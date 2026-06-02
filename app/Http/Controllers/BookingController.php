@@ -292,8 +292,6 @@ class BookingController extends Controller
             }
             
             // Create transaction
-            $txnInfo = $this->vnpay->getTransactionInfo($request);
-
             Transaction::create([
                 'user_id' => $booking->user_id,
                 'type' => 'ticket',

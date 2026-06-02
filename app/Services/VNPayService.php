@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Booking;
-use App\Models\Showtime;
 use Illuminate\Http\Request;
 
 class VNPayService
@@ -11,14 +10,12 @@ class VNPayService
     protected string $vnpUrl;
     protected string $tmnCode;
     protected string $hashSecret;
-    protected string $returnUrl;
 
     public function __construct()
     {
         $this->vnpUrl     = config('services.vnpay.url', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html');
         $this->tmnCode    = config('services.vnpay.tmn_code');
         $this->hashSecret = config('services.vnpay.hash_secret');
-        $this->returnUrl  = route('booking.vnpay-return');
     }
 
     /**
@@ -37,29 +34,16 @@ class VNPayService
             'vnp_Locale'     => 'vn',
             'vnp_OrderInfo'  => $orderInfo,
             'vnp_OrderType'  => 'other',
-            'vnp_ReturnUrl'  => $this->returnUrl,
+            'vnp_ReturnUrl'  => route('booking.vnpay-return'),
             'vnp_TxnRef'     => $booking->vnp_txn_ref,
             'vnp_ExpireDate' => now()->addMinutes(15)->format('YmdHis'),
         ];
 
         ksort($params);
 
-        $hashData = '';
-        $query    = '';
-        $i = 0;
-
-        foreach ($params as $key => $value) {
-            $encodedKey   = urlencode($key);
-            $encodedValue = urlencode($value);
-
-            if ($i++ > 0) {
-                $hashData .= '&';
-                $query    .= '&';
-            }
-
-            $hashData .= "{$encodedKey}={$encodedValue}";
-            $query    .= "{$encodedKey}={$encodedValue}";
-        }
+        // Build hashData dùng key gốc (không urlencode key) theo chuẩn VNPay
+        $hashData = http_build_query($params);
+        $query    = $hashData;
 
         $secureHash = hash_hmac('sha512', $hashData, $this->hashSecret);
 
@@ -73,20 +57,12 @@ class VNPayService
     {
         $vnpSecureHash = $request->input('vnp_SecureHash');
 
+        // Lấy toàn bộ params, bỏ hash fields
         $params = $request->except(['vnp_SecureHash', 'vnp_SecureHashType']);
         ksort($params);
 
-        $hashData = '';
-        $i = 0;
-
-        foreach ($params as $key => $value) {
-            if ($value !== '' && $value !== null) {
-                if ($i++ > 0) {
-                    $hashData .= '&';
-                }
-                $hashData .= urlencode($key) . '=' . urlencode($value);
-            }
-        }
+        // Build hashData theo chuẩn VNPay: key gốc, value url-encoded qua http_build_query
+        $hashData = http_build_query($params);
 
         $expectedHash = hash_hmac('sha512', $hashData, $this->hashSecret);
 
