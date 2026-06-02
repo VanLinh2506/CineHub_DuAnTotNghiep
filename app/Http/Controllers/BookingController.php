@@ -10,6 +10,7 @@ use App\Models\Ticket;
 use App\Models\Booking;
 use App\Models\FoodItem;
 use App\Models\Transaction;
+use App\Services\VNPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,7 @@ use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
+    public function __construct(protected VNPayService $vnpay) {}
     /**
      * Booking homepage - Select movie, theater, date, time
      */
@@ -225,7 +227,10 @@ class BookingController extends Controller
             DB::commit();
             
             // Redirect to VNPay
-            return $this->redirectToVNPay($booking, $showtime);
+            $orderInfo = 'Thanh toan ve xem phim ' . $showtime->movie->title;
+            $paymentUrl = $this->vnpay->createPaymentUrl($booking, $orderInfo, $request->ip());
+
+            return redirect($paymentUrl);
             
         } catch (\Exception $e) {
             DB::rollBack();
@@ -239,89 +244,86 @@ class BookingController extends Controller
      */
     public function vnpayReturn(Request $request)
     {
-        $vnpResponseCode = $request->input('vnp_ResponseCode');
-        $vnpTxnRef = $request->input('vnp_TxnRef');
-        
+        $vnpTxnRef        = $request->input('vnp_TxnRef');
         $pendingBookingId = session('pending_booking_id');
-        $showtimeId = session('showtime_id');
-        
+        $showtimeId       = session('showtime_id');
+
         if (!$pendingBookingId) {
             return redirect()->route('home')->with('error', 'Không tìm thấy booking!');
         }
-        
+
         $booking = Booking::find($pendingBookingId);
-        
+
         if (!$booking || $booking->vnp_txn_ref !== $vnpTxnRef) {
             return redirect()->route('home')->with('error', 'Booking không hợp lệ!');
         }
+
+        if (!$this->vnpay->isPaymentSuccess($request)) {
+            $booking->update(['status' => 'cancelled']);
+            return redirect()->route('booking.index', ['showtime_id' => $showtimeId])
+                ->with('error', 'Thanh toán thất bại hoặc chữ ký không hợp lệ!');
+        }
+        // Payment success
+        DB::beginTransaction();
         
-        if ($vnpResponseCode === '00') {
-            // Payment success
-            DB::beginTransaction();
+        try {
+            $showtime = Showtime::with('screen')->findOrFail($booking->showtime_id);
+            $seats = $booking->seats;
+            $basePrice = $showtime->price;
+            $screenType = $showtime->screen->screen_type ?? '2D';
+            $screenSurcharge = $this->getScreenTypeSurcharge($screenType);
             
-            try {
-                $showtime = Showtime::with('screen')->findOrFail($booking->showtime_id);
-                $seats = $booking->seats;
-                $basePrice = $showtime->price;
-                $screenType = $showtime->screen->screen_type ?? '2D';
-                $screenSurcharge = $this->getScreenTypeSurcharge($screenType);
+            // Create tickets
+            foreach ($seats as $seat) {
+                $seatType = $this->getSeatType($seat);
+                $price = $this->calculateSeatPrice($basePrice, $screenSurcharge, $seatType);
+                $qrCode = 'TICKET_' . uniqid() . '_' . time();
                 
-                // Create tickets
-                foreach ($seats as $seat) {
-                    $seatType = $this->getSeatType($seat);
-                    $price = $this->calculateSeatPrice($basePrice, $screenSurcharge, $seatType);
-                    $qrCode = 'TICKET_' . uniqid() . '_' . time();
-                    
-                    Ticket::create([
-                        'user_id' => $booking->user_id,
-                        'showtime_id' => $booking->showtime_id,
-                        'booking_pending_id' => $booking->id,
-                        'seat' => $seat,
-                        'seat_type' => $seatType,
-                        'price' => $price,
-                        'qr_code' => $qrCode,
-                        'status' => 'Đã đặt',
-                    ]);
-                }
-                
-                // Create transaction
-                Transaction::create([
+                Ticket::create([
                     'user_id' => $booking->user_id,
-                    'type' => 'ticket',
-                    'related_id' => $booking->id,
-                    'amount' => $booking->total_amount,
-                    'method' => 'VNPay',
-                    'status' => 'Thành công',
+                    'showtime_id' => $booking->showtime_id,
+                    'booking_pending_id' => $booking->id,
+                    'seat' => $seat,
+                    'seat_type' => $seatType,
+                    'price' => $price,
+                    'qr_code' => $qrCode,
+                    'status' => 'Đã đặt',
                 ]);
-                
-                // Update booking
-                $booking->update([
-                    'status' => 'completed',
-                    'qr_code' => 'BOOKING_' . uniqid() . '_' . $booking->id,
-                ]);
-                
-                DB::commit();
-                
-                session()->forget(['pending_booking_id', 'showtime_id']);
-                
-                return redirect()->route('booking.my-tickets')
-                    ->with('success', 'Đặt vé thành công!');
-                
-            } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error('Complete booking error: ' . $e->getMessage());
-                
-                $booking->update(['status' => 'cancelled']);
-                
-                return redirect()->route('booking.index')
-                    ->with('error', 'Có lỗi xảy ra khi hoàn tất đặt vé');
             }
-        } else {
-            // Payment failed
+            
+            // Create transaction
+            $txnInfo = $this->vnpay->getTransactionInfo($request);
+
+            Transaction::create([
+                'user_id' => $booking->user_id,
+                'type' => 'ticket',
+                'related_id' => $booking->id,
+                'amount' => $booking->total_amount,
+                'method' => 'VNPay',
+                'status' => 'Thành công',
+            ]);
+            
+            // Update booking
+            $booking->update([
+                'status' => 'completed',
+                'qr_code' => 'BOOKING_' . uniqid() . '_' . $booking->id,
+            ]);
+            
+            DB::commit();
+            
+            session()->forget(['pending_booking_id', 'showtime_id']);
+            
+            return redirect()->route('booking.my-tickets')
+                ->with('success', 'Đặt vé thành công!');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Complete booking error: ' . $e->getMessage());
+            
             $booking->update(['status' => 'cancelled']);
             
-            return redirect()->route('booking.index', ['showtime_id' => $showtimeId])
-                ->with('error', 'Thanh toán thất bại!');
+            return redirect()->route('booking.index')
+                ->with('error', 'Có lỗi xảy ra khi hoàn tất đặt vé');
         }
     }
     
@@ -413,50 +415,5 @@ class BookingController extends Controller
             '4DX' => 70000,
             default => 0,
         };
-    }
-    
-    private function redirectToVNPay($booking, $showtime)
-    {
-        $vnpUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-        $vnpTmnCode = config('services.vnpay.tmn_code', 'FK2JNB94');
-        $vnpHashSecret = config('services.vnpay.hash_secret', '6CJXOQ0GAO04RL7SOVVX2BB5AHW5ORGL');
-        $vnpReturnUrl = route('booking.vnpay-return');
-        
-        $inputData = [
-            "vnp_Version" => "2.1.0",
-            "vnp_TmnCode" => $vnpTmnCode,
-            "vnp_Amount" => $booking->total_amount * 100,
-            "vnp_Command" => "pay",
-            "vnp_CreateDate" => date('YmdHis'),
-            "vnp_CurrCode" => "VND",
-            "vnp_IpAddr" => request()->ip(),
-            "vnp_Locale" => "vn",
-            "vnp_OrderInfo" => "Thanh toan ve xem phim {$showtime->movie->title}",
-            "vnp_OrderType" => "other",
-            "vnp_ReturnUrl" => $vnpReturnUrl,
-            "vnp_TxnRef" => $booking->vnp_txn_ref,
-            "vnp_ExpireDate" => date('YmdHis', strtotime('+15 minutes')),
-        ];
-        
-        ksort($inputData);
-        $query = "";
-        $hashdata = "";
-        $i = 0;
-        
-        foreach ($inputData as $key => $value) {
-            if ($i == 1) {
-                $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
-            } else {
-                $hashdata .= urlencode($key) . "=" . urlencode($value);
-                $i = 1;
-            }
-            $query .= urlencode($key) . "=" . urlencode($value) . '&';
-        }
-        
-        $vnpUrl = $vnpUrl . "?" . $query;
-        $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnpHashSecret);
-        $vnpUrl .= 'vnp_SecureHash=' . $vnpSecureHash;
-        
-        return redirect($vnpUrl);
     }
 }
