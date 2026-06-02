@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\NewsController;
 use Illuminate\Support\Facades\Route;
 
 // Trang chủ
@@ -21,4 +22,10 @@ Route::get('/booking/vnpay-return', [BookingController::class, 'vnpayReturn'])->
 // Routes cũ (PHP thuần) - giữ lại để chuyển đổi dần
 Route::get('/old', function () {
     return view('welcome');
+});
+
+// Tin tức
+Route::prefix('tin-tuc')->name('news.')->group(function () {
+    Route::get('/', [NewsController::class, 'index'])->name('index');
+    Route::get('/{slug}', [NewsController::class, 'show'])->name('show');
 });
