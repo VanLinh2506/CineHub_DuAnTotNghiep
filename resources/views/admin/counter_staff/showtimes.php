@@ -1,0 +1,174 @@
+<!-- Date Filter -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0" style="color: #333; font-weight: 600;">
+                    <i class="fas fa-calendar-alt text-primary me-2"></i>Lịch chiếu phim
+                </h5>
+                <form method="GET" class="d-flex gap-2">
+                    <input type="hidden" name="route" value="counterStaff/showtimes">
+                    <input type="date" name="date" value="<?php echo htmlspecialchars($date); ?>" 
+                           class="form-control" style="width: 200px;" onchange="this.form.submit()">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Showtimes List -->
+<?php if (empty($showtimes)): ?>
+    <div class="stat-card">
+        <div class="text-center py-5">
+            <i class="fas fa-calendar-times text-muted" style="font-size: 3rem;"></i>
+            <p class="text-muted mt-3 mb-0">Không có suất chiếu nào vào ngày <?php echo date('d/m/Y', strtotime($date)); ?></p>
+        </div>
+    </div>
+<?php else: ?>
+    <div class="row">
+        <?php foreach ($showtimes as $showtime): ?>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="stat-card showtime-card animated-card" style="transition: all 0.3s ease;">
+                    <div class="d-flex align-items-start mb-3">
+                        <?php if ($showtime['thumbnail']): ?>
+                            <img src="<?php echo htmlspecialchars($showtime['thumbnail']); ?>" 
+                                 alt="<?php echo htmlspecialchars($showtime['movie_title']); ?>"
+                                 class="me-3" style="width: 80px; height: 120px; object-fit: cover; border-radius: 8px;">
+                        <?php else: ?>
+                            <div class="me-3 d-flex align-items-center justify-content-center bg-light" 
+                                 style="width: 80px; height: 120px; border-radius: 8px;">
+                                <i class="fas fa-film text-muted" style="font-size: 2rem;"></i>
+                            </div>
+                        <?php endif; ?>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-bold" style="color: #333;">
+                                <?php echo htmlspecialchars($showtime['movie_title']); ?>
+                            </h6>
+                            <small class="text-muted d-block mb-2">
+                                <i class="fas fa-clock me-1"></i>
+                                <?php echo $showtime['duration'] ?? 'N/A'; ?> phút
+                            </small>
+                            <span class="badge bg-primary mb-2">
+                                <?php echo htmlspecialchars($showtime['screen_type'] ?? '2D'); ?>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="border-top pt-3">
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Phòng chiếu</small>
+                                <strong style="color: #333;">
+                                    <i class="fas fa-door-open text-primary me-1"></i>
+                                    <?php echo htmlspecialchars($showtime['screen_name']); ?>
+                                </strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Giờ chiếu</small>
+                                <strong style="color: #333;">
+                                    <i class="fas fa-clock text-success me-1"></i>
+                                    <?php echo date('H:i', strtotime($showtime['show_time'])); ?>
+                                </strong>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Giá vé</small>
+                                <strong class="text-success" style="font-size: 1.1rem;">
+                                    <?php echo number_format($showtime['price']); ?>₫
+                                </strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Ghế còn lại</small>
+                                <strong style="color: #333;">
+                                    <?php 
+                                    $available = $showtime['available_seats'] ?? 0;
+                                    $total = $showtime['total_seats'] ?? 0;
+                                    $percentage = $total > 0 ? ($available / $total) * 100 : 0;
+                                    ?>
+                                    <span class="<?php echo $percentage < 20 ? 'text-danger' : ($percentage < 50 ? 'text-warning' : 'text-success'); ?>">
+                                        <?php echo $available; ?>/<?php echo $total; ?>
+                                    </span>
+                                </strong>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress bar for seat availability -->
+                        <div class="mb-2">
+                            <div class="progress" style="height: 8px; border-radius: 4px;">
+                                <div class="progress-bar <?php 
+                                    echo $percentage < 20 ? 'bg-danger' : ($percentage < 50 ? 'bg-warning' : 'bg-success'); 
+                                ?>" 
+                                role="progressbar" 
+                                style="width: <?php echo $percentage; ?>%"
+                                aria-valuenow="<?php echo $percentage; ?>" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-users me-1"></i>
+                                Đã đặt: <?php echo $showtime['booked_seats']; ?> vé
+                            </small>
+                            <span class="badge <?php 
+                                echo $percentage < 20 ? 'bg-danger' : ($percentage < 50 ? 'bg-warning' : 'bg-success'); 
+                            ?>">
+                                <?php echo number_format($percentage, 0); ?>% còn trống
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
+
+<style>
+.showtime-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.showtime-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.animated-card {
+    animation: fadeInUp 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.showtime-card:nth-child(1) { animation-delay: 0.1s; }
+.showtime-card:nth-child(2) { animation-delay: 0.2s; }
+.showtime-card:nth-child(3) { animation-delay: 0.3s; }
+.showtime-card:nth-child(4) { animation-delay: 0.4s; }
+.showtime-card:nth-child(5) { animation-delay: 0.5s; }
+.showtime-card:nth-child(6) { animation-delay: 0.6s; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.animated-card');
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.opacity = '1';
+        }, index * 100);
+    });
+});
+</script>
+
