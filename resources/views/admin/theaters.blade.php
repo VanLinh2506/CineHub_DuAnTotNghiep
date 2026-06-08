@@ -1,13 +1,9 @@
-@extends('layouts.app')
-
-@php
-    $title = 'Quản lý rạp chiếu';
-@endphp
+@extends('admin.layout')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5>{{ $title }}</h5>
+        <h2 class="mb-0">Quản lý rạp chiếu</h2>
         @if (!isset(auth()->user()['role']) || auth()->user()['role'] !== 'moderator')
             <a href="{{ url('?route=admin/theaters/create') }}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Thêm rạp mới

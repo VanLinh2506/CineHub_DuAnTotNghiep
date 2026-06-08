@@ -98,10 +98,10 @@
                 <i class="fas fa-building"></i> Thông tin rạp
             </a></li>
             @endif
-            <li><a href="{{ route('moderator.screens') }}" class="{{ ($current_page ?? '') === 'screens' ? 'active' : '' }}">
+            <li><a href="{{ route('moderator.screens.index') }}" class="{{ ($current_page ?? '') === 'screens' ? 'active' : '' }}">
                 <i class="fas fa-door-open"></i> Quản lý phòng
             </a></li>
-            <li><a href="{{ route('moderator.showtimes') }}" class="{{ ($current_page ?? '') === 'showtimes' ? 'active' : '' }}">
+            <li><a href="{{ route('moderator.showtimes.index') }}" class="{{ ($current_page ?? '') === 'showtimes' ? 'active' : '' }}">
                 <i class="fas fa-calendar-alt"></i> Lịch chiếu
             </a></li>
             <li><a href="{{ route('moderator.tickets') }}" class="{{ ($current_page ?? '') === 'tickets' ? 'active' : '' }}">
@@ -128,8 +128,16 @@
             @endif
             <li><a href="/"><i class="fas fa-home"></i> Về trang chủ</a></li>
             <li><a href="{{ route('profile.index') }}"><i class="fas fa-user"></i> Hồ sơ</a></li>
-            <li><a href="{{ route('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+            <li>
+                <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form-moderator').submit();">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                </a>
+            </li>
         </ul>
+        
+        <form id="logout-form-moderator" action="{{ route('logout') }}" method="POST" style="display: none;">
+            @csrf
+        </form>
     </div>
 
     <div class="moderator-main">

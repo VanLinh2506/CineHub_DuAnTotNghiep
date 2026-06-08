@@ -15,14 +15,13 @@
 
 <!-- Filters -->
 <div class="stat-card mb-3">
-    <form method="GET" class="row g-2">
-        <input type="hidden" name="route" value="moderator/showtimes">
+    <form method="GET" action="{{ route('moderator.showtimes.index') }}" class="row g-2">
         <div class="col-md-4">
-            <input type="date" name="date" class="form-control" value="{{ $date ?? date('Y-m-d') }}" onchange="this.form.submit()">
+            <input type="date" name="date" class="form-control" value="{{ $date ?? '' }}" onchange="this.form.submit()">
         </div>
         <div class="col-md-2">
-            <label class="form-label small">Hoặc xem tất cả (7 ngày tới)</label>
-            <a href="?route=moderator/showtimes&date=" class="btn btn-outline-info w-100 btn-sm">
+            <label class="form-label small">Hoặc xem tất cả lịch chiếu</label>
+            <a href="{{ route('moderator.showtimes.index') }}?all=1" class="btn btn-outline-info w-100 btn-sm">
                 <i class="fas fa-list"></i> Tất cả
             </a>
         </div>
@@ -30,7 +29,7 @@
             <button type="submit" class="btn btn-secondary w-100"><i class="fas fa-search"></i> Lọc</button>
         </div>
         <div class="col-md-2">
-            <a href="?route=moderator/showtimes" class="btn btn-outline-secondary w-100"><i class="fas fa-redo"></i> Xóa lọc</a>
+            <a href="{{ route('moderator.showtimes.index') }}" class="btn btn-outline-secondary w-100"><i class="fas fa-redo"></i> Xóa lọc</a>
         </div>
     </form>
 </div>
@@ -110,7 +109,8 @@
                 <h5 class="modal-title">Thêm lịch chiếu mới</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="?route=moderator/showtimesStore">
+            <form method="POST" action="{{ route('moderator.showtimes.store') }}">
+                @csrf
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="movie_id" class="form-label">Phim <span class="text-danger">*</span></label>
@@ -171,7 +171,9 @@
                 <h5 class="modal-title">Sửa lịch chiếu</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="?route=moderator/showtimesUpdate">
+            <form method="POST" action="{{ route('moderator.showtimes.update', ['id' => 0]) }}" id="editShowtimeForm">
+                @csrf
+                @method('PUT')
                 <input type="hidden" name="id" id="edit_showtime_id">
                 <div class="modal-body">
                     <div class="mb-3">
@@ -224,7 +226,8 @@
                 <h5 class="modal-title">Thêm phòng mới</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="?route=moderator/screensStore" id="addScreenFormShowtimes">
+            <form method="POST" action="{{ route('moderator.screens.store') }}" id="addScreenFormShowtimes">
+                @csrf
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -342,36 +345,91 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         function loadAvailableTimeSlots() {
-            const screenId = screenSelect.value, showDate = dateInput.value;
-            if (!screenId || !showDate) { availableSlotsDiv.style.display = 'none'; return; }
+            const screenId = screenSelect.value;
+            const showDate = dateInput.value;
+            const movieId = document.querySelector('#movie_id')?.value;
+            
+            if (!screenId || !showDate || !movieId) { 
+                availableSlotsDiv.style.display = 'none'; 
+                return; 
+            }
+            
             timeSlotsContainer.innerHTML = '<small class="text-muted">Đang tải...</small>';
             availableSlotsDiv.style.display = 'block';
-            fetch(`?route=moderator/getAvailableTimeSlots&screen_id=${screenId}&show_date=${showDate}`)
+            
+            fetch(`{{ route('moderator.api.availableTimeSlots') }}?screen_id=${screenId}&date=${showDate}&movie_id=${movieId}`)
                 .then(r => r.json())
                 .then(data => {
-                    if (data.success && data.available_slots.length > 0) {
+                    if (data.slots && data.slots.length > 0) {
                         timeSlotsContainer.innerHTML = '';
                         timeSlotButtons = [];
-                        data.available_slots.forEach(slot => {
+                        
+                        // Tạo container cho các slots
+                        const slotsWrapper = document.createElement('div');
+                        slotsWrapper.className = 'time-slots-wrapper';
+                        
+                        data.slots.forEach((slot, index) => {
                             const button = document.createElement('button');
                             button.type = 'button';
-                            button.className = 'btn btn-sm btn-outline-primary';
-                            button.textContent = slot;
+                            button.className = 'btn btn-sm btn-outline-primary me-2 mb-2 time-slot-btn';
+                            button.textContent = slot.label;
+                            
+                            // Ẩn các button sau 8 cái đầu tiên
+                            if (index >= 8) {
+                                button.classList.add('d-none', 'extra-slot');
+                            }
+                            
                             button.onclick = function() {
-                                timeInput.value = slot;
-                                timeSlotsContainer.querySelectorAll('button').forEach(btn => { btn.classList.remove('btn-primary'); btn.classList.add('btn-outline-primary'); });
-                                button.classList.remove('btn-outline-primary'); button.classList.add('btn-primary');
-                                updateTimeSlotsVisibility(slot);
+                                timeInput.value = slot.time;
+                                timeSlotsContainer.querySelectorAll('button').forEach(btn => { 
+                                    btn.classList.remove('btn-primary'); 
+                                    btn.classList.add('btn-outline-primary'); 
+                                });
+                                button.classList.remove('btn-outline-primary'); 
+                                button.classList.add('btn-primary');
+                                updateTimeSlotsVisibility(slot.time);
                             };
-                            timeSlotsContainer.appendChild(button);
+                            slotsWrapper.appendChild(button);
                             timeSlotButtons.push(button);
                         });
+                        
+                        timeSlotsContainer.appendChild(slotsWrapper);
+                        
+                        // Thêm nút "Xem thêm" nếu có nhiều hơn 8 slots
+                        if (data.slots.length > 8) {
+                            const showMoreBtn = document.createElement('button');
+                            showMoreBtn.type = 'button';
+                            showMoreBtn.className = 'btn btn-sm btn-link text-decoration-none';
+                            showMoreBtn.innerHTML = '<i class="fas fa-angle-down me-1"></i>Xem thêm (' + (data.slots.length - 8) + ' khung giờ)';
+                            showMoreBtn.id = 'showMoreSlotsBtn';
+                            
+                            showMoreBtn.onclick = function() {
+                                const extraSlots = timeSlotsContainer.querySelectorAll('.extra-slot');
+                                const isExpanded = this.getAttribute('data-expanded') === 'true';
+                                
+                                if (isExpanded) {
+                                    extraSlots.forEach(slot => slot.classList.add('d-none'));
+                                    this.innerHTML = '<i class="fas fa-angle-down me-1"></i>Xem thêm (' + extraSlots.length + ' khung giờ)';
+                                    this.setAttribute('data-expanded', 'false');
+                                } else {
+                                    extraSlots.forEach(slot => slot.classList.remove('d-none'));
+                                    this.innerHTML = '<i class="fas fa-angle-up me-1"></i>Thu gọn';
+                                    this.setAttribute('data-expanded', 'true');
+                                }
+                            };
+                            
+                            timeSlotsContainer.appendChild(showMoreBtn);
+                        }
+                        
                         if (timeInput.value) updateTimeSlotsVisibility(timeInput.value);
                     } else {
                         timeSlotsContainer.innerHTML = '<small class="text-warning">Không còn khung giờ trống trong ngày này</small>';
                     }
                 })
-                .catch(() => { timeSlotsContainer.innerHTML = '<small class="text-danger">Có lỗi xảy ra khi tải khung giờ</small>'; });
+                .catch(error => { 
+                    console.error('Error loading time slots:', error);
+                    timeSlotsContainer.innerHTML = '<small class="text-danger">Có lỗi xảy ra khi tải khung giờ</small>'; 
+                });
         }
 
         const movieSelect = addShowtimeModal.querySelector('#movie_id');
@@ -380,9 +438,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (movieSelect) {
             movieSelect.addEventListener('change', function() {
                 movieDuration = parseInt(this.options[this.selectedIndex].getAttribute('data-duration')) || 120;
-                if (this.value && movieDurationDisplay) { movieDurationValue.textContent = movieDuration; movieDurationDisplay.style.display = 'block'; }
+                if (this.value && movieDurationDisplay) { 
+                    movieDurationValue.textContent = movieDuration; 
+                    movieDurationDisplay.style.display = 'block'; 
+                }
                 else if (movieDurationDisplay) movieDurationDisplay.style.display = 'none';
                 if (timeInput.value) updateTimeSlotsVisibility(timeInput.value);
+                // Load available time slots when movie changes
+                loadAvailableTimeSlots();
             });
         }
 

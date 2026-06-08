@@ -41,6 +41,10 @@
                         <i class="fas fa-user-circle"></i>
                         <span>Thông tin cá nhân</span>
                     </a>
+                    <a href="#wallet" class="profile-nav-item" onclick="switchProfileTab('wallet', event)">
+                        <i class="fas fa-wallet"></i>
+                        <span>Ví điểm</span>
+                    </a>
                     <a href="#security" class="profile-nav-item" onclick="switchProfileTab('security', event)">
                         <i class="fas fa-lock"></i>
                         <span>Bảo mật</span>
@@ -114,6 +118,46 @@
                         <button type="button" class="btn-secondary" onclick="cancelEdit('personal')" style="display: none;">Hủy</button>
                     </div>
                 </form>
+            </div>
+            
+            <!-- Wallet Section -->
+            <div id="wallet" class="profile-section" style="display: none;">
+                <div class="section-header">
+                    <h2>Ví điểm</h2>
+                </div>
+                
+                <div class="wallet-balance">
+                    <div class="balance-card">
+                        <div class="balance-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="balance-info">
+                            <p class="balance-label">Số dư hiện tại</p>
+                            <h3 class="balance-amount">{{ number_format($user ? $user->points : 0) }} điểm</h3>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="deposit-form">
+                    <h4>Nạp điểm qua VNPay</h4>
+                    <form method="POST" action="{{ route('profile.depositVnpay') }}">
+                        @csrf
+                        <div class="form-group">
+                            <label>Số điểm muốn nạp (1 điểm = 1 VNĐ)</label>
+                            <select name="points" class="form-control">
+                                <option value="10000">10,000 điểm (10,000 VNĐ)</option>
+                                <option value="20000">20,000 điểm (20,000 VNĐ)</option>
+                                <option value="50000">50,000 điểm (50,000 VNĐ)</option>
+                                <option value="100000">100,000 điểm (100,000 VNĐ)</option>
+                                <option value="200000">200,000 điểm (200,000 VNĐ)</option>
+                                <option value="500000">500,000 điểm (500,000 VNĐ)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-credit-card"></i> Nạp điểm qua VNPay
+                        </button>
+                    </form>
+                </div>
             </div>
             
             <!-- Security Section -->
@@ -483,6 +527,61 @@
         margin: 0.5rem 0;
     }
     
+    .wallet-balance {
+        margin-bottom: 2rem;
+    }
+    
+    .balance-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    
+    .balance-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: white;
+    }
+    
+    .balance-info {
+        flex: 1;
+    }
+    
+    .balance-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .balance-amount {
+        color: white;
+        font-size: 2rem;
+        margin: 0;
+        font-weight: bold;
+    }
+    
+    .deposit-form {
+        background: rgba(229, 9, 20, 0.1);
+        border: 1px solid rgba(229, 9, 20, 0.3);
+        border-radius: 12px;
+        padding: 2rem;
+    }
+    
+    .deposit-form h4 {
+        color: #fff;
+        margin: 0 0 1.5rem 0;
+        font-size: 1.1rem;
+    }
+    
     @media (max-width: 768px) {
         .profile-luxury-container {
             padding: 1rem;
@@ -557,10 +656,15 @@
         
         const formData = new FormData();
         formData.append('avatar', file);
+        formData.append('_token', '{{ csrf_token() }}');
         
         fetch('{{ route("profile.uploadAvatar") }}', {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
         })
         .then(response => response.json())
         .then(data => {

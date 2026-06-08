@@ -22,27 +22,30 @@ class ModeratorController extends Controller
     
     public function __construct()
     {
-        $this->middleware(function ($request, $next) {
-            if (!Auth::check()) {
-                return redirect()->route('login')->with('error', 'Vui lòng đăng nhập');
-            }
-            
-            $user = Auth::user();
-            
-            // Kiểm tra quyền moderator
-            if (!$this->isModerator($user)) {
-                return redirect()->route('home')->with('error', 'Bạn không có quyền truy cập!');
-            }
-            
-            // Lấy theater_id
-            $this->theaterId = $user->theater_id;
-            
-            if (!$this->theaterId) {
-                return redirect()->route('home')->with('error', 'Bạn chưa được gán rạp!');
-            }
-            
-            return $next($request);
-        });
+        // Không sử dụng middleware trong constructor nữa
+    }
+    
+    protected function checkPermission()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập');
+        }
+        
+        $user = Auth::user();
+        
+        // Kiểm tra quyền moderator
+        if (!$this->isModerator($user)) {
+            return redirect()->route('home')->with('error', 'Bạn không có quyền truy cập!');
+        }
+        
+        // Lấy theater_id
+        $this->theaterId = $user->theater_id;
+        
+        if (!$this->theaterId) {
+            return redirect()->route('home')->with('error', 'Bạn chưa được gán rạp!');
+        }
+        
+        return null; // Không có lỗi
     }
     
     /**
@@ -50,6 +53,11 @@ class ModeratorController extends Controller
      */
     public function index()
     {
+        if ($error = $this->checkPermission()) return $error;
+        
+        // Get theater info
+        $theater = Theater::findOrFail($this->theaterId);
+        
         $stats = [
             'total_showtimes' => Showtime::whereHas('screen', function($q) {
                 $q->where('theater_id', $this->theaterId);
@@ -91,15 +99,15 @@ class ModeratorController extends Controller
         }
         
         // Top phim
-        $topMovies = Movie::select('movies.*')
-            ->join('showtimes', 'movies.id', '=', 'showtimes.movie_id')
+        $topMovies = Movie::join('showtimes', 'movies.id', '=', 'showtimes.movie_id')
             ->join('theater_screens', 'showtimes.screen_id', '=', 'theater_screens.id')
             ->leftJoin('tickets', function($join) {
                 $join->on('showtimes.id', '=', 'tickets.showtime_id')
                      ->where('tickets.status', 'Đã đặt');
             })
             ->where('theater_screens.theater_id', $this->theaterId)
-            ->groupBy('movies.id')
+            ->groupBy('movies.id', 'movies.title')
+            ->select('movies.id', 'movies.title')
             ->selectRaw('COUNT(tickets.id) as ticket_count, COALESCE(SUM(tickets.price), 0) as revenue')
             ->orderByDesc('ticket_count')
             ->limit(5)
@@ -120,7 +128,7 @@ class ModeratorController extends Controller
             ->limit(10)
             ->get();
         
-        return view('admin.moderator.dashboard', compact('stats', 'revenueByDay', 'topMovies', 'upcomingShowtimes'));
+        return view('admin.moderator.dashboard', compact('theater', 'stats', 'revenueByDay', 'topMovies', 'upcomingShowtimes'));
     }
     
     /**
@@ -128,6 +136,8 @@ class ModeratorController extends Controller
      */
     public function permissionRequests(Request $request)
     {
+        if ($error = $this->checkPermission()) return $error;
+        
         $requests = DB::table('moderator_permission_requests as mpr')
             ->leftJoin('users as u1', 'mpr.requested_by', '=', 'u1.id')
             ->leftJoin('users as u2', 'mpr.target_user_id', '=', 'u2.id')
@@ -156,6 +166,8 @@ class ModeratorController extends Controller
     
     public function handlePermissionRequest(Request $request)
     {
+        if ($error = $this->checkPermission()) return $error;
+        
         $requestId = $request->input('request_id');
         $action = $request->input('action');
         
@@ -201,24 +213,52 @@ class ModeratorController extends Controller
      */
     public function showtimes(Request $request)
     {
-        $date = $request->input('date', date('Y-m-d'));
+        if ($error = $this->checkPermission()) return $error;
         
-        $showtimes = Showtime::with(['movie', 'screen'])
+        $theater = Theater::findOrFail($this->theaterId);
+        $date = $request->input('date');
+        $showAll = $request->has('all'); // Kiểm tra xem có yêu cầu xem tất cả không
+        
+        $showtimesQuery = Showtime::with(['movie', 'screen'])
             ->whereHas('screen', function($q) {
                 $q->where('theater_id', $this->theaterId);
-            })
-            ->where('show_date', $date)
-            ->orderBy('show_time')
+            });
+        
+        // Xử lý filter
+        if ($date) {
+            // Nếu có date cụ thể, lọc theo ngày đó
+            $showtimesQuery->where('show_date', $date);
+        } elseif ($showAll) {
+            // Nếu nhấn "Tất cả", hiển thị tất cả lịch chiếu (không filter)
+            // Không thêm điều kiện where nào
+        } else {
+            // Mặc định: chỉ hiển thị lịch chiếu từ hôm nay trở đi
+            $showtimesQuery->where('show_date', '>=', now()->toDateString());
+        }
+        
+        // Sắp xếp theo ngày gần nhất, rồi theo giờ chiếu
+        $showtimes = $showtimesQuery
+            ->orderBy('show_date', 'asc')
+            ->orderBy('show_time', 'asc')
             ->get();
         
         $movies = Movie::where('status', 'Chiếu rạp')->orderBy('title')->get();
         $screens = Screen::where('theater_id', $this->theaterId)->orderBy('screen_name')->get();
         
-        return view('admin.moderator.showtimes', compact('showtimes', 'movies', 'screens', 'date'));
+        return view('admin.moderator.showtimes', compact('theater', 'showtimes', 'movies', 'screens', 'date'));
     }
     
     public function showtimesStore(Request $request)
     {
+        \Log::info('showtimesStore called', ['user_id' => Auth::id(), 'request' => $request->all()]);
+        
+        if ($error = $this->checkPermission()) {
+            \Log::warning('Permission check failed', ['theater_id' => $this->theaterId]);
+            return $error;
+        }
+        
+        \Log::info('Permission OK, theater_id: ' . $this->theaterId);
+        
         $request->validate([
             'movie_id' => 'required|exists:movies,id',
             'screen_id' => 'required|exists:theater_screens,id',
@@ -232,14 +272,38 @@ class ModeratorController extends Controller
             ->where('theater_id', $this->theaterId)
             ->firstOrFail();
         
-        // Kiểm tra trùng lặp
-        $existing = Showtime::where('screen_id', $request->screen_id)
-            ->where('show_date', $request->show_date)
-            ->where('show_time', $request->show_time)
-            ->exists();
+        // Lấy thông tin phim để biết thời lượng
+        $movie = Movie::findOrFail($request->movie_id);
+        $movieDuration = $movie->duration ?? 120; // Mặc định 120 phút nếu không có
         
-        if ($existing) {
-            return redirect()->back()->with('error', 'Phòng chiếu đã có lịch vào giờ này!');
+        // Tính thời gian kết thúc (thời lượng phim + 15 phút dọn dẹp)
+        $showTime = \Carbon\Carbon::parse($request->show_date . ' ' . $request->show_time);
+        $endTime = $showTime->copy()->addMinutes($movieDuration + 15);
+        
+        // Kiểm tra xem có suất chiếu nào trùng lặp không
+        $conflicts = Showtime::where('screen_id', $request->screen_id)
+            ->where('show_date', $request->show_date)
+            ->get()
+            ->filter(function($showtime) use ($showTime, $endTime) {
+                $existingStart = \Carbon\Carbon::parse($showtime->show_date . ' ' . $showtime->show_time);
+                
+                // Lấy thời lượng phim của suất chiếu đang có
+                $existingMovie = Movie::find($showtime->movie_id);
+                $existingDuration = $existingMovie->duration ?? 120;
+                $existingEnd = $existingStart->copy()->addMinutes($existingDuration + 15);
+                
+                // Kiểm tra xem có trùng lặp không
+                return ($showTime < $existingEnd && $endTime > $existingStart);
+            });
+        
+        if ($conflicts->count() > 0) {
+            $conflictTime = $conflicts->first();
+            $conflictMovie = Movie::find($conflictTime->movie_id);
+            return redirect()->back()->with('error', 
+                'Khung giờ này bị trùng với suất chiếu phim "' . $conflictMovie->title . '" (' . 
+                \Carbon\Carbon::parse($conflictTime->show_time)->format('H:i') . '). ' .
+                'Vui lòng chọn giờ khác!'
+            );
         }
         
         Showtime::create([
@@ -251,12 +315,14 @@ class ModeratorController extends Controller
             'price' => $request->price,
         ]);
         
-        return redirect()->route('moderator.showtimes')
+        return redirect()->route('moderator.showtimes.index')
             ->with('success', 'Thêm lịch chiếu thành công!');
     }
     
     public function showtimesUpdate(Request $request, $id)
     {
+        if ($error = $this->checkPermission()) return $error;
+        
         $showtime = Showtime::whereHas('screen', function($q) {
                 $q->where('theater_id', $this->theaterId);
             })->findOrFail($id);
@@ -277,6 +343,8 @@ class ModeratorController extends Controller
     
     public function showtimesDelete($id)
     {
+        if ($error = $this->checkPermission()) return $error;
+        
         $showtime = Showtime::whereHas('screen', function($q) {
                 $q->where('theater_id', $this->theaterId);
             })->findOrFail($id);
@@ -292,6 +360,9 @@ class ModeratorController extends Controller
      */
     public function screens()
     {
+        if ($error = $this->checkPermission()) return $error;
+        
+        $theater = Theater::findOrFail($this->theaterId);
         $screens = Screen::where('theater_id', $this->theaterId)
             ->withCount(['showtimes' => function($q) {
                 $q->where('show_date', '>=', today());
@@ -299,11 +370,13 @@ class ModeratorController extends Controller
             ->orderBy('screen_name')
             ->get();
         
-        return view('admin.moderator.screens', compact('screens'));
+        return view('admin.moderator.screens', compact('theater', 'screens'));
     }
     
     public function screensStore(Request $request)
     {
+        if ($error = $this->checkPermission()) return $error;
+        
         $request->validate([
             'screen_name' => 'required|string|max:255',
             'screen_type' => 'required|string',
@@ -336,6 +409,8 @@ class ModeratorController extends Controller
      */
     public function theater()
     {
+        if ($error = $this->checkPermission()) return $error;
+        
         $theater = Theater::findOrFail($this->theaterId);
         $screens = Screen::where('theater_id', $this->theaterId)->get();
         
@@ -344,6 +419,8 @@ class ModeratorController extends Controller
     
     public function theaterUpdate(Request $request)
     {
+        if ($error = $this->checkPermission()) return $error;
+        
         $theater = Theater::findOrFail($this->theaterId);
         
         $request->validate([
@@ -364,6 +441,9 @@ class ModeratorController extends Controller
      */
     public function tickets(Request $request)
     {
+        if ($error = $this->checkPermission()) return $error;
+        
+        $theater = Theater::findOrFail($this->theaterId);
         $query = Ticket::with(['showtime.movie', 'showtime.screen', 'user'])
             ->whereHas('showtime.screen', function($q) {
                 $q->where('theater_id', $this->theaterId);
@@ -393,7 +473,7 @@ class ModeratorController extends Controller
                 })->where('status', 'Đã đặt')->sum('price'),
         ];
         
-        return view('admin.moderator.tickets', compact('tickets', 'stats'));
+        return view('admin.moderator.tickets', compact('theater', 'tickets', 'stats'));
     }
     
     /**
@@ -401,16 +481,20 @@ class ModeratorController extends Controller
      */
     public function statistics(Request $request)
     {
+        if ($error = $this->checkPermission()) return $error;
+        
+        $theater = Theater::findOrFail($this->theaterId);
+        
         // Revenue by movie
-        $revenueByMovie = Movie::select('movies.*')
-            ->join('showtimes', 'movies.id', '=', 'showtimes.movie_id')
+        $revenueByMovie = Movie::join('showtimes', 'movies.id', '=', 'showtimes.movie_id')
             ->join('theater_screens', 'showtimes.screen_id', '=', 'theater_screens.id')
             ->leftJoin('tickets', function($join) {
                 $join->on('showtimes.id', '=', 'tickets.showtime_id')
                      ->where('tickets.status', 'Đã đặt');
             })
             ->where('theater_screens.theater_id', $this->theaterId)
-            ->groupBy('movies.id')
+            ->groupBy('movies.id', 'movies.title')
+            ->select('movies.id', 'movies.title')
             ->selectRaw('COUNT(tickets.id) as ticket_count, COALESCE(SUM(tickets.price), 0) as revenue')
             ->orderByDesc('revenue')
             ->get();
@@ -429,7 +513,7 @@ class ModeratorController extends Controller
             $revenueByDate[] = ['date' => $date, 'revenue' => $revenue];
         }
         
-        return view('admin.moderator.statistics', compact('revenueByMovie', 'revenueByDate'));
+        return view('admin.moderator.statistics', compact('theater', 'revenueByMovie', 'revenueByDate'));
     }
     
     // Helper methods
@@ -446,6 +530,74 @@ class ModeratorController extends Controller
         }
         
         return false;
+    }
+    
+    /**
+     * Get available time slots for a screen on a specific date
+     */
+    public function getAvailableTimeSlots(Request $request)
+    {
+        if ($error = $this->checkPermission()) return $error;
+        
+        $screenId = $request->screen_id;
+        $date = $request->date;
+        $movieId = $request->movie_id;
+        
+        if (!$screenId || !$date || !$movieId) {
+            return response()->json(['slots' => []]);
+        }
+        
+        // Lấy thông tin phim
+        $movie = Movie::find($movieId);
+        if (!$movie) {
+            return response()->json(['slots' => []]);
+        }
+        
+        $movieDuration = $movie->duration ?? 120;
+        
+        // Lấy tất cả suất chiếu trong ngày
+        $existingShowtimes = Showtime::where('screen_id', $screenId)
+            ->where('show_date', $date)
+            ->with('movie')
+            ->orderBy('show_time')
+            ->get();
+        
+        // Tạo danh sách khung giờ có thể (từ 8:00 đến 23:00, mỗi 30 phút)
+        $possibleSlots = [];
+        $startHour = 8;
+        $endHour = 23;
+        
+        for ($hour = $startHour; $hour <= $endHour; $hour++) {
+            foreach ([0, 30] as $minute) {
+                if ($hour == $endHour && $minute > 0) break;
+                
+                $timeSlot = sprintf('%02d:%02d', $hour, $minute);
+                $slotStart = \Carbon\Carbon::parse($date . ' ' . $timeSlot);
+                $slotEnd = $slotStart->copy()->addMinutes($movieDuration + 15);
+                
+                // Kiểm tra xem khung giờ này có trùng với suất chiếu nào không
+                $isAvailable = true;
+                foreach ($existingShowtimes as $showtime) {
+                    $existingStart = \Carbon\Carbon::parse($showtime->show_date . ' ' . $showtime->show_time);
+                    $existingDuration = $showtime->movie->duration ?? 120;
+                    $existingEnd = $existingStart->copy()->addMinutes($existingDuration + 15);
+                    
+                    if ($slotStart < $existingEnd && $slotEnd > $existingStart) {
+                        $isAvailable = false;
+                        break;
+                    }
+                }
+                
+                if ($isAvailable) {
+                    $possibleSlots[] = [
+                        'time' => $timeSlot,
+                        'label' => $timeSlot . ' (kết thúc lúc ' . $slotEnd->format('H:i') . ')'
+                    ];
+                }
+            }
+        }
+        
+        return response()->json(['slots' => $possibleSlots]);
     }
     
     private function generateSeatLayout($request)

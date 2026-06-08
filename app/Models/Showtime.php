@@ -9,6 +9,8 @@ class Showtime extends Model
 {
     use HasFactory;
 
+    const UPDATED_AT = null; // Chỉ dùng created_at, không dùng updated_at
+
     protected $fillable = [
         'movie_id',
         'theater_id',

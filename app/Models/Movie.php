@@ -18,7 +18,7 @@ class Movie extends Model
         'trailer_url',
         'rating',
         'duration',
-        'release_date',
+        'publish_date',
         'country',
         'director',
         'cast',
@@ -35,7 +35,7 @@ class Movie extends Model
 
     protected $casts = [
         'rating' => 'float',
-        'release_date' => 'date',
+        'publish_date' => 'datetime',
         'duration' => 'integer',
     ];
 
@@ -103,14 +103,54 @@ class Movie extends Model
     }
 
     // URL Accessors for storage files
+    public function getThumbnailAttribute($value)
+    {
+        // Access raw attribute value to avoid recursion
+        $rawValue = $this->attributes['thumbnail'] ?? null;
+        
+        if (empty($rawValue)) return null;
+        
+        // If already full URL, return as is
+        if (str_starts_with($rawValue, 'http://') || str_starts_with($rawValue, 'https://')) {
+            return $rawValue;
+        }
+        
+        // If path starts with data/img/ or data/phim/, use it directly
+        if (str_starts_with($rawValue, 'data/img/') || str_starts_with($rawValue, 'data/phim/')) {
+            return asset('storage/' . $rawValue);
+        }
+        
+        return storage_url($rawValue);
+    }
+
+    public function getBannerAttribute($value)
+    {
+        // Access raw attribute value to avoid recursion
+        $rawValue = $this->attributes['banner'] ?? null;
+        
+        if (empty($rawValue)) return null;
+        
+        // If already full URL, return as is
+        if (str_starts_with($rawValue, 'http://') || str_starts_with($rawValue, 'https://')) {
+            return $rawValue;
+        }
+        
+        // If path starts with data/img/ or data/phim/, use it directly
+        if (str_starts_with($rawValue, 'data/img/') || str_starts_with($rawValue, 'data/phim/')) {
+            return asset('storage/' . $rawValue);
+        }
+        
+        return storage_url($rawValue);
+    }
+
     public function getThumbnailUrlAttribute()
     {
-        return storage_url($this->attributes['thumbnail'] ?? null);
+        return $this->thumbnail;
     }
 
     public function getBannerUrlAttribute()
     {
-        return storage_url($this->attributes['banner'] ?? null);
+        return $this->banner;
     }
 
     public function getVideoUrlFullAttribute()

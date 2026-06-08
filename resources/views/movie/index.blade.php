@@ -135,14 +135,26 @@
             <div class="movie-grid">
                 @foreach($movies as $movie)
                 <div class="movie-card">
-                    <a href="{{ route('home') }}?route=movie/watch&id={{ $movie['id'] }}">
+                    @php
+                        // Nếu phim chiếu rạp, link đến trang đặt vé; nếu không thì xem phim online
+                        $movieUrl = ($movie['status'] === 'Chiếu rạp') 
+                            ? route('home') . '?route=booking/index&movie_id=' . $movie['id']
+                            : route('home') . '?route=movie/watch&id=' . $movie['id'];
+                    @endphp
+                    <a href="{{ $movieUrl }}">
                         <div class="movie-thumbnail">
                             @if($movie['thumbnail'])
                                 <img src="{{ $movie['thumbnail'] }}" alt="{{ $movie['title'] }}">
                             @else
                                 <div class="movie-placeholder"><i class="fas fa-film"></i></div>
                             @endif
-                            <div class="movie-overlay"><i class="fas fa-play"></i></div>
+                            <div class="movie-overlay">
+                                @if($movie['status'] === 'Chiếu rạp')
+                                    <i class="fas fa-ticket-alt"></i>
+                                @else
+                                    <i class="fas fa-play"></i>
+                                @endif
+                            </div>
                             @if(($movie['type'] ?? 'phimle') === 'phimbo')
                                 <div class="movie-badge" title="Số tập">
                                     {{ isset($movie['episode_count']) && $movie['episode_count'] > 0 ? $movie['episode_count'] . ' tập' : '? tập' }}
@@ -154,7 +166,7 @@
                     </a>
                     <div class="movie-info">
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-                            <a href="{{ route('home') }}?route=movie/watch&id={{ $movie['id'] }}" style="flex:1;text-decoration:none;color:inherit;">
+                            <a href="{{ $movieUrl }}" style="flex:1;text-decoration:none;color:inherit;">
                                 <h3>{{ $movie['title'] }}</h3>
                             </a>
                             @if(isset($user) && $user)

@@ -1,13 +1,9 @@
-@extends('layouts.app')
-
-@php
-    $title = 'Quản lý phim';
-@endphp
+@extends('admin.layout')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5>{{ $title }}</h5>
+        <h2 class="mb-0">Quản lý phim</h2>
         <div>
             <a href="{{ url('?route=admin/movies/scanEpisodes') }}" class="btn btn-info me-2">
                 <i class="fas fa-folder-open"></i> Import tập từ folder

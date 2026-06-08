@@ -104,36 +104,9 @@ class MovieController extends Controller
      */
     public function theater(Request $request)
     {
-        $query = Movie::with('category')
-            ->where('status', 'Chiếu rạp')
-            ->orderBy('release_date', 'desc');
-        
-        $movies = $query->paginate(12);
-        
-        $categories = Category::orderBy('name')->get();
-        $countries = collect();
-        $favorites = [];
-        
-        // Missing variables for view
-        $search = '';
-        $categoryId = null;
-        $status = 'Chiếu rạp';
-        $country = null;
-        $type = null;
-        $minRating = null;
-        
-        return view('movie.index', compact(
-            'movies',
-            'categories',
-            'countries',
-            'favorites',
-            'search',
-            'categoryId',
-            'status',
-            'country',
-            'type',
-            'minRating'
-        ));
+        // Forward to BookingController using app container
+        $bookingController = app(\App\Http\Controllers\BookingController::class);
+        return $bookingController->index($request);
     }
 
     /**

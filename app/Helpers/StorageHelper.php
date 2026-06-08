@@ -57,7 +57,12 @@ if (!function_exists('storage_url')) {
             return $path;
         }
         
-        // Convert old paths to new paths
+        // If path starts with data/img/ or data/phim/, use it directly (old structure preserved)
+        if (str_starts_with($path, 'data/img/') || str_starts_with($path, 'data/phim/')) {
+            return asset('storage/' . $path);
+        }
+        
+        // Convert old paths to new paths for compatibility
         $path = old_to_new_path($path);
         
         // Return full URL

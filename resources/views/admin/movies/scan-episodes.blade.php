@@ -1,10 +1,10 @@
-@extends('layouts.admin')
+@extends('admin.layout')
 
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5>Import tập phim từ folder</h5>
+        <h2 class="mb-0">Import tập phim từ folder</h2>
 
-        <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">
+        <a href="{{ route('admin.movies') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Quay lại
         </a>
     </div>

@@ -1,13 +1,9 @@
-@extends('layouts.app')
-
-@php
-    $title = 'Hỗ trợ khách hàng';
-@endphp
+@extends('admin.layout')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5>{{ $title }}</h5>
+        <h2 class="mb-0">Hỗ trợ khách hàng</h2>
     </div>
 
     <!-- Filters -->

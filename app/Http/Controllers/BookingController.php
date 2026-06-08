@@ -25,17 +25,19 @@ class BookingController extends Controller
      */
     public function index(Request $request)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để đặt vé');
-        }
-        
+        // Only require auth for actual booking submission, not for browsing
         $selectedMovieId = $request->input('movie');
         $selectedTheater = $request->input('theater');
         $selectedDate = $request->input('date', date('Y-m-d'));
         $selectedShowtimeId = $request->input('showtime_id');
         
-        // Get all theater movies
-        $allMovies = Movie::where('status', 'Chiếu rạp')->orderBy('title')->get();
+        // Get only movies that have upcoming showtimes (actually showing in theaters)
+        $allMovies = Movie::where('status', 'Chiếu rạp')
+            ->whereHas('showtimes', function($query) {
+                $query->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'));
+            })
+            ->orderBy('title')
+            ->get();
         
         $theaters = [];
         $showtimes = [];
@@ -52,6 +54,13 @@ class BookingController extends Controller
             $showtime = Showtime::with(['movie', 'theater', 'screen'])->find($selectedShowtimeId);
             
             if ($showtime) {
+                // Check if showtime is still valid (not in the past)
+                $showtimeDateTime = $showtime->show_date . ' ' . $showtime->show_time;
+                if ($showtimeDateTime < now()->format('Y-m-d H:i:s')) {
+                    // Showtime has passed, redirect back to movie selection
+                    return redirect()->route('booking.index')->with('error', 'Lịch chiếu đã qua. Vui lòng chọn lịch chiếu khác.');
+                }
+                
                 $selectedMovieId = $showtime->movie_id;
                 $selectedTheater = $showtime->theater_id;
                 $selectedDate = $showtime->show_date;
@@ -67,17 +76,43 @@ class BookingController extends Controller
                     ->toArray();
                 
                 // Get seat layout
-                if ($screenInfo && $screenInfo->seat_layout_config) {
-                    $seatLayout = json_decode($screenInfo->seat_layout_config, true);
+                if ($screenInfo && isset($screenInfo->seat_layout_config)) {
+                    $seatLayoutData = $screenInfo->seat_layout_config;
+                    
+                    // Only decode if it's a string
+                    if (is_string($seatLayoutData) && !empty($seatLayoutData)) {
+                        try {
+                            $decoded = json_decode($seatLayoutData, true);
+                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                $seatLayout = $decoded;
+                            } else {
+                                Log::warning('Invalid JSON in seat_layout_config for screen: ' . $screenInfo->id);
+                                $seatLayout = null;
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('Failed to decode seat layout: ' . $e->getMessage());
+                            $seatLayout = null;
+                        }
+                    } else {
+                        // Not a string or empty
+                        $seatLayout = null;
+                    }
+                } else {
+                    $seatLayout = null;
                 }
+            } else {
+                // Showtime not found, redirect back
+                return redirect()->route('booking.index')->with('error', 'Lịch chiếu không tồn tại.');
             }
         }
         
         // Get theaters for selected movie
         if ($selectedMovieId) {
             $movie = Movie::find($selectedMovieId);
+            
             $theaters = Theater::whereHas('showtimes', function($q) use ($selectedMovieId) {
-                    $q->where('movie_id', $selectedMovieId);
+                    $q->where('movie_id', $selectedMovieId)
+                      ->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'));
                 })->get();
         }
         
@@ -87,6 +122,7 @@ class BookingController extends Controller
                 ->where('movie_id', $selectedMovieId)
                 ->where('theater_id', $selectedTheater)
                 ->where('show_date', $selectedDate)
+                ->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'))
                 ->orderBy('show_time')
                 ->get();
         }
@@ -111,13 +147,117 @@ class BookingController extends Controller
             ];
         });
         
+        // Add selected_movie variable for view
+        $selected_movie = $selectedMovieId;
+        $selected_showtime_id = $selectedShowtimeId;
+        $selected_theater = $selectedTheater;
+        $selected_date = $selectedDate;
+        
         return view('booking.index', compact(
             'allMovies', 'theaters', 'showtimes', 'movie', 'selectedMovieId',
             'selectedTheater', 'selectedDate', 'selectedShowtimeId', 'dates',
             'bookedSeats', 'reservedSeats', 'seatLayout', 'normalPrice', 'vipPrice',
             'couplePrice', 'foodItems', 'screenInfo', 'theaterInfo', 'screenType',
-            'basePrice', 'screenSurcharge'
+            'basePrice', 'screenSurcharge', 'selected_movie', 'selected_showtime_id',
+            'selected_theater', 'selected_date'
         ));
+    }
+    
+    /**
+     * API: Get seat map and booked seats for a showtime
+     */
+    public function getSeatMap(Request $request)
+    {
+        $showtimeId = $request->input('showtime_id');
+        
+        if (!$showtimeId) {
+            return response()->json(['error' => 'Showtime ID required'], 400);
+        }
+        
+        $showtime = Showtime::with('screen')->find($showtimeId);
+        
+        if (!$showtime) {
+            return response()->json(['error' => 'Showtime not found'], 404);
+        }
+        
+        // Get booked seats
+        $bookedSeats = Ticket::where('showtime_id', $showtimeId)
+            ->where('status', 'Đã đặt')
+            ->pluck('seat')
+            ->toArray();
+        
+        // Get seat layout
+        $seatLayout = null;
+        if ($showtime->screen && isset($showtime->screen->seat_layout_config)) {
+            $seatLayoutData = $showtime->screen->seat_layout_config;
+            
+            if (is_string($seatLayoutData)) {
+                try {
+                    $seatLayout = json_decode($seatLayoutData, true);
+                } catch (\Exception $e) {
+                    $seatLayout = null;
+                }
+            } elseif (is_array($seatLayoutData)) {
+                $seatLayout = $seatLayoutData;
+            }
+        }
+        
+        // Calculate prices
+        $basePrice = $showtime->price;
+        $screenType = $showtime->screen->screen_type ?? '2D';
+        $screenSurcharge = $this->getScreenTypeSurcharge($screenType);
+        
+        $normalPrice = $basePrice + $screenSurcharge;
+        $vipPrice = $normalPrice * 1.3;
+        $couplePrice = $normalPrice * 1.5;
+        
+        return response()->json([
+            'layout' => $seatLayout,
+            'bookedSeats' => $bookedSeats,
+            'prices' => [
+                'base' => $basePrice,
+                'normal' => $normalPrice,
+                'vip' => $vipPrice,
+                'couple' => $couplePrice,
+            ],
+            'screen' => [
+                'name' => $showtime->screen->screen_name ?? '',
+                'type' => $screenType,
+            ],
+        ]);
+    }
+    
+    /**
+     * API: Get showtimes by movie, theater, and date
+     */
+    public function getShowtimesByDate(Request $request)
+    {
+        $movieId = $request->input('movie_id');
+        $theaterId = $request->input('theater_id');
+        $date = $request->input('date');
+        
+        if (!$movieId || !$theaterId || !$date) {
+            return response()->json(['showtimes' => []]);
+        }
+        
+        $showtimes = Showtime::with('screen')
+            ->where('movie_id', $movieId)
+            ->where('theater_id', $theaterId)
+            ->where('show_date', $date)
+            ->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'))
+            ->orderBy('show_time')
+            ->get()
+            ->map(function($showtime) {
+                return [
+                    'id' => $showtime->id,
+                    'show_time' => date('H:i', strtotime($showtime->show_time)),
+                    'screen_name' => $showtime->screen->name ?? 'N/A',
+                    'screen_type' => $showtime->screen->screen_type ?? '2D',
+                    'price' => $showtime->price,
+                ];
+            });
+        
+        return response()->json(['showtimes' => $showtimes]);
     }
     
     /**

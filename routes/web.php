@@ -57,7 +57,17 @@ Route::prefix('movies')->name('movies.')->group(function () {
 });
 
 // ==================== BOOKING ROUTES ====================
+// Public booking page (browsing movies and theaters)
+Route::get('/booking', [BookingController::class, 'index'])->name('booking.index');
+
+// API route for getting showtimes (no auth required for browsing)
+Route::get('/api/booking/showtimes', [BookingController::class, 'getShowtimesByDate'])->name('api.booking.showtimes');
+
+// API route for getting seat map
+Route::get('/api/booking/seat-map', [BookingController::class, 'getSeatMap'])->name('api.booking.seatMap');
+
 Route::middleware('auth')->prefix('booking')->name('booking.')->group(function () {
+    Route::post('/process', [BookingController::class, 'processBooking'])->name('processBooking');
     Route::get('/showtime/{showtimeId}', [BookingController::class, 'selectSeats'])->name('selectSeats');
     Route::post('/create', [BookingController::class, 'create'])->name('create');
     Route::get('/{bookingId}/payment', [BookingController::class, 'payment'])->name('payment');
@@ -78,6 +88,8 @@ Route::middleware('auth')->prefix('profile')->name('profile.')->group(function (
     Route::put('/update', [ProfileController::class, 'update'])->name('update');
     Route::put('/update-password', [ProfileController::class, 'updatePassword'])->name('updatePassword');
     Route::post('/upload-avatar', [ProfileController::class, 'uploadAvatar'])->name('uploadAvatar');
+    Route::post('/deposit-vnpay', [ProfileController::class, 'depositVnpay'])->name('depositVnpay');
+    Route::get('/vnpay-deposit-return', [ProfileController::class, 'vnpayDepositReturn'])->name('vnpay-deposit-return');
     Route::get('/bookings', [ProfileController::class, 'bookings'])->name('bookings');
     Route::get('/watch-history', [ProfileController::class, 'watchHistory'])->name('watchHistory');
     Route::get('/subscriptions', [ProfileController::class, 'subscriptions'])->name('subscriptions');
@@ -186,9 +198,25 @@ Route::middleware(['auth', 'moderator'])->prefix('moderator')->name('moderator.'
         Route::delete('/{id}', [ModeratorController::class, 'screensDelete'])->name('destroy');
     });
     
+    // Theater Management
+    Route::get('/theater', [ModeratorController::class, 'theater'])->name('theater');
+    Route::put('/theater', [ModeratorController::class, 'theaterUpdate'])->name('theater.update');
+    
     // Tickets
     Route::get('/tickets', [ModeratorController::class, 'tickets'])->name('tickets');
-    Route::get('/revenue', [ModeratorController::class, 'revenue'])->name('revenue');
+    
+    // Food Items (use admin routes for now)
+    Route::get('/food-items', [AdminController::class, 'foodItems'])->name('foodItems');
+    
+    // Statistics
+    Route::get('/statistics', [ModeratorController::class, 'statistics'])->name('statistics');
+    
+    // Permission Requests
+    Route::get('/permission-requests', [ModeratorController::class, 'permissionRequests'])->name('permissionRequests');
+    Route::post('/permission-requests/handle', [ModeratorController::class, 'handlePermissionRequest'])->name('permissionRequests.handle');
+    
+    // API - Get available time slots
+    Route::get('/api/available-time-slots', [ModeratorController::class, 'getAvailableTimeSlots'])->name('api.availableTimeSlots');
 });
 
 // ==================== COUNTER STAFF ROUTES ====================

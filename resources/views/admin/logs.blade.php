@@ -1,13 +1,9 @@
-@extends('layouts.app')
-
-@php
-    $title = 'Lịch sử hoạt động';
-@endphp
+@extends('admin.layout')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5><i class="fas fa-history"></i> {{ $title }}</h5>
+        <h2 class="mb-0"><i class="fas fa-history"></i> Lịch sử hoạt động</h2>
         <small style="color: #fff;">Xem lịch sử thêm, xóa, cập nhật phim, rạp, bình luận</small>
     </div>
 

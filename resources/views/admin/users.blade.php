@@ -1,16 +1,9 @@
-@extends('layouts.app')
-
-@php
-    $title = 'Quản lý người dùng';
-@endphp
+@extends('admin.layout')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5>{{ $title }}</h5>
-        <a href="{{ route('admin.users.create') ?? url('?route=admin/users/create') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Thêm người dùng
-        </a>
+        <h2 class="mb-0">Quản lý người dùng</h2>
     </div>
 
     <!-- Search -->

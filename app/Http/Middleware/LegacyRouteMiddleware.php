@@ -41,8 +41,8 @@ class LegacyRouteMiddleware
         'auth/resetPassword' => '/forgot-password',
         
         // ==================== BOOKING ====================
-        'booking/index' => '/movies/theater',
-        'booking/selectShowtime' => '/movies/theater',
+        'booking/index' => '/booking',
+        'booking/selectShowtime' => '/booking',
         'booking/selectSeats' => '/booking/showtime/{showtimeId}',
         'booking/selectFood' => '/booking/showtime/{showtimeId}',
         'booking/payment' => '/booking/{bookingId}/payment',
@@ -50,6 +50,7 @@ class LegacyRouteMiddleware
         'booking/confirmation' => '/booking/{bookingId}/confirmation',
         'booking/history' => '/booking/history',
         'booking/ticketDetail' => '/booking/history',
+        'booking/api/showtimes' => '/api/booking/showtimes',
         
         // ==================== PROFILE ====================
         'profile/index' => '/profile',

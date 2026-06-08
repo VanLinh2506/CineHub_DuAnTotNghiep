@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
 {
@@ -168,6 +169,36 @@ class ProfileController extends Controller
         $user->update($data);
         
         return redirect()->route('profile.index')->with('success', 'Cập nhật thông tin thành công!');
+    }
+    
+    /**
+     * Cập nhật mật khẩu
+     */
+    public function updatePassword(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+        
+        $user = Auth::user();
+        
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:6',
+            'confirm_password' => 'required|same:new_password',
+        ]);
+        
+        // Kiểm tra mật khẩu hiện tại
+        if (!Hash::check($request->input('current_password'), $user->password)) {
+            return back()->withErrors(['current_password' => 'Mật khẩu hiện tại không đúng!']);
+        }
+        
+        // Cập nhật mật khẩu mới
+        $user->update([
+            'password' => Hash::make($request->input('new_password'))
+        ]);
+        
+        return redirect()->route('profile.index')->with('success', 'Cập nhật mật khẩu thành công!');
     }
     
     /**
