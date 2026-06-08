@@ -28,4 +28,18 @@ class FoodItem extends Model
     {
         return $query->where('is_active', true);
     }
+
+    // URL Accessor for image
+    public function getImageUrlAttribute()
+    {
+        if (!empty($this->attributes['image'])) {
+            return storage_url($this->attributes['image']);
+        }
+        return asset('images/default-food.png');
+    }
+
+    public function scopeByType($query, $type)
+    {
+        return $query->where('type', $type);
+    }
 }

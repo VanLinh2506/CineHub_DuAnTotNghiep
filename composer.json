@@ -27,7 +27,8 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
-            "app/Helpers/QrCodeHelper.php"
+            "app/Helpers/QrCodeHelper.php",
+            "app/Helpers/StorageHelper.php"
         ]
     },
     "autoload-dev": {

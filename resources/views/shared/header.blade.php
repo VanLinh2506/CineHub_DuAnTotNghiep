@@ -73,14 +73,14 @@
                 <div class="header-left">
 
                     <div class="logo-new">
-                        <a href="{{ url('/') }}">
+                        <a href="{{ route('home') }}">
                             <i class="fas fa-film"></i>
                             <span>CineHub</span>
                         </a>
                     </div>
 
                     <div class="search-bar">
-                        <form method="GET" action="{{ url('/?route=movie/index') }}" class="search-form-inline">
+                        <form method="GET" action="{{ route('movies.index') }}" class="search-form-inline">
 
                             <input type="hidden" name="route" value="movie/index">
 
@@ -100,11 +100,11 @@
 
                 <nav class="nav-new">
 
-                    <a href="{{ url('/?route=movie/index&type=phimle') }}" class="nav-link-new">
+                    <a href="{{ route('movies.phimle') }}" class="nav-link-new">
                         Phim lẻ
                     </a>
 
-                    <a href="{{ url('/?route=movie/index&type=phimbo') }}" class="nav-link-new">
+                    <a href="{{ route('movies.phimbo') }}" class="nav-link-new">
                         Phim bộ
                     </a>
 
@@ -117,7 +117,7 @@
 
                         <div class="dropdown-menu">
                             @foreach($menuCategories as $cat)
-                                <a href="{{ url('/?route=movie/index&category=' . $cat['id']) }}" class="dropdown-item">
+                                <a href="{{ route('movies.category', $cat['id']) }}" class="dropdown-item">
                                     {{ $cat['name'] }}
                                 </a>
                             @endforeach
@@ -134,7 +134,7 @@
 
                         <div class="dropdown-menu">
                             @foreach($countries as $country)
-                                <a href="{{ url('/?route=movie/index&country=' . urlencode($country['country'])) }}"
+                                <a href="{{ route('movies.index', ['country' => $country['country']]) }}"
                                     class="dropdown-item">
                                     {{ $country['country'] }}
                                 </a>
@@ -143,11 +143,11 @@
 
                     </div>
 
-                    <a href="{{ url('/?route=movie/index') }}" class="nav-link-new">
+                    <a href="{{ route('movies.index') }}" class="nav-link-new">
                         Top phim
                     </a>
 
-                    <a href="{{ url('/?route=booking/index') }}" id="booking-link" class="nav-link-new">
+                    <a href="{{ route('movies.theater') }}" id="booking-link" class="nav-link-new">
                         Vé xem phim
                     </a>
 
@@ -158,21 +158,21 @@
                     @if(!empty($user))
 
                         @if($isAdmin)
-                            <a href="{{ url('/?route=admin/index') }}" class="sign-in-btn" style="background-color:#FFFFFF37;">
+                            <a href="{{ route('admin.index') }}" class="sign-in-btn" style="background-color:#FFFFFF37;">
                                 <i class="fas fa-cog"></i>
                                 <span>Admin Panel</span>
                             </a>
 
                         @elseif($isModerator)
 
-                            <a href="{{ url('/?route=moderator/index') }}" class="sign-in-btn">
+                            <a href="{{ route('moderator.index') }}" class="sign-in-btn">
                                 <i class="fas fa-building"></i>
                                 <span>Quản lý rạp</span>
                             </a>
 
                         @endif
 
-                        <a href="{{ url('/?route=profile/index') }}" class="sign-in-btn">
+                        <a href="{{ route('profile.index') }}" class="sign-in-btn">
 
                             <i class="fas fa-user"></i>
                             <span>{{ $user['name'] }}</span>
@@ -201,7 +201,7 @@
             <div class="mobile-header-container">
 
                 <div class="logo-new">
-                    <a href="{{ url('/') }}">
+                    <a href="{{ route('home') }}">
                         <i class="fas fa-film"></i>
                         <span>CineHub</span>
                     </a>
@@ -234,18 +234,18 @@
                 <span>Menu</span>
             </button>
 
-            <a href="{{ url('/?route=movie/index') }}" class="mobile-nav-item">
+            <a href="{{ route('movies.index') }}" class="mobile-nav-item">
                 <i class="fas fa-search"></i>
                 <span>Tìm kiếm</span>
             </a>
 
-            <a href="{{ url('/') }}" class="mobile-nav-item mobile-nav-home">
+            <a href="{{ route('home') }}" class="mobile-nav-item mobile-nav-home">
                 <i class="fas fa-home"></i>
                 <span>Trang chủ</span>
             </a>
 
             @if(!empty($user))
-                <a href="{{ url('/?route=profile/index') }}" class="mobile-nav-item">
+                <a href="{{ route('profile.index') }}" class="mobile-nav-item">
                     <i class="fas fa-user"></i>
                     <span>Tài khoản</span>
                 </a>
@@ -307,7 +307,7 @@
             <!-- Search -->
             <div class="mobile-menu-search">
 
-                <form method="GET" action="{{ url('/?route=movie/index') }}">
+                <form method="GET" action="{{ route('movies.index') }}">
 
                     <input type="hidden" name="route" value="movie/index">
 
@@ -326,7 +326,7 @@
 
                 <div class="mobile-menu-section">
 
-                    <a href="{{ url('/?route=movie/index&type=phimle') }}" class="mobile-menu-link"
+                    <a href="{{ route('movies.phimle') }}" class="mobile-menu-link"
                         onclick="closeMobileMenu()">
 
                         <i class="fas fa-film"></i>
@@ -334,7 +334,7 @@
 
                     </a>
 
-                    <a href="{{ url('/?route=movie/index&type=phimbo') }}" class="mobile-menu-link"
+                    <a href="{{ route('movies.phimbo') }}" class="mobile-menu-link"
                         onclick="closeMobileMenu()">
 
                         <i class="fas fa-tv"></i>
@@ -342,14 +342,14 @@
 
                     </a>
 
-                    <a href="{{ url('/?route=movie/index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+                    <a href="{{ route('movies.index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
 
                         <i class="fas fa-star"></i>
                         <span>Top phim</span>
 
                     </a>
 
-                    <a href="{{ url('/?route=booking/index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+                    <a href="{{ route('movies.theater') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
 
                         <i class="fas fa-ticket-alt"></i>
                         <span>Vé xem phim</span>
@@ -369,7 +369,7 @@
 
                         @foreach(array_slice($menuCategories, 0, 8) as $cat)
 
-                            <a href="{{ url('/?route=movie/index&category=' . $cat['id']) }}" class="mobile-menu-tag"
+                            <a href="{{ route('movies.category', $cat['id']) }}" class="mobile-menu-tag"
                                 onclick="closeMobileMenu()">
 
                                 {{ $cat['name'] }}
@@ -393,7 +393,7 @@
 
                         @foreach(array_slice($countries, 0, 6) as $country)
 
-                            <a href="{{ url('/?route=movie/index&country=' . urlencode($country['country'])) }}"
+                            <a href="{{ route('movies.index', ['country' => $country['country']]) }}"
                                 class="mobile-menu-tag" onclick="closeMobileMenu()">
 
                                 {{ $country['country'] }}
@@ -414,14 +414,14 @@
                             Tài khoản
                         </div>
 
-                        <a href="{{ url('/?route=profile/index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+                        <a href="{{ route('profile.index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
 
                             <i class="fas fa-user-circle"></i>
                             <span>Hồ sơ của tôi</span>
 
                         </a>
 
-                        <a href="{{ url('/?route=booking/myTickets') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+                        <a href="{{ route('booking.history') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
 
                             <i class="fas fa-ticket-alt"></i>
                             <span>Vé của tôi</span>
@@ -430,7 +430,7 @@
 
                         @if($isAdmin)
 
-                            <a href="{{ url('/?route=admin/index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+                            <a href="{{ route('admin.index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
 
                                 <i class="fas fa-cog"></i>
                                 <span>Admin Panel</span>
@@ -439,7 +439,7 @@
 
                         @elseif($isModerator)
 
-                            <a href="{{ url('/?route=moderator/index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+                            <a href="{{ route('moderator.index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
 
                                 <i class="fas fa-building"></i>
                                 <span>Quản lý rạp</span>
@@ -448,7 +448,7 @@
 
                         @endif
 
-                        <a href="{{ url('/?route=auth/logout') }}" class="mobile-menu-link mobile-menu-logout"
+                        <a href="{{ route('logout') }}" class="mobile-menu-link mobile-menu-logout"
                             onclick="closeMobileMenu()">
 
                             <i class="fas fa-sign-out-alt"></i>
@@ -602,7 +602,7 @@
                 <div id="loginError" class="alert alert-danger" style="display:none;">
                 </div>
 
-                <form id="loginForm" method="POST" action="{{ url('/?route=auth/login') }}">
+                <form id="loginForm" method="POST" action="{{ route('login') }}">
 
                     @csrf
 
@@ -655,7 +655,7 @@
                 <div id="registerError" class="alert alert-danger" style="display:none;">
                 </div>
 
-                <form id="registerForm" method="POST" action="{{ url('/?route=auth/register') }}">
+                <form id="registerForm" method="POST" action="{{ route('register') }}">
 
                     @csrf
 

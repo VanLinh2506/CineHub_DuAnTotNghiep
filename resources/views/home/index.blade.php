@@ -108,7 +108,7 @@
     <section class="movies-section">
         <div class="section-header">
             <h2 class="section-title">Phim mới cập nhật</h2>
-            <a href="{{ url('/?route=movie/index') }}" class="view-all-link">Xem tất cả</a>
+            <a href="{{ route('movies.index') }}" class="view-all-link">Xem tất cả</a>
         </div>
         <div class="movies-grid">
             @foreach ($newMovies as $movie)
@@ -122,7 +122,7 @@
     <section class="movies-section">
         <div class="section-header">
             <h2 class="section-title">Phim được đánh giá cao</h2>
-            <a href="{{ url('/?route=movie/index') }}" class="view-all-link">Xem tất cả</a>
+            <a href="{{ route('movies.index') }}" class="view-all-link">Xem tất cả</a>
         </div>
         <div class="movies-grid">
             @foreach ($topRatedMovies as $movie)
@@ -136,7 +136,7 @@
     <section class="movies-section">
         <div class="section-header">
             <h2 class="section-title">Phim bộ nổi bật</h2>
-            <a href="{{ url('/?route=movie/index&type=phimbo') }}" class="view-all-link">Xem tất cả</a>
+            <a href="{{ route('movies.phimbo') }}" class="view-all-link">Xem tất cả</a>
         </div>
         <div class="movies-grid">
             @foreach ($tvSeriesMovies as $movie)

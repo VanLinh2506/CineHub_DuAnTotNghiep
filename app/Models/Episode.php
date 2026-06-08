@@ -33,4 +33,15 @@ class Episode extends Model
     {
         return $query->where('movie_id', $movieId);
     }
+
+    // URL Accessor for video
+    public function getVideoUrlFullAttribute()
+    {
+        return storage_url($this->attributes['video_url'] ?? null);
+    }
+
+    public function hasVideo(): bool
+    {
+        return !empty($this->attributes['video_url']);
+    }
 }

@@ -43,7 +43,7 @@
                                  style="background: {{ $notification['is_read'] ? 'rgba(255, 255, 255, 0.05)' : 'rgba(229, 9, 20, 0.1)' }}; 
                                         border: 1px solid {{ $notification['is_read'] ? 'rgba(255, 255, 255, 0.1)' : 'rgba(229, 9, 20, 0.3)' }}; 
                                         cursor: pointer;"
-                                 onclick="window.location.href='{{ $notification['link'] ? $notification['link'] : url('/?route=notifications/index') }}'; markAsRead({{ $notification['id'] }});">
+                                 onclick="window.location.href='{{ $notification['link'] ? $notification['link'] : route('notifications.index') }}'; markAsRead({{ $notification['id'] }});">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div class="flex-grow-1">

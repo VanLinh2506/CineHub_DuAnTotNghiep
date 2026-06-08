@@ -29,11 +29,11 @@
             <div class="footer-section">
                 <h3 class="footer-title">Danh mục</h3>
                 <ul class="footer-links">
-                    <li><a href="{{ url('/?route=movie/index') }}">Phim mới</a></li>
-                    <li><a href="{{ url('/?route=movie/index') }}">Phim hot</a></li>
-                    <li><a href="{{ url('/?route=movie/index&type=phimle') }}">Phim lẻ</a></li>
-                    <li><a href="{{ url('/?route=movie/index&type=phimbo') }}">Phim bộ</a></li>
-                    <li><a href="{{ url('/?route=movie/index') }}">Phim hoạt hình</a></li>
+                    <li><a href="{{ route('movies.index') }}">Phim mới</a></li>
+                    <li><a href="{{ route('movies.index') }}">Phim hot</a></li>
+                    <li><a href="{{ route('movies.phimle') }}">Phim lẻ</a></li>
+                    <li><a href="{{ route('movies.phimbo') }}">Phim bộ</a></li>
+                    <li><a href="{{ route('movies.index') }}">Phim hoạt hình</a></li>
                 </ul>
             </div>
             
@@ -44,7 +44,7 @@
                         $categories = \App\Models\Category::limit(5)->get();
                     @endphp
                     @foreach($categories as $index => $category)
-                        <li><a href="{{ url('/?route=movie/index&category=' . $category->id) }}">{{ $category->name }}</a></li>
+                        <li><a href="{{ route('movies.category', $category->id) }}">{{ $category->name }}</a></li>
                     @endforeach
                 </ul>
             </div>
@@ -56,7 +56,7 @@
                     <li><a href="#">Điều khoản sử dụng</a></li>
                     <li><a href="#">Chính sách bảo mật</a></li>
                     <li><a href="#">Liên hệ</a></li>
-                    <li><a href="{{ url('/?route=booking/index') }}">Đặt vé xem phim</a></li>
+                    <li><a href="{{ route('movies.theater') }}">Đặt vé xem phim</a></li>
                 </ul>
             </div>
         </div>

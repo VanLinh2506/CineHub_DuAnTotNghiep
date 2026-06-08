@@ -101,4 +101,36 @@ class Movie extends Model
     {
         return in_array($this->type, ['phimle', 'phim lẻ', null]);
     }
+
+    // URL Accessors for storage files
+    public function getThumbnailUrlAttribute()
+    {
+        return storage_url($this->attributes['thumbnail'] ?? null);
+    }
+
+    public function getBannerUrlAttribute()
+    {
+        return storage_url($this->attributes['banner'] ?? null);
+    }
+
+    public function getVideoUrlFullAttribute()
+    {
+        return storage_url($this->attributes['video_url'] ?? null);
+    }
+
+    public function getTrailerUrlFullAttribute()
+    {
+        return storage_url($this->attributes['trailer_url'] ?? null);
+    }
+
+    // Additional helper methods
+    public function hasTrailer(): bool
+    {
+        return !empty($this->attributes['trailer_url']);
+    }
+
+    public function hasVideo(): bool
+    {
+        return !empty($this->attributes['video_url']);
+    }
 }

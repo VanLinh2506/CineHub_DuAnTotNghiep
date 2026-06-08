@@ -92,6 +92,11 @@ class User extends Authenticatable
         return $this->hasMany(UserToken::class);
     }
 
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class, 'user_id');
+    }
+
     // Helper methods
     public function addPoints($points)
     {
@@ -106,5 +111,48 @@ class User extends Authenticatable
             return $this->points;
         }
         return false;
+    }
+
+    // URL Accessor for avatar
+    public function getAvatarUrlAttribute()
+    {
+        if (!empty($this->attributes['avatar'])) {
+            return storage_url($this->attributes['avatar']);
+        }
+        return asset('images/default-avatar.png');
+    }
+
+    // Check roles
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin' || 
+               $this->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists();
+    }
+
+    public function isModerator(): bool
+    {
+        return $this->role === 'moderator' || 
+               !empty($this->theater_id);
+    }
+
+    public function isCounterStaff(): bool
+    {
+        return $this->role === 'counter_staff';
+    }
+
+    public function hasRole($roleName): bool
+    {
+        // Check in role column first
+        if ($this->role === $roleName) {
+            return true;
+        }
+        
+        // Check in roles relationship
+        return $this->roles()->where('name', $roleName)->exists();
+    }
+
+    public function hasSubscription(): bool
+    {
+        return !empty($this->subscription_id);
     }
 }

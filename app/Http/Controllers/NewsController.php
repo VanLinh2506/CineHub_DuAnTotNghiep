@@ -2,36 +2,57 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\NewsService;
+use App\Models\News;
+use App\Models\NewsCategory;
 use Illuminate\Http\Request;
 
 class NewsController extends Controller
 {
-    public function __construct(protected NewsService $news) {}
-
-    /**
-     * Danh sách tin tức
-     * GET /tin-tuc
-     */
-    public function index(Request $request)
+    public function index()
     {
-        $categoryId = $request->query('category');
+        $news = News::with('category')
+            ->where('status', 'published')
+            ->orderByDesc('published_at')
+            ->paginate(12);
 
-        $posts      = $this->news->getPublished(12, $categoryId);
-        $categories = $this->news->getCategories();
+        $categories = NewsCategory::withCount('news')->get();
 
-        return view('news.index', compact('posts', 'categories', 'categoryId'));
+        return view('news.index', compact('news', 'categories'));
     }
 
-    /**
-     * Chi tiết bài viết
-     * GET /tin-tuc/{slug}
-     */
-    public function show(string $slug)
+    public function category($categoryId)
     {
-        $post    = $this->news->getBySlug($slug);
-        $related = $this->news->getRelated($post);
+        $category = NewsCategory::findOrFail($categoryId);
+        
+        $news = News::with('category')
+            ->where('category_id', $categoryId)
+            ->where('status', 'published')
+            ->orderByDesc('published_at')
+            ->paginate(12);
 
-        return view('news.show', compact('post', 'related'));
+        $categories = NewsCategory::withCount('news')->get();
+
+        return view('news.category', compact('news', 'category', 'categories'));
+    }
+
+    public function show($slug)
+    {
+        $newsItem = News::with('category')
+            ->where('slug', $slug)
+            ->where('status', 'published')
+            ->firstOrFail();
+
+        // Increment views
+        $newsItem->increment('views');
+
+        // Get related news
+        $relatedNews = News::where('category_id', $newsItem->category_id)
+            ->where('id', '!=', $newsItem->id)
+            ->where('status', 'published')
+            ->orderByDesc('published_at')
+            ->limit(4)
+            ->get();
+
+        return view('news.show', compact('newsItem', 'relatedNews'));
     }
 }

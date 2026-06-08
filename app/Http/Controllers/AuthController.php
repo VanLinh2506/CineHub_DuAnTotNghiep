@@ -3,51 +3,58 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\UserToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+    public function showLogin()
     {
         if (Auth::check()) {
-            if ($request->ajax()) {
-                return response()->json(['success' => true, 'redirect' => route('home')]);
-            }
             return redirect()->route('home');
         }
-        
+        return view('auth.login');
+    }
+    
+    public function showRegister()
+    {
+        if (Auth::check()) {
+            return redirect()->route('home');
+        }
+        return view('auth.register');
+    }
+    
+    public function showForgotPassword()
+    {
+        return view('auth.forgot-password');
+    }
+    
+    public function sendResetLink(Request $request)
+    {
+        // TODO: Implement password reset functionality
+        return back()->with('success', 'Liên kết đặt lại mật khẩu đã được gửi đến email của bạn!');
+    }
+    
+    public function login(Request $request)
+    {
         if ($request->isMethod('post')) {
             $request->validate([
                 'email' => 'required|email',
                 'password' => 'required',
             ]);
             
-            $email = $request->input('email');
-            $password = $request->input('password');
+            $credentials = [
+                'email' => $request->input('email'),
+                'password' => $request->input('password'),
+            ];
             
-            $user = User::where('email', $email)->first();
+            $remember = $request->has('remember_me');
             
-            if ($user && Hash::check($password, $user->password)) {
-                Auth::login($user);
+            if (Auth::attempt($credentials, $remember)) {
+                $request->session()->regenerate();
                 
-                // Tạo token cho user
-                $deviceInfo = $request->header('User-Agent');
-                $ipAddress = $request->ip();
-                $token = Str::random(64);
-                
-                UserToken::create([
-                    'user_id' => $user->id,
-                    'token' => $token,
-                    'device_info' => $deviceInfo,
-                    'ip_address' => $ipAddress,
-                    'expires_at' => now()->addDays(30),
-                ]);
-                
-                session(['auth_token' => $token]);
+                $user = Auth::user();
                 
                 // Kiểm tra admin
                 $isAdmin = $user->role === 'admin' || 
@@ -60,16 +67,17 @@ class AuthController extends Controller
                     ]);
                 }
                 
-                return $isAdmin ? redirect()->route('admin.index') : redirect()->route('home');
-            } else {
-                $error = 'Email hoặc mật khẩu không đúng!';
-                
-                if ($request->ajax()) {
-                    return response()->json(['success' => false, 'error' => $error]);
-                }
-                
-                return redirect()->route('home')->with('error', $error);
+                return redirect()->intended($isAdmin ? route('admin.index') : route('home'))
+                    ->with('success', 'Đăng nhập thành công!');
             }
+            
+            $error = 'Email hoặc mật khẩu không đúng!';
+            
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'error' => $error]);
+            }
+            
+            return back()->withErrors(['email' => $error])->withInput($request->only('email'));
         }
         
         return redirect()->route('home');
@@ -77,13 +85,6 @@ class AuthController extends Controller
     
     public function register(Request $request)
     {
-        if (Auth::check()) {
-            if ($request->ajax()) {
-                return response()->json(['success' => true, 'redirect' => route('home')]);
-            }
-            return redirect()->route('home');
-        }
-        
         if ($request->isMethod('post')) {
             $request->validate([
                 'name' => 'required|string|max:255',
@@ -100,21 +101,7 @@ class AuthController extends Controller
             ]);
             
             Auth::login($user);
-            
-            // Tạo token
-            $deviceInfo = $request->header('User-Agent');
-            $ipAddress = $request->ip();
-            $token = Str::random(64);
-            
-            UserToken::create([
-                'user_id' => $user->id,
-                'token' => $token,
-                'device_info' => $deviceInfo,
-                'ip_address' => $ipAddress,
-                'expires_at' => now()->addDays(30),
-            ]);
-            
-            session(['auth_token' => $token]);
+            $request->session()->regenerate();
             
             if ($request->ajax()) {
                 return response()->json(['success' => true, 'redirect' => route('home')]);
@@ -128,11 +115,6 @@ class AuthController extends Controller
     
     public function logout(Request $request)
     {
-        $token = session('auth_token');
-        if ($token) {
-            UserToken::where('token', $token)->delete();
-        }
-        
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -142,10 +124,6 @@ class AuthController extends Controller
     
     public function logoutAll(Request $request)
     {
-        if (Auth::check()) {
-            UserToken::where('user_id', Auth::id())->delete();
-        }
-        
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
