@@ -188,7 +188,9 @@
     function openAuthModal(tab) {
         const modal = document.getElementById('authModal');
         if (modal) {
+            modal.style.display = 'flex';
             modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
             switchAuthTab(tab);
         }
     }
@@ -197,6 +199,10 @@
         const modal = document.getElementById('authModal');
         if (modal) {
             modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }, 300);
         }
     }
     
@@ -204,17 +210,22 @@
         const loginTab = document.getElementById('loginTab');
         const registerTab = document.getElementById('registerTab');
         const tabs = document.querySelectorAll('.auth-tab');
+        const isLogin = tab === 'login';
         
-        if (tab === 'login') {
-            if (loginTab) loginTab.style.display = 'block';
-            if (registerTab) registerTab.style.display = 'none';
-        } else {
-            if (loginTab) loginTab.style.display = 'none';
-            if (registerTab) registerTab.style.display = 'block';
+        if (loginTab) {
+            loginTab.style.display = isLogin ? 'block' : 'none';
+            loginTab.classList.toggle('active', isLogin);
+        }
+
+        if (registerTab) {
+            registerTab.style.display = isLogin ? 'none' : 'block';
+            registerTab.classList.toggle('active', !isLogin);
         }
         
         tabs.forEach(t => t.classList.remove('active'));
-        event.target.classList.add('active');
+        if (tabs.length >= 2) {
+            tabs[isLogin ? 0 : 1].classList.add('active');
+        }
     }
     
     function closeAlertModal() {

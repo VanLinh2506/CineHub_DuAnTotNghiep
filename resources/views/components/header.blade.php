@@ -96,7 +96,7 @@
                     <span>{{ $user->name }}</span>
                 </a>
             @else
-                <a href="{{ route('login') }}" class="sign-in-btn">
+                <a href="{{ route('login') }}" class="sign-in-btn" data-auth-trigger="login" onclick="event.preventDefault(); openAuthModal('login'); return false;">
                     <i class="fas fa-user"></i>
                     <span>Login</span>
                     <i class="fas fa-arrow-right"></i>
@@ -145,7 +145,7 @@
             <span>Tài khoản</span>
         </a>
     @else
-        <a href="{{ route('login') }}" class="mobile-nav-item">
+        <a href="{{ route('login') }}" class="mobile-nav-item" data-auth-trigger="login" onclick="event.preventDefault(); openAuthModal('login'); return false;">
             <i class="fas fa-user"></i>
             <span>Đăng nhập</span>
         </a>
@@ -266,11 +266,11 @@
             </div>
         @else
             <div class="mobile-menu-section">
-                <a href="{{ route('login') }}" class="mobile-menu-link mobile-menu-login" onclick="closeMobileMenu()">
+                <a href="{{ route('login') }}" class="mobile-menu-link mobile-menu-login" data-auth-trigger="login" data-close-mobile-menu="true" onclick="event.preventDefault(); closeMobileMenu(); openAuthModal('login'); return false;">
                     <i class="fas fa-sign-in-alt"></i>
                     <span>Đăng nhập</span>
                 </a>
-                <a href="{{ route('register') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+                <a href="{{ route('register') }}" class="mobile-menu-link" data-auth-trigger="register" data-close-mobile-menu="true" onclick="event.preventDefault(); closeMobileMenu(); openAuthModal('register'); return false;">
                     <i class="fas fa-user-plus"></i>
                     <span>Đăng ký</span>
                 </a>
@@ -610,6 +610,7 @@
 function openAuthModal(tab) {
     const modal = document.getElementById('authModal');
     if (modal) {
+        modal.style.display = 'flex';
         modal.classList.add('show');
         document.body.style.overflow = 'hidden';
         if (tab) {
@@ -622,7 +623,10 @@ function closeAuthModal() {
     const modal = document.getElementById('authModal');
     if (modal) {
         modal.classList.remove('show');
-        document.body.style.overflow = '';
+        setTimeout(() => {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }, 300);
     }
 }
 
@@ -634,11 +638,15 @@ function switchAuthTab(tab) {
     if (tab === 'login') {
         loginTab.style.display = 'block';
         registerTab.style.display = 'none';
+        loginTab.classList.add('active');
+        registerTab.classList.remove('active');
         tabs[0].classList.add('active');
         tabs[1].classList.remove('active');
     } else if (tab === 'register') {
         loginTab.style.display = 'none';
         registerTab.style.display = 'block';
+        loginTab.classList.remove('active');
+        registerTab.classList.add('active');
         tabs[0].classList.remove('active');
         tabs[1].classList.add('active');
     }
@@ -732,6 +740,21 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    document.querySelectorAll('[data-auth-trigger]').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            const tab = this.getAttribute('data-auth-trigger');
+
+            if (this.getAttribute('data-close-mobile-menu') === 'true') {
+                closeMobileMenu();
+            }
+
+            if (typeof openAuthModal === 'function') {
+                e.preventDefault();
+                openAuthModal(tab || 'login');
+            }
+        });
+    });
     
     // Auto open modal if redirected from login/register route
     @if(session('openAuthModal'))
