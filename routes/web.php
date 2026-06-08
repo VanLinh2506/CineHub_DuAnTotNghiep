@@ -1,25 +1,33 @@
 <?php
 
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\BookingController;
-use App\Http\Controllers\NewsController;
-use Illuminate\Support\Facades\Route;
 
-// Trang chủ
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\MovieController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ModeratorController;
+use App\Http\Controllers\CounterStaffController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
+
+// Home
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Booking
-Route::middleware('auth')->group(function () {
-    Route::get('/booking', [BookingController::class, 'index'])->name('booking.index');
-    Route::post('/booking/process', [BookingController::class, 'processBooking'])->name('booking.process');
-    Route::get('/booking/my-tickets', [BookingController::class, 'myTickets'])->name('booking.my-tickets');
-    Route::get('/booking/ticket/{bookingId}', [BookingController::class, 'viewTicket'])->name('booking.view-ticket');
-});
 
-// VNPay callback (không cần auth)
-Route::get('/booking/vnpay-return', [BookingController::class, 'vnpayReturn'])->name('booking.vnpay-return');
-
-// Routes cũ (PHP thuần) - giữ lại để chuyển đổi dần
 Route::get('/old', function () {
     return view('welcome');
 });
