@@ -351,7 +351,7 @@ class MovieController extends Controller
         // Save watch history
         WatchHistory::updateOrCreate(
             ['user_id' => $user->id, 'movie_id' => $movie->id],
-            ['created_at' => now()]
+            ['created_at' => now(), 'updated_at' => now()]
         );
         
         // Get episode if phim bộ

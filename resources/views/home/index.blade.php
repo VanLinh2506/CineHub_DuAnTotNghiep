@@ -73,7 +73,7 @@
                                         
                                         <!-- Action Buttons -->
                                         <div class="hero-actions">
-                                            <a href="{{ url('?route=movie/watch&id=' . $featuredMovie->id) }}" class="btn-play-large">
+                                            <a href="{{ route('movies.watch', $featuredMovie->id) }}" class="btn-play-large">
                                                 <i class="fas fa-play"></i>
                                             </a>
                                             <button class="btn-action-icon" title="Yêu thích">
@@ -104,42 +104,56 @@
 
 <!-- Movie Grid Sections -->
 <div class="container">
-    @if (!empty($newMovies))
+    @if (!empty($latestMovies))
     <section class="movies-section">
         <div class="section-header">
             <h2 class="section-title">Phim mới cập nhật</h2>
             <a href="{{ route('movies.index') }}" class="view-all-link">Xem tất cả</a>
         </div>
         <div class="movies-grid">
-            @foreach ($newMovies as $movie)
+            @foreach ($latestMovies as $movie)
                 @include('components.movie-card', ['movie' => $movie])
             @endforeach
         </div>
     </section>
     @endif
     
-    @if (!empty($topRatedMovies))
+    @if (!empty($phimLe))
     <section class="movies-section">
         <div class="section-header">
-            <h2 class="section-title">Phim được đánh giá cao</h2>
-            <a href="{{ route('movies.index') }}" class="view-all-link">Xem tất cả</a>
+            <h2 class="section-title">Phim lẻ nổi bật</h2>
+            <a href="{{ route('movies.index') }}?type=phimle" class="view-all-link">Xem tất cả</a>
         </div>
         <div class="movies-grid">
-            @foreach ($topRatedMovies as $movie)
+            @foreach ($phimLe as $movie)
                 @include('components.movie-card', ['movie' => $movie])
             @endforeach
         </div>
     </section>
     @endif
     
-    @if (!empty($tvSeriesMovies))
+    @if (!empty($phimBo))
     <section class="movies-section">
         <div class="section-header">
             <h2 class="section-title">Phim bộ nổi bật</h2>
-            <a href="{{ route('movies.phimbo') }}" class="view-all-link">Xem tất cả</a>
+            <a href="{{ route('movies.index') }}?type=phimbo" class="view-all-link">Xem tất cả</a>
         </div>
         <div class="movies-grid">
-            @foreach ($tvSeriesMovies as $movie)
+            @foreach ($phimBo as $movie)
+                @include('components.movie-card', ['movie' => $movie])
+            @endforeach
+        </div>
+    </section>
+    @endif
+    
+    @if (!empty($topMoviesWeek))
+    <section class="movies-section">
+        <div class="section-header">
+            <h2 class="section-title">Top phim xem nhiều trong tuần</h2>
+            <a href="{{ route('movies.index') }}" class="view-all-link">Xem tất cả</a>
+        </div>
+        <div class="movies-grid">
+            @foreach ($topMoviesWeek as $movie)
                 @include('components.movie-card', ['movie' => $movie])
             @endforeach
         </div>

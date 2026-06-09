@@ -173,9 +173,8 @@ class BookingController extends Controller
         $userLat = session('user_latitude');
         $userLng = session('user_longitude');
         
-        // Get only movies with upcoming showtimes
-        $allMovies = Movie::where('status', 'Chiếu rạp')
-            ->whereHas('showtimes', function($query) {
+        // Get only movies with upcoming showtimes (phim đang chiếu = phim có suất chiếu trong tương lai)
+        $allMovies = Movie::whereHas('showtimes', function($query) {
                 $query->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'));
             })
             ->orderBy('title')
@@ -375,9 +374,25 @@ class BookingController extends Controller
         $theaterId = $request->input('theater_id');
         $date = $request->input('date');
         
+        Log::info('GetShowtimesByDate called', [
+            'movie_id' => $movieId,
+            'theater_id' => $theaterId,
+            'date' => $date,
+            'now' => now()->format('Y-m-d H:i:s')
+        ]);
+        
         if (!$movieId || !$theaterId || !$date) {
-            return response()->json(['showtimes' => []]);
+            Log::warning('Missing parameters for getShowtimesByDate');
+            return response()->json(['showtimes' => [], 'error' => 'Missing parameters']);
         }
+        
+        // Debug: Check total showtimes in DB
+        $totalShowtimes = Showtime::where('movie_id', $movieId)
+            ->where('theater_id', $theaterId)
+            ->where('show_date', $date)
+            ->count();
+        
+        Log::info('Total showtimes for date (before time filter)', ['count' => $totalShowtimes]);
         
         $showtimes = Showtime::with('screen')
             ->where('movie_id', $movieId)
@@ -385,18 +400,26 @@ class BookingController extends Controller
             ->where('show_date', $date)
             ->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'))
             ->orderBy('show_time')
-            ->get()
-            ->map(function($showtime) {
-                return [
-                    'id' => $showtime->id,
-                    'show_time' => date('H:i', strtotime($showtime->show_time)),
-                    'screen_name' => $showtime->screen->name ?? 'N/A',
-                    'screen_type' => $showtime->screen->screen_type ?? '2D',
-                    'price' => $showtime->price,
-                ];
-            });
+            ->get();
         
-        return response()->json(['showtimes' => $showtimes]);
+        Log::info('Showtimes after time filter', [
+            'count' => $showtimes->count(),
+            'showtimes' => $showtimes->pluck('id', 'show_time')
+        ]);
+        
+        $result = $showtimes->map(function($showtime) {
+            return [
+                'id' => $showtime->id,
+                'show_time' => date('H:i', strtotime($showtime->show_time)),
+                'screen_name' => $showtime->screen->screen_name ?? 'N/A',
+                'screen_type' => $showtime->screen->screen_type ?? '2D',
+                'price' => $showtime->price,
+            ];
+        });
+        
+        Log::info('Returning showtimes', ['count' => $result->count()]);
+        
+        return response()->json(['showtimes' => $result]);
     }
     
     /**
