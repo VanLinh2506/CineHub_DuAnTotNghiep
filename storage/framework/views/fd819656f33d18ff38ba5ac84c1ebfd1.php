@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 // Early declaration - available immediately
 window.selectTheaterDirect = function(theaterId) {
@@ -96,171 +94,173 @@ function doSelectTheater(theaterId) {
     }
 }
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@php
+<?php
     $title = 'Đặt Vé Xem Phim';
     $meta_description = isset($movie) ? 'Đặt vé xem phim ' . $movie->title . ' tại CineHub. Chọn rạp, ngày, giờ và ghế ngồi phù hợp cho bạn.' : 'Đặt vé xem phim tại CineHub.';
     $meta_keywords = 'đặt vé xem phim, vé xem phim online, mua vé xem phim, CineHub';
     $meta_og_title = $title . ' - CineHub';
     $meta_og_description = $meta_description;
-@endphp
+?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <section class="booking-page-section">
     <div class="container-fluid px-4">
         <div class="row g-4">
             <!-- Left Column: Movie Info -->
             <div class="col-lg-5">
-                @if (isset($movie))
+                <?php if(isset($movie)): ?>
                     <article class="booking-movie-info" itemscope itemtype="https://schema.org/Movie" style="position: sticky; top: 20px;">
                         <!-- Movie Poster -->
                         <div class="movie-poster-large mb-4">
-                            @if ($movie->thumbnail)
+                            <?php if($movie->thumbnail): ?>
                                 <img id="img-moviee" 
-                                     src="{{ $movie->thumbnail }}" 
-                                     alt="{{ $movie->title }}" 
+                                     src="<?php echo e($movie->thumbnail); ?>" 
+                                     alt="<?php echo e($movie->title); ?>" 
                                      class="img-fluid rounded"
                                      itemprop="image"
                                      style="max-height: 500px; width: 100%; object-fit: cover;">
-                            @else
+                            <?php else: ?>
                                 <div class="poster-placeholder">
                                     <i class="fas fa-film fa-5x"></i>
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         <div class="background_film_blur">
-                            <img src="{{ $movie->thumbnail ?? '' }}" alt="">
+                            <img src="<?php echo e($movie->thumbnail ?? ''); ?>" alt="">
                         </div>
                         
                         <!-- Movie Title -->
-                        <h1 class="booking-movie-title" itemprop="name">{{ $movie->title }}</h1>
+                        <h1 class="booking-movie-title" itemprop="name"><?php echo e($movie->title); ?></h1>
                         
                         <!-- Movie Details -->
                         <div class="booking-movie-details">
-                            @if ($movie->rating)
+                            <?php if($movie->rating): ?>
                                 <div class="detail-item">
                                     <span class="detail-label">Đánh giá:</span>
                                     <span class="detail-value">
                                         <i class="fas fa-star"></i>
-                                        {{ number_format($movie->rating, 1) }}/10
+                                        <?php echo e(number_format($movie->rating, 1)); ?>/10
                                     </span>
                                 </div>
-                            @endif
+                            <?php endif; ?>
                             
-                            @if ($movie->duration)
+                            <?php if($movie->duration): ?>
                                 <div class="detail-item">
                                     <span class="detail-label">Thời lượng:</span>
-                                    <span class="detail-value">{{ floor($movie->duration / 60) }}h {{ $movie->duration % 60 }}m</span>
+                                    <span class="detail-value"><?php echo e(floor($movie->duration / 60)); ?>h <?php echo e($movie->duration % 60); ?>m</span>
                                 </div>
-                            @endif
+                            <?php endif; ?>
                             
-                            @if ($movie->category)
+                            <?php if($movie->category): ?>
                                 <div class="detail-item">
                                     <span class="detail-label">Thể loại:</span>
-                                    <span class="detail-value">{{ $movie->category->name }}</span>
+                                    <span class="detail-value"><?php echo e($movie->category->name); ?></span>
                                 </div>
-                            @endif
+                            <?php endif; ?>
                             
-                            @if ($movie->country)
+                            <?php if($movie->country): ?>
                                 <div class="detail-item">
                                     <span class="detail-label">Quốc gia:</span>
-                                    <span class="detail-value">{{ $movie->country }}</span>
+                                    <span class="detail-value"><?php echo e($movie->country); ?></span>
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         
                         <!-- Movie Description -->
-                        @if ($movie->description)
+                        <?php if($movie->description): ?>
                             <div class="booking-movie-description">
                                 <h3>Mô tả</h3>
-                                <p itemprop="description">{{ $movie->description }}</p>
+                                <p itemprop="description"><?php echo e($movie->description); ?></p>
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </article>
-                @else
+                <?php else: ?>
                     <div class="alert alert-warning">
                         <i class="fas fa-film"></i>
                         Vui lòng chọn một bộ phim để đặt vé
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
             
             <!-- Right Column: Booking Form -->
             <div class="col-lg-7">
                 <div class="booking-form-container">
                     <h2 class="booking-form-title">
-                        @if(!isset($movie))
+                        <?php if(!isset($movie)): ?>
                             Đặt vé xem phim
-                        @else
+                        <?php else: ?>
                             Chọn Lịch Chiếu & Ghế
-                        @endif
+                        <?php endif; ?>
                     </h2>
                     
-                    @if ($errors->any())
+                    <?php if($errors->any()): ?>
                         <div class="alert alert-danger">
                             <ul>
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
+                                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <li><?php echo e($error); ?></li>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </ul>
                         </div>
-                    @endif
+                    <?php endif; ?>
                     
-                    @if (session('success'))
+                    <?php if(session('success')): ?>
                         <div class="alert alert-success">
-                            {{ session('success') }}
+                            <?php echo e(session('success')); ?>
+
                         </div>
-                    @endif
+                    <?php endif; ?>
                     
-                    @if(!isset($movie) && isset($allMovies))
+                    <?php if(!isset($movie) && isset($allMovies)): ?>
                         <!-- Movies List - Display when no movie selected -->
                         <div class="booking-step mb-4">
                             <label class="booking-label">
                                 <i class="fas fa-film me-2"></i>Danh sách phim đang chiếu
                             </label>
-                            @if(count($allMovies) == 0)
+                            <?php if(count($allMovies) == 0): ?>
                                 <div class="alert alert-warning">
                                     <i class="fas fa-exclamation-triangle me-2"></i>
                                     Hiện tại chưa có phim nào đang chiếu rạp. Vui lòng quay lại sau!
                                 </div>
-                            @else
+                            <?php else: ?>
                                 <div class="movies-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
-                                    @foreach($allMovies as $m)
-                                        <a href="?route=booking/index&movie={{ $m->id }}"
+                                    <?php $__currentLoopData = $allMovies; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $m): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <a href="?route=booking/index&movie=<?php echo e($m->id); ?>"
                                             class="movie-card-booking"
                                             style="display: block; text-decoration: none; border: 2px solid #ddd; border-radius: 8px; overflow: hidden; transition: all 0.3s; background: white; cursor: pointer;"
                                             onmouseover="this.style.borderColor='#e50914'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)';"
                                             onmouseout="this.style.borderColor='#ddd'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-                                            @if($m->thumbnail)
-                                                <img src="{{ $m->thumbnail }}"
-                                                    alt="{{ $m->title }}"
+                                            <?php if($m->thumbnail): ?>
+                                                <img src="<?php echo e($m->thumbnail); ?>"
+                                                    alt="<?php echo e($m->title); ?>"
                                                     style="width: 100%; height: 200px; object-fit: cover;">
-                                            @else
+                                            <?php else: ?>
                                                 <div style="width: 100%; height: 200px; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
                                                     <i class="fas fa-film" style="font-size: 48px; color: #999;"></i>
                                                 </div>
-                                            @endif
+                                            <?php endif; ?>
                                             <div style="padding: 10px;">
                                                 <h4 style="margin: 0; font-size: 14px; color: #333; font-weight: bold; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                                    {{ $m->title }}
+                                                    <?php echo e($m->title); ?>
+
                                                 </h4>
-                                                @if($m->rating)
+                                                <?php if($m->rating): ?>
                                                     <div style="text-align: center; margin-top: 5px;">
                                                         <i class="fas fa-star text-warning" style="font-size: 12px;"></i>
-                                                        <span style="font-size: 12px; color: #666;">{{ number_format($m->rating, 1) }}</span>
+                                                        <span style="font-size: 12px; color: #666;"><?php echo e(number_format($m->rating, 1)); ?></span>
                                                     </div>
-                                                @endif
+                                                <?php endif; ?>
                                             </div>
                                         </a>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
-                    @else
+                    <?php else: ?>
                     
-                    <form id="bookingForm" method="POST" action="{{ route('booking.processBooking') }}" class="booking-form" onsubmit="return checkAuth()">
-                        @csrf
+                    <form id="bookingForm" method="POST" action="<?php echo e(route('booking.processBooking')); ?>" class="booking-form" onsubmit="return checkAuth()">
+                        <?php echo csrf_field(); ?>
                         
                         <!-- Theater Selection as Cards -->
                         <div class="form-group">
@@ -284,15 +284,15 @@ function doSelectTheater(theaterId) {
                                 🔍 Test Click (Debug)
                             </button>
                             
-                            @if (isset($theaters) && count($theaters) > 0)
+                            <?php if(isset($theaters) && count($theaters) > 0): ?>
                                 <div id="theatersContainer" class="theaters-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
-                                    @foreach ($theaters as $theater)
+                                    <?php $__currentLoopData = $theaters; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $theater): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <div class="theater-card" 
-                                             data-theater-id="{{ $theater->id }}"
-                                             data-lat="{{ $theater->latitude ?? '' }}" 
-                                             data-lng="{{ $theater->longitude ?? '' }}"
-                                             data-location="{{ $theater->location ?? '' }}"
-                                             onclick="window.selectTheaterDirect({{ $theater->id }})"
+                                             data-theater-id="<?php echo e($theater->id); ?>"
+                                             data-lat="<?php echo e($theater->latitude ?? ''); ?>" 
+                                             data-lng="<?php echo e($theater->longitude ?? ''); ?>"
+                                             data-location="<?php echo e($theater->location ?? ''); ?>"
+                                             onclick="window.selectTheaterDirect(<?php echo e($theater->id); ?>)"
                                              style="border: 2px solid #ddd; border-radius: 12px; padding: 15px; cursor: pointer; transition: all 0.3s; background: white; position: relative; z-index: 1;">
                                             
                                             <div class="d-flex align-items-start" style="pointer-events: none;">
@@ -302,23 +302,26 @@ function doSelectTheater(theaterId) {
                                                 
                                                 <div style="flex: 1;">
                                                     <h5 style="margin: 0 0 5px 0; font-size: 16px; font-weight: bold; color: #333;">
-                                                        {{ $theater->name }}
+                                                        <?php echo e($theater->name); ?>
+
                                                     </h5>
                                                     
-                                                    @if($theater->location)
+                                                    <?php if($theater->location): ?>
                                                         <p style="margin: 0; font-size: 13px; color: #666;">
                                                             <i class="fas fa-map-marker-alt" style="color: #e50914;"></i>
-                                                            {{ $theater->location }}
+                                                            <?php echo e($theater->location); ?>
+
                                                         </p>
-                                                    @endif
+                                                    <?php endif; ?>
                                                     
-                                                    @if($theater->address)
+                                                    <?php if($theater->address): ?>
                                                         <p style="margin: 5px 0 0 0; font-size: 12px; color: #999;">
-                                                            {{ $theater->address }}
+                                                            <?php echo e($theater->address); ?>
+
                                                         </p>
-                                                    @endif
+                                                    <?php endif; ?>
                                                     
-                                                    <div class="theater-distance" data-theater-id="{{ $theater->id }}" style="margin-top: 8px; font-size: 12px; color: #28a745; display: none;">
+                                                    <div class="theater-distance" data-theater-id="<?php echo e($theater->id); ?>" style="margin-top: 8px; font-size: 12px; color: #28a745; display: none;">
                                                         <i class="fas fa-route"></i>
                                                         <span class="distance-text"></span>
                                                     </div>
@@ -329,14 +332,14 @@ function doSelectTheater(theaterId) {
                                                 </div>
                                             </div>
                                         </div>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
-                            @else
+                            <?php else: ?>
                                 <div class="alert alert-warning">
                                     <i class="fas fa-exclamation-triangle me-2"></i>
                                     Hiện tại chưa có rạp nào chiếu phim này.
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         
                         <style>
@@ -420,15 +423,31 @@ function doSelectTheater(theaterId) {
                             }
                         </style>
                         
-                        <!-- Date Selection (hiển thị sau khi chọn rạp) -->
+                        <!-- Date Selection (hiển thị ngay khi có movie) -->
+                        <?php if(isset($movie)): ?>
+                        <div id="dateSelectionSection" class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-alt me-2"></i>Chọn ngày xem
+                            </label>
+                            <div id="datesContainer" class="dates-tabs" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;">
+                                <?php $__currentLoopData = $dates; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $date): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <div class="date-tab" onclick="selectDate('<?php echo e($date['value']); ?>')" data-date="<?php echo e($date['value']); ?>">
+                                        <div class="day-name"><?php echo e($date['day_name']); ?><?php echo e($date['is_today'] ? ' (Hôm nay)' : ''); ?></div>
+                                        <div class="date-text"><?php echo e($date['label']); ?></div>
+                                    </div>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </div>
+                        </div>
+                        <?php else: ?>
                         <div id="dateSelectionSection" class="form-group" style="display: none;">
                             <label class="form-label">
                                 <i class="fas fa-calendar-alt me-2"></i>Chọn ngày xem
                             </label>
                             <div id="datesContainer" class="dates-tabs" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;">
-                                <!-- Dates will be loaded via JavaScript when theater is selected -->
+                                <!-- Dates will be loaded via JavaScript -->
                             </div>
                         </div>
+                        <?php endif; ?>
                         
                         <!-- Showtime Selection (appears after date selection) -->
                         <div id="showtimeSelectionSection" class="form-group" style="display: none;">
@@ -497,7 +516,7 @@ function doSelectTheater(theaterId) {
                                    id="customerEmail" 
                                    class="form-control" 
                                    placeholder="email@example.com"
-                                   value="{{ Auth::check() ? Auth::user()->email : '' }}"
+                                   value="<?php echo e(Auth::check() ? Auth::user()->email : ''); ?>"
                                    required>
                             <small class="text-muted" style="font-size: 11px; display: block; margin-top: 5px;">
                                 <i class="fas fa-info-circle"></i> Vé điện tử sẽ được gửi đến email này
@@ -562,30 +581,30 @@ function doSelectTheater(theaterId) {
                                 <i class="fas fa-utensils me-2"></i>Combo Đồ Ăn & Nước (Tùy chọn)
                             </label>
                             <div id="foodItemsContainer" class="food-items-grid" style="display: grid; grid-template-columns: 1fr; gap: 10px;">
-                                @if(isset($foodItems) && count($foodItems) > 0)
-                                    @foreach($foodItems as $food)
+                                <?php if(isset($foodItems) && count($foodItems) > 0): ?>
+                                    <?php $__currentLoopData = $foodItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $food): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <div class="food-item-card" style="border: 1px solid #444; border-radius: 8px; padding: 12px; background: #2a2a2a; display: flex; align-items: center; gap: 12px;">
-                                            @if($food->image)
-                                                <img src="{{ asset('storage/' . $food->image) }}" alt="{{ $food->name }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;">
-                                            @else
+                                            <?php if($food->image): ?>
+                                                <img src="<?php echo e(asset('storage/' . $food->image)); ?>" alt="<?php echo e($food->name); ?>" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;">
+                                            <?php else: ?>
                                                 <div style="width: 60px; height: 60px; background: #444; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
                                                     <i class="fas fa-utensils" style="color: #666;"></i>
                                                 </div>
-                                            @endif
+                                            <?php endif; ?>
                                             <div style="flex: 1;">
-                                                <h6 style="margin: 0; color: #fff; font-size: 14px;">{{ $food->name }}</h6>
-                                                <p style="margin: 5px 0; color: #ffc107; font-weight: bold;">{{ number_format($food->price) }}đ</p>
+                                                <h6 style="margin: 0; color: #fff; font-size: 14px;"><?php echo e($food->name); ?></h6>
+                                                <p style="margin: 5px 0; color: #ffc107; font-weight: bold;"><?php echo e(number_format($food->price)); ?>đ</p>
                                             </div>
                                             <div class="quantity-control" style="display: flex; align-items: center; gap: 8px;">
-                                                <button type="button" class="btn-quantity" onclick="updateFoodQuantity({{ $food->id }}, -1)" style="width: 30px; height: 30px; border: 1px solid #666; background: #3a3a3a; color: #fff; border-radius: 4px; cursor: pointer;">-</button>
-                                                <input type="number" name="food_items[{{ $food->id }}]" id="food_{{ $food->id }}" value="0" min="0" max="10" readonly style="width: 40px; text-align: center; background: #1a1a1a; border: 1px solid #666; color: #fff; border-radius: 4px;">
-                                                <button type="button" class="btn-quantity" onclick="updateFoodQuantity({{ $food->id }}, 1)" style="width: 30px; height: 30px; border: 1px solid #666; background: #3a3a3a; color: #fff; border-radius: 4px; cursor: pointer;">+</button>
+                                                <button type="button" class="btn-quantity" onclick="updateFoodQuantity(<?php echo e($food->id); ?>, -1)" style="width: 30px; height: 30px; border: 1px solid #666; background: #3a3a3a; color: #fff; border-radius: 4px; cursor: pointer;">-</button>
+                                                <input type="number" name="food_items[<?php echo e($food->id); ?>]" id="food_<?php echo e($food->id); ?>" value="0" min="0" max="10" readonly style="width: 40px; text-align: center; background: #1a1a1a; border: 1px solid #666; color: #fff; border-radius: 4px;">
+                                                <button type="button" class="btn-quantity" onclick="updateFoodQuantity(<?php echo e($food->id); ?>, 1)" style="width: 30px; height: 30px; border: 1px solid #666; background: #3a3a3a; color: #fff; border-radius: 4px; cursor: pointer;">+</button>
                                             </div>
                                         </div>
-                                    @endforeach
-                                @else
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                <?php else: ?>
                                     <p class="text-muted" style="text-align: center;">Không có combo đồ ăn nào</p>
-                                @endif
+                                <?php endif; ?>
                             </div>
                         </div>
                         
@@ -610,7 +629,7 @@ function doSelectTheater(theaterId) {
                                         <div style="color: #fff; font-weight: bold; margin-bottom: 5px;">
                                             <i class="fas fa-wallet" style="color: #28a745;"></i> Ví CineHub
                                         </div>
-                                        <small style="color: #999;" id="walletBalance">Số dư: {{ Auth::check() ? number_format(Auth::user()->points ?? 0) : 0 }}đ</small>
+                                        <small style="color: #999;" id="walletBalance">Số dư: <?php echo e(Auth::check() ? number_format(Auth::user()->points ?? 0) : 0); ?>đ</small>
                                     </div>
                                 </label>
                             </div>
@@ -656,7 +675,7 @@ function doSelectTheater(theaterId) {
                             Tiếp tục thanh toán
                         </button>
                     </form>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -1049,7 +1068,7 @@ window.selectTheaterDirect = function(theaterId) {
 // Global variables
 var userLat = null;
 var userLng = null;
-var currentMovieId = {{ isset($movie) && $movie->id ? $movie->id : 'null' }};
+var currentMovieId = <?php echo e(isset($movie) && $movie->id ? $movie->id : 'null'); ?>;
 var selectedTheaterId = null;
 var selectedDate = null;
 var selectedShowtimeId = null;
@@ -1058,10 +1077,10 @@ var selectedShowtimeId = null;
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing booking page...');
     
-    @if(isset($movie))
+    <?php if(isset($movie)): ?>
         // Auto request location when movie is selected
         requestUserLocation();
-    @endif
+    <?php endif; ?>
     
     // Add click handlers to theater cards (backup method)
     const theaterCards = document.querySelectorAll('.theater-card');
@@ -1212,7 +1231,7 @@ function loadShowtimes() {
     showtimesContainer.innerHTML = '<p class="text-center text-muted">Đang tải...</p>';
     
     // Fetch showtimes using Laravel route
-    const url = `{{ route('api.booking.showtimes') }}?movie_id=${currentMovieId}&theater_id=${selectedTheaterId}&date=${selectedDate}`;
+    const url = `<?php echo e(route('api.booking.showtimes')); ?>?movie_id=${currentMovieId}&theater_id=${selectedTheaterId}&date=${selectedDate}`;
     console.log('Fetching showtimes from:', url);
     
     fetch(url)
@@ -1263,11 +1282,11 @@ function selectShowtime(showtimeId) {
 }
 
 function checkAuth() {
-    @if(!Auth::check())
+    <?php if(!Auth::check()): ?>
         alert('Vui lòng đăng nhập để tiếp tục đặt vé');
-        window.location.href = '{{ route("login") }}?redirect=' + encodeURIComponent(window.location.href);
+        window.location.href = '<?php echo e(route("login")); ?>?redirect=' + encodeURIComponent(window.location.href);
         return false;
-    @endif
+    <?php endif; ?>
     return true;
 }
 
@@ -1280,7 +1299,7 @@ function loadSeatMap(showtimeId) {
     seatMapContainer.innerHTML = '<p class="text-center text-muted">Đang tải sơ đồ ghế...</p>';
     
     // Fetch seat map data from API
-    const url = `{{ route('api.booking.seatMap') }}?showtime_id=${showtimeId}`;
+    const url = `<?php echo e(route('api.booking.seatMap')); ?>?showtime_id=${showtimeId}`;
     
     fetch(url)
         .then(response => response.json())
@@ -1495,7 +1514,7 @@ function updateSeatSummary() {
 }
 
 function calculateSeatPrice() {
-    const basePrice = {{ isset($basePrice) ? $basePrice : 90000 }};
+    const basePrice = <?php echo e(isset($basePrice) ? $basePrice : 90000); ?>;
     const normalPrice = basePrice;
     const vipPrice = Math.round(basePrice * 1.3);
     const couplePrice = Math.round(basePrice * 1.5);
@@ -1543,7 +1562,7 @@ function updateBookingSummary() {
     calculateSeatPrice();
     
     const quantity = selectedSeats.length;
-    const basePrice = {{ isset($basePrice) ? $basePrice : 90000 }};
+    const basePrice = <?php echo e(isset($basePrice) ? $basePrice : 90000); ?>;
     const normalPrice = basePrice;
     const vipPrice = Math.round(basePrice * 1.3);
     const couplePrice = Math.round(basePrice * 1.5);
@@ -1667,7 +1686,7 @@ function validateSeatSelection(showAlert = true) {
         document.getElementById('seatsText').textContent = selectedSeats.join(', ');
         
         // Calculate prices (default prices, should be from server)
-        const basePrice = {{ isset($basePrice) ? $basePrice : 90000 }};
+        const basePrice = <?php echo e(isset($basePrice) ? $basePrice : 90000); ?>;
         const normalPrice = basePrice;
         const vipPrice = Math.round(basePrice * 1.3);
         const couplePrice = Math.round(basePrice * 1.5);
@@ -1915,4 +1934,6 @@ function updateSeatSelection() {
 }
 </script>
 
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/booking/index.blade.php ENDPATH**/ ?>

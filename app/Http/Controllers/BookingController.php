@@ -10,28 +10,170 @@ use App\Models\Ticket;
 use App\Models\Booking;
 use App\Models\FoodItem;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Services\VNPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class BookingController extends Controller
 {
     public function __construct(protected VNPayService $vnpay) {}
+    
+    /**
+     * Get day name in Vietnamese
+     */
+    private function getDayName($day)
+    {
+        $days = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+        return $days[$day] ?? '';
+    }
+    
+    /**
+     * Validate single seat selection (khi đặt 1 ghế)
+     */
+    private function validateSingleSeat($row, $selectedCol, $groupCols, $minColInGroup, $maxColInGroup, $bookedSeats)
+    {
+        // Quy tắc 1: Không được chọn ghế ngay sát ghế ngoài cùng (ghế thứ 2 từ đầu hoặc từ cuối)
+        // NHƯNG: Nếu ghế ngoài cùng đã được đặt rồi, thì cho phép đặt ghế ngay sát nó
+        
+        // Kiểm tra ghế ngoài cùng bên trái đã được đặt chưa
+        $leftmostSeat = $row . $minColInGroup;
+        $isLeftmostBooked = in_array($leftmostSeat, $bookedSeats);
+        
+        // Kiểm tra ghế ngoài cùng bên phải đã được đặt chưa
+        $rightmostSeat = $row . $maxColInGroup;
+        $isRightmostBooked = in_array($rightmostSeat, $bookedSeats);
+        
+        // Chặn ghế thứ 2 từ đầu (bên trái) - chỉ chặn nếu ghế ngoài cùng bên trái chưa được đặt
+        if ($selectedCol == $minColInGroup + 1 && !$isLeftmostBooked) {
+            Log::warning("Row $row: Validation FAILED - Không được chọn ghế ngay sát ghế ngoài cùng bên trái");
+            return "Không được chọn ghế ngay sát ghế ngoài cùng bên trái! Vui lòng chọn ghế ngoài cùng hoặc ghế khác.";
+        }
+        
+        // Chặn ghế thứ 2 từ cuối (bên phải) - chỉ chặn nếu ghế ngoài cùng bên phải chưa được đặt
+        if ($selectedCol == $maxColInGroup - 1 && !$isRightmostBooked) {
+            Log::warning("Row $row: Validation FAILED - Không được chọn ghế ngay sát ghế ngoài cùng bên phải");
+            return "Không được chọn ghế ngay sát ghế ngoài cùng bên phải! Vui lòng chọn ghế ngoài cùng hoặc ghế khác.";
+        }
+        
+        // Quy tắc 2: Nếu giữa 2 ghế đã đặt có >= 3 ghế trống, không được đặt ghế ở giữa
+        $nearestBookedLeft = null;
+        for ($checkCol = $selectedCol - 1; $checkCol >= $minColInGroup; $checkCol--) {
+            if (!in_array($checkCol, $groupCols)) continue;
+            $checkSeat = $row . $checkCol;
+            if (in_array($checkSeat, $bookedSeats)) {
+                $nearestBookedLeft = $checkCol;
+                break;
+            }
+        }
+        
+        $nearestBookedRight = null;
+        for ($checkCol = $selectedCol + 1; $checkCol <= $maxColInGroup; $checkCol++) {
+            if (!in_array($checkCol, $groupCols)) continue;
+            $checkSeat = $row . $checkCol;
+            if (in_array($checkSeat, $bookedSeats)) {
+                $nearestBookedRight = $checkCol;
+                break;
+            }
+        }
+        
+        if ($nearestBookedLeft !== null && $nearestBookedRight !== null) {
+            $gapBetweenBooked = $nearestBookedRight - $nearestBookedLeft - 1;
+            
+            if ($gapBetweenBooked >= 3) {
+                $distanceFromLeft = $selectedCol - $nearestBookedLeft;
+                $distanceFromRight = $nearestBookedRight - $selectedCol;
+                
+                if ($distanceFromLeft > 1 && $distanceFromRight > 1) {
+                    Log::warning("Row $row: Validation FAILED - Đặt 1 vé giữa 2 ghế đã đặt có >= 3 ghế trống");
+                    return "Không được đặt ghế ở giữa khi giữa 2 ghế đã đặt có 3 ghế trống trở lên! Vui lòng chọn ghế ngay sát một trong hai ghế đã đặt hoặc chọn ghế khác.";
+                }
+            }
+        }
+        
+        return null; // OK
+    }
+    
+    /**
+     * Get seat groups in a row from seat layout
+     */
+    private function getSeatGroupsInRow($row, $seatLayout)
+    {
+        if (!$seatLayout) {
+            return [];
+        }
+        
+        $groups = [];
+        
+        if (isset($seatLayout['seat_groups']) && is_array($seatLayout['seat_groups'])) {
+            foreach ($seatLayout['seat_groups'] as $group) {
+                $groupRows = $group['rows'] ?? [];
+                $groupCols = $group['cols'] ?? [];
+                
+                if (in_array($row, $groupRows) && !empty($groupCols)) {
+                    $groups[] = ['cols' => $groupCols];
+                }
+            }
+        } elseif (isset($seatLayout['cols']) && is_array($seatLayout['cols'])) {
+            $groups[] = ['cols' => $seatLayout['cols']];
+        }
+        
+        return $groups;
+    }
+    
+    /**
+     * Get all columns in a row from seat layout
+     */
+    private function getAllColumnsInRow($row, $seatLayout)
+    {
+        if (!$seatLayout) {
+            return [];
+        }
+        
+        $allCols = [];
+        
+        if (isset($seatLayout['seat_groups']) && is_array($seatLayout['seat_groups'])) {
+            foreach ($seatLayout['seat_groups'] as $group) {
+                $groupRows = $group['rows'] ?? [];
+                $groupCols = $group['cols'] ?? [];
+                
+                if (in_array($row, $groupRows)) {
+                    foreach ($groupCols as $col) {
+                        if (!in_array($col, $allCols)) {
+                            $allCols[] = $col;
+                        }
+                    }
+                }
+            }
+        } elseif (isset($seatLayout['cols']) && is_array($seatLayout['cols'])) {
+            $allCols = $seatLayout['cols'];
+        }
+        
+        sort($allCols);
+        return $allCols;
+    }
+    
     /**
      * Booking homepage - Select movie, theater, date, time
      */
     public function index(Request $request)
     {
-        // Only require auth for actual booking submission, not for browsing
+        // Allow browsing without login
         $selectedMovieId = $request->input('movie');
         $selectedTheater = $request->input('theater');
         $selectedDate = $request->input('date', date('Y-m-d'));
         $selectedShowtimeId = $request->input('showtime_id');
         
-        // Get only movies that have upcoming showtimes (actually showing in theaters)
+        // Get user location from session
+        $userLat = session('user_latitude');
+        $userLng = session('user_longitude');
+        
+        // Get only movies with upcoming showtimes
         $allMovies = Movie::where('status', 'Chiếu rạp')
             ->whereHas('showtimes', function($query) {
                 $query->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'));
@@ -47,20 +189,13 @@ class BookingController extends Controller
         $seatLayout = null;
         $screenInfo = null;
         $theaterInfo = null;
-        $foodItems = FoodItem::where('is_active', true)->get();
         
-        // If showtime selected, get booking info
+        // If showtime selected, get all info
         if ($selectedShowtimeId) {
             $showtime = Showtime::with(['movie', 'theater', 'screen'])->find($selectedShowtimeId);
             
             if ($showtime) {
-                // Check if showtime is still valid (not in the past)
-                $showtimeDateTime = $showtime->show_date . ' ' . $showtime->show_time;
-                if ($showtimeDateTime < now()->format('Y-m-d H:i:s')) {
-                    // Showtime has passed, redirect back to movie selection
-                    return redirect()->route('booking.index')->with('error', 'Lịch chiếu đã qua. Vui lòng chọn lịch chiếu khác.');
-                }
-                
+                // Auto-populate from showtime
                 $selectedMovieId = $showtime->movie_id;
                 $selectedTheater = $showtime->theater_id;
                 $selectedDate = $showtime->show_date;
@@ -75,45 +210,48 @@ class BookingController extends Controller
                     ->pluck('seat')
                     ->toArray();
                 
-                // Get seat layout
-                if ($screenInfo && isset($screenInfo->seat_layout_config)) {
-                    $seatLayoutData = $screenInfo->seat_layout_config;
-                    
-                    // Only decode if it's a string
-                    if (is_string($seatLayoutData) && !empty($seatLayoutData)) {
-                        try {
-                            $decoded = json_decode($seatLayoutData, true);
-                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                                $seatLayout = $decoded;
-                            } else {
-                                Log::warning('Invalid JSON in seat_layout_config for screen: ' . $screenInfo->id);
-                                $seatLayout = null;
-                            }
-                        } catch (\Exception $e) {
-                            Log::error('Failed to decode seat layout: ' . $e->getMessage());
-                            $seatLayout = null;
-                        }
-                    } else {
-                        // Not a string or empty
-                        $seatLayout = null;
-                    }
-                } else {
-                    $seatLayout = null;
+                // Get reserved seats (if table exists)
+                try {
+                    $reservedSeats = DB::table('seat_reservations')
+                        ->where('showtime_id', $selectedShowtimeId)
+                        ->where('expires_at', '>', now())
+                        ->pluck('seat')
+                        ->toArray();
+                } catch (\Exception $e) {
+                    $reservedSeats = [];
                 }
-            } else {
-                // Showtime not found, redirect back
-                return redirect()->route('booking.index')->with('error', 'Lịch chiếu không tồn tại.');
+                
+                // Get seat layout
+                if ($screenInfo && $screenInfo->seat_layout_config) {
+                    $seatLayoutData = $screenInfo->seat_layout_config;
+                    if (is_string($seatLayoutData)) {
+                        $seatLayout = json_decode($seatLayoutData, true);
+                    } else {
+                        $seatLayout = $seatLayoutData;
+                    }
+                }
             }
         }
         
         // Get theaters for selected movie
         if ($selectedMovieId) {
-            $movie = Movie::find($selectedMovieId);
+            $movie = $movie ?? Movie::find($selectedMovieId);
             
             $theaters = Theater::whereHas('showtimes', function($q) use ($selectedMovieId) {
                     $q->where('movie_id', $selectedMovieId)
                       ->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'));
-                })->get();
+                })
+                ->select('theaters.*')
+                ->when($userLat && $userLng, function($query) use ($userLat, $userLng) {
+                    // Calculate distance if user location available
+                    $query->selectRaw("
+                        (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * 
+                        cos(radians(longitude) - radians(?)) + sin(radians(?)) * 
+                        sin(radians(latitude)))) AS distance
+                    ", [$userLat, $userLng, $userLat])
+                    ->orderBy('distance');
+                })
+                ->get();
         }
         
         // Get showtimes
@@ -127,39 +265,40 @@ class BookingController extends Controller
                 ->get();
         }
         
-        // Calculate prices
-        $basePrice = $selectedShowtimeId && isset($showtime) ? $showtime->price : 90000;
-        $screenType = $screenInfo->screen_type ?? '2D';
-        $screenSurcharge = $this->getScreenTypeSurcharge($screenType);
+        // Get food items
+        $foodItems = FoodItem::where('is_active', true)->get();
         
+        // Calculate prices
+        $basePrice = 90000;
+        $screenType = '2D';
+        
+        if ($selectedShowtimeId && isset($showtime)) {
+            $basePrice = $showtime->price;
+            $screenType = $screenInfo->screen_type ?? '2D';
+        }
+        
+        $screenSurcharge = $this->getScreenTypeSurcharge($screenType);
         $normalPrice = $basePrice + $screenSurcharge;
         $vipPrice = $basePrice + $screenSurcharge + ($basePrice * 0.3);
         $couplePrice = $basePrice + $screenSurcharge + ($basePrice * 0.5);
         
-        // Generate dates (next 7 days)
+        // Generate dates (7 days)
         $dates = collect(range(0, 6))->map(function($i) {
             $date = now()->addDays($i);
             return [
                 'value' => $date->toDateString(),
                 'label' => $date->format('d/m'),
-                'day_name' => $date->isoFormat('dddd'),
+                'day_name' => $this->getDayName($date->dayOfWeek),
                 'is_today' => $i === 0,
             ];
         });
-        
-        // Add selected_movie variable for view
-        $selected_movie = $selectedMovieId;
-        $selected_showtime_id = $selectedShowtimeId;
-        $selected_theater = $selectedTheater;
-        $selected_date = $selectedDate;
         
         return view('booking.index', compact(
             'allMovies', 'theaters', 'showtimes', 'movie', 'selectedMovieId',
             'selectedTheater', 'selectedDate', 'selectedShowtimeId', 'dates',
             'bookedSeats', 'reservedSeats', 'seatLayout', 'normalPrice', 'vipPrice',
             'couplePrice', 'foodItems', 'screenInfo', 'theaterInfo', 'screenType',
-            'basePrice', 'screenSurcharge', 'selected_movie', 'selected_showtime_id',
-            'selected_theater', 'selected_date'
+            'basePrice', 'screenSurcharge'
         ));
     }
     
@@ -264,6 +403,347 @@ class BookingController extends Controller
      * Process booking and create pending booking
      */
     public function processBooking(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+        
+        $request->validate([
+            'showtime_id' => 'required|exists:showtimes,id',
+            'seats' => 'required|array|min:1|max:8',
+            'customer_email' => 'required|email',
+            'food_items' => 'nullable|array',
+        ]);
+        
+        $user = Auth::user();
+        $showtimeId = $request->input('showtime_id');
+        $seats = $request->input('seats');
+        $customerEmail = $request->input('customer_email');
+        $foodItems = $request->input('food_items', []);
+        
+        // Validate seats với logic phức tạp
+        $validationError = $this->validateSeatSelection($seats, $showtimeId);
+        if ($validationError) {
+            return redirect()->back()->with('error', $validationError);
+        }
+        
+        // Get showtime
+        $showtime = Showtime::with(['movie', 'screen'])->findOrFail($showtimeId);
+        
+        // Check if showtime has passed
+        $showtimeDateTime = Carbon::parse($showtime->show_date . ' ' . $showtime->show_time);
+        if ($showtimeDateTime->isPast()) {
+            return redirect()->back()->with('error', 'Suất chiếu đã qua!');
+        }
+        
+        // Check seats availability
+        $bookedSeatsCount = Ticket::where('showtime_id', $showtimeId)
+            ->whereIn('seat', $seats)
+            ->where('status', 'Đã đặt')
+            ->count();
+        
+        if ($bookedSeatsCount > 0) {
+            return redirect()->back()->with('error', 'Một số ghế đã được đặt!');
+        }
+        
+        DB::beginTransaction();
+        
+        try {
+            // Calculate total amount
+            $basePrice = $showtime->price;
+            $screenType = $showtime->screen->screen_type ?? '2D';
+            $screenSurcharge = $this->getScreenTypeSurcharge($screenType);
+            
+            $totalAmount = 0;
+            $seatPrices = [];
+            
+            foreach ($seats as $seat) {
+                $seatType = $this->getSeatType($seat);
+                $price = $this->calculateSeatPrice($basePrice, $screenSurcharge, $seatType);
+                $totalAmount += $price;
+                $seatPrices[$seat] = $price;
+            }
+            
+            // Add food items price
+            $foodTotal = 0;
+            $filteredFoodItems = [];
+            
+            foreach ($foodItems as $foodId => $quantity) {
+                if ($quantity > 0) {
+                    $food = FoodItem::find($foodId);
+                    if ($food) {
+                        $foodTotal += $food->price * $quantity;
+                        $filteredFoodItems[$foodId] = $quantity;
+                    }
+                }
+            }
+            
+            $totalAmount += $foodTotal;
+            
+            // Create pending booking
+            $vnpTxnRef = 'BKG' . $user->id . '_' . time();
+            
+            $booking = Booking::create([
+                'user_id' => $user->id,
+                'showtime_id' => $showtimeId,
+                'seats' => $seats,
+                'food_items' => $filteredFoodItems,
+                'customer_email' => $customerEmail,
+                'customer_name' => $user->name,
+                'customer_phone' => $user->phone ?? '',
+                'total_amount' => $totalAmount,
+                'vnp_txn_ref' => $vnpTxnRef,
+                'status' => 'pending',
+                'expires_at' => now()->addMinutes(10),
+            ]);
+            
+            // Save to session for VNPay
+            session([
+                'pending_booking_id' => $booking->id,
+                'showtime_id' => $showtimeId,
+            ]);
+            
+            DB::commit();
+            
+            // Redirect to VNPay
+            $orderInfo = 'Thanh toan ve xem phim ' . $showtime->movie->title;
+            $paymentUrl = $this->vnpay->createPaymentUrl($booking, $orderInfo, $request->ip());
+
+            return redirect($paymentUrl);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Booking error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Validate seat selection với logic phức tạp từ controller cũ
+     */
+    private function validateSeatSelection($seats, $showtime_id = null)
+    {
+        if (empty($seats)) {
+            return null;
+        }
+        
+        $seatCount = count($seats);
+        
+        // Lấy danh sách ghế đã được đặt
+        $bookedSeats = [];
+        $seatLayout = null;
+        
+        if ($showtime_id) {
+            try {
+                $bookedSeats = Ticket::where('showtime_id', $showtime_id)
+                    ->where('status', 'Đã đặt')
+                    ->pluck('seat')
+                    ->toArray();
+                
+                // Lấy seat layout
+                $showtime = Showtime::find($showtime_id);
+                
+                if ($showtime && $showtime->screen_id) {
+                    $screen = Screen::find($showtime->screen_id);
+                    if ($screen && $screen->seat_layout_config) {
+                        $seatLayout = is_string($screen->seat_layout_config) 
+                            ? json_decode($screen->seat_layout_config, true) 
+                            : $screen->seat_layout_config;
+                    }
+                }
+                
+                // Nếu không có layout, tạo layout mặc định
+                if (!$seatLayout) {
+                    $seatLayout = [
+                        'rows' => ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
+                        'cols' => range(1, 12),
+                        'vip_rows' => ['D', 'E', 'F'],
+                        'couple_rows' => ['J']
+                    ];
+                }
+            } catch (\Exception $e) {
+                Log::error("ERROR getting seat layout: " . $e->getMessage());
+                $seatLayout = [
+                    'rows' => ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
+                    'cols' => range(1, 12),
+                    'vip_rows' => ['D', 'E', 'F'],
+                    'couple_rows' => ['J']
+                ];
+            }
+        }
+        
+        // Lấy danh sách hàng ghế đôi
+        $coupleRows = $seatLayout['couple_rows'] ?? ['J'];
+        
+        // Sắp xếp ghế theo hàng và cột
+        $seatsByRow = [];
+        foreach ($seats as $seat) {
+            $row = substr($seat, 0, 1);
+            $col = (int)substr($seat, 1);
+            if (!isset($seatsByRow[$row])) {
+                $seatsByRow[$row] = [];
+            }
+            $seatsByRow[$row][] = $col;
+        }
+        
+        // Kiểm tra từng hàng
+        foreach ($seatsByRow as $row => $cols) {
+            sort($cols);
+            
+            // BỎ QUA VALIDATION CHO HÀNG GHẾ ĐÔI
+            if (in_array($row, $coupleRows)) {
+                Log::info("Row $row: Bỏ qua validation - Đây là hàng ghế đôi");
+                continue;
+            }
+            
+            // Kiểm tra không bỏ trống ghế ở giữa
+            if (count($cols) > 1) {
+                for ($i = 0; $i < count($cols) - 1; $i++) {
+                    $gap = $cols[$i + 1] - $cols[$i];
+                    if ($gap > 1) {
+                        return "Không được bỏ trống ghế ở giữa! Các ghế phải liền kề nhau.";
+                    }
+                }
+            }
+            
+            // Lấy danh sách các nhóm ghế trong hàng này
+            $seatGroupsInRow = $this->getSeatGroupsInRow($row, $seatLayout);
+            
+            if (empty($seatGroupsInRow)) {
+                $allColsInRow = $this->getAllColumnsInRow($row, $seatLayout);
+                if (!empty($allColsInRow)) {
+                    $seatGroupsInRow = [['cols' => $allColsInRow]];
+                } else if (!empty($cols)) {
+                    $minCol = min($cols);
+                    $maxCol = max($cols);
+                    $fallbackCols = range($minCol, $maxCol);
+                    $seatGroupsInRow = [['cols' => $fallbackCols]];
+                }
+            }
+            
+            // Kiểm tra từng nhóm ghế
+            foreach ($seatGroupsInRow as $group) {
+                $groupCols = $group['cols'] ?? [];
+                if (empty($groupCols)) continue;
+                
+                sort($groupCols);
+                
+                $selectedColsInGroup = array_intersect($cols, $groupCols);
+                if (empty($selectedColsInGroup)) continue;
+                
+                $selectedColsInGroup = array_values($selectedColsInGroup);
+                sort($selectedColsInGroup);
+                $selectedSeatCountInGroup = count($selectedColsInGroup);
+                
+                $minColInGroup = min($groupCols);
+                $maxColInGroup = max($groupCols);
+                $selectedMinCol = min($selectedColsInGroup);
+                $selectedMaxCol = max($selectedColsInGroup);
+                
+                // Đếm tổng số ghế AVAILABLE trong nhóm
+                $totalAvailableInGroup = 0;
+                foreach ($groupCols as $col) {
+                    $checkSeat = $row . $col;
+                    if (!in_array($checkSeat, $bookedSeats)) {
+                        $totalAvailableInGroup++;
+                    }
+                }
+                
+                // Kiểm tra xem có chọn ít nhất 1 trong 2 ghế ngoài cùng không
+                $hasFirstSeat = in_array($minColInGroup, $selectedColsInGroup);
+                $hasLastSeat = in_array($maxColInGroup, $selectedColsInGroup);
+                
+                // Kiểm tra riêng cho trường hợp đặt 1 vé
+                if ($selectedSeatCountInGroup == 1) {
+                    $singleSeatError = $this->validateSingleSeat($row, $selectedMinCol, $groupCols, $minColInGroup, $maxColInGroup, $bookedSeats);
+                    if ($singleSeatError) {
+                        return $singleSeatError;
+                    }
+                }
+                
+                // Nếu đặt từ đầu hàng - OK
+                if ($hasFirstSeat || $hasLastSeat) {
+                    continue;
+                }
+                
+                // Tìm ghế đã đặt gần nhất
+                $nearestBookedSeatLeft = null;
+                for ($checkCol = $selectedMinCol - 1; $checkCol >= $minColInGroup; $checkCol--) {
+                    if (!in_array($checkCol, $groupCols)) continue;
+                    $checkSeat = $row . $checkCol;
+                    if (in_array($checkSeat, $bookedSeats)) {
+                        $nearestBookedSeatLeft = $checkCol;
+                        break;
+                    }
+                }
+                
+                $nearestBookedSeatRight = null;
+                for ($checkCol = $selectedMaxCol + 1; $checkCol <= $maxColInGroup; $checkCol++) {
+                    if (!in_array($checkCol, $groupCols)) continue;
+                    $checkSeat = $row . $checkCol;
+                    if (in_array($checkSeat, $bookedSeats)) {
+                        $nearestBookedSeatRight = $checkCol;
+                        break;
+                    }
+                }
+                
+                $isAdjacentToBookedLeft = ($nearestBookedSeatLeft !== null && $selectedMinCol == $nearestBookedSeatLeft + 1);
+                $isAdjacentToBookedRight = ($nearestBookedSeatRight !== null && $selectedMaxCol == $nearestBookedSeatRight - 1);
+                
+                // Nếu đặt ngay sau ghế đã đặt - OK
+                if ($isAdjacentToBookedLeft || $isAdjacentToBookedRight) {
+                    continue;
+                }
+                
+                // Đếm số ghế available ở hai đầu
+                $startPoint = ($nearestBookedSeatLeft !== null) ? $nearestBookedSeatLeft : $minColInGroup;
+                $countStart = ($nearestBookedSeatLeft !== null) ? $nearestBookedSeatLeft + 1 : $minColInGroup;
+                
+                $availableSeatsAtStart = 0;
+                for ($checkCol = $countStart; $checkCol < $selectedMinCol; $checkCol++) {
+                    if (!in_array($checkCol, $groupCols)) continue;
+                    $checkSeat = $row . $checkCol;
+                    if (in_array($checkSeat, $bookedSeats)) break;
+                    $availableSeatsAtStart++;
+                }
+                
+                $endPoint = ($nearestBookedSeatRight !== null) ? $nearestBookedSeatRight : $maxColInGroup;
+                $countEnd = ($nearestBookedSeatRight !== null) ? $nearestBookedSeatRight - 1 : $maxColInGroup;
+                
+                $availableSeatsAtEnd = 0;
+                for ($checkCol = $selectedMaxCol + 1; $checkCol <= $countEnd; $checkCol++) {
+                    if (!in_array($checkCol, $groupCols)) continue;
+                    $checkSeat = $row . $checkCol;
+                    if (in_array($checkSeat, $bookedSeats)) break;
+                    $availableSeatsAtEnd++;
+                }
+                
+                // Áp dụng quy tắc validation
+                $halfOfAvailable = floor($totalAvailableInGroup / 2);
+                
+                if ($selectedSeatCountInGroup >= $halfOfAvailable) {
+                    return "Khi đặt từ $halfOfAvailable vé trở lên trong nhóm có $totalAvailableInGroup ghế trống, bắt buộc phải đặt từ đầu hàng (chọn ít nhất 1 trong 2 ghế ngoài cùng)!";
+                } else {
+                    $minRequiredAtEnds = ($selectedSeatCountInGroup == 1) ? 1 : 2;
+                    
+                    if ($availableSeatsAtStart < $minRequiredAtEnds || $availableSeatsAtEnd < $minRequiredAtEnds) {
+                        if ($selectedSeatCountInGroup == 1 && ($availableSeatsAtStart >= 2 || $availableSeatsAtEnd >= 2)) {
+                            // OK
+                        } else {
+                            return "Khi đặt $selectedSeatCountInGroup vé trong nhóm có $totalAvailableInGroup ghế trống mà không đặt từ đầu hàng, phải để lại ít nhất $minRequiredAtEnds ghế kể từ ghế ngoài cùng ở cả hai đầu hàng!";
+                        }
+                    }
+                }
+            }
+        }
+        
+        return null; // Valid
+    }
+    
+    /**
+     * Process booking and create pending booking (OLD METHOD - KEEPING FOR REFERENCE)
+     */
+    private function processBookingOld(Request $request)
     {
         if (!Auth::check()) {
             return redirect()->route('login');
@@ -496,33 +976,6 @@ class BookingController extends Controller
     }
     
     // Helper methods
-    private function validateSeatSelection($seats, $showtimeId)
-    {
-        // Simplified validation
-        if (count($seats) > 8) {
-            return 'Chỉ được đặt tối đa 8 vé';
-        }
-        
-        // Check for gaps
-        $seatsByRow = [];
-        foreach ($seats as $seat) {
-            $row = substr($seat, 0, 1);
-            $col = (int)substr($seat, 1);
-            $seatsByRow[$row][] = $col;
-        }
-        
-        foreach ($seatsByRow as $row => $cols) {
-            sort($cols);
-            for ($i = 0; $i < count($cols) - 1; $i++) {
-                if ($cols[$i + 1] - $cols[$i] > 1) {
-                    return 'Các ghế phải liền kề nhau';
-                }
-            }
-        }
-        
-        return null;
-    }
-    
     private function getSeatType($seat)
     {
         $row = substr($seat, 0, 1);
