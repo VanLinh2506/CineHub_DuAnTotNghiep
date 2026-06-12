@@ -73,7 +73,8 @@ Route::middleware('auth')->prefix('booking')->name('booking.')->group(function (
     Route::get('/{bookingId}/payment', [BookingController::class, 'payment'])->name('payment');
     Route::get('/{bookingId}/confirmation', [BookingController::class, 'confirmation'])->name('confirmation');
     Route::post('/{bookingId}/cancel', [BookingController::class, 'cancel'])->name('cancel');
-    Route::get('/history', [BookingController::class, 'history'])->name('history');
+    Route::get('/history', [BookingController::class, 'myTickets'])->name('history');
+    Route::get('/my-tickets', [BookingController::class, 'myTickets'])->name('my-tickets');
 });
 
 // ==================== PAYMENT ROUTES ====================
@@ -82,14 +83,16 @@ Route::prefix('payment')->name('payment.')->group(function () {
     Route::post('/vnpay/create', [BookingController::class, 'createVnpayPayment'])->name('vnpay.create');
 });
 
+Route::get('/profile/vnpay-deposit-return', [ProfileController::class, 'handleVnpayDepositReturn'])
+    ->name('profile.vnpay-deposit-return');
+
 // ==================== PROFILE ROUTES ====================
 Route::middleware('auth')->prefix('profile')->name('profile.')->group(function () {
     Route::get('/', [ProfileController::class, 'index'])->name('index');
     Route::put('/update', [ProfileController::class, 'update'])->name('update');
     Route::put('/update-password', [ProfileController::class, 'updatePassword'])->name('updatePassword');
     Route::post('/upload-avatar', [ProfileController::class, 'uploadAvatar'])->name('uploadAvatar');
-    Route::post('/deposit-vnpay', [ProfileController::class, 'depositVnpay'])->name('depositVnpay');
-    Route::get('/vnpay-deposit-return', [ProfileController::class, 'vnpayDepositReturn'])->name('vnpay-deposit-return');
+    Route::post('/deposit-vnpay', [ProfileController::class, 'startVnpayDeposit'])->name('depositVnpay');
     Route::get('/bookings', [ProfileController::class, 'bookings'])->name('bookings');
     Route::get('/watch-history', [ProfileController::class, 'watchHistory'])->name('watchHistory');
     Route::get('/subscriptions', [ProfileController::class, 'subscriptions'])->name('subscriptions');

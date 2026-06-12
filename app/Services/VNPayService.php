@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use RuntimeException;
 
 class VNPayService
 {
@@ -13,83 +14,104 @@ class VNPayService
 
     public function __construct()
     {
-        $this->vnpUrl     = config('services.vnpay.url', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html');
-        $this->tmnCode    = config('services.vnpay.tmn_code');
-        $this->hashSecret = config('services.vnpay.hash_secret');
+        $this->vnpUrl = config('services.vnpay.url', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html');
+        $this->tmnCode = (string) config('services.vnpay.tmn_code');
+        $this->hashSecret = (string) config('services.vnpay.hash_secret');
     }
 
-    /**
-     * Tạo URL thanh toán VNPay
-     */
-    public function createPaymentUrl(Booking $booking, string $orderInfo, string $clientIp): string
-    {
+    public function createBookingPaymentUrl(
+        Booking $booking,
+        string $orderInfo,
+        string $returnUrl,
+        string $clientIp
+    ): string {
+        return $this->createPaymentUrl(
+            txnRef: $booking->vnp_txn_ref,
+            amount: (float) $booking->total_amount,
+            orderInfo: $orderInfo,
+            returnUrl: $returnUrl,
+            clientIp: $clientIp
+        );
+    }
+
+    public function createPaymentUrl(
+        string $txnRef,
+        float $amount,
+        string $orderInfo,
+        string $returnUrl,
+        string $clientIp,
+        array $extraParams = []
+    ): string {
+        $this->ensureConfigured();
+
         $params = [
-            'vnp_Version'    => '2.1.0',
-            'vnp_TmnCode'    => $this->tmnCode,
-            'vnp_Amount'     => (int) ($booking->total_amount * 100),
-            'vnp_Command'    => 'pay',
+            'vnp_Version' => '2.1.0',
+            'vnp_TmnCode' => $this->tmnCode,
+            'vnp_Amount' => (int) round($amount * 100),
+            'vnp_Command' => 'pay',
             'vnp_CreateDate' => now()->format('YmdHis'),
-            'vnp_CurrCode'   => 'VND',
-            'vnp_IpAddr'     => $clientIp,
-            'vnp_Locale'     => 'vn',
-            'vnp_OrderInfo'  => $orderInfo,
-            'vnp_OrderType'  => 'other',
-            'vnp_ReturnUrl'  => route('booking.vnpay-return'),
-            'vnp_TxnRef'     => $booking->vnp_txn_ref,
+            'vnp_CurrCode' => 'VND',
+            'vnp_IpAddr' => $clientIp,
+            'vnp_Locale' => 'vn',
+            'vnp_OrderInfo' => $orderInfo,
+            'vnp_OrderType' => 'other',
+            'vnp_ReturnUrl' => $returnUrl,
+            'vnp_TxnRef' => $txnRef,
             'vnp_ExpireDate' => now()->addMinutes(15)->format('YmdHis'),
         ];
 
+        $params = array_filter(
+            array_merge($params, $extraParams),
+            static fn ($value) => $value !== null && $value !== ''
+        );
+
         ksort($params);
 
-        // Build hashData dùng key gốc (không urlencode key) theo chuẩn VNPay
         $hashData = http_build_query($params);
-        $query    = $hashData;
-
         $secureHash = hash_hmac('sha512', $hashData, $this->hashSecret);
 
-        return "{$this->vnpUrl}?{$query}&vnp_SecureHash={$secureHash}";
+        return "{$this->vnpUrl}?{$hashData}&vnp_SecureHash={$secureHash}";
     }
 
-    /**
-     * Xác thực chữ ký từ VNPay callback
-     */
     public function verifyCallback(Request $request): bool
     {
-        $vnpSecureHash = $request->input('vnp_SecureHash');
+        if ($this->hashSecret === '') {
+            return false;
+        }
 
-        // Lấy toàn bộ params, bỏ hash fields
+        $vnpSecureHash = $request->input('vnp_SecureHash');
         $params = $request->except(['vnp_SecureHash', 'vnp_SecureHashType']);
+
         ksort($params);
 
-        // Build hashData theo chuẩn VNPay: key gốc, value url-encoded qua http_build_query
         $hashData = http_build_query($params);
-
         $expectedHash = hash_hmac('sha512', $hashData, $this->hashSecret);
 
         return hash_equals($expectedHash, $vnpSecureHash ?? '');
     }
 
-    /**
-     * Kiểm tra thanh toán thành công
-     */
     public function isPaymentSuccess(Request $request): bool
     {
         return $this->verifyCallback($request)
             && $request->input('vnp_ResponseCode') === '00';
     }
 
-    /**
-     * Lấy thông tin giao dịch từ callback
-     */
     public function getTransactionInfo(Request $request): array
     {
         return [
-            'txn_ref'       => $request->input('vnp_TxnRef'),
-            'transaction_no'=> $request->input('vnp_TransactionNo'),
-            'amount'        => (int) $request->input('vnp_Amount') / 100,
-            'bank_code'     => $request->input('vnp_BankCode'),
-            'pay_date'      => $request->input('vnp_PayDate'),
+            'txn_ref' => $request->input('vnp_TxnRef'),
+            'transaction_no' => $request->input('vnp_TransactionNo'),
+            'amount' => (int) $request->input('vnp_Amount') / 100,
+            'bank_code' => $request->input('vnp_BankCode'),
+            'pay_date' => $request->input('vnp_PayDate'),
             'response_code' => $request->input('vnp_ResponseCode'),
         ];
+    }
+
+    private function ensureConfigured(): void
+    {
+        if ($this->tmnCode === '' || $this->hashSecret === '') {
+            throw new RuntimeException('VNPay is not configured. Please set VNPAY_TMN_CODE and VNPAY_HASH_SECRET.');
+        }
     }
 }

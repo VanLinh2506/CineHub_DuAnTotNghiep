@@ -46,7 +46,7 @@ class BookingPending extends Model
 
     public function tickets()
     {
-        return $this->hasMany(Ticket::class);
+        return $this->hasMany(Ticket::class, 'booking_pending_id');
     }
 
     // Scopes
