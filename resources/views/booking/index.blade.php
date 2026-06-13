@@ -2656,6 +2656,145 @@ function sortTheatersByDistance() {
 function updateSeatSelection() {
     updateBookingSummary();
 }
+
+// ============== FOOD MODAL FUNCTIONS ==============
+
+// Open food modal after confirming seats
+function openFoodModal() {
+    const modal = document.getElementById('foodModal');
+    if (modal) {
+        modal.style.display = 'block';
+        // Reset modal quantities to match current selection
+        syncFoodModalQuantities();
+        updateFoodModalTotal();
+    }
+}
+
+// Close food modal
+function closeFoodModal() {
+    const modal = document.getElementById('foodModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Update food quantity in modal
+function updateFoodQuantityModal(foodId, change) {
+    const input = document.getElementById('food_modal_' + foodId);
+    if (!input) return;
+    
+    let currentValue = parseInt(input.value) || 0;
+    let newValue = currentValue + change;
+    
+    if (newValue < 0) newValue = 0;
+    if (newValue > 10) newValue = 10;
+    
+    input.value = newValue;
+    updateFoodModalTotal();
+}
+
+// Sync food quantities between modal and form
+function syncFoodModalQuantities() {
+    // Copy quantities from hidden form to modal
+    const foodInputs = document.querySelectorAll('input[name^="food_items"]');
+    foodInputs.forEach(input => {
+        const foodId = input.name.match(/\d+/)[0];
+        const modalInput = document.getElementById('food_modal_' + foodId);
+        if (modalInput) {
+            modalInput.value = input.value || 0;
+        }
+    });
+}
+
+// Update food modal total price
+function updateFoodModalTotal() {
+    let total = 0;
+    const foodItems = document.querySelectorAll('.food-modal-item');
+    
+    foodItems.forEach(item => {
+        const foodId = item.dataset.foodId;
+        const price = parseFloat(item.dataset.foodPrice) || 0;
+        const input = document.getElementById('food_modal_' + foodId);
+        const quantity = parseInt(input?.value) || 0;
+        
+        total += price * quantity;
+    });
+    
+    const totalElement = document.getElementById('foodModalTotal');
+    if (totalElement) {
+        totalElement.textContent = total.toLocaleString('vi-VN') + 'đ';
+    }
+}
+
+// Confirm food selection and close modal
+function confirmFoodSelection() {
+    // Copy quantities from modal to hidden form inputs
+    const foodItems = document.querySelectorAll('.food-modal-item');
+    const foodData = {};
+    
+    foodItems.forEach(item => {
+        const foodId = item.dataset.foodId;
+        const input = document.getElementById('food_modal_' + foodId);
+        const quantity = parseInt(input?.value) || 0;
+        
+        if (quantity > 0) {
+            foodData[foodId] = quantity;
+        }
+        
+        // Also update the hidden food_items input if exists
+        const hiddenInput = document.querySelector(`input[name="food_items[${foodId}]"]`);
+        if (hiddenInput) {
+            hiddenInput.value = quantity;
+        } else if (quantity > 0) {
+            // Create hidden input if doesn't exist
+            const newInput = document.createElement('input');
+            newInput.type = 'hidden';
+            newInput.name = `food_items[${foodId}]`;
+            newInput.value = quantity;
+            document.getElementById('bookingForm').appendChild(newInput);
+        }
+    });
+    
+    // Update food_items_data hidden field
+    const foodDataInput = document.getElementById('foodItemsData');
+    if (foodDataInput) {
+        foodDataInput.value = JSON.stringify(foodData);
+    }
+    
+    // Close modal
+    closeFoodModal();
+    
+    // Update booking summary with food prices
+    updateBookingSummary();
+    
+    // Show success message
+    const itemCount = Object.keys(foodData).length;
+    if (itemCount > 0) {
+        showSuccess(`Đã thêm ${itemCount} món vào đơn hàng!`);
+    } else {
+        showSuccess('Đã bỏ qua chọn combo & đồ ăn');
+    }
+}
+
+// Auto-open food modal after confirming seats
+window.addEventListener('load', function() {
+    const originalConfirmSeats = window.confirmSeats;
+    
+    window.confirmSeats = function() {
+        // Call original function
+        const result = originalConfirmSeats();
+        
+        // If seats confirmed successfully, open food modal
+        if (window.seatsConfirmed) {
+            setTimeout(() => {
+                openFoodModal();
+            }, 500); // Small delay for better UX
+        }
+        
+        return result;
+    };
+});
+
 </script>
 
 @endsection
