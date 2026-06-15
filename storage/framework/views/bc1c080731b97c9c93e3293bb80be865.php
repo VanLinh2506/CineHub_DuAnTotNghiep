@@ -32,4 +32,4 @@
         </div>
     </body>
 </html>
-<?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\vendor\laravel\framework\src\Illuminate\Foundation\Exceptions/views/minimal.blade.php ENDPATH**/ ?>
+<?php /**PATH D:\laragon\www\CineHub_DuAnTotNghiep\vendor\laravel\framework\src\Illuminate\Foundation\Exceptions/views/minimal.blade.php ENDPATH**/ ?>

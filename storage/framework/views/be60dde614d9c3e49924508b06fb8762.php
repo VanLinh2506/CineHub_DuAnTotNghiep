@@ -63,4 +63,4 @@
     <?php echo $__env->yieldPushContent('scripts'); ?>
 </body>
 </html>
-<?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/layouts/app.blade.php ENDPATH**/ ?>
+<?php /**PATH D:\laragon\www\CineHub_DuAnTotNghiep\resources\views/layouts/app.blade.php ENDPATH**/ ?>

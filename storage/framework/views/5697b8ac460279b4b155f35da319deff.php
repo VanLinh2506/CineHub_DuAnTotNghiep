@@ -138,4 +138,4 @@
         margin: 0;
     }
 </style>
-<?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/components/movie-card.blade.php ENDPATH**/ ?>
+<?php /**PATH D:\laragon\www\CineHub_DuAnTotNghiep\resources\views/components/movie-card.blade.php ENDPATH**/ ?>

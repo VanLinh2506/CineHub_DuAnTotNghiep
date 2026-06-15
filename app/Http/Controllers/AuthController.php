@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -129,5 +131,68 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
         
         return redirect()->route('home')->with('success', 'Đã đăng xuất khỏi tất cả thiết bị!');
+    }
+    
+    /**
+     * Redirect to Google for authentication
+     */
+    public function redirectToGoogle()
+    {
+        try {
+            return Socialite::driver('google')->redirect();
+        } catch (\Exception $e) {
+            return redirect()->route('login')
+                ->with('error', 'Không thể kết nối với Google. Vui lòng thử lại sau.');
+        }
+    }
+    
+    /**
+     * Handle Google callback
+     */
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+
+            // Find or create user
+            $user = User::where('email', $googleUser->getEmail())->first();
+
+            if ($user) {
+                // User exists — update google_id if not set
+                if (!$user->google_id) {
+                    $user->update(['google_id' => $googleUser->getId()]);
+                }
+            } else {
+                // Create new user from Google account
+                $user = User::create([
+                    'name'              => $googleUser->getName(),
+                    'email'             => $googleUser->getEmail(),
+                    'google_id'         => $googleUser->getId(),
+                    'avatar'            => $googleUser->getAvatar(),
+                    'password'          => Hash::make(Str::random(24)),
+                    'email_verified_at' => now(),
+                    'email_verified'    => 1,
+                    'subscription_id'   => 1,
+                ]);
+            }
+
+            Auth::login($user, true);
+
+            $isAdmin = $user->role === 'admin' ||
+                       $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists();
+
+            return redirect()->intended($isAdmin ? route('admin.index') : route('home'))
+                ->with('success', 'Đăng nhập bằng Google thành công!');
+
+        } catch (\Laravel\Socialite\Two\InvalidStateException $e) {
+            return redirect()->route('login')
+                ->with('error', 'Phiên đăng nhập Google hết hạn. Vui lòng thử lại.');
+        } catch (\GuzzleHttp\Exception\ClientException $e) {
+            return redirect()->route('login')
+                ->with('error', 'Google Client ID hoặc Secret không đúng. Kiểm tra lại cấu hình.');
+        } catch (\Exception $e) {
+            return redirect()->route('login')
+                ->with('error', 'Đăng nhập Google thất bại: ' . $e->getMessage());
+        }
     }
 }

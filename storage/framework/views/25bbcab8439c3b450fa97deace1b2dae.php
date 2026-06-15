@@ -260,4 +260,4 @@
         }
     });
 </script>
-<?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/components/footer.blade.php ENDPATH**/ ?>
+<?php /**PATH D:\laragon\www\CineHub_DuAnTotNghiep\resources\views/components/footer.blade.php ENDPATH**/ ?>
