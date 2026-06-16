@@ -1,6 +1,4 @@
-@extends('admin.moderator.layout')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h5><i class="fas fa-users"></i> Quản lý nhân viên đứng quầy</h5>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStaffModal">
@@ -9,7 +7,7 @@
 </div>
 
 <div class="stat-card">
-    @if(empty($counterStaff))
+    <?php if(empty($counterStaff)): ?>
         <div class="alert alert-info text-center py-5">
             <i class="fas fa-info-circle fa-3x mb-3 d-block"></i>
             <h5>Chưa có nhân viên đứng quầy nào</h5>
@@ -18,7 +16,7 @@
                 <i class="fas fa-plus"></i> Thêm nhân viên đầu tiên
             </button>
         </div>
-    @else
+    <?php else: ?>
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -32,44 +30,46 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($counterStaff as $staff)
+                    <?php $__currentLoopData = $counterStaff; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $staff): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <tr>
-                        <td><strong>#{{ $staff['id'] }}</strong></td>
+                        <td><strong>#<?php echo e($staff['id']); ?></strong></td>
                         <td>
                             <i class="fas fa-user-circle text-primary me-2"></i>
-                            <strong>{{ $staff['name'] }}</strong>
+                            <strong><?php echo e($staff['name']); ?></strong>
                         </td>
                         <td>
                             <i class="fas fa-envelope text-muted me-2"></i>
-                            {{ $staff['email'] }}
+                            <?php echo e($staff['email']); ?>
+
                         </td>
                         <td>
                             <i class="fas fa-phone text-muted me-2"></i>
-                            {{ $staff['phone'] }}
+                            <?php echo e($staff['phone']); ?>
+
                         </td>
                         <td>
-                            <small class="text-muted">{{ $staff['created_at'] }}</small>
+                            <small class="text-muted"><?php echo e($staff['created_at']); ?></small>
                         </td>
                         <td class="text-center">
                             <button type="button" class="btn btn-sm btn-info" 
-                                    onclick="editStaff({{ json_encode($staff) }})"
+                                    onclick="editStaff(<?php echo e(json_encode($staff)); ?>)"
                                     data-bs-toggle="modal" 
                                     data-bs-target="#editStaffModal">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <form action="{{ route('moderator.counterStaff.destroy', $staff['id']) }}" 
+                            <form action="<?php echo e(route('moderator.counterStaff.destroy', $staff['id'])); ?>" 
                                   method="POST" 
                                   class="d-inline"
-                                  onsubmit="return confirm('Bạn có chắc muốn xóa nhân viên {{ $staff['name'] }}?')">
-                                @csrf
-                                @method('DELETE')
+                                  onsubmit="return confirm('Bạn có chắc muốn xóa nhân viên <?php echo e($staff['name']); ?>?')">
+                                <?php echo csrf_field(); ?>
+                                <?php echo method_field('DELETE'); ?>
                                 <button type="submit" class="btn btn-sm btn-danger">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
                         </td>
                     </tr>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </tbody>
             </table>
         </div>
@@ -77,18 +77,18 @@
         <div class="mt-3">
             <p class="text-muted mb-0">
                 <i class="fas fa-info-circle me-2"></i>
-                Tổng số nhân viên: <strong>{{ count($counterStaff) }}</strong>
+                Tổng số nhân viên: <strong><?php echo e(count($counterStaff)); ?></strong>
             </p>
         </div>
-    @endif
+    <?php endif; ?>
 </div>
 
 <!-- Add Staff Modal -->
 <div class="modal fade" id="addStaffModal" tabindex="-1" aria-labelledby="addStaffModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ route('moderator.counterStaff.store') }}" method="POST">
-                @csrf
+            <form action="<?php echo e(route('moderator.counterStaff.store')); ?>" method="POST">
+                <?php echo csrf_field(); ?>
                 <div class="modal-header">
                     <h5 class="modal-title" id="addStaffModalLabel">
                         <i class="fas fa-user-plus"></i> Thêm nhân viên mới
@@ -120,7 +120,7 @@
                     
                     <div class="alert alert-info mb-0">
                         <i class="fas fa-info-circle me-2"></i>
-                        <small>Nhân viên sẽ được gán vào rạp <strong>{{ $theater['name'] }}</strong> với vai trò đứng quầy bán vé.</small>
+                        <small>Nhân viên sẽ được gán vào rạp <strong><?php echo e($theater['name']); ?></strong> với vai trò đứng quầy bán vé.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -141,8 +141,8 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form id="editStaffForm" method="POST">
-                @csrf
-                @method('PUT')
+                <?php echo csrf_field(); ?>
+                <?php echo method_field('PUT'); ?>
                 <div class="modal-header">
                     <h5 class="modal-title" id="editStaffModalLabel">
                         <i class="fas fa-user-edit"></i> Chỉnh sửa nhân viên
@@ -184,7 +184,7 @@
     </div>
 </div>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 function editStaff(staff) {
     document.getElementById('edit_name').value = staff.name;
@@ -197,5 +197,7 @@ function editStaff(staff) {
     form.action = '/moderator/counter-staff/' + staff.id;
 }
 </script>
-@endpush
-@endsection
+<?php $__env->stopPush(); ?>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('admin.moderator.layout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/admin/moderator/counter_staff.blade.php ENDPATH**/ ?>

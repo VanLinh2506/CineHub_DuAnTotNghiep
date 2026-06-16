@@ -370,7 +370,20 @@ class ModeratorController extends Controller
             ->orderBy('screen_name')
             ->get();
         
-        return view('admin.moderator.screens', compact('theater', 'screens'));
+        // Get movies for filter dropdown
+        $movies = Movie::join('showtimes', 'movies.id', '=', 'showtimes.movie_id')
+            ->join('theater_screens', 'showtimes.screen_id', '=', 'theater_screens.id')
+            ->where('theater_screens.theater_id', $this->theaterId)
+            ->select('movies.id', 'movies.title')
+            ->distinct()
+            ->orderBy('movies.title')
+            ->get()
+            ->map(function($item) {
+                return ['id' => $item->id, 'title' => $item->title];
+            })
+            ->toArray();
+        
+        return view('admin.moderator.screens', compact('theater', 'screens', 'movies'));
     }
     
     public function screensStore(Request $request)
@@ -468,12 +481,34 @@ class ModeratorController extends Controller
             'sold' => Ticket::whereHas('showtime.screen', function($q) {
                     $q->where('theater_id', $this->theaterId);
                 })->where('status', 'Đã đặt')->count(),
+            'cancelled' => Ticket::whereHas('showtime.screen', function($q) {
+                    $q->where('theater_id', $this->theaterId);
+                })->where('status', 'Đã hủy')->count(),
+            'pending' => Ticket::whereHas('showtime.screen', function($q) {
+                    $q->where('theater_id', $this->theaterId);
+                })->where('status', 'Chờ thanh toán')->count(),
             'revenue' => Ticket::whereHas('showtime.screen', function($q) {
                     $q->where('theater_id', $this->theaterId);
                 })->where('status', 'Đã đặt')->sum('price'),
         ];
         
-        return view('admin.moderator.tickets', compact('theater', 'tickets', 'stats'));
+        // Get movies for filter dropdown
+        $movies = Movie::join('showtimes', 'movies.id', '=', 'showtimes.movie_id')
+            ->join('theater_screens', 'showtimes.screen_id', '=', 'theater_screens.id')
+            ->where('theater_screens.theater_id', $this->theaterId)
+            ->select('movies.id', 'movies.title')
+            ->distinct()
+            ->orderBy('movies.title')
+            ->get()
+            ->map(function($item) {
+                return ['id' => $item->id, 'title' => $item->title];
+            })
+            ->toArray();
+        
+        $movie_id = $request->input('movie_id');
+        $status = $request->input('status');
+        
+        return view('admin.moderator.tickets', compact('theater', 'tickets', 'stats', 'movies', 'movie_id', 'status'));
     }
     
     /**
@@ -497,23 +532,213 @@ class ModeratorController extends Controller
             ->select('movies.id', 'movies.title')
             ->selectRaw('COUNT(tickets.id) as ticket_count, COALESCE(SUM(tickets.price), 0) as revenue')
             ->orderByDesc('revenue')
-            ->get();
+            ->get()
+            ->map(function($item) {
+                return [
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'ticket_count' => $item->ticket_count,
+                    'revenue' => $item->revenue
+                ];
+            })
+            ->toArray();
         
-        // Revenue by date (30 days)
-        $revenueByDate = [];
+        // Revenue by date (30 days) - grouped by movie
+        $dates = [];
+        $revenueByDateRaw = [];
+        
         for ($i = 29; $i >= 0; $i--) {
             $date = now()->subDays($i)->toDateString();
-            $revenue = Ticket::whereHas('showtime.screen', function($q) {
-                    $q->where('theater_id', $this->theaterId);
-                })
-                ->where('status', 'Đã đặt')
-                ->whereDate('created_at', $date)
-                ->sum('price');
+            $dates[] = $date;
             
-            $revenueByDate[] = ['date' => $date, 'revenue' => $revenue];
+            // Get revenue per movie for this date
+            $dailyRevenue = Movie::join('showtimes', 'movies.id', '=', 'showtimes.movie_id')
+                ->join('theater_screens', 'showtimes.screen_id', '=', 'theater_screens.id')
+                ->leftJoin('tickets', function($join) use ($date) {
+                    $join->on('showtimes.id', '=', 'tickets.showtime_id')
+                         ->where('tickets.status', 'Đã đặt')
+                         ->whereDate('tickets.created_at', $date);
+                })
+                ->where('theater_screens.theater_id', $this->theaterId)
+                ->whereDate('showtimes.show_date', '<=', $date)
+                ->groupBy('movies.id', 'movies.title')
+                ->select('movies.id', 'movies.title')
+                ->selectRaw('COALESCE(SUM(tickets.price), 0) as revenue')
+                ->get();
+            
+            foreach ($dailyRevenue as $movieRevenue) {
+                if (!isset($revenueByDateRaw[$movieRevenue->id])) {
+                    $revenueByDateRaw[$movieRevenue->id] = [
+                        'title' => $movieRevenue->title,
+                        'data' => []
+                    ];
+                }
+                $revenueByDateRaw[$movieRevenue->id]['data'][] = [
+                    'date' => $date,
+                    'revenue' => $movieRevenue->revenue
+                ];
+            }
         }
         
-        return view('admin.moderator.statistics', compact('theater', 'revenueByMovie', 'revenueByDate'));
+        $revenueByDate = $revenueByDateRaw;
+        
+        // Get available dates from showtimes
+        $availableDates = Showtime::whereHas('screen', function($q) {
+                $q->where('theater_id', $this->theaterId);
+            })
+            ->select('show_date')
+            ->distinct()
+            ->orderBy('show_date', 'desc')
+            ->get()
+            ->map(function($item) {
+                return ['show_date' => $item->show_date];
+            })
+            ->toArray();
+        
+        // Get available movies
+        $availableMovies = Movie::join('showtimes', 'movies.id', '=', 'showtimes.movie_id')
+            ->join('theater_screens', 'showtimes.screen_id', '=', 'theater_screens.id')
+            ->where('theater_screens.theater_id', $this->theaterId)
+            ->select('movies.id', 'movies.title')
+            ->distinct()
+            ->orderBy('movies.title')
+            ->get()
+            ->map(function($item) {
+                return ['id' => $item->id, 'title' => $item->title];
+            })
+            ->toArray();
+        
+        // Get available screens
+        $availableScreens = Screen::where('theater_id', $this->theaterId)
+            ->select('id', 'screen_name')
+            ->orderBy('screen_name')
+            ->get()
+            ->map(function($item) {
+                return ['id' => $item->id, 'screen_name' => $item->screen_name];
+            })
+            ->toArray();
+        
+        // Get available times
+        $availableTimes = Showtime::whereHas('screen', function($q) {
+                $q->where('theater_id', $this->theaterId);
+            })
+            ->select('show_time')
+            ->distinct()
+            ->orderBy('show_time')
+            ->get()
+            ->map(function($item) {
+                return ['show_time' => $item->show_time];
+            })
+            ->toArray();
+        
+        // Get fill rate filters from request
+        $fillRateMovieFilter = $request->input('fill_rate_movie', 'all');
+        $fillRateDateFilter = $request->input('fill_rate_date', 'all');
+        $fillRateScreenFilter = $request->input('fill_rate_screen', 'all');
+        $fillRateTimeFilter = $request->input('fill_rate_time', 'all');
+        
+        // Fill rate by date and screen
+        $fillRateQuery = Showtime::with(['movie', 'screen'])
+            ->whereHas('screen', function($q) {
+                $q->where('theater_id', $this->theaterId);
+            });
+        
+        // Apply filters
+        if ($fillRateDateFilter !== 'all') {
+            $fillRateQuery->where('show_date', $fillRateDateFilter);
+        }
+        if ($fillRateMovieFilter !== 'all') {
+            $fillRateQuery->where('movie_id', $fillRateMovieFilter);
+        }
+        if ($fillRateScreenFilter !== 'all') {
+            $fillRateQuery->where('screen_id', $fillRateScreenFilter);
+        }
+        if ($fillRateTimeFilter !== 'all') {
+            $fillRateQuery->where('show_time', $fillRateTimeFilter);
+        }
+        
+        $fillRateData = $fillRateQuery->get()
+            ->groupBy('show_date')
+            ->map(function($showtimes, $date) {
+                $screens = $showtimes->map(function($showtime) {
+                    $bookedTickets = Ticket::where('showtime_id', $showtime->id)
+                        ->where('status', 'Đã đặt')
+                        ->count();
+                    
+                    $pickedUpTickets = Ticket::where('showtime_id', $showtime->id)
+                        ->where('status', 'Đã đặt')
+                        ->where('is_picked_up', true)
+                        ->count();
+                    
+                    $fillRate = $bookedTickets > 0 ? ($pickedUpTickets / $bookedTickets) * 100 : 0;
+                    
+                    return [
+                        'showtime_id' => $showtime->id,
+                        'movie_id' => $showtime->movie_id,
+                        'movie_title' => $showtime->movie ? $showtime->movie->title : 'N/A',
+                        'screen_id' => $showtime->screen_id,
+                        'screen_name' => $showtime->screen ? $showtime->screen->screen_name : 'N/A',
+                        'show_time' => $showtime->show_time,
+                        'booked_tickets' => $bookedTickets,
+                        'picked_up_tickets' => $pickedUpTickets,
+                        'fill_rate' => round($fillRate, 2)
+                    ];
+                });
+                
+                return [
+                    'show_date' => $date,
+                    'screens' => $screens->values()->toArray()
+                ];
+            })
+            ->values()
+            ->toArray();
+        
+        $fillRateByDate = $fillRateData;
+        
+        // Fill rate average by movie
+        $fillRateByMovieAvg = Movie::join('showtimes', 'movies.id', '=', 'showtimes.movie_id')
+            ->join('theater_screens', 'showtimes.screen_id', '=', 'theater_screens.id')
+            ->where('theater_screens.theater_id', $this->theaterId)
+            ->select('movies.id as movie_id', 'movies.title as movie_title')
+            ->selectRaw('
+                COUNT(DISTINCT showtimes.id) as total_showtimes,
+                COALESCE(SUM(CASE WHEN tickets.status = "Đã đặt" THEN 1 ELSE 0 END), 0) as total_booked_tickets,
+                COALESCE(SUM(CASE WHEN tickets.status = "Đã đặt" AND tickets.is_picked_up = 1 THEN 1 ELSE 0 END), 0) as total_picked_up_tickets
+            ')
+            ->leftJoin('tickets', 'showtimes.id', '=', 'tickets.showtime_id')
+            ->groupBy('movies.id', 'movies.title')
+            ->get()
+            ->map(function($item) {
+                $avgFillRate = $item->total_booked_tickets > 0 
+                    ? ($item->total_picked_up_tickets / $item->total_booked_tickets) * 100 
+                    : 0;
+                
+                return [
+                    'movie_id' => $item->movie_id,
+                    'movie_title' => $item->movie_title,
+                    'total_booked_tickets' => $item->total_booked_tickets,
+                    'total_picked_up_tickets' => $item->total_picked_up_tickets,
+                    'avg_fill_rate' => round($avgFillRate, 2)
+                ];
+            })
+            ->toArray();
+        
+        return view('admin.moderator.statistics', compact(
+            'theater', 
+            'revenueByMovie', 
+            'revenueByDate', 
+            'dates',
+            'availableDates',
+            'availableMovies',
+            'availableScreens',
+            'availableTimes',
+            'fillRateByDate',
+            'fillRateByMovieAvg',
+            'fillRateMovieFilter',
+            'fillRateDateFilter',
+            'fillRateScreenFilter',
+            'fillRateTimeFilter'
+        ));
     }
     
     // Helper methods
@@ -611,5 +836,219 @@ class ModeratorController extends Controller
             'vip_rows' => ['D', 'E', 'F'],
             'couple_rows' => ['L'],
         ]);
+    }
+    
+    /**
+     * Counter Staff Management
+     */
+    public function counterStaff()
+    {
+        if ($error = $this->checkPermission()) return $error;
+        
+        $theater = Theater::findOrFail($this->theaterId);
+        
+        // Get counter staff for this theater (users with theater_id and role = 'user')
+        $counterStaff = User::where('theater_id', $this->theaterId)
+            ->where('role', 'user') // Counter staff là user có theater_id
+            ->orderBy('name')
+            ->get()
+            ->map(function($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone ?? 'N/A',
+                    'created_at' => $user->created_at->format('d/m/Y H:i'),
+                ];
+            })
+            ->toArray();
+        
+        return view('admin.moderator.counter_staff', compact('theater', 'counterStaff'));
+    }
+    
+    public function counterStaffStore(Request $request)
+    {
+        if ($error = $this->checkPermission()) return $error;
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+            'phone' => 'nullable|string|max:20',
+        ]);
+        
+        try {
+            User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => $request->password, // Laravel 11 auto-hashes if cast is set
+                'phone' => $request->phone,
+                'role' => 'user', // Counter staff là user có theater_id
+                'theater_id' => $this->theaterId,
+                'is_active' => true,
+                'status' => 'active',
+            ]);
+            
+            return redirect()->route('moderator.counterStaff')
+                ->with('success', 'Thêm nhân viên thành công!');
+        } catch (\Exception $e) {
+            \Log::error('Error creating counter staff: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+    
+    public function counterStaffUpdate(Request $request, $id)
+    {
+        if ($error = $this->checkPermission()) return $error;
+        
+        $staff = User::where('id', $id)
+            ->where('theater_id', $this->theaterId)
+            ->where('role', 'user') // Counter staff là user có theater_id
+            ->firstOrFail();
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $id,
+            'phone' => 'nullable|string|max:20',
+        ]);
+        
+        $data = $request->only(['name', 'email', 'phone']);
+        
+        if ($request->filled('password')) {
+            $request->validate(['password' => 'string|min:6']);
+            $data['password'] = $request->password; // Auto-hashed by model
+        }
+        
+        $staff->update($data);
+        
+        return redirect()->route('moderator.counterStaff')
+            ->with('success', 'Cập nhật nhân viên thành công!');
+    }
+    
+    public function counterStaffDelete($id)
+    {
+        if ($error = $this->checkPermission()) return $error;
+        
+        $staff = User::where('id', $id)
+            ->where('theater_id', $this->theaterId)
+            ->where('role', 'user') // Counter staff là user có theater_id
+            ->firstOrFail();
+        
+        $staff->delete();
+        
+        return redirect()->route('moderator.counterStaff')
+            ->with('success', 'Xóa nhân viên thành công!');
+    }
+    
+    /**
+     * Food Items Management
+     */
+    public function foodItems()
+    {
+        if ($error = $this->checkPermission()) return $error;
+        
+        $theater = Theater::findOrFail($this->theaterId);
+        
+        // Get food items for this theater
+        $foodItems = FoodItem::where('theater_id', $this->theaterId)
+            ->orderBy('category')
+            ->orderBy('name')
+            ->get()
+            ->map(function($item) {
+                return [
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'category' => $item->category,
+                    'price' => $item->price,
+                    'description' => $item->description,
+                    'image' => $item->image,
+                    'is_available' => $item->is_available,
+                ];
+            })
+            ->toArray();
+        
+        return view('admin.moderator.food_items', compact('theater', 'foodItems'));
+    }
+    
+    public function foodItemsStore(Request $request)
+    {
+        if ($error = $this->checkPermission()) return $error;
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|in:combo,drink,snack,other',
+            'price' => 'required|numeric|min:0',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|max:2048',
+        ]);
+        
+        $data = $request->only(['name', 'category', 'price', 'description']);
+        $data['theater_id'] = $this->theaterId;
+        $data['is_available'] = $request->has('is_available');
+        
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('food_items', 'public');
+            $data['image'] = $imagePath;
+        }
+        
+        FoodItem::create($data);
+        
+        return redirect()->route('moderator.foodItems')
+            ->with('success', 'Thêm đồ ăn thành công!');
+    }
+    
+    public function foodItemsUpdate(Request $request, $id)
+    {
+        if ($error = $this->checkPermission()) return $error;
+        
+        $foodItem = FoodItem::where('id', $id)
+            ->where('theater_id', $this->theaterId)
+            ->firstOrFail();
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|in:combo,drink,snack,other',
+            'price' => 'required|numeric|min:0',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|max:2048',
+        ]);
+        
+        $data = $request->only(['name', 'category', 'price', 'description']);
+        $data['is_available'] = $request->has('is_available');
+        
+        if ($request->hasFile('image')) {
+            // Delete old image
+            if ($foodItem->image) {
+                Storage::disk('public')->delete($foodItem->image);
+            }
+            $imagePath = $request->file('image')->store('food_items', 'public');
+            $data['image'] = $imagePath;
+        }
+        
+        $foodItem->update($data);
+        
+        return redirect()->route('moderator.foodItems')
+            ->with('success', 'Cập nhật đồ ăn thành công!');
+    }
+    
+    public function foodItemsDelete($id)
+    {
+        if ($error = $this->checkPermission()) return $error;
+        
+        $foodItem = FoodItem::where('id', $id)
+            ->where('theater_id', $this->theaterId)
+            ->firstOrFail();
+        
+        // Delete image if exists
+        if ($foodItem->image) {
+            Storage::disk('public')->delete($foodItem->image);
+        }
+        
+        $foodItem->delete();
+        
+        return redirect()->route('moderator.foodItems')
+            ->with('success', 'Xóa đồ ăn thành công!');
     }
 }

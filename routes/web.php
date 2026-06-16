@@ -212,8 +212,23 @@ Route::middleware(['auth', 'moderator'])->prefix('moderator')->name('moderator.'
     // Tickets
     Route::get('/tickets', [ModeratorController::class, 'tickets'])->name('tickets');
     
-    // Food Items (use admin routes for now)
-    Route::get('/food-items', [AdminController::class, 'foodItems'])->name('foodItems');
+    // Counter Staff Management
+    Route::prefix('counter-staff')->name('counterStaff.')->group(function () {
+        Route::get('/', [ModeratorController::class, 'counterStaff'])->name('index');
+        Route::post('/', [ModeratorController::class, 'counterStaffStore'])->name('store');
+        Route::put('/{id}', [ModeratorController::class, 'counterStaffUpdate'])->name('update');
+        Route::delete('/{id}', [ModeratorController::class, 'counterStaffDelete'])->name('destroy');
+    });
+    Route::get('/counter-staff', [ModeratorController::class, 'counterStaff'])->name('counterStaff');
+    
+    // Food Items Management
+    Route::prefix('food-items')->name('foodItems.')->group(function () {
+        Route::get('/', [ModeratorController::class, 'foodItems'])->name('index');
+        Route::post('/', [ModeratorController::class, 'foodItemsStore'])->name('store');
+        Route::put('/{id}', [ModeratorController::class, 'foodItemsUpdate'])->name('update');
+        Route::delete('/{id}', [ModeratorController::class, 'foodItemsDelete'])->name('destroy');
+    });
+    Route::get('/food-items', [ModeratorController::class, 'foodItems'])->name('foodItems');
     
     // Statistics
     Route::get('/statistics', [ModeratorController::class, 'statistics'])->name('statistics');
@@ -229,11 +244,19 @@ Route::middleware(['auth', 'moderator'])->prefix('moderator')->name('moderator.'
 // ==================== COUNTER STAFF ROUTES ====================
 Route::middleware(['auth', 'counter_staff'])->prefix('counter')->name('counter.')->group(function () {
     Route::get('/', [CounterStaffController::class, 'index'])->name('index');
-    Route::get('/scan', [CounterStaffController::class, 'scan'])->name('scan');
+    
+    // QR Code Scanning
+    Route::get('/scan-qr', [CounterStaffController::class, 'scanQR'])->name('scanQR');
     Route::post('/verify-ticket', [CounterStaffController::class, 'verifyTicket'])->name('verifyTicket');
-    Route::post('/pickup-ticket', [CounterStaffController::class, 'pickupTicket'])->name('pickupTicket');
-    Route::get('/bookings', [CounterStaffController::class, 'bookings'])->name('bookings');
-    Route::get('/bookings/{id}', [CounterStaffController::class, 'bookingDetail'])->name('bookingDetail');
+    Route::get('/scanned-tickets', [CounterStaffController::class, 'scannedTickets'])->name('scannedTickets');
+    
+    // Sell Tickets at Counter
+    Route::get('/sell-ticket', [CounterStaffController::class, 'sellTicket'])->name('sellTicket');
+    Route::post('/process-sale', [CounterStaffController::class, 'processSale'])->name('processSale');
+    Route::get('/sales-history', [CounterStaffController::class, 'salesHistory'])->name('salesHistory');
+    
+    // Showtimes
+    Route::get('/showtimes', [CounterStaffController::class, 'showtimes'])->name('showtimes');
 });
 
 // ==================== NEWS ROUTES ====================

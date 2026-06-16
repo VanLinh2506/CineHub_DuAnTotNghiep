@@ -58,18 +58,31 @@ class AuthController extends Controller
                 
                 $user = Auth::user();
                 
-                // Kiểm tra admin
-                $isAdmin = $user->role === 'admin' || 
-                          $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists();
+                // Xác định redirect URL dựa trên role và theater_id
+                $redirectUrl = route('home'); // Default
+                
+                // Admin
+                if ($user->role === 'admin' || $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists()) {
+                    $redirectUrl = route('admin.index');
+                }
+                // Moderator (role = moderator VÀ có theater_id)
+                else if ($user->role === 'moderator' && !empty($user->theater_id) && $user->theater_id != '') {
+                    $redirectUrl = route('moderator.index');
+                }
+                // Counter Staff (role = user VÀ có theater_id hợp lệ)
+                else if ($user->role === 'user' && !empty($user->theater_id) && $user->theater_id != '' && is_numeric($user->theater_id)) {
+                    $redirectUrl = route('counter.index');
+                }
+                // User thường - về home
                 
                 if ($request->ajax()) {
                     return response()->json([
                         'success' => true,
-                        'redirect' => $isAdmin ? route('admin.index') : route('home')
+                        'redirect' => $redirectUrl
                     ]);
                 }
                 
-                return redirect()->intended($isAdmin ? route('admin.index') : route('home'))
+                return redirect()->intended($redirectUrl)
                     ->with('success', 'Đăng nhập thành công!');
             }
             
@@ -178,10 +191,23 @@ class AuthController extends Controller
 
             Auth::login($user, true);
 
-            $isAdmin = $user->role === 'admin' ||
-                       $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists();
+            // Xác định redirect URL dựa trên role và theater_id
+            $redirectUrl = route('home'); // Default
+            
+            // Admin
+            if ($user->role === 'admin' || $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists()) {
+                $redirectUrl = route('admin.index');
+            }
+            // Moderator (role = moderator VÀ có theater_id)
+            else if ($user->role === 'moderator' && !empty($user->theater_id) && $user->theater_id != '') {
+                $redirectUrl = route('moderator.index');
+            }
+            // Counter Staff (role = user VÀ có theater_id hợp lệ)
+            else if ($user->role === 'user' && !empty($user->theater_id) && $user->theater_id != '' && is_numeric($user->theater_id)) {
+                $redirectUrl = route('counter.index');
+            }
 
-            return redirect()->intended($isAdmin ? route('admin.index') : route('home'))
+            return redirect()->intended($redirectUrl)
                 ->with('success', 'Đăng nhập bằng Google thành công!');
 
         } catch (\Laravel\Socialite\Two\InvalidStateException $e) {

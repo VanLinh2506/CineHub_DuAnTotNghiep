@@ -47,25 +47,31 @@
             <i class="fas fa-user-tie"></i> Nhân viên quầy
         </div>
         <ul class="sidebar-menu">
-            <li><a href="{{ route('counterStaff.sellTicket') }}" class="{{ ($current_page ?? '') === 'sell_ticket' ? 'active' : '' }}">
+            <li><a href="{{ route('counter.sellTicket') }}" class="{{ request()->routeIs('counter.sellTicket') ? 'active' : '' }}">
                 <i class="fas fa-cash-register"></i> Bán vé trực tiếp
             </a></li>
-            <li><a href="{{ route('counterStaff.salesHistory') }}" class="{{ ($current_page ?? '') === 'sales_history' ? 'active' : '' }}">
+            <li><a href="{{ route('counter.salesHistory') }}" class="{{ request()->routeIs('counter.salesHistory') ? 'active' : '' }}">
                 <i class="fas fa-history"></i> Lịch sử bán vé
             </a></li>
-            <li><a href="{{ route('counterStaff.scanQR') }}" class="{{ ($current_page ?? '') === 'scan_qr' ? 'active' : '' }}">
+            <li><a href="{{ route('counter.scanQR') }}" class="{{ request()->routeIs('counter.scanQR') ? 'active' : '' }}">
                 <i class="fas fa-qrcode"></i> Quét QR Code
             </a></li>
-            <li><a href="{{ route('counterStaff.scannedTickets') }}" class="{{ ($current_page ?? '') === 'scanned_tickets' ? 'active' : '' }}">
+            <li><a href="{{ route('counter.scannedTickets') }}" class="{{ request()->routeIs('counter.scannedTickets') ? 'active' : '' }}">
                 <i class="fas fa-ticket-alt"></i> Vé đã quét
             </a></li>
-            <li><a href="{{ route('counterStaff.showtimes') }}" class="{{ ($current_page ?? '') === 'showtimes' ? 'active' : '' }}">
+            <li><a href="{{ route('counter.showtimes') }}" class="{{ request()->routeIs('counter.showtimes') ? 'active' : '' }}">
                 <i class="fas fa-calendar-alt"></i> Lịch chiếu phim
             </a></li>
-            <li><a href="/"><i class="fas fa-home"></i> Về trang chủ</a></li>
+            <li><a href="{{ route('home') }}"><i class="fas fa-home"></i> Về trang chủ</a></li>
             <li><a href="{{ route('profile.index') }}"><i class="fas fa-user"></i> Hồ sơ</a></li>
-            <li><a href="{{ route('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+            <li><a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <i class="fas fa-sign-out-alt"></i> Đăng xuất
+            </a></li>
         </ul>
+        
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+            @csrf
+        </form>
     </div>
 
     <div class="staff-main">

@@ -101,6 +101,7 @@ function loadShowtimesNow() {
 
 // Declare selectShowtime function
 window.selectShowtime = function(showtimeId) {
+    console.log('=== SHOWTIME SELECTION ===');
     console.log('Showtime selected:', showtimeId);
     
     // Remove previous selection
@@ -113,12 +114,20 @@ window.selectShowtime = function(showtimeId) {
     var selectedBtn = document.querySelector('.showtime-btn[data-showtime-id="' + showtimeId + '"]');
     if (selectedBtn) {
         selectedBtn.classList.add('selected');
+        console.log('Showtime button marked as selected');
     }
     
     window.selectedShowtimeId = showtimeId;
+    console.log('Set window.selectedShowtimeId =', showtimeId);
+    
     var showtimeInput = document.getElementById('showtimeIdInput');
+    console.log('Found showtimeIdInput element:', !!showtimeInput);
+    
     if (showtimeInput) {
         showtimeInput.value = showtimeId;
+        console.log('Set showtimeIdInput.value =', showtimeInput.value);
+    } else {
+        console.error('showtimeIdInput element not found!');
     }
     
     // Load seat map
@@ -371,10 +380,29 @@ function validateSeatSelectionNow(showAlert) {
 function updateSeatSummaryNow() {
     var quantity = window.selectedSeats ? window.selectedSeats.length : 0;
     
-    // Update selected seats input
-    var seatsInput = document.getElementById('selectedSeatsInput');
-    if (seatsInput) {
-        seatsInput.value = JSON.stringify(window.selectedSeats || []);
+    // Update selected seats inputs (multiple hidden inputs for array submission)
+    var container = document.getElementById('seatsInputContainer');
+    if (!container) {
+        // Create container if not exists
+        container = document.createElement('div');
+        container.id = 'seatsInputContainer';
+        container.style.display = 'none';
+        var form = document.getElementById('bookingForm');
+        if (form) form.appendChild(container);
+    }
+    
+    // Clear old inputs
+    container.innerHTML = '';
+    
+    // Create new inputs for each seat
+    if (window.selectedSeats && window.selectedSeats.length > 0) {
+        for (var i = 0; i < window.selectedSeats.length; i++) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'seats[]';
+            input.value = window.selectedSeats[i];
+            container.appendChild(input);
+        }
     }
     
     // Show seat summary and confirm button
@@ -480,7 +508,7 @@ window.confirmSeats = function() {
     var reselectBtn = document.getElementById('reselectSeatsBtn');
     if (reselectBtn) reselectBtn.style.display = 'inline-block';
     
-    // Show food/payment sections
+    // Show food/payment/email sections
     var foodSection = document.getElementById('foodSection');
     if (foodSection) foodSection.style.display = 'block';
     
@@ -501,8 +529,6 @@ window.confirmSeats = function() {
             seats[i].style.cursor = 'not-allowed';
         }
     }
-    
-    showSuccessMsg('Đã xác nhận chọn ghế! Bạn có thể chọn combo đồ ăn bên dưới.');
     
     updateBookingSummaryFull();
     
@@ -528,7 +554,7 @@ window.reselectSeats = function() {
     if (paymentSection) paymentSection.style.display = 'none';
     
     // Reset food quantities
-    var foodInputs = document.querySelectorAll('input[name^="food_items"]');
+    var foodInputs = document.querySelectorAll('input[name^="food_items["]');
     for (var i = 0; i < foodInputs.length; i++) {
         foodInputs[i].value = 0;
     }
@@ -545,8 +571,35 @@ window.reselectSeats = function() {
     updateBookingSummaryFull();
 };
 
+// Update food quantity
+window.updateFoodQuantity = function(foodId, change) {
+    console.log('updateFoodQuantity called:', {foodId, change});
+    var input = document.getElementById('food_' + foodId);
+    if (!input) {
+        console.error('Food input not found for ID:', foodId);
+        return;
+    }
+    
+    var currentValue = parseInt(input.value) || 0;
+    var newValue = currentValue + change;
+    
+    if (newValue < 0) newValue = 0;
+    if (newValue > 10) newValue = 10;
+    
+    console.log('Updating food quantity:', {foodId, currentValue, newValue});
+    input.value = newValue;
+    
+    // Update total price immediately
+    updateBookingSummaryFull();
+};
+
+// Also make it available without window prefix
+var updateFoodQuantity = window.updateFoodQuantity;
+
 // Update booking summary (full)
 function updateBookingSummaryFull() {
+    console.log('updateBookingSummaryFull called, seatsConfirmed:', window.seatsConfirmed);
+    
     if (!window.seatsConfirmed) {
         calculateSeatPriceNow();
         return;
@@ -559,36 +612,75 @@ function updateBookingSummaryFull() {
     var vipPrice = Math.round(basePrice * 1.3);
     var couplePrice = Math.round(basePrice * 1.5);
     
-    var totalPrice = 0;
+    var seatsTotal = 0;
     
     if (window.selectedSeats) {
         for (var i = 0; i < window.selectedSeats.length; i++) {
             var seat = window.selectedSeats[i];
             var row = seat.charAt(0);
             if (row === 'D' || row === 'E' || row === 'F') {
-                totalPrice += vipPrice;
+                seatsTotal += vipPrice;
             } else if (row === 'J') {
-                totalPrice += couplePrice;
+                seatsTotal += couplePrice;
             } else {
-                totalPrice += normalPrice;
+                seatsTotal += normalPrice;
             }
         }
     }
     
-    // Add food items to total
-    var foodInputs = document.querySelectorAll('input[name^="food_items"]');
+    console.log('Seat total:', seatsTotal);
+    
+    // Update seats total display
+    var seatsTotalEl = document.getElementById('seatsTotal');
+    if (seatsTotalEl) seatsTotalEl.textContent = new Intl.NumberFormat('vi-VN').format(seatsTotal) + ' ₫';
+    
+    // Add food items to total (from inline inputs)
+    var foodInputs = document.querySelectorAll('input[name^="food_items["]');
     var foodTotal = 0;
+    var foodSummaryHtml = '';
+    var hasFoodItems = false;
+    
+    console.log('Found food inputs:', foodInputs.length);
+    
     for (var i = 0; i < foodInputs.length; i++) {
         var qty = parseInt(foodInputs[i].value) || 0;
         if (qty > 0) {
-            var foodCard = foodInputs[i].closest('.food-item-card');
-            var priceText = foodCard.querySelector('p').textContent;
-            var price = parseInt(priceText.replace(/[^0-9]/g, ''));
-            foodTotal += price * qty;
+            hasFoodItems = true;
+            // Get price from data attribute of corresponding food card
+            var foodId = foodInputs[i].name.match(/\[(\d+)\]/)[1];
+            var foodCard = document.querySelector('.food-item-card-compact[data-food-id="' + foodId + '"]');
+            if (foodCard) {
+                var price = parseInt(foodCard.getAttribute('data-food-price')) || 0;
+                var subtotal = price * qty;
+                foodTotal += subtotal;
+                
+                // Get food name
+                var foodName = foodCard.querySelector('h6') ? foodCard.querySelector('h6').textContent.trim() : 'Món ăn #' + foodId;
+                
+                foodSummaryHtml += '<div class="price-row" style="font-size: 13px; color: #ddd;">';
+                foodSummaryHtml += '<span>' + foodName + ' x' + qty + '</span>';
+                foodSummaryHtml += '<span>' + new Intl.NumberFormat('vi-VN').format(subtotal) + ' ₫</span>';
+                foodSummaryHtml += '</div>';
+                
+                console.log('Food item:', {foodId, foodName, qty, price, subtotal});
+            }
         }
     }
     
-    totalPrice += foodTotal;
+    // Update food summary section
+    var foodSummaryRows = document.getElementById('foodSummaryRows');
+    if (foodSummaryRows) {
+        if (hasFoodItems) {
+            foodSummaryRows.innerHTML = '<div class="price-row" style="font-weight: 600; margin-bottom: 5px;"><span>Đồ ăn & nước:</span><span></span></div>' + foodSummaryHtml;
+            foodSummaryRows.style.display = 'block';
+        } else {
+            foodSummaryRows.style.display = 'none';
+        }
+    }
+    
+    console.log('Food total:', foodTotal);
+    var totalPrice = seatsTotal + foodTotal;
+    console.log('Grand total:', totalPrice);
     
     var totalEl = document.getElementById('totalPrice');
     if (totalEl) totalEl.textContent = new Intl.NumberFormat('vi-VN').format(totalPrice) + ' ₫';
@@ -596,21 +688,6 @@ function updateBookingSummaryFull() {
     var bookBtn = document.getElementById('bookBtn');
     if (bookBtn) bookBtn.disabled = false;
 }
-
-// Update food quantity
-window.updateFoodQuantity = function(foodId, change) {
-    var input = document.getElementById('food_' + foodId);
-    if (!input) return;
-    
-    var currentValue = parseInt(input.value) || 0;
-    var newValue = currentValue + change;
-    
-    if (newValue < 0) newValue = 0;
-    if (newValue > 10) newValue = 10;
-    
-    input.value = newValue;
-    updateBookingSummaryFull();
-};
 
 // Update booking summary
 function updateBookingSummaryNow() {
@@ -747,6 +824,62 @@ function doSelectTheater(theaterId) {
     } else {
         console.error('datesContainer not found!');
     }
+}
+
+// Validate form before submit
+function validateFormBeforeSubmit() {
+    console.log('=== FORM VALIDATION ===');
+    
+    // Force get fresh value
+    var showtimeInput = document.getElementById('showtimeIdInput');
+    var showtimeId = showtimeInput ? showtimeInput.value : null;
+    
+    var seats = document.querySelectorAll('input[name="seats[]"]');
+    var email = document.getElementById('customerEmail') ? document.getElementById('customerEmail').value : '';
+    
+    console.log('Showtime Input Element:', showtimeInput);
+    console.log('Showtime ID from input:', showtimeId);
+    console.log('Showtime ID from window:', window.selectedShowtimeId);
+    console.log('Seats count:', seats.length);
+    console.log('Seats:', Array.from(seats).map(s => s.value));
+    console.log('Email:', email);
+    console.log('Seats confirmed:', window.seatsConfirmed);
+    
+    // If showtime_id is empty but window.selectedShowtimeId has value, set it
+    if ((!showtimeId || showtimeId === '') && window.selectedShowtimeId) {
+        console.warn('showtime_id input was empty, setting from window.selectedShowtimeId');
+        if (showtimeInput) {
+            showtimeInput.value = window.selectedShowtimeId;
+            showtimeId = window.selectedShowtimeId;
+            console.log('Set showtime_id to:', showtimeId);
+        }
+    }
+    
+    if (!showtimeId || showtimeId === '') {
+        alert('Vui lòng chọn suất chiếu!');
+        console.error('Validation failed: No showtime selected');
+        return false;
+    }
+    
+    if (seats.length === 0) {
+        alert('Vui lòng chọn ghế!');
+        console.error('Validation failed: No seats selected');
+        return false;
+    }
+    
+    if (!window.seatsConfirmed) {
+        alert('Vui lòng xác nhận chọn ghế!');
+        console.error('Validation failed: Seats not confirmed');
+        return false;
+    }
+    
+    console.log('✅ Form validation passed! Submitting...');
+    console.log('Final form data:');
+    console.log('- showtime_id:', showtimeId);
+    console.log('- seats:', Array.from(seats).map(s => s.value));
+    console.log('- email:', email);
+    
+    return true;
 }
 </script>
 @endpush
@@ -912,8 +1045,12 @@ function doSelectTheater(theaterId) {
                         </div>
                     @else
                     
-                    <form id="bookingForm" method="POST" action="{{ route('booking.processBooking') }}" class="booking-form" onsubmit="return checkAuth()">
+                    <form id="bookingForm" method="POST" action="{{ route('booking.processBooking') }}" class="booking-form" onsubmit="return validateFormBeforeSubmit()">
                         @csrf
+                        
+                        <!-- Hidden inputs for form submission -->
+                        <input type="hidden" name="showtime_id" id="showtimeIdInput" value="">
+                        <div id="seatsInputContainer" style="display: none;"></div>
                         
                         <!-- Theater Selection as Cards -->
                         <div class="form-group">
@@ -1093,8 +1230,6 @@ function doSelectTheater(theaterId) {
                             </div>
                         </div>
                         
-                        <input type="hidden" name="showtime_id" id="showtimeIdInput" required>
-                        
                         <!-- Seat Selection -->
                         <div id="seatSelectionSection" class="form-group" style="display: none;">
                             <label class="form-label">
@@ -1136,8 +1271,6 @@ function doSelectTheater(theaterId) {
                                     <span style="font-size: 12px; color: #ccc;">Đôi</span>
                                 </div>
                             </div>
-                            
-                            <input type="hidden" name="seats[]" id="selectedSeatsInput">
                         </div>
                         
                         <!-- Email for ticket -->
@@ -1209,104 +1342,49 @@ function doSelectTheater(theaterId) {
                             </div>
                         </div>
                         
-                        <!-- Food Items Section - Hidden, will show in modal -->
+                        <!-- Food Items Section - Grid cards -->
                         <div id="foodSection" class="form-group" style="display: none;">
-                            <input type="hidden" name="food_items_data" id="foodItemsData">
-                        </div>
-                        
-                        <!-- Food Modal -->
-                        <div id="foodModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 9999; backdrop-filter: blur(5px);">
-                            <div class="modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);">
-                                <!-- Modal Header -->
-                                <div style="padding: 25px; border-bottom: 2px solid rgba(255, 193, 7, 0.3); display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to bottom, rgba(255, 193, 7, 0.1), transparent);">
-                                    <h3 style="margin: 0; color: #ffc107; font-size: 24px; display: flex; align-items: center; gap: 10px;">
-                                        <i class="fas fa-utensils"></i>
-                                        Combo & Đồ ăn
-                                    </h3>
-                                    <button type="button" onclick="closeFoodModal()" style="background: rgba(255, 255, 255, 0.1); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: all 0.3s;" onmouseover="this.style.background='rgba(255, 193, 7, 0.2)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
+                            <label class="form-label" style="margin-bottom: 10px;">
+                                <i class="fas fa-utensils me-2"></i>Combo Đồ Ăn & Nước (Tùy chọn)
+                            </label>
+                            <div id="foodItemsContainer" class="food-items-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
+                                @php
+                                    $hasFoodItems = isset($foodItems) && count($foodItems) > 0;
+                                @endphp
                                 
-                                <!-- Modal Body -->
-                                <div id="foodModalBody" style="padding: 20px;">
-                                    @if(isset($foodItems) && count($foodItems) > 0)
-                                        @foreach($foodItems as $food)
-                                            <div class="food-modal-item" data-food-id="{{ $food->id }}" data-food-price="{{ $food->price }}" style="background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; transition: all 0.3s;" onmouseover="this.style.borderColor='rgba(255, 193, 7, 0.5)'" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.1)'">
-                                                @if($food->image)
-                                                    <img src="{{ asset('storage/' . $food->image) }}" alt="{{ $food->name }}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 12px; background: #2a2a2a;">
-                                                @else
-                                                    <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                                        <i class="fas fa-utensils" style="color: #fff; font-size: 28px;"></i>
-                                                    </div>
-                                                @endif
-                                                
-                                                <div style="flex: 1;">
-                                                    <h5 style="margin: 0 0 5px 0; color: #fff; font-size: 16px; font-weight: 600;">{{ $food->name }}</h5>
-                                                    @if($food->description)
-                                                        <p style="margin: 0 0 8px 0; color: #999; font-size: 12px;">{{ Str::limit($food->description, 60) }}</p>
-                                                    @else
-                                                        <p style="margin: 0 0 8px 0; color: #999; font-size: 12px;">{{ $food->category ?? 'Combo' }}</p>
-                                                    @endif
-                                                    <div style="color: #ffc107; font-weight: bold; font-size: 16px;">
-                                                        {{ number_format($food->price) }}đ
-                                                    </div>
+                                @if($hasFoodItems)
+                                    @foreach($foodItems as $food)
+                                        <div class="food-item-card-compact" data-food-id="{{ $food->id }}" data-food-price="{{ $food->price }}" style="border: 2px solid #444; border-radius: 10px; padding: 10px; background: #2a2a2a; text-align: center; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='#ffc107'" onmouseout="this.style.borderColor='#444'">
+                                            @if($food->image)
+                                                <img src="{{ asset('storage/' . $food->image) }}" alt="{{ $food->name }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin: 0 auto 8px;">
+                                            @else
+                                                <div style="width: 50px; height: 50px; background: #444; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">
+                                                    <i class="fas fa-utensils" style="color: #666; font-size: 20px;"></i>
                                                 </div>
-                                                
-                                                <div class="quantity-control-modal" style="display: flex; align-items: center; gap: 10px;">
-                                                    <button type="button" onclick="updateFoodQuantityModal({{ $food->id }}, -1)" style="width: 36px; height: 36px; border: 2px solid rgba(255, 193, 7, 0.5); background: rgba(255, 193, 7, 0.1); color: #ffc107; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255, 193, 7, 0.2)'" onmouseout="this.style.background='rgba(255, 193, 7, 0.1)'">
-                                                        <i class="fas fa-minus"></i>
-                                                    </button>
-                                                    <input type="number" id="food_modal_{{ $food->id }}" value="0" min="0" max="10" readonly style="width: 50px; height: 36px; text-align: center; background: rgba(0, 0, 0, 0.3); border: 2px solid rgba(255, 255, 255, 0.2); color: #fff; border-radius: 8px; font-size: 16px; font-weight: bold;">
-                                                    <button type="button" onclick="updateFoodQuantityModal({{ $food->id }}, 1)" style="width: 36px; height: 36px; border: 2px solid rgba(255, 193, 7, 0.5); background: rgba(255, 193, 7, 0.1); color: #ffc107; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255, 193, 7, 0.2)'" onmouseout="this.style.background='rgba(255, 193, 7, 0.1)'">
-                                                        <i class="fas fa-plus"></i>
-                                                    </button>
-                                                </div>
+                                            @endif
+                                            <h6 style="margin: 0 0 5px 0; color: #fff; font-size: 12px; font-weight: 600; min-height: 32px; display: flex; align-items: center; justify-content: center;">{{ $food->name }}</h6>
+                                            <p style="margin: 0 0 8px 0; color: #ffc107; font-weight: bold; font-size: 13px;">{{ number_format($food->price) }}đ</p>
+                                            <div class="quantity-control" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                                <button type="button" class="btn-quantity-compact" onclick="updateFoodQuantity({{ $food->id }}, -1)" style="width: 26px; height: 26px; border: 1px solid #666; background: #3a3a3a; color: #fff; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">−</button>
+                                                <input type="number" name="food_items[{{ $food->id }}]" id="food_{{ $food->id }}" value="0" min="0" max="10" readonly style="width: 40px; height: 26px; text-align: center; background: #1a1a1a; border: 1px solid #666; color: #fff; border-radius: 4px; font-size: 14px; font-weight: bold; padding: 0;">
+                                                <button type="button" class="btn-quantity-compact" onclick="updateFoodQuantity({{ $food->id }}, 1)" style="width: 26px; height: 26px; border: 1px solid #666; background: #3a3a3a; color: #fff; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">+</button>
                                             </div>
-                                        @endforeach
-                                    @else
-                                        <p class="text-center" style="color: #999; padding: 40px 0;">
-                                            <i class="fas fa-utensils" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 15px;"></i>
-                                            Không có combo đồ ăn nào
-                                        </p>
-                                    @endif
-                                </div>
-                                
-                                <!-- Modal Footer -->
-                                <div style="padding: 20px; border-top: 2px solid rgba(255, 193, 7, 0.3); background: rgba(0, 0, 0, 0.3);">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                        <span style="color: #ccc; font-size: 14px;">Tổng tiền combo & đồ ăn:</span>
-                                        <span id="foodModalTotal" style="color: #ffc107; font-size: 20px; font-weight: bold;">0đ</span>
-                                    </div>
-                                    <div style="display: flex; gap: 10px;">
-                                        <button type="button" onclick="closeFoodModal()" style="flex: 1; padding: 12px; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); color: #fff; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.background='rgba(255, 255, 255, 0.15)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'">
-                                            Bỏ qua
-                                        </button>
-                                        <button type="button" onclick="confirmFoodSelection()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); border: none; color: #000; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.3s; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 193, 7, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255, 193, 7, 0.3)'">
-                                            <i class="fas fa-check"></i> Xác nhận
-                                        </button>
-                                    </div>
-                                </div>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <p class="text-muted" style="text-align: center; grid-column: 1 / -1;">Không có combo đồ ăn nào</p>
+                                @endif
                             </div>
                         </div>
                         
                         <style>
-                            .modal-content::-webkit-scrollbar {
-                                width: 8px;
+                            .btn-quantity-compact:hover {
+                                background: #4a4a4a !important;
+                                transform: scale(1.05);
                             }
-                            
-                            .modal-content::-webkit-scrollbar-track {
-                                background: rgba(255, 255, 255, 0.05);
-                                border-radius: 4px;
-                            }
-                            
-                            .modal-content::-webkit-scrollbar-thumb {
-                                background: rgba(255, 193, 7, 0.5);
-                                border-radius: 4px;
-                            }
-                            
-                            .modal-content::-webkit-scrollbar-thumb:hover {
-                                background: rgba(255, 193, 7, 0.7);
+                            .food-item-card-compact:hover {
+                                transform: translateY(-2px);
+                                box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
                             }
                         </style>
                         
@@ -1352,12 +1430,19 @@ function doSelectTheater(theaterId) {
                                 <span id="unitPrice">0 ₫</span>
                             </div>
                             <div class="price-row">
-                                <span>Số lượng:</span>
+                                <span>Số lượng ghế:</span>
                                 <span id="quantity">0</span>
                             </div>
-                            <div class="price-row total">
-                                <span>Tổng cộng:</span>
-                                <span id="totalPrice">0 ₫</span>
+                            <div class="price-row">
+                                <span>Tiền vé:</span>
+                                <span id="seatsTotal">0 ₫</span>
+                            </div>
+                            <div id="foodSummaryRows" style="border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 8px; margin-top: 8px; display: none;">
+                                <!-- Food items will be added here dynamically -->
+                            </div>
+                            <div class="price-row total" style="border-top: 2px solid rgba(229, 9, 20, 0.5); margin-top: 8px; padding-top: 8px; font-size: 18px;">
+                                <span style="font-weight: bold;">Tổng thanh toán:</span>
+                                <span id="totalPrice" style="font-weight: bold; color: #ffc107;">0 ₫</span>
                             </div>
                         </div>
                         
@@ -1741,1060 +1826,5 @@ function doSelectTheater(theaterId) {
         }
     }
 </style>
-
-<script>
-// ============== DECLARE FUNCTION FIRST ==============
-window.selectTheaterDirect = function(theaterId) {
-    console.log('Theater clicked! ID:', theaterId);
-    
-    // Remove previous selection
-    var cards = document.querySelectorAll('.theater-card');
-    for (var i = 0; i < cards.length; i++) {
-        cards[i].classList.remove('selected');
-    }
-    
-    // Select clicked theater
-    var selectedCard = document.querySelector('.theater-card[data-theater-id="' + theaterId + '"]');
-    if (selectedCard) {
-        selectedCard.classList.add('selected');
-    }
-    
-    // Set values
-    var theaterInput = document.getElementById('theaterIdInput');
-    if (theaterInput) theaterInput.value = theaterId;
-    
-    window.selectedTheaterId = theaterId;
-    window.selectedDate = null;
-    window.selectedShowtimeId = null;
-    
-    var showtimeInput = document.getElementById('showtimeIdInput');
-    if (showtimeInput) showtimeInput.value = '';
-    
-    // Hide sections
-    var seatMap = document.getElementById('seatMap');
-    if (seatMap) seatMap.innerHTML = '<p class="text-center text-muted">Vui lòng chọn lịch chiếu</p>';
-    
-    var seatSection = document.getElementById('seatSelectionSection');
-    if (seatSection) seatSection.style.display = 'none';
-    
-    var showtimeSection = document.getElementById('showtimeSelectionSection');
-    if (showtimeSection) showtimeSection.style.display = 'none';
-    
-    // Load dates
-    console.log('Loading dates...');
-    if (typeof loadDates === 'function') {
-        loadDates();
-    } else {
-        console.error('loadDates function not found');
-    }
-};
-
-// Global variables
-var userLat = null;
-var userLng = null;
-var currentMovieId = {{ isset($movie) && $movie->id ? $movie->id : 'null' }};
-var selectedTheaterId = null;
-var selectedDate = null;
-var selectedShowtimeId = null;
-
-// Request user location when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing booking page...');
-    
-    @if(isset($movie))
-        // Auto request location when movie is selected
-        requestUserLocation();
-    @endif
-    
-    // Add click handlers to theater cards (backup method)
-    const theaterCards = document.querySelectorAll('.theater-card');
-    console.log('Found', theaterCards.length, 'theater cards');
-    
-    theaterCards.forEach(card => {
-        card.addEventListener('click', function(e) {
-            const theaterId = this.getAttribute('data-theater-id');
-            console.log('Theater card clicked via event listener! ID:', theaterId);
-            if (theaterId) {
-                window.selectTheaterDirect(parseInt(theaterId));
-            }
-        });
-        
-        // Test if card is clickable
-        card.style.cursor = 'pointer';
-        card.title = 'Click để chọn rạp này';
-    });
-});
-
-function selectTheater(theaterId) {
-    console.log('selectTheater called with ID:', theaterId);
-    
-    // Remove previous selection
-    document.querySelectorAll('.theater-card').forEach(card => {
-        card.classList.remove('selected');
-    });
-    
-    // Select clicked theater
-    const selectedCard = document.querySelector(`.theater-card[data-theater-id="${theaterId}"]`);
-    console.log('Selected card:', selectedCard);
-    
-    if (selectedCard) {
-        selectedCard.classList.add('selected');
-    }
-    
-    // Set hidden input and variable
-    const theaterInput = document.getElementById('theaterIdInput');
-    if (theaterInput) {
-        theaterInput.value = theaterId;
-        console.log('Set theaterIdInput to:', theaterId);
-    } else {
-        console.error('theaterIdInput not found!');
-    }
-    
-    selectedTheaterId = theaterId;
-    
-    // Reset date and showtime
-    selectedDate = null;
-    selectedShowtimeId = null;
-    const showtimeInput = document.getElementById('showtimeIdInput');
-    if (showtimeInput) {
-        showtimeInput.value = '';
-    }
-    
-    // Hide seat map
-    const seatMap = document.getElementById('seatMap');
-    if (seatMap) {
-        seatMap.innerHTML = '<p class="text-center text-muted">Vui lòng chọn lịch chiếu</p>';
-    }
-    
-    const showtimeSection = document.getElementById('showtimeSelectionSection');
-    if (showtimeSection) {
-        showtimeSection.style.display = 'none';
-    }
-    
-    // Load dates
-    console.log('Loading dates...');
-    loadDates();
-}
-
-function loadDates() {
-    const datesSection = document.getElementById('dateSelectionSection');
-    const datesContainer = document.getElementById('datesContainer');
-    
-    // Show dates section
-    datesSection.style.display = 'block';
-    
-    // Generate 7 days from today
-    const dates = [];
-    const dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-    
-    for (let i = 0; i < 7; i++) {
-        const date = new Date();
-        date.setDate(date.getDate() + i);
-        
-        const dateStr = date.toISOString().split('T')[0];
-        const dayOfWeek = date.getDay();
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        
-        dates.push({
-            value: dateStr,
-            dayName: dayNames[dayOfWeek],
-            dateText: `${day}/${month}`,
-            isToday: i === 0
-        });
-    }
-    
-    // Render date tabs
-    let html = '';
-    dates.forEach(date => {
-        html += `
-            <div class="date-tab" onclick="selectDate('${date.value}')" data-date="${date.value}">
-                <div class="day-name">${date.dayName}${date.isToday ? ' (Hôm nay)' : ''}</div>
-                <div class="date-text">${date.dateText}</div>
-            </div>
-        `;
-    });
-    
-    datesContainer.innerHTML = html;
-}
-
-function selectDate(dateValue) {
-    // Remove previous selection
-    document.querySelectorAll('.date-tab').forEach(tab => {
-        tab.classList.remove('selected');
-    });
-    
-    // Select clicked date
-    const selectedTab = document.querySelector(`.date-tab[data-date="${dateValue}"]`);
-    if (selectedTab) {
-        selectedTab.classList.add('selected');
-    }
-    
-    selectedDate = dateValue;
-    selectedShowtimeId = null;
-    document.getElementById('showtimeIdInput').value = '';
-    
-    // Hide seat map
-    document.getElementById('seatMap').innerHTML = '<p class="text-center text-muted">Vui lòng chọn khung giờ chiếu</p>';
-    
-    // Load showtimes
-    loadShowtimes();
-}
-
-function loadShowtimes() {
-    if (!selectedTheaterId || !selectedDate || !currentMovieId) {
-        console.log('Missing required data:', {selectedTheaterId, selectedDate, currentMovieId});
-        return;
-    }
-    
-    const showtimesSection = document.getElementById('showtimeSelectionSection');
-    const showtimesContainer = document.getElementById('showtimesContainer');
-    
-    // Show loading
-    showtimesSection.style.display = 'block';
-    showtimesContainer.innerHTML = '<p class="text-center text-muted">Đang tải...</p>';
-    
-    // Fetch showtimes using Laravel route
-    const url = `{{ route('api.booking.showtimes') }}?movie_id=${currentMovieId}&theater_id=${selectedTheaterId}&date=${selectedDate}`;
-    console.log('Fetching showtimes from:', url);
-    
-    fetch(url)
-        .then(response => {
-            console.log('Response status:', response.status);
-            return response.json();
-        })
-        .then(data => {
-            console.log('Showtimes data:', data);
-            if (data.showtimes && data.showtimes.length > 0) {
-                let html = '';
-                data.showtimes.forEach(showtime => {
-                    html += `
-                        <div class="showtime-btn" onclick="selectShowtime(${showtime.id})" data-showtime-id="${showtime.id}">
-                            <div>${showtime.show_time}</div>
-                            <div class="screen-info">${showtime.screen_name || 'N/A'} - ${showtime.screen_type || '2D'}</div>
-                        </div>
-                    `;
-                });
-                showtimesContainer.innerHTML = html;
-            } else {
-                showtimesContainer.innerHTML = '<p class="text-center text-warning">Không có suất chiếu nào cho ngày này</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error loading showtimes:', error);
-            showtimesContainer.innerHTML = '<p class="text-center text-danger">Lỗi khi tải lịch chiếu</p>';
-        });
-}
-
-function selectShowtime(showtimeId) {
-    // Remove previous selection
-    document.querySelectorAll('.showtime-btn').forEach(btn => {
-        btn.classList.remove('selected');
-    });
-    
-    // Select clicked showtime
-    const selectedBtn = document.querySelector(`.showtime-btn[data-showtime-id="${showtimeId}"]`);
-    if (selectedBtn) {
-        selectedBtn.classList.add('selected');
-    }
-    
-    selectedShowtimeId = showtimeId;
-    document.getElementById('showtimeIdInput').value = showtimeId;
-    
-    // Load seat map
-    loadSeatMap(showtimeId);
-}
-
-function checkAuth() {
-    @if(!Auth::check())
-        alert('Vui lòng đăng nhập để tiếp tục đặt vé');
-        window.location.href = '{{ route("login") }}?redirect=' + encodeURIComponent(window.location.href);
-        return false;
-    @endif
-    return true;
-}
-
-function loadSeatMap(showtimeId) {
-    const seatMapContainer = document.getElementById('seatMap');
-    const seatSelectionSection = document.getElementById('seatSelectionSection');
-    
-    // Show seat selection section
-    seatSelectionSection.style.display = 'block';
-    seatMapContainer.innerHTML = '<p class="text-center text-muted">Đang tải sơ đồ ghế...</p>';
-    
-    // Fetch seat map data from API
-    const url = `{{ route('api.booking.seatMap') }}?showtime_id=${showtimeId}`;
-    
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            // Display screen name
-            if (data.screen && data.screen.name) {
-                const screenDisplay = document.getElementById('screenNameDisplay');
-                if (screenDisplay) {
-                    screenDisplay.textContent = `(${data.screen.name} - ${data.screen.type || '2D'})`;
-                }
-            }
-            
-            if (data.layout) {
-                renderSeatMap(data.layout, data.bookedSeats || [], data.prices || {});
-            } else {
-                // Generate default seat layout
-                generateDefaultSeatLayout(data.bookedSeats || []);
-            }
-        })
-        .catch(error => {
-            console.error('Error loading seat map:', error);
-            generateDefaultSeatLayout([]);
-        });
-}
-
-function generateDefaultSeatLayout(bookedSeats = []) {
-    // Default 10 rows x 12 seats layout
-    const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-    const seatsPerRow = 12;
-    const seatMapContainer = document.getElementById('seatMap');
-    
-    let html = '';
-    
-    rows.forEach((row, rowIndex) => {
-        html += `<div class="seat-row">`;
-        html += `<div class="seat-row-label">${row}</div>`;
-        
-        // For row J (couple seats), show only 6 couple seats (each takes 2 spaces)
-        if (row === 'J') {
-            for (let col = 1; col <= 6; col++) {
-                const seatNumber = `${row}${col}`;
-                let seatClass = 'seat seat-couple';
-                
-                // Check if booked
-                if (bookedSeats.includes(seatNumber)) {
-                    seatClass += ' seat-booked';
-                }
-                
-                // Aisle space after 3rd couple seat
-                if (col === 4) {
-                    html += `<div class="seat-space"></div>`;
-                }
-                
-                const onclick = bookedSeats.includes(seatNumber) ? '' : `onclick="toggleSeat('${seatNumber}')"`;
-                
-                html += `<div class="${seatClass}" data-seat="${seatNumber}" ${onclick}>
-                            ${col}
-                         </div>`;
-            }
-        } else {
-            // Normal rows
-            for (let col = 1; col <= seatsPerRow; col++) {
-                const seatNumber = `${row}${col}`;
-                let seatClass = 'seat';
-                
-                // Check if booked
-                if (bookedSeats.includes(seatNumber)) {
-                    seatClass += ' seat-booked';
-                }
-                
-                // VIP rows (middle rows D, E, F)
-                if (['D', 'E', 'F'].includes(row)) {
-                    seatClass += ' seat-vip';
-                }
-                
-                // Aisle spaces (middle gap after seat 6)
-                if (col === 7) {
-                    html += `<div class="seat-space"></div>`;
-                }
-                
-                const onclick = bookedSeats.includes(seatNumber) ? '' : `onclick="toggleSeat('${seatNumber}')"`;
-                
-                html += `<div class="${seatClass}" data-seat="${seatNumber}" ${onclick}>
-                            ${col}
-                         </div>`;
-            }
-        }
-        
-        html += `</div>`;
-    });
-    
-    seatMapContainer.innerHTML = html;
-}
-
-let selectedSeats = [];
-let seatsConfirmed = false;
-
-function toggleSeat(seatNumber) {
-    if (seatsConfirmed) {
-        showError('Bạn đã xác nhận ghế rồi! Nếu muốn chọn lại, vui lòng nhấn "Chọn lại ghế"');
-        return;
-    }
-    
-    const seatElement = document.querySelector(`.seat[data-seat="${seatNumber}"]`);
-    
-    if (!seatElement || seatElement.classList.contains('seat-booked')) {
-        return; // Can't select booked seats
-    }
-    
-    if (seatElement.classList.contains('seat-selected')) {
-        // Deselect
-        seatElement.classList.remove('seat-selected');
-        selectedSeats = selectedSeats.filter(s => s !== seatNumber);
-    } else {
-        // Check max 8 seats
-        if (selectedSeats.length >= 8) {
-            showError('Chỉ được đặt tối đa 8 ghế!');
-            return;
-        }
-        
-        // Select
-        seatElement.classList.add('seat-selected');
-        selectedSeats.push(seatNumber);
-    }
-    
-    updateSeatSummary();
-}
-
-function confirmSeats() {
-    // Validate seats strictly
-    const validation = validateSeatSelection(true);
-    
-    if (!validation.valid) {
-        return false;
-    }
-    
-    // Mark as confirmed
-    seatsConfirmed = true;
-    
-    // Hide confirm button, show reselect button
-    document.getElementById('confirmSeatsBtn').style.display = 'none';
-    document.getElementById('reselectSeatsBtn').style.display = 'inline-block';
-    
-    // Show food/payment sections
-    document.getElementById('foodSection').style.display = 'block';
-    document.getElementById('paymentSection').style.display = 'block';
-    document.getElementById('emailSection').style.display = 'block';
-    document.getElementById('priceInfoBox').style.display = 'block';
-    
-    // Disable seat selection
-    document.querySelectorAll('.seat').forEach(seat => {
-        if (!seat.classList.contains('seat-booked')) {
-            seat.style.opacity = '0.6';
-            seat.style.cursor = 'not-allowed';
-        }
-    });
-    
-    showSuccess('Đã xác nhận chọn ghế! Bạn có thể chọn combo đồ ăn bên dưới.');
-    
-    updateBookingSummary();
-    
-    return true;
-}
-
-function reselectSeats() {
-    seatsConfirmed = false;
-    
-    // Show confirm button, hide reselect button
-    document.getElementById('confirmSeatsBtn').style.display = 'inline-block';
-    document.getElementById('reselectSeatsBtn').style.display = 'none';
-    
-    // Hide food/payment sections
-    document.getElementById('foodSection').style.display = 'none';
-    document.getElementById('paymentSection').style.display = 'none';
-    
-    // Reset food quantities
-    document.querySelectorAll('input[name^="food_items"]').forEach(input => {
-        input.value = 0;
-    });
-    
-    // Enable seat selection
-    document.querySelectorAll('.seat').forEach(seat => {
-        if (!seat.classList.contains('seat-booked')) {
-            seat.style.opacity = '1';
-            seat.style.cursor = 'pointer';
-        }
-    });
-    
-    updateBookingSummary();
-}
-
-function updateSeatSummary() {
-    const quantity = selectedSeats.length;
-    
-    // Update selected seats input
-    document.getElementById('selectedSeatsInput').value = JSON.stringify(selectedSeats);
-    
-    // Show seat summary and confirm button
-    if (quantity > 0) {
-        document.getElementById('selectedSeatsDisplay').style.display = 'block';
-        document.getElementById('seatsText').textContent = selectedSeats.join(', ');
-        document.getElementById('confirmSeatsBtn').disabled = false;
-        
-        // Calculate and show price
-        calculateSeatPrice();
-    } else {
-        document.getElementById('selectedSeatsDisplay').style.display = 'none';
-        document.getElementById('confirmSeatsBtn').disabled = true;
-        document.getElementById('quantity').textContent = '0';
-        document.getElementById('totalPrice').textContent = '0 ₫';
-    }
-}
-
-function calculateSeatPrice() {
-    const basePrice = {{ isset($basePrice) ? $basePrice : 90000 }};
-    const normalPrice = basePrice;
-    const vipPrice = Math.round(basePrice * 1.3);
-    const couplePrice = Math.round(basePrice * 1.5);
-    
-    // Update price display
-    document.getElementById('normalPriceDisplay').textContent = new Intl.NumberFormat('vi-VN').format(normalPrice) + 'đ';
-    document.getElementById('vipPriceDisplay').textContent = new Intl.NumberFormat('vi-VN').format(vipPrice) + 'đ';
-    document.getElementById('couplePriceDisplay').textContent = new Intl.NumberFormat('vi-VN').format(couplePrice) + 'đ';
-    
-    let totalPrice = 0;
-    let seatBreakdown = { normal: 0, vip: 0, couple: 0 };
-    
-    selectedSeats.forEach(seat => {
-        const row = seat.charAt(0);
-        if (['D', 'E', 'F'].includes(row)) {
-            totalPrice += vipPrice;
-            seatBreakdown.vip++;
-        } else if (row === 'J') {
-            totalPrice += couplePrice;
-            seatBreakdown.couple++;
-        } else {
-            totalPrice += normalPrice;
-            seatBreakdown.normal++;
-        }
-    });
-    
-    // Build quantity text
-    let quantityText = selectedSeats.length + ' ghế';
-    if (seatBreakdown.normal > 0) quantityText += ` (${seatBreakdown.normal} thường`;
-    if (seatBreakdown.vip > 0) quantityText += `${seatBreakdown.normal > 0 ? ', ' : ' ('}${seatBreakdown.vip} VIP`;
-    if (seatBreakdown.couple > 0) quantityText += `${(seatBreakdown.normal > 0 || seatBreakdown.vip > 0) ? ', ' : ' ('}${seatBreakdown.couple} đôi`;
-    if (seatBreakdown.normal > 0 || seatBreakdown.vip > 0 || seatBreakdown.couple > 0) quantityText += ')';
-    
-    document.getElementById('quantity').textContent = quantityText;
-    document.getElementById('unitPrice').textContent = new Intl.NumberFormat('vi-VN').format(basePrice) + ' ₫';
-    document.getElementById('totalPrice').textContent = new Intl.NumberFormat('vi-VN').format(totalPrice) + ' ₫';
-}
-
-function updateBookingSummary() {
-    if (!seatsConfirmed) {
-        calculateSeatPrice();
-        return;
-    }
-    
-    calculateSeatPrice();
-    
-    const quantity = selectedSeats.length;
-    const basePrice = {{ isset($basePrice) ? $basePrice : 90000 }};
-    const normalPrice = basePrice;
-    const vipPrice = Math.round(basePrice * 1.3);
-    const couplePrice = Math.round(basePrice * 1.5);
-    
-    let totalPrice = 0;
-    
-    selectedSeats.forEach(seat => {
-        const row = seat.charAt(0);
-        if (['D', 'E', 'F'].includes(row)) {
-            totalPrice += vipPrice;
-        } else if (row === 'J') {
-            totalPrice += couplePrice;
-        } else {
-            totalPrice += normalPrice;
-        }
-    });
-    
-    // Add food items to total
-    const foodInputs = document.querySelectorAll('input[name^="food_items"]');
-    let foodTotal = 0;
-    foodInputs.forEach(input => {
-        const qty = parseInt(input.value) || 0;
-        if (qty > 0) {
-            const foodCard = input.closest('.food-item-card');
-            const priceText = foodCard.querySelector('p').textContent;
-            const price = parseInt(priceText.replace(/[^0-9]/g, ''));
-            foodTotal += price * qty;
-        }
-    });
-    
-    totalPrice += foodTotal;
-    
-    document.getElementById('totalPrice').textContent = new Intl.NumberFormat('vi-VN').format(totalPrice) + ' ₫';
-    document.getElementById('bookBtn').disabled = false;
-}
-
-function showError(message) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'booking-alert booking-alert-error';
-    alertDiv.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 10px; padding: 15px; background: rgba(220, 53, 69, 0.2); border: 2px solid #dc3545; border-radius: 8px; color: #ff7b8f; margin: 10px 0;">
-            <i class="fas fa-exclamation-circle" style="font-size: 20px;"></i>
-            <div style="flex: 1; white-space: pre-line;">${message}</div>
-            <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #ff7b8f; cursor: pointer; font-size: 20px;">×</button>
-        </div>
-    `;
-    
-    const container = document.getElementById('seatSelectionSection');
-    if (container) {
-        container.querySelectorAll('.booking-alert-error').forEach(el => el.remove());
-        container.insertBefore(alertDiv, container.firstChild);
-        setTimeout(() => alertDiv.remove(), 5000);
-    }
-}
-
-function showSuccess(message) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'booking-alert booking-alert-success';
-    alertDiv.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 10px; padding: 15px; background: rgba(40, 167, 69, 0.2); border: 2px solid #28a745; border-radius: 8px; color: #85ff9f; margin: 10px 0;">
-            <i class="fas fa-check-circle" style="font-size: 20px;"></i>
-            <div style="flex: 1;">${message}</div>
-            <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #85ff9f; cursor: pointer; font-size: 20px;">×</button>
-        </div>
-    `;
-    
-    const container = document.getElementById('seatSelectionSection');
-    if (container) {
-        container.querySelectorAll('.booking-alert-success').forEach(el => el.remove());
-        container.insertBefore(alertDiv, container.firstChild);
-        setTimeout(() => alertDiv.remove(), 4000);
-    }
-}
-
-function validateSeatSelection(showAlert = true) {
-    if (selectedSeats.length === 0) {
-        if (showAlert) showError('Vui lòng chọn ít nhất 1 ghế!');
-        return { valid: false, message: 'Vui lòng chọn ít nhất 1 ghế!' };
-    }
-    
-    if (selectedSeats.length > 8) {
-        if (showAlert) showError('Chỉ được đặt tối đa 8 ghế!');
-        return { valid: false, message: 'Chỉ được đặt tối đa 8 ghế!' };
-    }
-    
-    // Check for gaps (seats must be adjacent in same row)
-    const seatsByRow = {};
-    selectedSeats.forEach(seat => {
-        const row = seat.charAt(0);
-        const col = parseInt(seat.substring(1));
-        if (!seatsByRow[row]) seatsByRow[row] = [];
-        seatsByRow[row].push(col);
-    });
-    
-    for (const row in seatsByRow) {
-        const cols = seatsByRow[row].sort((a, b) => a - b);
-        
-        // Check if there are gaps between selected seats
-        for (let i = 0; i < cols.length - 1; i++) {
-            const gap = cols[i + 1] - cols[i];
-            if (gap > 1) {
-                const message = `Ghế trong hàng ${row} phải liền kề nhau!\nKhông được bỏ trống ghế ở giữa (ghế ${row}${cols[i]} và ${row}${cols[i+1]} cách nhau ${gap-1} ghế)`;
-                if (showAlert) showError(message);
-                return { valid: false, message: message };
-            }
-        }
-    }
-    
-    return { valid: true, message: '' };
-}
-    } else {
-        if (emailSection) emailSection.style.display = 'none';
-        if (priceInfoBox) priceInfoBox.style.display = 'none';
-        if (foodSection) foodSection.style.display = 'none';
-        if (paymentSection) paymentSection.style.display = 'none';
-    }
-    
-    // Update display
-    if (quantity > 0) {
-        document.getElementById('selectedSeatsDisplay').style.display = 'block';
-        document.getElementById('seatsText').textContent = selectedSeats.join(', ');
-        
-        // Calculate prices (default prices, should be from server)
-        const basePrice = {{ isset($basePrice) ? $basePrice : 90000 }};
-        const normalPrice = basePrice;
-        const vipPrice = Math.round(basePrice * 1.3);
-        const couplePrice = Math.round(basePrice * 1.5);
-        
-        // Update price display
-        document.getElementById('normalPriceDisplay').textContent = new Intl.NumberFormat('vi-VN').format(normalPrice) + 'đ';
-        document.getElementById('vipPriceDisplay').textContent = new Intl.NumberFormat('vi-VN').format(vipPrice) + 'đ';
-        document.getElementById('couplePriceDisplay').textContent = new Intl.NumberFormat('vi-VN').format(couplePrice) + 'đ';
-        
-        let totalPrice = 0;
-        let seatBreakdown = { normal: 0, vip: 0, couple: 0 };
-        
-        selectedSeats.forEach(seat => {
-            const row = seat.charAt(0);
-            // VIP rows: D, E, F
-            if (['D', 'E', 'F'].includes(row)) {
-                totalPrice += vipPrice;
-                seatBreakdown.vip++;
-            }
-            // Couple row: J only
-            else if (row === 'J') {
-                totalPrice += couplePrice;
-                seatBreakdown.couple++;
-            }
-            // Normal
-            else {
-                totalPrice += normalPrice;
-                seatBreakdown.normal++;
-            }
-        });
-        
-        // Add food items to total
-        const foodInputs = document.querySelectorAll('input[name^="food_items"]');
-        let foodTotal = 0;
-        foodInputs.forEach(input => {
-            const qty = parseInt(input.value) || 0;
-            if (qty > 0) {
-                const foodCard = input.closest('.food-item-card');
-                const priceText = foodCard.querySelector('p').textContent;
-                const price = parseInt(priceText.replace(/[^0-9]/g, ''));
-                foodTotal += price * qty;
-            }
-        });
-        
-        totalPrice += foodTotal;
-        
-        // Build quantity text
-        let quantityText = quantity + ' ghế';
-        if (seatBreakdown.normal > 0) quantityText += ` (${seatBreakdown.normal} thường`;
-        if (seatBreakdown.vip > 0) quantityText += `${seatBreakdown.normal > 0 ? ', ' : ' ('}${seatBreakdown.vip} VIP`;
-        if (seatBreakdown.couple > 0) quantityText += `${(seatBreakdown.normal > 0 || seatBreakdown.vip > 0) ? ', ' : ' ('}${seatBreakdown.couple} đôi`;
-        if (seatBreakdown.normal > 0 || seatBreakdown.vip > 0 || seatBreakdown.couple > 0) quantityText += ')';
-        
-        document.getElementById('quantity').textContent = quantityText;
-        document.getElementById('unitPrice').textContent = new Intl.NumberFormat('vi-VN').format(basePrice) + ' ₫';
-        document.getElementById('totalPrice').textContent = new Intl.NumberFormat('vi-VN').format(totalPrice) + ' ₫';
-        document.getElementById('bookBtn').disabled = false;
-    } else {
-        document.getElementById('selectedSeatsDisplay').style.display = 'none';
-        document.getElementById('bookBtn').disabled = true;
-        
-        document.getElementById('quantity').textContent = '0';
-        document.getElementById('unitPrice').textContent = '0 ₫';
-        document.getElementById('totalPrice').textContent = '0 ₫';
-    }
-}
-
-function updateFoodQuantity(foodId, change) {
-    const input = document.getElementById('food_' + foodId);
-    let currentValue = parseInt(input.value) || 0;
-    let newValue = currentValue + change;
-    
-    if (newValue < 0) newValue = 0;
-    if (newValue > 10) newValue = 10;
-    
-    input.value = newValue;
-    updateBookingSummary();
-}
-
-function validateSeatSelection() {
-    if (selectedSeats.length === 0) {
-        alert('Vui lòng chọn ít nhất 1 ghế!');
-        return false;
-    }
-    
-    if (selectedSeats.length > 8) {
-        alert('Chỉ được đặt tối đa 8 ghế!');
-        return false;
-    }
-    
-    // Check for gaps (seats must be adjacent in same row)
-    const seatsByRow = {};
-    selectedSeats.forEach(seat => {
-        const row = seat.charAt(0);
-        const col = parseInt(seat.substring(1));
-        if (!seatsByRow[row]) seatsByRow[row] = [];
-        seatsByRow[row].push(col);
-    });
-    
-    for (const row in seatsByRow) {
-        const cols = seatsByRow[row].sort((a, b) => a - b);
-        for (let i = 0; i < cols.length - 1; i++) {
-            if (cols[i + 1] - cols[i] > 1) {
-                alert(`Ghế trong hàng ${row} phải liền kề nhau. Không được bỏ trống ghế giữa!`);
-                return false;
-            }
-        }
-    }
-    
-    return true;
-}
-
-function renderSeatMap(layout, bookedSeats = [], prices = {}) {
-    const seatMapContainer = document.getElementById('seatMap');
-    let html = '';
-    
-    if (!layout || !Array.isArray(layout)) {
-        generateDefaultSeatLayout();
-        return;
-    }
-    
-    layout.forEach(row => {
-        html += `<div class="seat-row">`;
-        html += `<div class="seat-row-label">${row.row}</div>`;
-        
-        row.seats.forEach(seat => {
-            let seatClass = 'seat';
-            
-            if (seat.type === 'vip') seatClass += ' seat-vip';
-            if (seat.type === 'couple') seatClass += ' seat-couple';
-            if (seat.type === 'disabled' || !seat.available) seatClass += ' seat-disabled';
-            if (bookedSeats.includes(seat.number)) seatClass += ' seat-booked';
-            
-            const onclick = (seat.type !== 'disabled' && seat.available && !bookedSeats.includes(seat.number))
-                ? `onclick="toggleSeat('${seat.number}')"`
-                : '';
-            
-            html += `<div class="${seatClass}" data-seat="${seat.number}" ${onclick}>
-                        ${seat.label || ''}
-                     </div>`;
-        });
-        
-        html += `</div>`;
-    });
-    
-    seatMapContainer.innerHTML = html;
-}
-
-function requestUserLocation() {
-    const badge = document.getElementById('userLocationBadge');
-    const text = document.getElementById('userLocationText');
-    
-    if (badge) badge.style.display = 'inline-block';
-    if (text) text.textContent = 'Đang lấy vị trí...';
-    
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            function(position) {
-                userLat = position.coords.latitude;
-                userLng = position.coords.longitude;
-                
-                if (text) {
-                    text.textContent = `Đã xác định vị trí`;
-                    text.style.color = '#28a745';
-                }
-                
-                // Sort and update theaters by distance
-                sortTheatersByDistance();
-            },
-            function(error) {
-                console.error('Geolocation error:', error);
-                if (text) {
-                    text.textContent = 'Không thể lấy vị trí. Click để thử lại';
-                    text.style.color = '#dc3545';
-                }
-            }
-        );
-    } else {
-        if (text) {
-            text.textContent = 'Trình duyệt không hỗ trợ định vị';
-            text.style.color = '#dc3545';
-        }
-    }
-}
-
-function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Earth radius in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-}
-
-function sortTheatersByDistance() {
-    if (!userLat || !userLng) return;
-    
-    const container = document.getElementById('theatersContainer');
-    if (!container) return;
-    
-    const cards = Array.from(container.querySelectorAll('.theater-card'));
-    
-    // Calculate distance for each theater
-    const theatersWithDistance = cards.map(card => {
-        const lat = parseFloat(card.dataset.lat);
-        const lng = parseFloat(card.dataset.lng);
-        
-        let distance = null;
-        if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
-            distance = calculateDistance(userLat, userLng, lat, lng);
-        }
-        
-        return { card, distance };
-    });
-    
-    // Sort by distance (nulls last)
-    theatersWithDistance.sort((a, b) => {
-        if (a.distance === null) return 1;
-        if (b.distance === null) return -1;
-        return a.distance - b.distance;
-    });
-    
-    // Reorder cards in DOM
-    theatersWithDistance.forEach(({ card, distance }) => {
-        container.appendChild(card);
-        
-        // Show distance
-        if (distance !== null) {
-            const distanceDiv = card.querySelector('.theater-distance');
-            const distanceText = distanceDiv.querySelector('.distance-text');
-            
-            if (distanceDiv && distanceText) {
-                distanceText.textContent = `Cách ${distance.toFixed(1)} km`;
-                distanceDiv.style.display = 'block';
-            }
-        }
-    });
-}
-
-// Update total price when seats are selected
-function updateSeatSelection() {
-    updateBookingSummary();
-}
-
-// ============== FOOD MODAL FUNCTIONS ==============
-
-// Open food modal after confirming seats
-function openFoodModal() {
-    const modal = document.getElementById('foodModal');
-    if (modal) {
-        modal.style.display = 'block';
-        // Reset modal quantities to match current selection
-        syncFoodModalQuantities();
-        updateFoodModalTotal();
-    }
-}
-
-// Close food modal
-function closeFoodModal() {
-    const modal = document.getElementById('foodModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Update food quantity in modal
-function updateFoodQuantityModal(foodId, change) {
-    const input = document.getElementById('food_modal_' + foodId);
-    if (!input) return;
-    
-    let currentValue = parseInt(input.value) || 0;
-    let newValue = currentValue + change;
-    
-    if (newValue < 0) newValue = 0;
-    if (newValue > 10) newValue = 10;
-    
-    input.value = newValue;
-    updateFoodModalTotal();
-}
-
-// Sync food quantities between modal and form
-function syncFoodModalQuantities() {
-    // Copy quantities from hidden form to modal
-    const foodInputs = document.querySelectorAll('input[name^="food_items"]');
-    foodInputs.forEach(input => {
-        const foodId = input.name.match(/\d+/)[0];
-        const modalInput = document.getElementById('food_modal_' + foodId);
-        if (modalInput) {
-            modalInput.value = input.value || 0;
-        }
-    });
-}
-
-// Update food modal total price
-function updateFoodModalTotal() {
-    let total = 0;
-    const foodItems = document.querySelectorAll('.food-modal-item');
-    
-    foodItems.forEach(item => {
-        const foodId = item.dataset.foodId;
-        const price = parseFloat(item.dataset.foodPrice) || 0;
-        const input = document.getElementById('food_modal_' + foodId);
-        const quantity = parseInt(input?.value) || 0;
-        
-        total += price * quantity;
-    });
-    
-    const totalElement = document.getElementById('foodModalTotal');
-    if (totalElement) {
-        totalElement.textContent = total.toLocaleString('vi-VN') + 'đ';
-    }
-}
-
-// Confirm food selection and close modal
-function confirmFoodSelection() {
-    // Copy quantities from modal to hidden form inputs
-    const foodItems = document.querySelectorAll('.food-modal-item');
-    const foodData = {};
-    
-    foodItems.forEach(item => {
-        const foodId = item.dataset.foodId;
-        const input = document.getElementById('food_modal_' + foodId);
-        const quantity = parseInt(input?.value) || 0;
-        
-        if (quantity > 0) {
-            foodData[foodId] = quantity;
-        }
-        
-        // Also update the hidden food_items input if exists
-        const hiddenInput = document.querySelector(`input[name="food_items[${foodId}]"]`);
-        if (hiddenInput) {
-            hiddenInput.value = quantity;
-        } else if (quantity > 0) {
-            // Create hidden input if doesn't exist
-            const newInput = document.createElement('input');
-            newInput.type = 'hidden';
-            newInput.name = `food_items[${foodId}]`;
-            newInput.value = quantity;
-            document.getElementById('bookingForm').appendChild(newInput);
-        }
-    });
-    
-    // Update food_items_data hidden field
-    const foodDataInput = document.getElementById('foodItemsData');
-    if (foodDataInput) {
-        foodDataInput.value = JSON.stringify(foodData);
-    }
-    
-    // Close modal
-    closeFoodModal();
-    
-    // Update booking summary with food prices
-    updateBookingSummary();
-    
-    // Show success message
-    const itemCount = Object.keys(foodData).length;
-    if (itemCount > 0) {
-        showSuccess(`Đã thêm ${itemCount} món vào đơn hàng!`);
-    } else {
-        showSuccess('Đã bỏ qua chọn combo & đồ ăn');
-    }
-}
-
-// Auto-open food modal after confirming seats
-window.addEventListener('load', function() {
-    const originalConfirmSeats = window.confirmSeats;
-    
-    window.confirmSeats = function() {
-        // Call original function
-        const result = originalConfirmSeats();
-        
-        // If seats confirmed successfully, open food modal
-        if (window.seatsConfirmed) {
-            setTimeout(() => {
-                openFoodModal();
-            }, 500); // Small delay for better UX
-        }
-        
-        return result;
-    };
-});
-
-</script>
 
 @endsection

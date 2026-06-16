@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ isset($title) ? $title . ' - ' : '' }}Quản lý rạp - CineHub</title>
+    <title><?php echo e(isset($title) ? $title . ' - ' : ''); ?>Quản lý rạp - CineHub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -252,7 +252,7 @@
             .mobile-menu-toggle { display: none !important; } 
         }
     </style>
-    @stack('styles')
+    <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
 <body>
     <button class="mobile-menu-toggle" onclick="toggleAdminSidebar()">
@@ -266,43 +266,43 @@
             <i class="fas fa-building"></i> Quản lý rạp
         </div>
         <ul class="sidebar-menu">
-            <li><a href="{{ route('moderator.index') }}" class="{{ request()->routeIs('moderator.index') ? 'active' : '' }}">
+            <li><a href="<?php echo e(route('moderator.index')); ?>" class="<?php echo e(request()->routeIs('moderator.index') ? 'active' : ''); ?>">
                 <i class="fas fa-tachometer-alt"></i> Dashboard
             </a></li>
             
-            <li><a href="{{ route('moderator.theater') }}" class="{{ request()->routeIs('moderator.theater') ? 'active' : '' }}">
+            <li><a href="<?php echo e(route('moderator.theater')); ?>" class="<?php echo e(request()->routeIs('moderator.theater') ? 'active' : ''); ?>">
                 <i class="fas fa-building"></i> Thông tin rạp
             </a></li>
             
-            <li><a href="{{ route('moderator.screens.index') }}" class="{{ request()->routeIs('moderator.screens*') ? 'active' : '' }}">
+            <li><a href="<?php echo e(route('moderator.screens.index')); ?>" class="<?php echo e(request()->routeIs('moderator.screens*') ? 'active' : ''); ?>">
                 <i class="fas fa-door-open"></i> Quản lý phòng
             </a></li>
             
-            <li><a href="{{ route('moderator.showtimes.index') }}" class="{{ request()->routeIs('moderator.showtimes*') ? 'active' : '' }}">
+            <li><a href="<?php echo e(route('moderator.showtimes.index')); ?>" class="<?php echo e(request()->routeIs('moderator.showtimes*') ? 'active' : ''); ?>">
                 <i class="fas fa-calendar-alt"></i> Lịch chiếu
             </a></li>
             
-            <li><a href="{{ route('moderator.tickets') }}" class="{{ request()->routeIs('moderator.tickets') ? 'active' : '' }}">
+            <li><a href="<?php echo e(route('moderator.tickets')); ?>" class="<?php echo e(request()->routeIs('moderator.tickets') ? 'active' : ''); ?>">
                 <i class="fas fa-ticket-alt"></i> Quản lý vé
             </a></li>
             
-            <li><a href="{{ route('moderator.foodItems') }}" class="{{ request()->routeIs('moderator.foodItems*') ? 'active' : '' }}">
+            <li><a href="<?php echo e(route('moderator.foodItems')); ?>" class="<?php echo e(request()->routeIs('moderator.foodItems*') ? 'active' : ''); ?>">
                 <i class="fas fa-utensils"></i> Combo & Đồ ăn
             </a></li>
             
-            <li><a href="{{ route('moderator.counterStaff') }}" class="{{ request()->routeIs('moderator.counterStaff*') ? 'active' : '' }}">
+            <li><a href="<?php echo e(route('moderator.counterStaff')); ?>" class="<?php echo e(request()->routeIs('moderator.counterStaff*') ? 'active' : ''); ?>">
                 <i class="fas fa-users"></i> Quản lý nhân viên
             </a></li>
             
-            <li><a href="{{ route('moderator.statistics') }}" class="{{ request()->routeIs('moderator.statistics') ? 'active' : '' }}">
+            <li><a href="<?php echo e(route('moderator.statistics')); ?>" class="<?php echo e(request()->routeIs('moderator.statistics') ? 'active' : ''); ?>">
                 <i class="fas fa-chart-line"></i> Thống kê
             </a></li>
             
-            <li><a href="{{ route('moderator.permissionRequests') }}" class="{{ request()->routeIs('moderator.permissionRequests') ? 'active' : '' }}">
+            <li><a href="<?php echo e(route('moderator.permissionRequests')); ?>" class="<?php echo e(request()->routeIs('moderator.permissionRequests') ? 'active' : ''); ?>">
                 <i class="fas fa-user-shield"></i> Yêu cầu thay đổi quyền
             </a></li>
             
-            <li><a href="{{ route('home') }}">
+            <li><a href="<?php echo e(route('home')); ?>">
                 <i class="fas fa-home"></i> Về trang chủ
             </a></li>
             
@@ -311,27 +311,29 @@
             </a></li>
         </ul>
         
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-            @csrf
+        <form id="logout-form" action="<?php echo e(route('logout')); ?>" method="POST" style="display: none;">
+            <?php echo csrf_field(); ?>
         </form>
     </div>
 
     <div class="admin-main">
-        @if(session('success'))
+        <?php if(session('success')): ?>
             <div class="alert alert-success alert-dismissible fade show">
-                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                <i class="fas fa-check-circle me-2"></i><?php echo e(session('success')); ?>
+
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-        @endif
+        <?php endif; ?>
 
-        @if(session('error'))
+        <?php if(session('error')): ?>
             <div class="alert alert-danger alert-dismissible fade show">
-                <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+                <i class="fas fa-exclamation-circle me-2"></i><?php echo e(session('error')); ?>
+
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-        @endif
+        <?php endif; ?>
 
-        @yield('content')
+        <?php echo $__env->yieldContent('content'); ?>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -346,6 +348,7 @@
         document.getElementById('sidebarOverlay').classList.remove('active');
     }
     </script>
-    @stack('scripts')
+    <?php echo $__env->yieldPushContent('scripts'); ?>
 </body>
 </html>
+<?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/admin/moderator/layout.blade.php ENDPATH**/ ?>

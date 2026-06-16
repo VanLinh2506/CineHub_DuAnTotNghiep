@@ -576,9 +576,21 @@ class BookingController extends Controller
         $showtime = Showtime::with(['movie', 'screen'])->findOrFail($showtimeId);
         
         // Check if showtime has passed
-        $showtimeDateTime = Carbon::parse($showtime->show_date . ' ' . $showtime->show_time);
-        if ($showtimeDateTime->isPast()) {
-            return redirect()->back()->with('error', 'Suất chiếu đã qua!');
+        try {
+            if ($showtime->show_date && $showtime->show_time) {
+                // show_date is already a Carbon instance, just need to set the time
+                $showtimeDateTime = Carbon::parse($showtime->show_date)->setTimeFromTimeString($showtime->show_time);
+                if ($showtimeDateTime->isPast()) {
+                    return redirect()->back()->with('error', 'Suất chiếu đã qua!');
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error parsing showtime date: ' . $e->getMessage(), [
+                'show_date' => $showtime->show_date,
+                'show_time' => $showtime->show_time,
+                'error' => $e->getMessage()
+            ]);
+            // Continue even if date parsing fails - don't block booking
         }
         
         // Check seats availability
@@ -634,8 +646,6 @@ class BookingController extends Controller
                 'seats' => $seats,
                 'food_items' => $filteredFoodItems,
                 'customer_email' => $customerEmail,
-                'customer_name' => $user->name,
-                'customer_phone' => $user->phone ?? '',
                 'total_amount' => $totalAmount,
                 'vnp_txn_ref' => $vnpTxnRef,
                 'status' => 'pending',
@@ -652,18 +662,28 @@ class BookingController extends Controller
             
             // Redirect to VNPay
             $orderInfo = 'Thanh toan ve xem phim ' . $showtime->movie->title;
+            Log::info('Creating VNPay payment URL');
+            
             $paymentUrl = $this->vnpay->createBookingPaymentUrl(
                 $booking,
                 $orderInfo,
                 route('payment.vnpay.callback'),
                 $request->ip()
             );
+            
+            Log::info('VNPay payment URL created:', ['url' => $paymentUrl]);
+            Log::info('Booking created successfully', ['booking_id' => $booking->id, 'vnp_txn_ref' => $vnpTxnRef]);
+            Log::info('Redirecting to VNPay...');
+            
+            // Debug: Also store in session
+            session(['last_payment_url' => $paymentUrl]);
 
-            return redirect($paymentUrl);
+            return redirect()->away($paymentUrl);
             
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Booking error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return redirect()->back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
     }

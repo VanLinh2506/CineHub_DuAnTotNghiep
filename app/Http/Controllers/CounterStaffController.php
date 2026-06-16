@@ -45,6 +45,48 @@ class CounterStaffController extends Controller
     }
     
     /**
+     * Dashboard cho counter staff
+     */
+    public function index()
+    {
+        $user = Auth::user();
+        $theaterId = $this->theaterId;
+        $theater = Theater::find($theaterId);
+        
+        // Thống kê hôm nay
+        $todayStats = [
+            'tickets_sold' => Ticket::where('is_counter_sale', true)
+                ->where('sold_by', $user->id)
+                ->whereDate('created_at', today())
+                ->count(),
+            
+            'revenue' => Ticket::where('is_counter_sale', true)
+                ->where('sold_by', $user->id)
+                ->whereDate('created_at', today())
+                ->sum('price'),
+            
+            'tickets_scanned' => Ticket::whereHas('showtime.screen', function($q) use ($theaterId) {
+                    $q->where('theater_id', $theaterId);
+                })
+                ->where('is_picked_up', true)
+                ->whereDate('updated_at', today())
+                ->count(),
+        ];
+        
+        // Lịch chiếu hôm nay
+        $todayShowtimes = Showtime::with(['movie', 'screen'])
+            ->whereHas('screen', function($q) use ($theaterId) {
+                $q->where('theater_id', $theaterId);
+            })
+            ->whereDate('show_date', today())
+            ->orderBy('show_time')
+            ->limit(10)
+            ->get();
+        
+        return view('admin.counter_staff.dashboard', compact('user', 'theater', 'todayStats', 'todayShowtimes'));
+    }
+    
+    /**
      * Trang quét QR code
      */
     public function scanQR()
@@ -386,15 +428,21 @@ class CounterStaffController extends Controller
     // Helper methods
     private function isCounterStaff($user)
     {
-        if ($user->role === 'counter_staff') {
-            return true;
-        }
+        // Counter staff: role = 'user' VÀ có theater_id hợp lệ (không empty và là số)
+        $isCounterStaff = $user->role === 'user' && 
+                         !empty($user->theater_id) && 
+                         $user->theater_id != '' &&
+                         is_numeric($user->theater_id);
         
-        if ($user->roles && $user->roles->contains('name', 'Counter Staff')) {
-            return true;
-        }
+        // Moderator cũng có quyền
+        $isModerator = $user->role === 'moderator' && 
+                      !empty($user->theater_id) && 
+                      $user->theater_id != '';
         
-        return false;
+        // Admin có quyền
+        $isAdmin = $user->role === 'admin';
+        
+        return $isCounterStaff || $isModerator || $isAdmin;
     }
     
     private function getSeatType($seat)
