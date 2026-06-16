@@ -7,156 +7,326 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .moderator-sidebar { min-height: 100vh; background: linear-gradient(180deg, #2d1b3d 0%, #1a0d2e 100%); padding: 0; position: fixed; width: 250px; left: 0; top: 0; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.3); overflow-y: auto; overflow-x: hidden; }
-        .moderator-sidebar::-webkit-scrollbar { width: 6px; }
-        .moderator-sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
-        .moderator-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
-        .moderator-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
-        .moderator-main { margin-left: 250px; padding: 20px; background: linear-gradient(135deg, #2d1b3d 0%, #1a0d2e 100%); min-height: 100vh; }
-        .moderator-header { background: linear-gradient(135deg, #3d2a4d 0%, #2d1b3d 100%); color: #fff; padding: 15px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 20px; border-radius: 12px; }
-        .moderator-header h4, .moderator-header small { color: #fff !important; }
-        .sidebar-brand { padding: 20px; color: #fff; font-size: 1.5rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); }
-        .sidebar-menu { list-style: none; padding: 0; margin: 0; }
-        .sidebar-menu li { border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-menu a { display: flex; align-items: center; padding: 15px 20px; color: rgba(255,255,255,0.9); text-decoration: none; transition: all 0.3s ease; position: relative; }
-        .sidebar-menu a::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: #fff; transform: scaleY(0); transition: transform 0.3s ease; }
-        .sidebar-menu a:hover, .sidebar-menu a.active { background: rgba(255,255,255,0.2); color: #fff; padding-left: 25px; box-shadow: inset 0 0 10px rgba(255,255,255,0.1); }
-        .sidebar-menu a.active::before, .sidebar-menu a:hover::before { transform: scaleY(1); }
-        .sidebar-menu a i { width: 25px; margin-right: 10px; }
-        .stat-card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; color: #333 !important; }
-        .stat-card * { color: #333; }
-        .stat-card h1,.stat-card h2,.stat-card h3,.stat-card h4,.stat-card h5,.stat-card h6 { color: #333 !important; }
-        .stat-card .badge { color: #fff !important; }
-        .stat-card .btn { color: #fff !important; }
-        .stat-card .btn-outline-primary { color: #0d6efd !important; }
-        .stat-card .btn-outline-secondary { color: #6c757d !important; }
-        .stat-card .btn-outline-info { color: #0dcaf0 !important; }
-        .stat-card .btn-outline-success { color: #198754 !important; }
-        .stat-card .btn-outline-warning { color: #ffc107 !important; }
-        .stat-card .btn-outline-danger { color: #dc3545 !important; }
-        .stat-card a:not(.btn) { color: #0d6efd !important; }
-        .stat-card .text-primary { color: #0d6efd !important; }
-        .stat-card .text-secondary { color: #6c757d !important; }
-        .stat-card .text-success { color: #198754 !important; }
-        .stat-card .text-danger { color: #dc3545 !important; }
-        .stat-card .text-warning { color: #ffc107 !important; }
-        .stat-card .text-info { color: #0dcaf0 !important; }
-        .stat-card .text-muted { color: #6c757d !important; }
-        .stat-card .text-dark { color: #212529 !important; }
-        .stat-card .table { color: #333 !important; }
-        .stat-card .table th { color: #333 !important; background-color: #f8f9fa !important; }
-        .stat-card .table td { color: #333 !important; }
-        .stat-card .form-control, .stat-card .form-select { color: #333 !important; background-color: #fff !important; }
-        .stat-card .form-label { color: #333 !important; }
-        .stat-card .input-group-text { color: #333 !important; background-color: #e9ecef !important; }
-        .stat-card .list-group-item { color: #333 !important; background-color: #fff !important; }
-        .moderator-main { color: #333; }
-        .moderator-main > .d-flex h5, .moderator-main > .d-flex h4, .moderator-main > .mb-4 > h5, .moderator-main > .mb-3 > h5, .moderator-main > .row > .col-12 > h5, .moderator-main > h5, .moderator-main > h4 { color: #fff !important; }
-        .moderator-main > form .form-control, .moderator-main > .mb-3 .form-control { color: #333 !important; background-color: #fff !important; }
-        .modal-content { color: #333 !important; background-color: #fff !important; }
-        .modal-content * { color: #333; }
-        .modal-content h1,.modal-content h2,.modal-content h3,.modal-content h4,.modal-content h5,.modal-content h6 { color: #333 !important; }
-        .modal-content p,.modal-content span,.modal-content div,.modal-content label,.modal-content strong,.modal-content small { color: #333 !important; }
-        .modal-content .form-control, .modal-content .form-select { color: #333 !important; background-color: #fff !important; }
-        .modal-content .form-label { color: #333 !important; }
-        .modal-content .text-muted { color: #6c757d !important; }
-        .modal-content .text-danger { color: #dc3545 !important; }
-        .modal-content .btn { color: #fff !important; }
-        .modal-content .btn-secondary { background-color: #6c757d !important; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f6fa; }
+        
+        /* Sidebar */
+        .admin-sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #4a3567 0%, #2d1f3d 100%);
+            padding: 0;
+            position: fixed;
+            width: 240px;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+        .admin-sidebar::-webkit-scrollbar { width: 5px; }
+        .admin-sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+        .admin-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+        
+        /* Sidebar Brand */
+        .sidebar-brand { 
+            padding: 20px 15px; 
+            color: #fff; 
+            font-size: 1.3rem; 
+            font-weight: 600; 
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sidebar-brand i { font-size: 1.5rem; }
+        
+        /* Sidebar Menu */
+        .sidebar-menu { 
+            list-style: none; 
+            padding: 10px 0; 
+            margin: 0; 
+        }
+        .sidebar-menu li { margin: 0; }
+        .sidebar-menu a { 
+            display: flex; 
+            align-items: center; 
+            padding: 12px 20px; 
+            color: rgba(255,255,255,0.8); 
+            text-decoration: none; 
+            transition: all 0.3s ease; 
+            position: relative;
+            font-size: 0.95rem;
+        }
+        .sidebar-menu a::before { 
+            content: ''; 
+            position: absolute; 
+            left: 0; 
+            top: 0; 
+            height: 100%; 
+            width: 3px; 
+            background: #fff; 
+            transform: scaleY(0); 
+            transition: transform 0.3s ease; 
+        }
+        .sidebar-menu a:hover { 
+            background: rgba(255,255,255,0.1); 
+            color: #fff;
+            padding-left: 25px;
+        }
+        .sidebar-menu a.active { 
+            background: rgba(255,255,255,0.15); 
+            color: #fff; 
+            font-weight: 500;
+        }
+        .sidebar-menu a.active::before { transform: scaleY(1); }
+        .sidebar-menu a i { 
+            width: 22px; 
+            margin-right: 12px; 
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .admin-main { 
+            margin-left: 240px; 
+            padding: 25px; 
+            background: #f5f6fa; 
+            min-height: 100vh; 
+        }
+        
+        /* Stats Cards */
+        .stat-card { 
+            background: #fff; 
+            border-radius: 12px; 
+            padding: 25px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); 
+            margin-bottom: 20px; 
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+        }
+        .stat-card .d-flex { align-items: center; }
+        .stat-card .stat-icon { 
+            width: 65px; 
+            height: 65px; 
+            border-radius: 12px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1.8rem; 
+            color: #fff;
+            margin-left: 15px;
+        }
+        .stat-card .stat-value { 
+            font-size: 2.2rem; 
+            font-weight: 700; 
+            margin: 0;
+            line-height: 1;
+        }
+        .stat-card .stat-label { 
+            color: #8c8c8c; 
+            font-size: 0.9rem; 
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        /* Color Variants */
+        .bg-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; }
+        .bg-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important; }
+        .bg-info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important; }
+        .bg-warning { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important; }
+        .bg-danger { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important; }
+        
+        .text-primary { color: #667eea !important; }
+        .text-success { color: #11998e !important; }
+        .text-info { color: #4facfe !important; }
+        .text-warning { color: #fa709a !important; }
+        .text-danger { color: #f5576c !important; }
+        
+        /* Tables */
+        .table { 
+            background: #fff; 
+            border-radius: 8px; 
+            overflow: hidden;
+        }
+        .table thead th { 
+            background: #f8f9fa; 
+            border: none; 
+            padding: 15px; 
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            color: #495057;
+        }
+        .table tbody td { 
+            padding: 15px; 
+            vertical-align: middle;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .table tbody tr:last-child td { border-bottom: none; }
+        .table tbody tr:hover { background: #f8f9fa; }
+        
+        /* Buttons */
+        .btn { 
+            padding: 8px 20px; 
+            border-radius: 8px; 
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; }
+        .btn-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border: none; }
+        .btn-danger { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none; }
+        .btn-sm { padding: 5px 12px; font-size: 0.875rem; }
+        
+        /* Forms */
+        .form-control, .form-select { 
+            border-radius: 8px; 
+            border: 1px solid #e0e0e0;
+            padding: 10px 15px;
+        }
+        .form-control:focus, .form-select:focus { 
+            border-color: #667eea; 
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25); 
+        }
+        .form-label { font-weight: 500; margin-bottom: 8px; }
+        
+        /* Alerts */
+        .alert { 
+            border-radius: 10px; 
+            border: none; 
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-danger { background: #f8d7da; color: #721c24; }
+        .alert-dismissible .btn-close { padding: 18px 20px; }
+        
+        /* Responsive */
         @media screen and (max-width: 768px) {
-            .moderator-sidebar { position: fixed; left: -250px; transition: left 0.3s ease; z-index: 9999; }
-            .moderator-sidebar.active { left: 0; }
-            .moderator-main { margin-left: 0; padding: 15px; padding-top: 70px; }
-            .moderator-header { padding: 10px 15px; }
-            .moderator-header h4 { font-size: 1rem; }
+            .admin-sidebar { 
+                position: fixed; 
+                left: -240px; 
+                transition: left 0.3s ease; 
+                z-index: 9999; 
+            }
+            .admin-sidebar.active { left: 0; }
+            .admin-main { 
+                margin-left: 0; 
+                padding: 15px; 
+            }
             .stat-card { padding: 15px; }
-            .mobile-menu-toggle { display: block !important; position: fixed; top: 15px; left: 15px; z-index: 10000; background: #1a1a2e; border: none; color: #fff; padding: 10px 15px; border-radius: 8px; font-size: 1.2rem; }
-            .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998; }
+            .stat-card .stat-value { font-size: 1.5rem; }
+            .stat-card .stat-icon { width: 50px; height: 50px; font-size: 1.3rem; }
+            .mobile-menu-toggle { 
+                display: block !important; 
+                position: fixed; 
+                top: 15px; 
+                left: 15px; 
+                z-index: 10000; 
+                background: #4a3567; 
+                border: none; 
+                color: #fff; 
+                padding: 10px 15px; 
+                border-radius: 8px; 
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            }
+            .sidebar-overlay { 
+                display: none; 
+                position: fixed; 
+                top: 0; 
+                left: 0; 
+                right: 0; 
+                bottom: 0; 
+                background: rgba(0,0,0,0.5); 
+                z-index: 9998; 
+            }
             .sidebar-overlay.active { display: block; }
         }
-        @media screen and (min-width: 769px) { .mobile-menu-toggle { display: none !important; } }
+        @media screen and (min-width: 769px) { 
+            .mobile-menu-toggle { display: none !important; } 
+        }
     </style>
     @stack('styles')
 </head>
 <body>
-    <button class="mobile-menu-toggle" onclick="toggleModeratorSidebar()">
+    <button class="mobile-menu-toggle" onclick="toggleAdminSidebar()">
         <i class="fas fa-bars"></i>
     </button>
 
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeModeratorSidebar()"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeAdminSidebar()"></div>
 
-    <div class="moderator-sidebar" id="moderatorSidebar">
+    <div class="admin-sidebar" id="adminSidebar">
         <div class="sidebar-brand">
             <i class="fas fa-building"></i> Quản lý rạp
         </div>
         <ul class="sidebar-menu">
-            @if(!isset($isCounterStaff) || !$isCounterStaff)
-            <li><a href="{{ route('moderator.index') }}" class="{{ ($current_page ?? '') === 'dashboard' ? 'active' : '' }}">
+            <li><a href="{{ route('moderator.index') }}" class="{{ request()->routeIs('moderator.index') ? 'active' : '' }}">
                 <i class="fas fa-tachometer-alt"></i> Dashboard
             </a></li>
-            <li><a href="{{ route('moderator.theater') }}" class="{{ ($current_page ?? '') === 'theater' ? 'active' : '' }}">
+            
+            <li><a href="{{ route('moderator.theater') }}" class="{{ request()->routeIs('moderator.theater') ? 'active' : '' }}">
                 <i class="fas fa-building"></i> Thông tin rạp
             </a></li>
-            @endif
-            <li><a href="{{ route('moderator.screens') }}" class="{{ ($current_page ?? '') === 'screens' ? 'active' : '' }}">
+            
+            <li><a href="{{ route('moderator.screens.index') }}" class="{{ request()->routeIs('moderator.screens*') ? 'active' : '' }}">
                 <i class="fas fa-door-open"></i> Quản lý phòng
             </a></li>
-            <li><a href="{{ route('moderator.showtimes') }}" class="{{ ($current_page ?? '') === 'showtimes' ? 'active' : '' }}">
+            
+            <li><a href="{{ route('moderator.showtimes.index') }}" class="{{ request()->routeIs('moderator.showtimes*') ? 'active' : '' }}">
                 <i class="fas fa-calendar-alt"></i> Lịch chiếu
             </a></li>
-            <li><a href="{{ route('moderator.tickets') }}" class="{{ ($current_page ?? '') === 'tickets' ? 'active' : '' }}">
+            
+            <li><a href="{{ route('moderator.tickets') }}" class="{{ request()->routeIs('moderator.tickets') ? 'active' : '' }}">
                 <i class="fas fa-ticket-alt"></i> Quản lý vé
             </a></li>
-            <li><a href="{{ route('moderator.foodItems') }}" class="{{ ($current_page ?? '') === 'food_items' ? 'active' : '' }}">
+            
+            <li><a href="{{ route('moderator.foodItems') }}" class="{{ request()->routeIs('moderator.foodItems*') ? 'active' : '' }}">
                 <i class="fas fa-utensils"></i> Combo & Đồ ăn
             </a></li>
-            @if(!isset($isCounterStaff) || !$isCounterStaff)
-            <li><a href="{{ route('moderator.statistics') }}" class="{{ ($current_page ?? '') === 'statistics' ? 'active' : '' }}">
-                <i class="fas fa-chart-line"></i> Thống kê
-            </a></li>
-            @if(isset($isTheaterAdmin) && $isTheaterAdmin || isset($isModerator) && $isModerator)
-            <li><a href="{{ route('moderator.counterStaff') }}" class="{{ ($current_page ?? '') === 'counter_staff' ? 'active' : '' }}">
+            
+            <li><a href="{{ route('moderator.counterStaff') }}" class="{{ request()->routeIs('moderator.counterStaff*') ? 'active' : '' }}">
                 <i class="fas fa-users"></i> Quản lý nhân viên
             </a></li>
-            @endif
-            <li><a href="{{ route('moderator.permissionRequests') }}" class="{{ ($current_page ?? '') === 'permission_requests' ? 'active' : '' }}">
-                <i class="fas fa-user-shield"></i> Yêu cầu thay đổi quyền
-                @if(isset($pendingCount) && $pendingCount > 0)
-                    <span class="badge bg-danger ms-2">{{ $pendingCount }}</span>
-                @endif
+            
+            <li><a href="{{ route('moderator.statistics') }}" class="{{ request()->routeIs('moderator.statistics') ? 'active' : '' }}">
+                <i class="fas fa-chart-line"></i> Thống kê
             </a></li>
-            @endif
-            <li><a href="/"><i class="fas fa-home"></i> Về trang chủ</a></li>
-            <li><a href="{{ route('profile.index') }}"><i class="fas fa-user"></i> Hồ sơ</a></li>
-            <li><a href="{{ route('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+            
+            <li><a href="{{ route('moderator.permissionRequests') }}" class="{{ request()->routeIs('moderator.permissionRequests') ? 'active' : '' }}">
+                <i class="fas fa-user-shield"></i> Yêu cầu thay đổi quyền
+            </a></li>
+            
+            <li><a href="{{ route('home') }}">
+                <i class="fas fa-home"></i> Về trang chủ
+            </a></li>
+            
+            <li><a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <i class="fas fa-sign-out-alt"></i> Đăng xuất
+            </a></li>
         </ul>
+        
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+            @csrf
+        </form>
     </div>
 
-    <div class="moderator-main">
-        <div class="moderator-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h4 class="mb-0">{{ $title ?? 'Quản lý rạp' }}</h4>
-                    @if(isset($theater))
-                        <small class="text-muted">{{ $theater['name'] }} - {{ $theater['location'] ?? '' }}</small>
-                    @endif
-                </div>
-                <div class="d-flex align-items-center gap-3">
-                    <span><i class="fas fa-user-circle"></i> {{ $user['name'] ?? 'Moderator' }}</span>
-                </div>
-            </div>
-        </div>
-
+    <div class="admin-main">
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show">
-                <i class="fas fa-check-circle"></i> {{ session('success') }}
+                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
         @if(session('error'))
             <div class="alert alert-danger alert-dismissible fade show">
-                <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+                <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
@@ -165,19 +335,16 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-    function toggleModeratorSidebar() {
-        document.getElementById('moderatorSidebar').classList.toggle('active');
+    function toggleAdminSidebar() {
+        document.getElementById('adminSidebar').classList.toggle('active');
         document.getElementById('sidebarOverlay').classList.toggle('active');
     }
-    function closeModeratorSidebar() {
-        document.getElementById('moderatorSidebar').classList.remove('active');
+    function closeAdminSidebar() {
+        document.getElementById('adminSidebar').classList.remove('active');
         document.getElementById('sidebarOverlay').classList.remove('active');
     }
-    document.querySelectorAll('.sidebar-menu a').forEach(link => {
-        link.addEventListener('click', closeModeratorSidebar);
-    });
     </script>
     @stack('scripts')
 </body>

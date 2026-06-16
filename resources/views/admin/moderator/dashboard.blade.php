@@ -8,19 +8,19 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-2" style="color: #333; font-weight: 600;">
-                        <i class="fas fa-building text-primary me-2"></i>{{ $theater['name'] }}
+                        <i class="fas fa-building text-primary me-2"></i>{{ $theater->name }}
                     </h5>
-                    <p class="text-muted mb-1"><i class="fas fa-map-marker-alt"></i> {{ $theater['location'] ?? 'N/A' }}</p>
-                    @if($theater['address'])
-                        <p class="text-muted mb-1"><i class="fas fa-address-card"></i> {{ $theater['address'] }}</p>
+                    <p class="text-muted mb-1"><i class="fas fa-map-marker-alt"></i> {{ $theater->location ?? 'N/A' }}</p>
+                    @if($theater->address)
+                        <p class="text-muted mb-1"><i class="fas fa-address-card"></i> {{ $theater->address }}</p>
                     @endif
-                    @if($theater['phone'])
-                        <p class="text-muted mb-0"><i class="fas fa-phone"></i> {{ $theater['phone'] }}</p>
+                    @if($theater->phone)
+                        <p class="text-muted mb-0"><i class="fas fa-phone"></i> {{ $theater->phone }}</p>
                     @endif
                 </div>
                 <div class="text-end">
                     <span class="badge bg-success fs-6 px-3 py-2">
-                        <i class="fas fa-door-open me-1"></i>{{ $theater['total_screens'] }} phòng chiếu
+                        <i class="fas fa-door-open me-1"></i>{{ $theater->total_screens }} phòng chiếu
                     </span>
                 </div>
             </div>

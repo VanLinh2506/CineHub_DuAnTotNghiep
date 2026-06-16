@@ -1,8 +1,11 @@
+@extends('layouts.app')
+
+@section('content')
 <section class="section">
     <br>
     <div class="container">
         <div class="filter-bar">
-            <form method="GET" class="search-form" action="{{ url('/') }}?route=movie/index">
+            <form method="GET" class="search-form" action="{{ route('movies.index') }}">
                 <input type="hidden" name="route" value="movie/index">
                 @if(isset($search) && $search)
                     <input type="hidden" name="search" value="{{ $search }}">
@@ -42,10 +45,10 @@
                             <label class="form-label small">Quốc gia</label>
                             <select name="country" class="form-select form-select-sm">
                                 <option value="">Tất cả quốc gia</option>
-                                @if(isset($countries))
+                                @if(isset($countries) && $countries->isNotEmpty())
                                     @foreach($countries as $c)
-                                        <option value="{{ $c['country'] }}" {{ (isset($country) && $country === $c['country']) ? 'selected' : '' }}>
-                                            {{ $c['country'] }}
+                                        <option value="{{ $c }}" {{ (isset($country) && $country === $c) ? 'selected' : '' }}>
+                                            {{ $c }}
                                         </option>
                                     @endforeach
                                 @endif
@@ -65,7 +68,7 @@
                         <button type="submit" class="btn btn-sm btn-primary">
                             <i class="fas fa-filter"></i> Áp dụng bộ lọc
                         </button>
-                        <a href="{{ url('/') }}?route=movie/index" class="btn btn-sm btn-outline-secondary">
+                        <a href="{{ route('movies.index') }}" class="btn btn-sm btn-outline-secondary">
                             <i class="fas fa-redo"></i> Xóa bộ lọc
                         </a>
                     </div>
@@ -74,12 +77,12 @@
 
             <div class="category-filter mt-3">
                 <div class="category-tags">
-                    <a href="{{ url('/') }}?route=movie/index"
+                    <a href="{{ route('movies.index') }}"
                        class="category-tag {{ (!isset($category_id) || !$category_id) ? 'active' : '' }}">
                         <i class="fas fa-th"></i> Tất cả
                     </a>
                     @foreach($categories as $cat)
-                        <a href="{{ url('/') }}?route=movie/index&category={{ $cat['id'] }}"
+                        <a href="{{ route('movies.category', $cat['id']) }}"
                            class="category-tag {{ (isset($category_id) && $category_id == $cat['id']) ? 'active' : '' }}">
                             {{ $cat['name'] }}
                         </a>
@@ -118,7 +121,7 @@
                 <i class="fas fa-search fa-3x text-muted mb-3"></i>
                 <h4>Không tìm thấy phim nào</h4>
                 <p class="text-muted">Không có kết quả phù hợp với từ khóa: "<strong>{{ $search }}</strong>"</p>
-                <a href="{{ url('/') }}?route=movie/index" class="btn btn-primary mt-3">
+                <a href="{{ route('home') }}?route=movie/index" class="btn btn-primary mt-3">
                     <i class="fas fa-redo"></i> Xem tất cả phim
                 </a>
             </div>
@@ -132,14 +135,26 @@
             <div class="movie-grid">
                 @foreach($movies as $movie)
                 <div class="movie-card">
-                    <a href="{{ url('/') }}?route=movie/watch&id={{ $movie['id'] }}">
+                    @php
+                        // Nếu phim chiếu rạp, link đến trang đặt vé; nếu không thì xem phim online
+                        $movieUrl = ($movie['status'] === 'Chiếu rạp') 
+                            ? route('home') . '?route=booking/index&movie_id=' . $movie['id']
+                            : route('home') . '?route=movie/watch&id=' . $movie['id'];
+                    @endphp
+                    <a href="{{ $movieUrl }}">
                         <div class="movie-thumbnail">
                             @if($movie['thumbnail'])
                                 <img src="{{ $movie['thumbnail'] }}" alt="{{ $movie['title'] }}">
                             @else
                                 <div class="movie-placeholder"><i class="fas fa-film"></i></div>
                             @endif
-                            <div class="movie-overlay"><i class="fas fa-play"></i></div>
+                            <div class="movie-overlay">
+                                @if($movie['status'] === 'Chiếu rạp')
+                                    <i class="fas fa-ticket-alt"></i>
+                                @else
+                                    <i class="fas fa-play"></i>
+                                @endif
+                            </div>
                             @if(($movie['type'] ?? 'phimle') === 'phimbo')
                                 <div class="movie-badge" title="Số tập">
                                     {{ isset($movie['episode_count']) && $movie['episode_count'] > 0 ? $movie['episode_count'] . ' tập' : '? tập' }}
@@ -151,7 +166,7 @@
                     </a>
                     <div class="movie-info">
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-                            <a href="{{ url('/') }}?route=movie/watch&id={{ $movie['id'] }}" style="flex:1;text-decoration:none;color:inherit;">
+                            <a href="{{ $movieUrl }}" style="flex:1;text-decoration:none;color:inherit;">
                                 <h3>{{ $movie['title'] }}</h3>
                             </a>
                             @if(isset($user) && $user)
@@ -181,7 +196,7 @@
                         @endif
                         @if(isset($movie['status']) && $movie['status'] === 'Chiếu rạp')
                             <div class="mt-2">
-                                <a href="{{ url('/') }}?route=booking/index&movie={{ $movie['id'] }}"
+                                <a href="{{ route('home') }}?route=booking/index&movie={{ $movie['id'] }}"
                                    class="btn btn-primary btn-sm w-100"
                                    style="background:#e50914;border:none;padding:8px 16px;border-radius:6px;text-decoration:none;display:inline-block;text-align:center;color:white;font-weight:500;">
                                     <i class="fas fa-ticket-alt"></i> Đặt vé xem phim
@@ -197,7 +212,7 @@
             @if(isset($totalPages) && $totalPages > 1)
                 @php
                     $queryParams = request()->except('page');
-                    $paginationUrl = url('/') . '?route=movie/index' . (!empty($queryParams) ? '&' . http_build_query($queryParams) : '');
+                    $paginationUrl = route('home') . '?route=movie/index' . (!empty($queryParams) ? '&' . http_build_query($queryParams) : '');
                     $startPage = max(1, $page - 2);
                     $endPage = min($totalPages, $page + 2);
                 @endphp
@@ -289,3 +304,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+
+@endsection

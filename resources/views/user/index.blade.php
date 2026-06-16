@@ -3,6 +3,8 @@
 @php
     $user = auth()->user();
     $title = 'Hồ Sơ';
+    $isAdmin = $user ? $user->isAdmin() : false;
+    $isModerator = $user ? $user->isModerator() : false;
 @endphp
 
 @section('content')
@@ -75,8 +77,9 @@
                     </button>
                 </div>
                 
-                <form id="personalForm" method="POST" action="{{ url('/?route=profile/update') }}" class="profile-form">
+                <form id="personalForm" method="POST" action="{{ route('profile.update') }}" class="profile-form">
                     @csrf
+                    @method('PUT')
                     <div class="form-row">
                         <div class="form-group">
                             <label>Họ và tên</label>
@@ -119,8 +122,9 @@
                     <h2>Bảo mật</h2>
                 </div>
                 
-                <form method="POST" action="{{ url('/?route=profile/changePassword') }}" class="profile-form">
+                <form method="POST" action="{{ route('profile.updatePassword') }}" class="profile-form">
                     @csrf
+                    @method('PUT')
                     <div class="form-group">
                         <label>Mật khẩu hiện tại</label>
                         <input type="password" name="current_password" placeholder="Nhập mật khẩu hiện tại" class="form-control" required>
@@ -554,7 +558,7 @@
         const formData = new FormData();
         formData.append('avatar', file);
         
-        fetch('{{ url("/?route=profile/uploadAvatar") }}', {
+        fetch('{{ route("profile.uploadAvatar") }}', {
             method: 'POST',
             body: formData
         })

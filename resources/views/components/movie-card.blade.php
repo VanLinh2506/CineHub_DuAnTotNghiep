@@ -8,7 +8,7 @@
             </div>
         @endif
         <div class="movie-card-overlay">
-            <a href="{{ url('?route=movie/watch&id=' . $movie->id) }}" class="play-button">
+            <a href="{{ route('movies.watch', $movie->id) }}" class="play-button">
                 <i class="fas fa-play"></i>
             </a>
         </div>

@@ -1,8 +1,4 @@
-@extends('layouts.app')
-
-@php
-    $title = 'Admin Dashboard';
-@endphp
+@extends('admin.layout')
 
 @section('content')
 <div class="container">
@@ -123,7 +119,7 @@
                         </span>
                     </div>
                 </div>
-                <canvas id="revenueChart" height="80"></canvas>
+                <canvas id="revenueChart" style="max-height: 300px;"></canvas>
             </div>
         </div>
         
@@ -344,23 +340,102 @@
         updateCounter();
     });
 
-    // Chart initialization (placeholder)
-    // const ctx = document.getElementById('revenueChart');
-    // if (ctx) {
-    //     new Chart(ctx, {
-    //         type: 'line',
-    //         data: {
-    //             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    //             datasets: [{
-    //                 label: 'Revenue',
-    //                 data: [12000, 15000, 18000, 17000, 22000, 25000, 28000],
-    //                 borderColor: '#667eea',
-    //                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
-    //                 tension: 0.4,
-    //                 fill: true
-    //             }]
-    //         }
-    //     });
-    // }
+    // Chart initialization
+    const ctx = document.getElementById('revenueChart');
+    if (ctx) {
+        const revenueData = @json($revenueByDay ?? []);
+        
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+        };
+        
+        const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(102, 126, 234, 0.4)');
+        gradient.addColorStop(1, 'rgba(118, 75, 162, 0.1)');
+        
+        const labels = revenueData.length > 0 
+            ? revenueData.map(item => formatDate(item.date))
+            : ['02-06', '03-06', '04-06', '05-06', '06-06', '07-06', '08-06'];
+            
+        const data = revenueData.length > 0 
+            ? revenueData.map(item => parseFloat(item.revenue || 0))
+            : [0, 0, 0, 0, 0, 0, 0];
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Doanh thu (đ)',
+                    data: data,
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: 'rgba(102, 126, 234, 1)',
+                    pointBorderWidth: 3,
+                    pointHoverBackgroundColor: 'rgba(102, 126, 234, 1)',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 3,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 15,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.y;
+                                return 'Doanh thu: ' + new Intl.NumberFormat('vi-VN').format(value) + 'đ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                if (value >= 1000000) {
+                                    return (value / 1000000).toFixed(1) + 'M';
+                                } else if (value >= 1000) {
+                                    return (value / 1000).toFixed(0) + 'K';
+                                }
+                                return value;
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
 </script>
 @endsection

@@ -4,8 +4,8 @@
     $isModerator = false;
     
     if ($user) {
-        $isAdmin = $user->hasRole('admin') || $user->hasRole('Super Admin') || $user->hasRole('Admin');
-        $isModerator = $user->hasRole('moderator') || !empty($user->theater_id);
+        $isAdmin = $user->isAdmin();
+        $isModerator = $user->isModerator();
     }
     
     // Fetch menu categories and countries
@@ -22,14 +22,14 @@
     <div class="header-container">
         <div class="header-left">
             <div class="logo-new">
-                <a href="{{ url('/') }}">
+                <a href="{{ route('home') }}">
                     <i class="fas fa-film"></i>
                     <span>CineHub</span>
                 </a>
             </div>
             
             <div class="search-bar">
-                <form method="GET" action="{{ url('/') }}" class="search-form-inline">
+                <form method="GET" action="{{ route('home') }}" class="search-form-inline">
                     <input type="hidden" name="route" value="movie/index">
                     <input type="text" name="search" id="search-input-header" class="search-input" placeholder="Tìm kiếm phim...">
                     <button type="submit" class="search-btn">
@@ -40,10 +40,10 @@
         </div>
         
         <nav class="nav-new">
-            <a href="{{ url('/?route=movie/index&type=phimle') }}" class="nav-link-new">
+            <a href="{{ route('movies.phimle') }}" class="nav-link-new">
                 Phim lẻ
             </a>
-            <a href="{{ url('/?route=movie/index&type=phimbo') }}" class="nav-link-new">
+            <a href="{{ route('movies.phimbo') }}" class="nav-link-new">
                 Phim bộ
             </a>
             <div class="nav-dropdown">
@@ -52,7 +52,7 @@
                 </span>
                 <div class="dropdown-menu">
                     @foreach ($menuCategories as $cat)
-                        <a href="{{ url('/?route=movie/index&category=' . $cat->id) }}" class="dropdown-item">
+                        <a href="{{ route('movies.category', $cat->id) }}" class="dropdown-item">
                             {{ $cat->name }}
                         </a>
                     @endforeach
@@ -64,16 +64,16 @@
                 </span>
                 <div class="dropdown-menu">
                     @foreach ($countries as $country)
-                        <a href="{{ url('/?route=movie/index&country=' . urlencode($country)) }}" class="dropdown-item">
+                        <a href="{{ route('movies.index', ['country' => $country]) }}" class="dropdown-item">
                             {{ $country }}
                         </a>
                     @endforeach
                 </div>
             </div>
-            <a href="{{ url('/?route=movie/index') }}" class="nav-link-new">
+            <a href="{{ route('movies.index') }}" class="nav-link-new">
                 Top phim
             </a>
-            <a href="{{ url('/?route=booking/index') }}" class="nav-link-new" id="booking-link">
+            <a href="{{ route('movies.theater') }}" class="nav-link-new" id="booking-link">
                 Vé xem phim
             </a>
         </nav>
@@ -81,22 +81,22 @@
         <div class="header-right">
             @if ($user)
                 @if ($isAdmin)
-                    <a href="{{ url('/?route=admin/index') }}" class="sign-in-btn" style="background-color: #FFFFFF37;">
+                    <a href="{{ route('admin.index') }}" class="sign-in-btn" style="background-color: #FFFFFF37;">
                         <i class="fas fa-cog"></i>
                         <span>Admin Panel</span>
                     </a>
                 @elseif ($isModerator)
-                    <a href="{{ url('/?route=moderator/index') }}" class="sign-in-btn">
+                    <a href="{{ route('moderator.index') }}" class="sign-in-btn">
                         <i class="fas fa-building"></i>
                         <span>Quản lý rạp</span>
                     </a>
                 @endif
-                <a href="{{ url('/?route=profile/index') }}" class="sign-in-btn">
+                <a href="{{ route('profile.index') }}" class="sign-in-btn">
                     <i class="fas fa-user"></i>
                     <span>{{ $user->name }}</span>
                 </a>
             @else
-                <a href="#" class="sign-in-btn" onclick="event.preventDefault(); openAuthModal('login');">
+                <a href="{{ route('login') }}" class="sign-in-btn" data-auth-trigger="login" onclick="event.preventDefault(); openAuthModal('login'); return false;">
                     <i class="fas fa-user"></i>
                     <span>Login</span>
                     <i class="fas fa-arrow-right"></i>
@@ -110,7 +110,7 @@
 <header class="header-mobile">
     <div class="mobile-header-container">
         <div class="logo-new">
-            <a href="{{ url('/') }}">
+            <a href="{{ route('home') }}">
                 <i class="fas fa-film"></i>
                 <span>CineHub</span>
             </a>
@@ -131,21 +131,21 @@
         <i class="fas fa-bars"></i>
         <span>Menu</span>
     </button>
-    <a href="{{ url('/?route=movie/index') }}" class="mobile-nav-item">
+    <a href="{{ route('movies.index') }}" class="mobile-nav-item">
         <i class="fas fa-search"></i>
         <span>Tìm kiếm</span>
     </a>
-    <a href="{{ url('/') }}" class="mobile-nav-item mobile-nav-home">
+    <a href="{{ route('home') }}" class="mobile-nav-item mobile-nav-home">
         <i class="fas fa-home"></i>
         <span>Trang chủ</span>
     </a>
     @if ($user)
-        <a href="{{ url('/?route=profile/index') }}" class="mobile-nav-item">
+        <a href="{{ route('profile.index') }}" class="mobile-nav-item">
             <i class="fas fa-user"></i>
             <span>Tài khoản</span>
         </a>
     @else
-        <a href="#" class="mobile-nav-item" onclick="event.preventDefault(); openAuthModal('login');">
+        <a href="{{ route('login') }}" class="mobile-nav-item" data-auth-trigger="login" onclick="event.preventDefault(); openAuthModal('login'); return false;">
             <i class="fas fa-user"></i>
             <span>Đăng nhập</span>
         </a>
@@ -182,7 +182,7 @@
     @endif
     
     <div class="mobile-menu-search">
-        <form method="GET" action="{{ url('/?route=movie/index') }}">
+        <form method="GET" action="{{ route('movies.index') }}">
             <input type="hidden" name="route" value="movie/index">
             <input type="text" name="search" placeholder="Tìm kiếm phim..." class="mobile-search-input">
             <button type="submit" class="mobile-search-btn">
@@ -193,19 +193,19 @@
     
     <div class="mobile-menu-content">
         <div class="mobile-menu-section">
-            <a href="{{ url('/?route=movie/index&type=phimle') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+            <a href="{{ route('movies.phimle') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
                 <i class="fas fa-film"></i>
                 <span>Phim lẻ</span>
             </a>
-            <a href="{{ url('/?route=movie/index&type=phimbo') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+            <a href="{{ route('movies.phimbo') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
                 <i class="fas fa-tv"></i>
                 <span>Phim bộ</span>
             </a>
-            <a href="{{ url('/?route=movie/index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+            <a href="{{ route('movies.index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
                 <i class="fas fa-star"></i>
                 <span>Top phim</span>
             </a>
-            <a href="{{ url('/?route=booking/index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+            <a href="{{ route('movies.theater') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
                 <i class="fas fa-ticket-alt"></i>
                 <span>Vé xem phim</span>
             </a>
@@ -215,7 +215,7 @@
             <div class="mobile-menu-section-title">Thể loại</div>
             <div class="mobile-menu-tags">
                 @foreach ($menuCategories->take(8) as $cat)
-                    <a href="{{ url('/?route=movie/index&category=' . $cat->id) }}" class="mobile-menu-tag" onclick="closeMobileMenu()">
+                    <a href="{{ route('movies.category', $cat->id) }}" class="mobile-menu-tag" onclick="closeMobileMenu()">
                         {{ $cat->name }}
                     </a>
                 @endforeach
@@ -226,7 +226,7 @@
             <div class="mobile-menu-section-title">Quốc gia</div>
             <div class="mobile-menu-tags">
                 @foreach (array_slice($countries, 0, 6) as $country)
-                    <a href="{{ url('/?route=movie/index&country=' . urlencode($country)) }}" class="mobile-menu-tag" onclick="closeMobileMenu()">
+                    <a href="{{ route('movies.index', ['country' => $country]) }}" class="mobile-menu-tag" onclick="closeMobileMenu()">
                         {{ $country }}
                     </a>
                 @endforeach
@@ -236,37 +236,41 @@
         @if ($user)
             <div class="mobile-menu-section">
                 <div class="mobile-menu-section-title">Tài khoản</div>
-                <a href="{{ url('/?route=profile/index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+                <a href="{{ route('profile.index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
                     <i class="fas fa-user-circle"></i>
                     <span>Hồ sơ của tôi</span>
                 </a>
-                <a href="{{ url('/?route=booking/myTickets') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+                <a href="{{ route('booking.history') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
                     <i class="fas fa-ticket-alt"></i>
                     <span>Vé của tôi</span>
                 </a>
                 @if ($isAdmin)
-                    <a href="{{ url('/?route=admin/index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+                    <a href="{{ route('admin.index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
                         <i class="fas fa-cog"></i>
                         <span>Admin Panel</span>
                     </a>
                 @elseif ($isModerator)
-                    <a href="{{ url('/?route=moderator/index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+                    <a href="{{ route('moderator.index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
                         <i class="fas fa-building"></i>
                         <span>Quản lý rạp</span>
                     </a>
                 @endif
-                <a href="{{ url('/?route=auth/logout') }}" class="mobile-menu-link mobile-menu-logout" onclick="closeMobileMenu()">
+                <a href="#" class="mobile-menu-link mobile-menu-logout" 
+                   onclick="event.preventDefault(); document.getElementById('logout-form-mobile').submit();">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Đăng xuất</span>
                 </a>
+                <form id="logout-form-mobile" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
             </div>
         @else
             <div class="mobile-menu-section">
-                <a href="#" class="mobile-menu-link mobile-menu-login" onclick="event.preventDefault(); closeMobileMenu(); openAuthModal('login');">
+                <a href="{{ route('login') }}" class="mobile-menu-link mobile-menu-login" data-auth-trigger="login" data-close-mobile-menu="true" onclick="event.preventDefault(); closeMobileMenu(); openAuthModal('login'); return false;">
                     <i class="fas fa-sign-in-alt"></i>
                     <span>Đăng nhập</span>
                 </a>
-                <a href="#" class="mobile-menu-link" onclick="event.preventDefault(); closeMobileMenu(); openAuthModal('register');">
+                <a href="{{ route('register') }}" class="mobile-menu-link" data-auth-trigger="register" data-close-mobile-menu="true" onclick="event.preventDefault(); closeMobileMenu(); openAuthModal('register'); return false;">
                     <i class="fas fa-user-plus"></i>
                     <span>Đăng ký</span>
                 </a>
@@ -295,7 +299,11 @@
 
 @if ($user)
     @php
-        $unreadCount = $user->notifications()->where('is_read', false)->count();
+        try {
+            $unreadCount = $user->notifications()->where('is_read', false)->count();
+        } catch (\Exception $e) {
+            $unreadCount = 0;
+        }
     @endphp
     <div class="notification-wrapper-fixed" id="notificationWrapper">
         <a href="javascript:void(0);" class="notification-btn-fixed" id="notificationBtnFixed" onclick="toggleNotificationDropdown()">
@@ -307,7 +315,7 @@
         <div class="notification-dropdown" id="notificationDropdown" style="display: none;">
             <div class="notification-dropdown-header">
                 <h6>Thông báo</h6>
-                <a href="{{ url('/?route=notifications/index') }}" class="view-all-link">Xem tất cả</a>
+                <a href="{{ route('notifications.index') }}" class="view-all-link">Xem tất cả</a>
             </div>
             <div class="notification-dropdown-body" id="notificationList">
                 <div class="notification-loading">
@@ -363,7 +371,7 @@
         <div id="loginTab" class="auth-tab-content active">
             <h2 class="modal-title">Đăng nhập</h2>
             <div id="loginError" class="alert alert-error" style="display: none;"></div>
-            <form id="loginForm" method="POST" action="{{ url('/?route=auth/login') }}">
+            <form id="loginForm" onsubmit="handleLogin(event)">
                 @csrf
                 <div class="form-group-new">
                     <input type="email" name="email" required placeholder="Email" class="input-field">
@@ -376,12 +384,29 @@
                         <input type="checkbox" name="remember_me">
                         <span>Ghi nhớ đăng nhập</span>
                     </label>
-                    <a href="#" class="forgot-password">Quên mật khẩu?</a>
+                    <a href="javascript:void(0);" onclick="closeAuthModal(); openForgotPasswordModal();" class="forgot-password">Quên mật khẩu?</a>
                 </div>
                 <button type="submit" class="btn-login">Đăng nhập</button>
             </form>
+
+            <!-- Divider -->
+            <div class="auth-divider">
+                <span>hoặc</span>
+            </div>
+
+            <!-- Google Login -->
+            <a href="{{ route('auth.google') }}" class="btn-google-auth">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19.8 10.2273C19.8 9.51819 19.7364 8.83637 19.6182 8.18182H10.2V12.05H15.5818C15.3273 13.3 14.5727 14.3591 13.4455 15.0682V17.5773H16.7364C18.6091 15.8364 19.8 13.2727 19.8 10.2273Z" fill="#4285F4"/>
+                    <path d="M10.2 20C12.9 20 15.1727 19.1045 16.7364 17.5773L13.4455 15.0682C12.4909 15.6682 11.2636 16.0227 10.2 16.0227C7.59091 16.0227 5.37273 14.2636 4.52727 11.9H1.11364V14.4909C2.66818 17.5909 6.19091 20 10.2 20Z" fill="#34A853"/>
+                    <path d="M4.52727 11.9C4.30909 11.3 4.18182 10.6591 4.18182 10C4.18182 9.34091 4.30909 8.7 4.52727 8.1V5.50909H1.11364C0.418182 6.89091 0 8.4 0 10C0 11.6 0.418182 13.1091 1.11364 14.4909L4.52727 11.9Z" fill="#FBBC05"/>
+                    <path d="M10.2 3.97727C11.3636 3.97727 12.4 4.37727 13.2091 5.15455L16.1364 2.22727C15.1636 1.32727 12.9 0 10.2 0C6.19091 0 2.66818 2.40909 1.11364 5.50909L4.52727 8.1C5.37273 5.73636 7.59091 3.97727 10.2 3.97727Z" fill="#EA4335"/>
+                </svg>
+                Đăng nhập bằng Google
+            </a>
+
             <div class="modal-footer">
-                <p>Chưa có tài khoản? <a href="#" onclick="event.preventDefault(); switchAuthTab('register');">Đăng ký ngay</a></p>
+                <p>Chưa có tài khoản? <a href="javascript:void(0);" onclick="switchAuthTab('register');">Đăng ký ngay</a></p>
             </div>
         </div>
         
@@ -389,7 +414,7 @@
         <div id="registerTab" class="auth-tab-content" style="display: none;">
             <h2 class="modal-title">Đăng ký</h2>
             <div id="registerError" class="alert alert-error" style="display: none;"></div>
-            <form id="registerForm" method="POST" action="{{ url('/?route=auth/register') }}">
+            <form id="registerForm" onsubmit="handleRegister(event)">
                 @csrf
                 <div class="form-group-new">
                     <input type="text" name="name" required placeholder="Họ và tên" class="input-field">
@@ -405,8 +430,25 @@
                 </div>
                 <button type="submit" class="btn-register-form">Đăng ký</button>
             </form>
+
+            <!-- Divider -->
+            <div class="auth-divider">
+                <span>hoặc</span>
+            </div>
+
+            <!-- Google Register -->
+            <a href="{{ route('auth.google') }}" class="btn-google-auth">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19.8 10.2273C19.8 9.51819 19.7364 8.83637 19.6182 8.18182H10.2V12.05H15.5818C15.3273 13.3 14.5727 14.3591 13.4455 15.0682V17.5773H16.7364C18.6091 15.8364 19.8 13.2727 19.8 10.2273Z" fill="#4285F4"/>
+                    <path d="M10.2 20C12.9 20 15.1727 19.1045 16.7364 17.5773L13.4455 15.0682C12.4909 15.6682 11.2636 16.0227 10.2 16.0227C7.59091 16.0227 5.37273 14.2636 4.52727 11.9H1.11364V14.4909C2.66818 17.5909 6.19091 20 10.2 20Z" fill="#34A853"/>
+                    <path d="M4.52727 11.9C4.30909 11.3 4.18182 10.6591 4.18182 10C4.18182 9.34091 4.30909 8.7 4.52727 8.1V5.50909H1.11364C0.418182 6.89091 0 8.4 0 10C0 11.6 0.418182 13.1091 1.11364 14.4909L4.52727 11.9Z" fill="#FBBC05"/>
+                    <path d="M10.2 3.97727C11.3636 3.97727 12.4 4.37727 13.2091 5.15455L16.1364 2.22727C15.1636 1.32727 12.9 0 10.2 0C6.19091 0 2.66818 2.40909 1.11364 5.50909L4.52727 8.1C5.37273 5.73636 7.59091 3.97727 10.2 3.97727Z" fill="#EA4335"/>
+                </svg>
+                Đăng ký bằng Google
+            </a>
+
             <div class="modal-footer">
-                <p>Đã có tài khoản? <a href="#" onclick="event.preventDefault(); switchAuthTab('login');">Đăng nhập ngay</a></p>
+                <p>Đã có tài khoản? <a href="javascript:void(0);" onclick="switchAuthTab('login');">Đăng nhập ngay</a></p>
             </div>
         </div>
     </div>
@@ -484,4 +526,328 @@
         color: #e50914;
         text-decoration: none;
     }
+    
+    .alert {
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+    
+    .alert-error {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .form-group-new {
+        margin-bottom: 15px;
+    }
+    
+    .input-field {
+        width: 100%;
+        padding: 12px;
+        background: #2a2a2a;
+        border: 1px solid #444;
+        border-radius: 6px;
+        color: #fff;
+        font-size: 16px;
+    }
+    
+    .input-field:focus {
+        outline: none;
+        border-color: #e50914;
+    }
+    
+    .form-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+    
+    .checkbox-label {
+        color: #999;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+    
+    .checkbox-label input {
+        margin-right: 8px;
+    }
+    
+    .forgot-password {
+        color: #e50914;
+        text-decoration: none;
+    }
+    
+    .btn-login,
+    .btn-register-form {
+        width: 100%;
+        padding: 12px;
+        background: #e50914;
+        border: none;
+        border-radius: 6px;
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s;
+        margin-bottom: 0;
+    }
+
+    .btn-login:hover,
+    .btn-register-form:hover {
+        background: #c00812;
+    }
+
+    .auth-divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 18px 0;
+        color: #555;
+        font-size: 13px;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #333;
+    }
+
+    .auth-divider span {
+        padding: 0 12px;
+    }
+
+    .btn-google-auth {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 11px;
+        background: #fff;
+        border: none;
+        border-radius: 6px;
+        color: #333;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.2s, box-shadow 0.2s;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        margin-bottom: 4px;
+    }
+
+    .btn-google-auth:hover {
+        background: #f1f1f1;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        color: #111;
+        text-decoration: none;
+    }
+        transition: background 0.3s;
+    }
+    
+    .btn-login:hover,
+    .btn-register-form:hover {
+        background: #d00913;
+    }
+    
+    .btn-login:disabled,
+    .btn-register-form:disabled {
+        background: #666;
+        cursor: not-allowed;
+    }
+    
+    .auth-tabs {
+        display: flex;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #333;
+    }
+    
+    .auth-tab {
+        flex: 1;
+        padding: 12px;
+        background: transparent;
+        border: none;
+        color: #999;
+        font-size: 16px;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+    
+    .auth-tab.active {
+        color: #e50914;
+        border-bottom: 2px solid #e50914;
+        margin-bottom: -2px;
+    }
+    
+    .auth-tab-content {
+        display: none;
+    }
+    
+    .auth-tab-content.active {
+        display: block;
+    }
 </style>
+
+
+<script>
+// Auth Modal Functions
+function openAuthModal(tab) {
+    const modal = document.getElementById('authModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        if (tab) {
+            switchAuthTab(tab);
+        }
+    }
+}
+
+function closeAuthModal() {
+    const modal = document.getElementById('authModal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }, 300);
+    }
+}
+
+function switchAuthTab(tab) {
+    const loginTab = document.getElementById('loginTab');
+    const registerTab = document.getElementById('registerTab');
+    const tabs = document.querySelectorAll('.auth-tab');
+    
+    if (tab === 'login') {
+        loginTab.style.display = 'block';
+        registerTab.style.display = 'none';
+        loginTab.classList.add('active');
+        registerTab.classList.remove('active');
+        tabs[0].classList.add('active');
+        tabs[1].classList.remove('active');
+    } else if (tab === 'register') {
+        loginTab.style.display = 'none';
+        registerTab.style.display = 'block';
+        loginTab.classList.remove('active');
+        registerTab.classList.add('active');
+        tabs[0].classList.remove('active');
+        tabs[1].classList.add('active');
+    }
+}
+
+// Handle Login Form Submit
+function handleLogin(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const errorDiv = document.getElementById('loginError');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    // Disable button
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Đang đăng nhập...';
+    errorDiv.style.display = 'none';
+    
+    fetch('{{ route('login') }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect;
+        } else {
+            errorDiv.textContent = data.error || 'Đăng nhập thất bại!';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Đăng nhập';
+        }
+    })
+    .catch(error => {
+        errorDiv.textContent = 'Có lỗi xảy ra. Vui lòng thử lại!';
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Đăng nhập';
+    });
+}
+
+// Handle Register Form Submit
+function handleRegister(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const errorDiv = document.getElementById('registerError');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    // Disable button
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Đang đăng ký...';
+    errorDiv.style.display = 'none';
+    
+    fetch('{{ route('register') }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect;
+        } else {
+            errorDiv.textContent = data.error || 'Đăng ký thất bại!';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Đăng ký';
+        }
+    })
+    .catch(error => {
+        errorDiv.textContent = 'Có lỗi xảy ra. Vui lòng thử lại!';
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Đăng ký';
+    });
+}
+
+// Close modal when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('authModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeAuthModal();
+            }
+        });
+    }
+
+    document.querySelectorAll('[data-auth-trigger]').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            const tab = this.getAttribute('data-auth-trigger');
+
+            if (this.getAttribute('data-close-mobile-menu') === 'true') {
+                closeMobileMenu();
+            }
+
+            if (typeof openAuthModal === 'function') {
+                e.preventDefault();
+                openAuthModal(tab || 'login');
+            }
+        });
+    });
+    
+    // Auto open modal if redirected from login/register route
+    @if(session('openAuthModal'))
+        openAuthModal('{{ session('openAuthModal') }}');
+    @endif
+});
+</script>
