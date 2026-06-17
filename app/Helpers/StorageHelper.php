@@ -57,15 +57,22 @@ if (!function_exists('storage_url')) {
             return $path;
         }
         
-        // If path starts with data/img/ or data/phim/, use it directly (old structure preserved)
+        // If path starts with data/img/ or data/phim/, these are in storage/app/public
+        // so we need to prepend /storage/ to access them
         if (str_starts_with($path, 'data/img/') || str_starts_with($path, 'data/phim/')) {
+            return asset('storage/' . $path);
+        }
+        
+        // If path starts with data/storage/, remove the duplicate
+        if (str_starts_with($path, 'data/storage/')) {
+            $path = substr($path, strlen('data/storage/'));
             return asset('storage/' . $path);
         }
         
         // Convert old paths to new paths for compatibility
         $path = old_to_new_path($path);
         
-        // Return full URL
+        // Return full URL with storage prefix
         return asset('storage/' . ltrim($path, '/'));
     }
 }

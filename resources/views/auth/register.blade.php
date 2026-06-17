@@ -14,117 +14,213 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            background: #0a0a0a;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background gradient */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(229, 9, 20, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(0, 123, 255, 0.15) 0%, transparent 50%),
+                linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            animation: gradientShift 20s ease infinite;
+            z-index: 0;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            50% {
+                transform: translate(5%, 5%) rotate(5deg);
+            }
         }
 
         .register-container {
+            position: relative;
+            z-index: 1;
             width: 100%;
             max-width: 500px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 50px 40px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            animation: fadeInUp 0.6s ease;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border-radius: 100% 100% 40px 40px;
+            padding: 60px 45px 45px;
+            box-shadow: 
+                0 8px 32px 0 rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+                0 0 60px rgba(138, 43, 226, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            animation: floatIn 0.8s ease-out;
         }
 
-        @keyframes fadeInUp {
+        @keyframes floatIn {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(50px) scale(0.9);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
 
-        .logo-section {
-            text-align: center;
-            margin-bottom: 40px;
+        /* Glowing orbs behind the form */
+        .register-container::before,
+        .register-container::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.6;
+            animation: pulse 4s ease-in-out infinite;
+            z-index: -1;
         }
 
-        .logo-icon {
-            font-size: 50px;
-            color: #e50914;
-            margin-bottom: 15px;
-            display: inline-block;
-            animation: pulse 2s infinite;
+        .register-container::before {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(138, 43, 226, 0.4) 0%, transparent 70%);
+            top: -50px;
+            right: -50px;
+            animation-delay: 0s;
+        }
+
+        .register-container::after {
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(0, 123, 255, 0.3) 0%, transparent 70%);
+            bottom: -40px;
+            left: -40px;
+            animation-delay: 2s;
         }
 
         @keyframes pulse {
             0%, 100% {
                 transform: scale(1);
+                opacity: 0.6;
             }
             50% {
-                transform: scale(1.1);
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            font-size: 50px;
+            background: linear-gradient(135deg, #8a2be2 0%, #ff6b6b 50%, #e50914 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            display: inline-block;
+            animation: logoFloat 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(138, 43, 226, 0.5));
+        }
+
+        @keyframes logoFloat {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            25% {
+                transform: translateY(-8px) rotate(-5deg);
+            }
+            75% {
+                transform: translateY(-8px) rotate(5deg);
             }
         }
 
         .logo-text {
             font-size: 32px;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: 2px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            filter: drop-shadow(0 2px 10px rgba(255, 255, 255, 0.2));
         }
 
         .welcome-text {
             text-align: center;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 30px;
-            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 25px;
+            font-size: 14px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
         }
 
         .alert {
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 25px;
+            padding: 12px 16px;
+            border-radius: 50px;
+            margin-bottom: 18px;
             display: flex;
             align-items: center;
             gap: 10px;
-            animation: slideIn 0.3s ease;
+            animation: slideInBounce 0.4s ease-out;
+            backdrop-filter: blur(10px);
+            font-size: 13px;
         }
 
-        @keyframes slideIn {
-            from {
+        @keyframes slideInBounce {
+            0% {
                 opacity: 0;
-                transform: translateX(-20px);
+                transform: translateY(-20px);
             }
-            to {
+            60% {
+                transform: translateY(5px);
+            }
+            100% {
                 opacity: 1;
-                transform: translateX(0);
+                transform: translateY(0);
             }
         }
 
         .alert-error {
-            background: rgba(220, 53, 69, 0.2);
-            border: 1px solid rgba(220, 53, 69, 0.5);
+            background: rgba(229, 9, 20, 0.15);
+            border: 1px solid rgba(229, 9, 20, 0.3);
             color: #ff6b6b;
         }
 
         .alert-success {
-            background: rgba(40, 167, 69, 0.2);
-            border: 1px solid rgba(40, 167, 69, 0.5);
+            background: rgba(40, 200, 120, 0.15);
+            border: 1px solid rgba(40, 200, 120, 0.3);
             color: #51cf66;
         }
 
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 18px;
             position: relative;
         }
 
         .form-label {
             display: block;
-            color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 10px;
-            font-size: 14px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 8px;
+            font-size: 12px;
             font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .input-wrapper {
@@ -133,139 +229,196 @@
 
         .input-icon {
             position: absolute;
-            left: 18px;
+            left: 20px;
             top: 50%;
             transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 16px;
-            transition: color 0.3s;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 15px;
+            transition: all 0.3s ease;
+            pointer-events: none;
         }
 
         .form-control {
             width: 100%;
-            padding: 15px 20px 15px 50px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            padding: 16px 22px 16px 52px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 50px;
             color: #fff;
-            font-size: 15px;
-            transition: all 0.3s ease;
+            font-size: 14px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             outline: none;
+            backdrop-filter: blur(10px);
         }
 
         .form-control:focus {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: #e50914;
-            box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.1);
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(138, 43, 226, 0.6);
+            box-shadow: 
+                0 0 0 4px rgba(138, 43, 226, 0.1),
+                0 8px 20px rgba(138, 43, 226, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
         }
 
         .form-control:focus + .input-icon {
-            color: #e50914;
+            color: #8a2be2;
+            transform: translateY(-50%) scale(1.1);
         }
 
         .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.25);
         }
 
         .password-strength {
-            margin-top: 8px;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.6);
+            margin-top: 6px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            padding-left: 12px;
         }
 
         .btn-register {
             width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #e50914 0%, #b20710 100%);
+            padding: 17px;
+            background: linear-gradient(135deg, #8a2be2 0%, #6a1bb2 100%);
             border: none;
-            border-radius: 12px;
+            border-radius: 50px;
             color: white;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 15px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3);
-            margin-top: 10px;
+            letter-spacing: 2px;
+            box-shadow: 
+                0 4px 20px rgba(138, 43, 226, 0.4),
+                0 0 40px rgba(138, 43, 226, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-register::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
         }
 
         .btn-register:hover {
-            background: linear-gradient(135deg, #ff1f2f 0%, #e50914 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(229, 9, 20, 0.4);
+            background: linear-gradient(135deg, #a855f7 0%, #8a2be2 100%);
+            transform: translateY(-3px);
+            box-shadow: 
+                0 8px 30px rgba(138, 43, 226, 0.5),
+                0 0 60px rgba(138, 43, 226, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-register:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         .btn-register:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
         }
 
         .divider {
             display: flex;
             align-items: center;
             text-align: center;
-            margin: 30px 0;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 14px;
+            margin: 24px 0;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .divider::before,
         .divider::after {
             content: '';
             flex: 1;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .divider span {
-            padding: 0 15px;
+            padding: 0 16px;
         }
 
         .login-link {
             text-align: center;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 15px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            margin-top: 8px;
         }
 
         .login-link a {
-            color: #e50914;
+            color: #a855f7;
             text-decoration: none;
             font-weight: 600;
-            transition: color 0.3s;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .login-link a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #8a2be2;
+            transition: width 0.3s;
         }
 
         .login-link a:hover {
-            color: #ff1f2f;
-            text-decoration: underline;
+            color: #8a2be2;
+        }
+
+        .login-link a:hover::after {
+            width: 100%;
         }
 
         .btn-google {
             width: 100%;
             padding: 16px;
-            background: #fff;
-            border: none;
-            border-radius: 12px;
-            color: #444;
-            font-size: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            color: #333;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
             text-decoration: none;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 25px;
+            box-shadow: 
+                0 4px 20px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            margin-bottom: 18px;
         }
 
         .btn-google:hover {
-            background: #f8f8f8;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-3px);
+            box-shadow: 
+                0 8px 30px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.7);
         }
 
         .btn-google:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
         }
 
         .btn-google svg {
@@ -274,59 +427,80 @@
         }
 
         .back-home {
-            position: absolute;
+            position: fixed;
             top: 30px;
             left: 30px;
             color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             font-size: 15px;
-            transition: all 0.3s;
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 25px;
-            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 50px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 10;
         }
 
         .back-home:hover {
             color: #fff;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
             transform: translateX(-5px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .terms {
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             color: rgba(255, 255, 255, 0.5);
-            margin-top: 20px;
+            margin-top: 15px;
             line-height: 1.6;
         }
 
         .terms a {
-            color: #e50914;
+            color: #a855f7;
             text-decoration: none;
+            transition: color 0.3s;
         }
 
         .terms a:hover {
+            color: #8a2be2;
             text-decoration: underline;
         }
 
         @media (max-width: 576px) {
             .register-container {
-                padding: 40px 30px;
+                padding: 50px 35px 40px;
+                border-radius: 100% 100% 35px 35px;
             }
 
             .logo-text {
                 font-size: 28px;
+                letter-spacing: 2px;
+            }
+
+            .logo-icon {
+                font-size: 44px;
             }
 
             .back-home {
                 top: 20px;
                 left: 20px;
                 font-size: 14px;
-                padding: 8px 15px;
+                padding: 10px 18px;
+            }
+
+            .form-control {
+                padding: 15px 20px 15px 50px;
+            }
+
+            .btn-register,
+            .btn-google {
+                padding: 15px;
+                font-size: 14px;
             }
         }
     </style>

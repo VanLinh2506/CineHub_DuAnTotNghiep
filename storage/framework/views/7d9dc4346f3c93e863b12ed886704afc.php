@@ -535,7 +535,7 @@
     </style>
 </head>
 <body>
-    <a href="{{ route('home') }}" class="back-home">
+    <a href="<?php echo e(route('home')); ?>" class="back-home">
         <i class="fas fa-arrow-left"></i>
         <span>Về trang chủ</span>
     </a>
@@ -552,33 +552,33 @@
             Chào mừng bạn trở lại! Đăng nhập để tiếp tục
         </div>
 
-        @if (session('error'))
+        <?php if(session('error')): ?>
             <div class="alert alert-error">
                 <i class="fas fa-exclamation-circle"></i>
-                <span>{{ session('error') }}</span>
+                <span><?php echo e(session('error')); ?></span>
             </div>
-        @endif
+        <?php endif; ?>
 
-        @if (session('success'))
+        <?php if(session('success')): ?>
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i>
-                <span>{{ session('success') }}</span>
+                <span><?php echo e(session('success')); ?></span>
             </div>
-        @endif
+        <?php endif; ?>
 
-        @if ($errors->any())
+        <?php if($errors->any()): ?>
             <div class="alert alert-error">
                 <i class="fas fa-exclamation-circle"></i>
                 <div>
-                    @foreach ($errors->all() as $error)
-                        <div>{{ $error }}</div>
-                    @endforeach
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <div><?php echo e($error); ?></div>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
-        @endif
+        <?php endif; ?>
 
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
+        <form method="POST" action="<?php echo e(route('login')); ?>">
+            <?php echo csrf_field(); ?>
             
             <div class="form-group">
                 <label class="form-label">Email</label>
@@ -587,7 +587,7 @@
                            name="email" 
                            class="form-control" 
                            placeholder="Nhập email của bạn"
-                           value="{{ old('email') }}"
+                           value="<?php echo e(old('email')); ?>"
                            required 
                            autofocus>
                     <i class="fas fa-envelope input-icon"></i>
@@ -611,7 +611,7 @@
                     <input type="checkbox" name="remember_me" id="remember_me">
                     <label for="remember_me">Ghi nhớ đăng nhập</label>
                 </div>
-                <a href="{{ route('password.request') }}" class="forgot-link">Quên mật khẩu?</a>
+                <a href="<?php echo e(route('password.request')); ?>" class="forgot-link">Quên mật khẩu?</a>
             </div>
 
             <button type="submit" class="btn-login">
@@ -624,7 +624,7 @@
         </div>
 
         <!-- Google Login Button -->
-        <a href="{{ route('auth.google') }}" class="btn-google">
+        <a href="<?php echo e(route('auth.google')); ?>" class="btn-google">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M19.8 10.2273C19.8 9.51819 19.7364 8.83637 19.6182 8.18182H10.2V12.05H15.5818C15.3273 13.3 14.5727 14.3591 13.4455 15.0682V17.5773H16.7364C18.6091 15.8364 19.8 13.2727 19.8 10.2273Z" fill="#4285F4"/>
                 <path d="M10.2 20C12.9 20 15.1727 19.1045 16.7364 17.5773L13.4455 15.0682C12.4909 15.6682 11.2636 16.0227 10.2 16.0227C7.59091 16.0227 5.37273 14.2636 4.52727 11.9H1.11364V14.4909C2.66818 17.5909 6.19091 20 10.2 20Z" fill="#34A853"/>
@@ -635,8 +635,9 @@
         </a>
 
         <div class="register-link">
-            Chưa có tài khoản? <a href="{{ route('register') }}">Đăng ký ngay</a>
+            Chưa có tài khoản? <a href="<?php echo e(route('register')); ?>">Đăng ký ngay</a>
         </div>
     </div>
 </body>
 </html>
+<?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/auth/login.blade.php ENDPATH**/ ?>

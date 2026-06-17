@@ -98,7 +98,7 @@ $baseUrl = UrlHelper::getBaseUrl();
                     }
                     ?>
                     <video id="videoPlayer" controls>
-                        <source src="<?php echo htmlspecialchars($finalVideoSrc); ?>" type="video/mp4">
+                        <source src="storage/<?php echo htmlspecialchars($finalVideoSrc); ?>" type="video/mp4">
                         Trình duyệt của bạn không hỗ trợ video.
                     </video>
                 <?php elseif ($noVideoMessage): ?>
@@ -120,7 +120,7 @@ $baseUrl = UrlHelper::getBaseUrl();
                     }
                     ?>
                     <video id="videoPlayer" controls>
-                        <source src="<?php echo htmlspecialchars($fullTrailerUrl); ?>" type="video/mp4">
+                        <source src="/storage/<?php echo htmlspecialchars($fullTrailerUrl); ?>" type="video/mp4">
                         Trình duyệt của bạn không hỗ trợ video.
                     </video>
                 <?php else: ?>
