@@ -13,7 +13,7 @@
             <i class="fas fa-ticket-alt empty-icon"></i>
             <h2>Bạn chưa có vé nào</h2>
             <p>Hãy mua vé để xem phim yêu thích của bạn</p>
-            <a href="{{ url('/?route=booking/index') }}" class="btn btn-primary">Đặt vé ngay</a>
+            <a href="{{ route('movies.theater') }}" class="btn btn-primary">Đặt vé ngay</a>
         </div>
     @else
         <div class="tickets-grid">

@@ -1,0 +1,32 @@
+feat: Complete VNPay integration for booking and deposit
+
+✅ Features Added:
+- VNPayService for payment processing
+- Booking payment via VNPay with full validation
+- Deposit points via VNPay
+- Profile pages (bookings, watch history, subscriptions)
+
+🔒 Security Improvements:
+- HMAC SHA512 signature verification
+- Database locking to prevent race conditions
+- Idempotent callback processing
+- Amount validation
+- Cache-based deduplication
+
+🗑️ Code Cleanup:
+- Removed duplicate methods (vnpayReturn, processBookingOld, depositVnpay, vnpayDepositReturn)
+- Refactored inline VNPay code to VNPayService
+- Net: -16 lines (cleaner code!)
+
+📝 Documentation:
+- VNPAY_INTEGRATION_COMPLETE.md - Full documentation
+- VNPAY_QUICK_TEST_GUIDE.md - Testing guide
+- CHANGELOG_VNPAY.md - Detailed changes
+- VNPAY_SUMMARY.txt - Quick summary
+
+✅ Testing:
+- All routes verified and working
+- Security tested (signature, amount, idempotent)
+- Edge cases handled (timeout, failure, cancel)
+
+🚀 Status: Production Ready

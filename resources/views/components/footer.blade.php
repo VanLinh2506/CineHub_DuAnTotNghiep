@@ -29,11 +29,11 @@
             <div class="footer-section">
                 <h3 class="footer-title">Danh mục</h3>
                 <ul class="footer-links">
-                    <li><a href="{{ url('/?route=movie/index') }}">Phim mới</a></li>
-                    <li><a href="{{ url('/?route=movie/index') }}">Phim hot</a></li>
-                    <li><a href="{{ url('/?route=movie/index&type=phimle') }}">Phim lẻ</a></li>
-                    <li><a href="{{ url('/?route=movie/index&type=phimbo') }}">Phim bộ</a></li>
-                    <li><a href="{{ url('/?route=movie/index') }}">Phim hoạt hình</a></li>
+                    <li><a href="{{ route('movies.index') }}">Phim mới</a></li>
+                    <li><a href="{{ route('movies.index') }}">Phim hot</a></li>
+                    <li><a href="{{ route('movies.phimle') }}">Phim lẻ</a></li>
+                    <li><a href="{{ route('movies.phimbo') }}">Phim bộ</a></li>
+                    <li><a href="{{ route('movies.index') }}">Phim hoạt hình</a></li>
                 </ul>
             </div>
             
@@ -44,7 +44,7 @@
                         $categories = \App\Models\Category::limit(5)->get();
                     @endphp
                     @foreach($categories as $index => $category)
-                        <li><a href="{{ url('/?route=movie/index&category=' . $category->id) }}">{{ $category->name }}</a></li>
+                        <li><a href="{{ route('movies.category', $category->id) }}">{{ $category->name }}</a></li>
                     @endforeach
                 </ul>
             </div>
@@ -56,7 +56,7 @@
                     <li><a href="#">Điều khoản sử dụng</a></li>
                     <li><a href="#">Chính sách bảo mật</a></li>
                     <li><a href="#">Liên hệ</a></li>
-                    <li><a href="{{ url('/?route=booking/index') }}">Đặt vé xem phim</a></li>
+                    <li><a href="{{ route('movies.theater') }}">Đặt vé xem phim</a></li>
                 </ul>
             </div>
         </div>
@@ -188,7 +188,9 @@
     function openAuthModal(tab) {
         const modal = document.getElementById('authModal');
         if (modal) {
+            modal.style.display = 'flex';
             modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
             switchAuthTab(tab);
         }
     }
@@ -197,6 +199,10 @@
         const modal = document.getElementById('authModal');
         if (modal) {
             modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }, 300);
         }
     }
     
@@ -204,17 +210,22 @@
         const loginTab = document.getElementById('loginTab');
         const registerTab = document.getElementById('registerTab');
         const tabs = document.querySelectorAll('.auth-tab');
+        const isLogin = tab === 'login';
         
-        if (tab === 'login') {
-            if (loginTab) loginTab.style.display = 'block';
-            if (registerTab) registerTab.style.display = 'none';
-        } else {
-            if (loginTab) loginTab.style.display = 'none';
-            if (registerTab) registerTab.style.display = 'block';
+        if (loginTab) {
+            loginTab.style.display = isLogin ? 'block' : 'none';
+            loginTab.classList.toggle('active', isLogin);
+        }
+
+        if (registerTab) {
+            registerTab.style.display = isLogin ? 'none' : 'block';
+            registerTab.classList.toggle('active', !isLogin);
         }
         
         tabs.forEach(t => t.classList.remove('active'));
-        event.target.classList.add('active');
+        if (tabs.length >= 2) {
+            tabs[isLogin ? 0 : 1].classList.add('active');
+        }
     }
     
     function closeAlertModal() {

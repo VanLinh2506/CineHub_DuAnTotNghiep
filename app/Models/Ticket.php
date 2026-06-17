@@ -45,7 +45,7 @@ class Ticket extends Model
 
     public function bookingPending()
     {
-        return $this->belongsTo(BookingPending::class);
+        return $this->belongsTo(Booking::class, 'booking_pending_id');
     }
 
     // Scopes

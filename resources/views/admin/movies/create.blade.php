@@ -1,13 +1,11 @@
-@extends('layouts.admin')
-
-@section('title', 'Thêm phim mới')
+@extends('admin.layout')
 
 @section('content')
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5>Thêm phim mới</h5>
+        <h2 class="mb-0">Thêm phim mới</h2>
 
-        <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">
+        <a href="{{ route('admin.movies') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Quay lại
         </a>
     </div>

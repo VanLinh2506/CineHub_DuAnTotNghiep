@@ -3,105 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ isset($title) ? $title . ' - ' : '' }}Admin Panel - CineHub</title>
+    <title>{{ isset($title) ? $title . ' - ' : '' }}CineHub Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f6fa; }
+        
+        /* Sidebar */
         .admin-sidebar {
             min-height: 100vh;
-            background: linear-gradient(180deg, #2d1b3d 0%, #1a0d2e 100%);
+            background: linear-gradient(180deg, #4a3567 0%, #2d1f3d 100%);
             padding: 0;
             position: fixed;
-            width: 250px;
+            width: 240px;
             left: 0;
             top: 0;
             z-index: 1000;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+            box-shadow: 2px 0 15px rgba(0,0,0,0.1);
             overflow-y: auto;
-            overflow-x: hidden;
         }
-        .admin-sidebar::-webkit-scrollbar { width: 6px; }
+        .admin-sidebar::-webkit-scrollbar { width: 5px; }
         .admin-sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
         .admin-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
-        .admin-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
-        .admin-main { margin-left: 250px; padding: 20px; background: linear-gradient(135deg, #2d1b3d 0%, #1a0d2e 100%); min-height: 100vh; }
-        .admin-header { background: linear-gradient(135deg, #3d2a4d 0%, #2d1b3d 100%); color: #fff; padding: 15px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 20px; border-radius: 12px; }
-        .admin-header h4, .admin-header small { color: #fff !important; }
-        .sidebar-brand { padding: 20px; color: #fff; font-size: 1.5rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); }
-        .sidebar-menu { list-style: none; padding: 0; margin: 0; }
-        .sidebar-menu li { border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-menu a { display: flex; align-items: center; padding: 15px 20px; color: rgba(255,255,255,0.9); text-decoration: none; transition: all 0.3s ease; position: relative; }
-        .sidebar-menu a::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: #fff; transform: scaleY(0); transition: transform 0.3s ease; }
-        .sidebar-menu a:hover, .sidebar-menu a.active { background: rgba(255,255,255,0.2); color: #fff; padding-left: 25px; box-shadow: inset 0 0 10px rgba(255,255,255,0.1); }
-        .sidebar-menu a.active::before, .sidebar-menu a:hover::before { transform: scaleY(1); }
-        .sidebar-menu a i { width: 25px; margin-right: 10px; }
-        .stat-card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; color: #333 !important; }
-        .stat-card * { color: #333; }
-        .stat-card h1,.stat-card h2,.stat-card h3,.stat-card h4,.stat-card h5,.stat-card h6 { color: #333 !important; }
-        .stat-card p,.stat-card span,.stat-card div,.stat-card label,.stat-card strong,.stat-card small { color: #333 !important; }
-        .stat-card .stat-icon { width: 60px; height: 60px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff !important; }
-        .stat-card .stat-icon i { color: #fff !important; }
-        .stat-card .stat-value { font-size: 2rem; font-weight: bold; margin: 10px 0; color: #333 !important; }
-        .stat-card .stat-label { color: #666 !important; font-size: 0.9rem; }
-        .stat-card .badge { color: #fff !important; }
-        .stat-card .btn { color: #fff !important; }
-        .stat-card .btn-outline-primary { color: #0d6efd !important; }
-        .stat-card .btn-outline-secondary { color: #6c757d !important; }
-        .stat-card .btn-outline-info { color: #0dcaf0 !important; }
-        .stat-card .btn-outline-success { color: #198754 !important; }
-        .stat-card .btn-outline-warning { color: #ffc107 !important; }
-        .stat-card .btn-outline-danger { color: #dc3545 !important; }
-        .stat-card a:not(.btn) { color: #0d6efd !important; }
-        .stat-card .text-primary { color: #0d6efd !important; }
-        .stat-card .text-secondary { color: #6c757d !important; }
-        .stat-card .text-success { color: #198754 !important; }
-        .stat-card .text-danger { color: #dc3545 !important; }
-        .stat-card .text-warning { color: #ffc107 !important; }
-        .stat-card .text-info { color: #0dcaf0 !important; }
-        .stat-card .text-muted { color: #6c757d !important; }
-        .stat-card .text-dark { color: #212529 !important; }
-        .stat-card .table { color: #333 !important; }
-        .stat-card .table th { color: #333 !important; background-color: #f8f9fa !important; }
-        .stat-card .table td { color: #333 !important; }
-        .stat-card .table td a { color: #0d6efd !important; }
-        .stat-card .form-control, .stat-card .form-select { color: #333 !important; background-color: #fff !important; }
-        .stat-card .form-control::placeholder { color: #6c757d !important; }
-        .stat-card .form-label { color: #333 !important; }
-        .stat-card .input-group-text { color: #333 !important; background-color: #e9ecef !important; }
-        .stat-card .list-group-item { color: #333 !important; background-color: #fff !important; }
-        .stat-card ul li, .stat-card ol li { color: #333 !important; }
-        .admin-main { color: #333; }
-        .admin-main > h4, .admin-main > h5, .admin-main > h6, .admin-main > p { color: #333; }
-        .admin-main > .d-flex h5, .admin-main > .d-flex h4, .admin-main > .mb-4 > h5, .admin-main > .mb-3 > h5, .admin-main > .row > .col-12 > h5, .admin-main > h5, .admin-main > h4 { color: #fff !important; }
-        .admin-main > form .form-control, .admin-main > .mb-3 .form-control { color: #333 !important; background-color: #fff !important; }
-        .admin-main .badge { color: #fff !important; }
-        .admin-main .btn { color: #fff; }
-        .modal-content { color: #333 !important; background-color: #fff !important; }
-        .modal-content * { color: #333; }
-        .modal-content h1,.modal-content h2,.modal-content h3,.modal-content h4,.modal-content h5,.modal-content h6 { color: #333 !important; }
-        .modal-content p,.modal-content span,.modal-content div,.modal-content label,.modal-content strong,.modal-content small { color: #333 !important; }
-        .modal-content .form-control, .modal-content .form-select { color: #333 !important; background-color: #fff !important; }
-        .modal-content .form-label { color: #333 !important; }
-        .modal-content .text-muted { color: #6c757d !important; }
-        .modal-content .text-danger { color: #dc3545 !important; }
-        .modal-content .btn { color: #fff !important; }
-        .modal-content .btn-secondary { background-color: #6c757d !important; }
-        .admin-main .alert-success { background-color: #d1e7dd; border-color: #badbcc; color: #0f5132; }
-        .admin-main .alert-danger { background-color: #f8d7da; border-color: #f5c2c7; color: #842029; }
-        .stat-card .pagination .page-link { color: #0d6efd; }
-        .stat-card .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; color: #fff; }
+        
+        /* Sidebar Brand */
+        .sidebar-brand { 
+            padding: 20px 15px; 
+            color: #fff; 
+            font-size: 1.3rem; 
+            font-weight: 600; 
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sidebar-brand i { font-size: 1.5rem; }
+        
+        /* Sidebar Menu */
+        .sidebar-menu { 
+            list-style: none; 
+            padding: 10px 0; 
+            margin: 0; 
+        }
+        .sidebar-menu li { margin: 0; }
+        .sidebar-menu a { 
+            display: flex; 
+            align-items: center; 
+            padding: 12px 20px; 
+            color: rgba(255,255,255,0.8); 
+            text-decoration: none; 
+            transition: all 0.3s ease; 
+            position: relative;
+            font-size: 0.95rem;
+        }
+        .sidebar-menu a::before { 
+            content: ''; 
+            position: absolute; 
+            left: 0; 
+            top: 0; 
+            height: 100%; 
+            width: 3px; 
+            background: #fff; 
+            transform: scaleY(0); 
+            transition: transform 0.3s ease; 
+        }
+        .sidebar-menu a:hover { 
+            background: rgba(255,255,255,0.1); 
+            color: #fff;
+            padding-left: 25px;
+        }
+        .sidebar-menu a.active { 
+            background: rgba(255,255,255,0.15); 
+            color: #fff; 
+            font-weight: 500;
+        }
+        .sidebar-menu a.active::before { transform: scaleY(1); }
+        .sidebar-menu a i { 
+            width: 22px; 
+            margin-right: 12px; 
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .admin-main { 
+            margin-left: 240px; 
+            padding: 25px; 
+            background: #f5f6fa; 
+            min-height: 100vh; 
+        }
+        
+        /* Stats Cards */
+        .stat-card { 
+            background: #fff; 
+            border-radius: 12px; 
+            padding: 25px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); 
+            margin-bottom: 20px; 
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+        }
+        .stat-card .d-flex { align-items: center; }
+        .stat-card .stat-icon { 
+            width: 65px; 
+            height: 65px; 
+            border-radius: 12px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1.8rem; 
+            color: #fff;
+            margin-left: 15px;
+        }
+        .stat-card .stat-value { 
+            font-size: 2.2rem; 
+            font-weight: 700; 
+            margin: 0;
+            line-height: 1;
+        }
+        .stat-card .stat-label { 
+            color: #8c8c8c; 
+            font-size: 0.9rem; 
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        /* Color Variants */
+        .bg-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; }
+        .bg-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important; }
+        .bg-info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important; }
+        .bg-warning { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important; }
+        .bg-danger { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important; }
+        
+        .text-primary { color: #667eea !important; }
+        .text-success { color: #11998e !important; }
+        .text-info { color: #4facfe !important; }
+        .text-warning { color: #fa709a !important; }
+        .text-danger { color: #f5576c !important; }
+        
+        /* Tables */
+        .table { 
+            background: #fff; 
+            border-radius: 8px; 
+            overflow: hidden;
+        }
+        .table thead th { 
+            background: #f8f9fa; 
+            border: none; 
+            padding: 15px; 
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            color: #495057;
+        }
+        .table tbody td { 
+            padding: 15px; 
+            vertical-align: middle;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .table tbody tr:last-child td { border-bottom: none; }
+        .table tbody tr:hover { background: #f8f9fa; }
+        
+        /* Buttons */
+        .btn { 
+            padding: 8px 20px; 
+            border-radius: 8px; 
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; }
+        .btn-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border: none; }
+        .btn-danger { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none; }
+        .btn-sm { padding: 5px 12px; font-size: 0.875rem; }
+        
+        /* Forms */
+        .form-control, .form-select { 
+            border-radius: 8px; 
+            border: 1px solid #e0e0e0;
+            padding: 10px 15px;
+        }
+        .form-control:focus, .form-select:focus { 
+            border-color: #667eea; 
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25); 
+        }
+        .form-label { font-weight: 500; margin-bottom: 8px; }
+        
+        /* Alerts */
+        .alert { 
+            border-radius: 10px; 
+            border: none; 
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-danger { background: #f8d7da; color: #721c24; }
+        .alert-dismissible .btn-close { padding: 18px 20px; }
+        
+        /* Responsive */
         @media screen and (max-width: 768px) {
-            .admin-sidebar { position: fixed; left: -250px; transition: left 0.3s ease; z-index: 9999; }
+            .admin-sidebar { 
+                position: fixed; 
+                left: -240px; 
+                transition: left 0.3s ease; 
+                z-index: 9999; 
+            }
             .admin-sidebar.active { left: 0; }
-            .admin-main { margin-left: 0; padding: 15px; padding-top: 70px; }
-            .admin-header { padding: 10px 15px; }
-            .admin-header h4 { font-size: 1rem; }
+            .admin-main { 
+                margin-left: 0; 
+                padding: 15px; 
+            }
             .stat-card { padding: 15px; }
-            .mobile-menu-toggle { display: block !important; position: fixed; top: 15px; left: 15px; z-index: 10000; background: #1a1a2e; border: none; color: #fff; padding: 10px 15px; border-radius: 8px; font-size: 1.2rem; }
-            .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998; }
+            .stat-card .stat-value { font-size: 1.5rem; }
+            .stat-card .stat-icon { width: 50px; height: 50px; font-size: 1.3rem; }
+            .mobile-menu-toggle { 
+                display: block !important; 
+                position: fixed; 
+                top: 15px; 
+                left: 15px; 
+                z-index: 10000; 
+                background: #4a3567; 
+                border: none; 
+                color: #fff; 
+                padding: 10px 15px; 
+                border-radius: 8px; 
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            }
+            .sidebar-overlay { 
+                display: none; 
+                position: fixed; 
+                top: 0; 
+                left: 0; 
+                right: 0; 
+                bottom: 0; 
+                background: rgba(0,0,0,0.5); 
+                z-index: 9998; 
+            }
             .sidebar-overlay.active { display: block; }
         }
-        @media screen and (min-width: 769px) { .mobile-menu-toggle { display: none !important; } }
+        @media screen and (min-width: 769px) { 
+            .mobile-menu-toggle { display: none !important; } 
+        }
     </style>
     @stack('styles')
 </head>
@@ -117,65 +266,71 @@
             <i class="fas fa-film"></i> CineHub Admin
         </div>
         <ul class="sidebar-menu">
-            <li><a href="{{ route('admin.index') }}" class="{{ ($current_page ?? '') === 'dashboard' ? 'active' : '' }}">
+            <li><a href="{{ route('admin.index') }}" class="{{ request()->routeIs('admin.index') ? 'active' : '' }}">
                 <i class="fas fa-tachometer-alt"></i> Dashboard
             </a></li>
-            @if(!isset($isModerator) || !$isModerator)
-            <li><a href="{{ route('admin.users') }}" class="{{ ($current_page ?? '') === 'users' ? 'active' : '' }}">
+            
+            @if(Auth::user()->isAdmin())
+            <li><a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users*') ? 'active' : '' }}">
                 <i class="fas fa-users"></i> Quản lý người dùng
             </a></li>
             @endif
-            <li><a href="{{ route('admin.movies') }}" class="{{ ($current_page ?? '') === 'movies' ? 'active' : '' }}">
+            
+            <li><a href="{{ route('admin.movies.index') }}" class="{{ request()->routeIs('admin.movies*') ? 'active' : '' }}">
                 <i class="fas fa-film"></i> Quản lý phim
             </a></li>
-            <li><a href="{{ route('admin.categories') }}" class="{{ ($current_page ?? '') === 'categories' ? 'active' : '' }}">
+            
+            @if(Auth::user()->isAdmin())
+            <li><a href="{{ route('admin.categories.index') }}" class="{{ request()->routeIs('admin.categories*') ? 'active' : '' }}">
                 <i class="fas fa-tags"></i> Quản lý thể loại
             </a></li>
-            <li><a href="{{ route('admin.theaters') }}" class="{{ ($current_page ?? '') === 'theaters' ? 'active' : '' }}">
+            @endif
+            
+            <li><a href="{{ route('admin.theaters.index') }}" class="{{ request()->routeIs('admin.theaters*') ? 'active' : '' }}">
                 <i class="fas fa-building"></i> Quản lý rạp
             </a></li>
-            @if(isset($user['role']) && $user['role'] === 'moderator')
-            <li><a href="{{ route('admin.tickets') }}" class="{{ ($current_page ?? '') === 'tickets' ? 'active' : '' }}">
-                <i class="fas fa-ticket-alt"></i> Quản lý vé
+            
+            <li><a href="{{ route('admin.tickets.index') }}" class="{{ request()->routeIs('admin.tickets*') ? 'active' : '' }}">
+                <i class="fas fa-ticket-alt"></i> Hỗ trợ khách hàng
             </a></li>
-            <li><a href="{{ route('admin.foodItems') }}" class="{{ ($current_page ?? '') === 'food_items' ? 'active' : '' }}">
-                <i class="fas fa-utensils"></i> Combo & Đồ ăn
+            
+            <li><a href="{{ route('admin.foodItems.index') }}" class="{{ request()->routeIs('admin.foodItems*') ? 'active' : '' }}">
+                <i class="fas fa-utensils"></i> Đồ ăn & Combo
             </a></li>
-            @endif
-            <li><a href="{{ route('admin.analytics') }}" class="{{ ($current_page ?? '') === 'analytics' ? 'active' : '' }}">
+            
+            <li><a href="{{ route('admin.analytics') }}" class="{{ request()->routeIs('admin.analytics') ? 'active' : '' }}">
                 <i class="fas fa-chart-line"></i> Analytics & Báo cáo
             </a></li>
-            <li><a href="{{ route('admin.support') }}" class="{{ ($current_page ?? '') === 'support' ? 'active' : '' }}">
-                <i class="fas fa-headset"></i> Hỗ trợ khách hàng
-            </a></li>
-            <li><a href="{{ route('admin.logs') }}" class="{{ ($current_page ?? '') === 'logs' ? 'active' : '' }}">
+            
+            <li><a href="{{ route('admin.logs') }}" class="{{ request()->routeIs('admin.logs') ? 'active' : '' }}">
                 <i class="fas fa-history"></i> Lịch sử hoạt động
             </a></li>
-            <li><a href="/"><i class="fas fa-home"></i> Về trang chủ</a></li>
-            <li><a href="{{ route('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>
+            
+            <li><a href="{{ route('home') }}">
+                <i class="fas fa-home"></i> Về trang chủ
+            </a></li>
+            
+            <li><a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <i class="fas fa-sign-out-alt"></i> Đăng xuất
+            </a></li>
         </ul>
+        
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+            @csrf
+        </form>
     </div>
 
     <div class="admin-main">
-        <div class="admin-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">{{ $title ?? 'Admin Panel' }}</h4>
-                <div class="d-flex align-items-center gap-3">
-                    <span><i class="fas fa-user-circle"></i> {{ $user['name'] ?? 'Admin' }}</span>
-                </div>
-            </div>
-        </div>
-
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show">
-                <i class="fas fa-check-circle"></i> {{ session('success') }}
+                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
         @if(session('error'))
             <div class="alert alert-danger alert-dismissible fade show">
-                <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+                <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
@@ -194,9 +349,6 @@
         document.getElementById('adminSidebar').classList.remove('active');
         document.getElementById('sidebarOverlay').classList.remove('active');
     }
-    document.querySelectorAll('.sidebar-menu a').forEach(link => {
-        link.addEventListener('click', closeAdminSidebar);
-    });
     </script>
     @stack('scripts')
 </body>

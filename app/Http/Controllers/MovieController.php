@@ -98,7 +98,235 @@ class MovieController extends Controller
             'favorites'
         ));
     }
-    
+
+    /**
+     * Show movies currently in theaters
+     */
+    public function theater(Request $request)
+    {
+        // Forward to BookingController using app container
+        $bookingController = app(\App\Http\Controllers\BookingController::class);
+        return $bookingController->index($request);
+    }
+
+    /**
+     * Show online movies
+     */
+    public function online(Request $request)
+    {
+        $query = Movie::with('category')
+            ->where('status', '!=', 'Chiếu rạp')
+            ->orderBy('created_at', 'desc');
+        
+        $movies = $query->paginate(12);
+        
+        $categories = Category::orderBy('name')->get();
+        $countries = collect();
+        $favorites = [];
+        
+        // Missing variables for view
+        $search = '';
+        $categoryId = null;
+        $status = null;
+        $country = null;
+        $type = null;
+        $minRating = null;
+        
+        return view('movie.index', compact(
+            'movies',
+            'categories',
+            'countries',
+            'favorites',
+            'search',
+            'categoryId',
+            'status',
+            'country',
+            'type',
+            'minRating'
+        ));
+    }
+
+    /**
+     * Show phim lẻ (single movies)
+     */
+    public function phimLe(Request $request)
+    {
+        $query = Movie::with('category')
+            ->where('type', 'phimle')
+            ->orderBy('created_at', 'desc');
+        
+        $movies = $query->paginate(12);
+        
+        $categories = Category::orderBy('name')->get();
+        $countries = collect();
+        $favorites = [];
+        
+        // Missing variables for view
+        $search = '';
+        $categoryId = null;
+        $status = null;
+        $country = null;
+        $type = 'phimle';
+        $minRating = null;
+        
+        return view('movie.index', compact(
+            'movies',
+            'categories',
+            'countries',
+            'favorites',
+            'search',
+            'categoryId',
+            'status',
+            'country',
+            'type',
+            'minRating'
+        ));
+    }
+
+    /**
+     * Show phim bộ (series)
+     */
+    public function phimBo(Request $request)
+    {
+        $query = Movie::with('category')
+            ->where('type', 'phimbo')
+            ->orderBy('created_at', 'desc');
+        
+        $movies = $query->paginate(12);
+        
+        // Add episode count
+        $movies->each(function($movie) {
+            $movie->episode_count = $movie->episodes()->count();
+        });
+        
+        $categories = Category::orderBy('name')->get();
+        $countries = collect();
+        $favorites = [];
+        
+        // Missing variables for view
+        $search = '';
+        $categoryId = null;
+        $status = null;
+        $country = null;
+        $type = 'phimbo';
+        $minRating = null;
+        
+        return view('movie.index', compact(
+            'movies',
+            'categories',
+            'countries',
+            'favorites',
+            'search',
+            'categoryId',
+            'status',
+            'country',
+            'type',
+            'minRating'
+        ));
+    }
+
+    /**
+     * Show movies by category
+     */
+    public function category(Request $request, $id)
+    {
+        $category = Category::findOrFail($id);
+        
+        $query = Movie::with('category')
+            ->where('category_id', $id)
+            ->orderBy('created_at', 'desc');
+        
+        $movies = $query->paginate(12);
+        
+        $categories = Category::orderBy('name')->get();
+        $countries = collect();
+        $favorites = [];
+        
+        // Missing variables for view
+        $search = '';
+        $categoryId = $id;
+        $status = null;
+        $country = null;
+        $type = null;
+        $minRating = null;
+        
+        return view('movie.index', compact(
+            'movies',
+            'categories',
+            'countries',
+            'favorites',
+            'category',
+            'search',
+            'categoryId',
+            'status',
+            'country',
+            'type',
+            'minRating'
+        ));
+    }
+
+    /**
+     * Show movie detail
+     */
+    public function show($id)
+    {
+        $movie = Movie::with(['category', 'episodes' => function($q) {
+            $q->orderBy('episode_number');
+        }])->findOrFail($id);
+        
+        // Reviews and Comments
+        $reviews = $movie->reviews()
+            ->with('user')
+            ->orderByDesc('is_pinned')
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get();
+        
+        $comments = $movie->comments()
+            ->with(['user', 'replies.user'])
+            ->whereNull('parent_id')
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get();
+        
+        // Check if user rated
+        $userHasRated = false;
+        $userRating = null;
+        $user = Auth::user();
+        
+        if ($user) {
+            $userReview = $movie->reviews()->where('user_id', $user->id)->first();
+            if ($userReview) {
+                $userHasRated = true;
+                $userRating = $userReview->rating;
+            }
+        }
+        
+        // Related movies
+        $relatedMovies = Movie::with('category')
+            ->where('category_id', $movie->category_id)
+            ->where('id', '!=', $movie->id)
+            ->orderByDesc('rating')
+            ->limit(6)
+            ->get();
+        
+        $isAdmin = $user && ($user->role === 'admin' || 
+                   $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists());
+        
+        return view('movie.show', compact(
+            'movie',
+            'reviews',
+            'comments',
+            'userHasRated',
+            'userRating',
+            'relatedMovies',
+            'isAdmin'
+        ));
+    }
+
+    /**
+     * Watch movie
+     */
     public function watch(Request $request, $id)
     {
         $movie = Movie::with(['category', 'episodes' => function($q) {
@@ -123,7 +351,7 @@ class MovieController extends Controller
         // Save watch history
         WatchHistory::updateOrCreate(
             ['user_id' => $user->id, 'movie_id' => $movie->id],
-            ['created_at' => now()]
+            ['created_at' => now(), 'updated_at' => now()]
         );
         
         // Get episode if phim bộ
@@ -196,7 +424,27 @@ class MovieController extends Controller
             'isAdmin'
         ));
     }
-    
+
+    /**
+     * Watch episode (for phim bộ)
+     */
+    public function watchEpisode($movieId, $episodeNumber)
+    {
+        $movie = Movie::with(['category', 'episodes' => function($q) {
+            $q->orderBy('episode_number');
+        }])->findOrFail($movieId);
+        
+        $currentEpisode = $movie->episodes()
+            ->where('episode_number', $episodeNumber)
+            ->firstOrFail();
+        
+        // Redirect to watch method with episode
+        return redirect()->route('movies.watch', [
+            'id' => $movieId,
+            'episode_id' => $currentEpisode->id
+        ]);
+    }
+
     public function toggleFavorite(Request $request)
     {
         if (!Auth::check()) {

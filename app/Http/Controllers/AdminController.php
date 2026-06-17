@@ -10,15 +10,7 @@ use Carbon\Carbon;
 
 class AdminController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'moderator'])) {
-                return redirect()->route('home')->with('error', 'Bạn không có quyền truy cập!');
-            }
-            return $next($request);
-        });
-    }
+    // Middleware is handled by routes - no need for constructor middleware
 
     protected function checkIsAdmin()
     {
@@ -35,26 +27,33 @@ class AdminController extends Controller
         $stats = [
             'total_users' => User::count(),
             'total_movies' => Movie::count(),
-            'total_tickets' => Ticket::where('status', 'Đã đặt')->count(),
+            'total_tickets' => Ticket::count(),
             'total_revenue' => Transaction::where('status', 'Thành công')->sum('amount') ?? 0,
             'today_revenue' => Transaction::where('status', 'Thành công')->whereDate('created_at', today())->sum('amount') ?? 0,
             'week_revenue' => Transaction::where('status', 'Thành công')->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->sum('amount') ?? 0,
             'month_revenue' => Transaction::where('status', 'Thành công')->whereMonth('created_at', now()->month)->sum('amount') ?? 0,
+            'active_users_today' => User::whereDate('updated_at', today())->count(),
+            'pending_tickets' => 0, // Placeholder
         ];
 
         $revenueByDay = Transaction::where('status', 'Thành công')
-            ->where('created_at', '>=', now()->subDays(7))
+            ->where('created_at', '>=', now()->subDays(6))
             ->selectRaw('DATE(created_at) as date, SUM(amount) as revenue, COUNT(*) as transaction_count')
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
-        $topMovies = Movie::join('watch_history', 'movies.id', '=', 'watch_history.movie_id')
-            ->selectRaw('movies.title, COUNT(watch_history.id) as view_count')
-            ->groupBy('movies.id', 'movies.title')
-            ->orderByDesc('view_count')
-            ->limit(5)
-            ->get();
+        try {
+            $topMovies = Movie::join('watch_history', 'movies.id', '=', 'watch_history.movie_id')
+                ->selectRaw('movies.title, COUNT(watch_history.id) as view_count')
+                ->groupBy('movies.id', 'movies.title')
+                ->orderByDesc('view_count')
+                ->limit(5)
+                ->get()
+                ->toArray();
+        } catch (\Exception $e) {
+            $topMovies = [];
+        }
 
         return view('admin.dashboard', compact('stats', 'revenueByDay', 'topMovies'));
     }
@@ -177,7 +176,7 @@ class AdminController extends Controller
         $movies = $query->orderByDesc('created_at')->get();
         $categories = Category::all();
 
-        return view('admin.movies.index', compact('movies', 'categories'));
+        return view('admin.movies', compact('movies', 'categories'));
     }
 
     public function moviesCreate()
@@ -366,7 +365,7 @@ class AdminController extends Controller
 
         $theaters = $query->orderBy('name')->get();
 
-        return view('admin.theaters.index', compact('theaters'));
+        return view('admin.theaters', compact('theaters'));
     }
 
     public function theatersCreate()
@@ -454,24 +453,74 @@ class AdminController extends Controller
     // Analytics
     public function analytics(Request $request)
     {
-        $period = $request->period ?? 'month';
+        $period = $request->period ?? '7days';
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
 
-        $revenueData = $this->getRevenueData($period);
-        
-        $topMoviesByRevenue = Ticket::where('status', 'Đã đặt')
-            ->join('showtimes', 'tickets.showtime_id', '=', 'showtimes.id')
-            ->join('movies', 'showtimes.movie_id', '=', 'movies.id')
-            ->selectRaw('movies.id, movies.title, SUM(tickets.price) as revenue, COUNT(tickets.id) as ticket_count')
-            ->groupBy('movies.id', 'movies.title')
-            ->orderByDesc('revenue')
-            ->limit(10)
+        // Calculate date range based on period
+        if ($startDate && $endDate) {
+            $start = Carbon::parse($startDate);
+            $end = Carbon::parse($endDate);
+        } else {
+            switch ($period) {
+                case '7days':
+                    $start = now()->subDays(6)->startOfDay();
+                    $end = now()->endOfDay();
+                    break;
+                case '30days':
+                    $start = now()->subDays(29)->startOfDay();
+                    $end = now()->endOfDay();
+                    break;
+                case 'thismonth':
+                    $start = now()->startOfMonth();
+                    $end = now()->endOfMonth();
+                    break;
+                case 'lastmonth':
+                    $start = now()->subMonth()->startOfMonth();
+                    $end = now()->subMonth()->endOfMonth();
+                    break;
+                case 'thisyear':
+                    $start = now()->startOfYear();
+                    $end = now()->endOfYear();
+                    break;
+                default:
+                    $start = now()->subDays(6)->startOfDay();
+                    $end = now()->endOfDay();
+            }
+        }
+
+        // Get revenue data grouped by date
+        $revenueData = Transaction::where('status', 'Thành công')
+            ->whereBetween('created_at', [$start, $end])
+            ->selectRaw('DATE(created_at) as period, SUM(amount) as revenue, COUNT(*) as transaction_count')
+            ->groupBy('period')
+            ->orderBy('period')
             ->get();
+        
+        // Safely get top movies by revenue with error handling
+        try {
+            $topMoviesByRevenue = Ticket::whereBetween('tickets.created_at', [$start, $end])
+                ->join('showtimes', 'tickets.showtime_id', '=', 'showtimes.id')
+                ->join('movies', 'showtimes.movie_id', '=', 'movies.id')
+                ->selectRaw('movies.id, movies.title, movies.type, SUM(tickets.price) as revenue, COUNT(tickets.id) as ticket_count')
+                ->groupBy('movies.id', 'movies.title', 'movies.type')
+                ->orderByDesc('revenue')
+                ->limit(10)
+                ->get();
+        } catch (\Exception $e) {
+            Log::error('Analytics error: ' . $e->getMessage());
+            $topMoviesByRevenue = collect();
+        }
 
         $summaryStats = [
-            'total_revenue' => Transaction::where('status', 'Thành công')->sum('amount') ?? 0,
-            'total_transactions' => Transaction::where('status', 'Thành công')->count(),
-            'total_tickets' => Ticket::where('status', 'Đã đặt')->count(),
-            'avg_ticket_price' => Ticket::where('status', 'Đã đặt')->avg('price') ?? 0,
+            'total_revenue' => Transaction::where('status', 'Thành công')
+                ->whereBetween('created_at', [$start, $end])
+                ->sum('amount') ?? 0,
+            'total_transactions' => Transaction::where('status', 'Thành công')
+                ->whereBetween('created_at', [$start, $end])
+                ->count(),
+            'total_tickets' => Ticket::whereBetween('created_at', [$start, $end])->count(),
+            'avg_ticket_price' => Ticket::whereBetween('created_at', [$start, $end])->avg('price') ?? 0,
         ];
 
         return view('admin.analytics', compact('revenueData', 'topMoviesByRevenue', 'summaryStats', 'period'));
@@ -528,7 +577,7 @@ class AdminController extends Controller
 
         $movies = Movie::where('status', 'Chiếu rạp')->get();
 
-        return view('admin.tickets.index', compact('tickets', 'movies'));
+        return view('admin.tickets', compact('tickets', 'movies'));
     }
 
     // Food Items Management
@@ -544,7 +593,7 @@ class AdminController extends Controller
 
         $foodItems = $query->orderBy('name')->get();
 
-        return view('admin.food-items.index', compact('foodItems'));
+        return view('admin.food_items', compact('foodItems'));
     }
 
     public function foodItemsCreate()
@@ -617,7 +666,7 @@ class AdminController extends Controller
 
         $categories = Category::withCount('movies')->orderBy('name')->get();
 
-        return view('admin.categories.index', compact('categories'));
+        return view('admin.categories', compact('categories'));
     }
 
     public function categoriesStore(Request $request)

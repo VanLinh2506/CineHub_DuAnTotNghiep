@@ -12,7 +12,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Legacy route middleware để tương thích với PHP cũ
+        $middleware->append(\App\Http\Middleware\LegacyRouteMiddleware::class);
+        
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'moderator' => \App\Http\Middleware\ModeratorMiddleware::class,
+            'counter_staff' => \App\Http\Middleware\CounterStaffMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

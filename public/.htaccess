@@ -5,6 +5,10 @@
 
     RewriteEngine On
 
+    # ==================== LEGACY PHP COMPATIBILITY ====================
+    # Redirect old index.php?route=... to new Laravel routes
+    # This is handled by LegacyRouteMiddleware in Laravel
+    
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -18,8 +22,61 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    # Send Requests To Front Controller...
+    # ==================== STATIC FILES ====================
+    # Allow direct access to data folder (videos, images, QR codes, PDFs)
+    RewriteCond %{REQUEST_URI} ^/data/
+    RewriteRule ^ - [L]
+
+    # Allow direct access to CSS/JS/images
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    # ==================== LARAVEL ROUTING ====================
+    # Send all other requests to Laravel front controller
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+</IfModule>
+
+# ==================== SECURITY ====================
+# Disable directory browsing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "^\.env|^composer\.(json|lock)|^package(-lock)?\.json|^artisan$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# ==================== CACHING & PERFORMANCE ====================
+# Cache static assets
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Images
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    
+    # Videos
+    ExpiresByType video/mp4 "access plus 1 year"
+    ExpiresByType video/webm "access plus 1 year"
+    
+    # CSS/JS
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    
+    # Fonts
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    
+    # PDF & QR Codes
+    ExpiresByType application/pdf "access plus 1 week"
+</IfModule>
+
+# Compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json
 </IfModule>

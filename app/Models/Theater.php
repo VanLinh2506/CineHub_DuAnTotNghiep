@@ -16,6 +16,7 @@ class Theater extends Model
         'latitude',
         'longitude',
         'phone',
+        'image',
         'is_active',
     ];
 
@@ -40,5 +41,14 @@ class Theater extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    // URL Accessor for image
+    public function getImageUrlAttribute()
+    {
+        if (!empty($this->attributes['image'])) {
+            return storage_url($this->attributes['image']);
+        }
+        return asset('images/default-theater.png');
     }
 }

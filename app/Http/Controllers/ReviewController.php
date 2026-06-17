@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 class ReviewController extends Controller
 {
     /**
-     * Tạo bình luận mới (không có sao)
+     * Tạo bình luận mới 
      */
     public function comment(Request $request)
     {

@@ -8,13 +8,132 @@ use App\Models\Ticket;
 use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Models\Movie;
+use App\Services\VNPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
 {
+    public function __construct(protected VNPayService $vnpay) {}
+
+    public function startVnpayDeposit(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        $request->validate([
+            'points' => 'required|integer|min:10000',
+        ]);
+
+        $user = Auth::user();
+        $points = (int) $request->input('points');
+        $amount = $points;
+        $vnpTxnRef = 'DEP' . $user->id . '_' . time();
+
+        Cache::put(
+            "vnpay:deposit:pending:{$vnpTxnRef}",
+            [
+                'user_id' => $user->id,
+                'points' => $points,
+                'amount' => $amount,
+                'txn_ref' => $vnpTxnRef,
+            ],
+            now()->addMinutes(20)
+        );
+
+        try {
+            $paymentUrl = $this->vnpay->createPaymentUrl(
+                txnRef: $vnpTxnRef,
+                amount: (float) $amount,
+                orderInfo: 'Nap ' . number_format($points) . ' diem cho tai khoan ' . $user->email,
+                returnUrl: route('profile.vnpay-deposit-return'),
+                clientIp: $request->ip()
+            );
+
+            return redirect($paymentUrl);
+        } catch (\Throwable $e) {
+            Cache::forget("vnpay:deposit:pending:{$vnpTxnRef}");
+
+            return redirect()->route('profile.index')
+                ->with('error', 'Khong tao duoc lien ket thanh toan VNPay: ' . $e->getMessage());
+        }
+    }
+
+    public function handleVnpayDepositReturn(Request $request)
+    {
+        $vnpTxnRef = $request->input('vnp_TxnRef');
+        $vnpResponseCode = $request->input('vnp_ResponseCode');
+        $vnpAmount = ((int) $request->input('vnp_Amount', 0)) / 100;
+
+        if (!$this->vnpay->verifyCallback($request)) {
+            return redirect()->route(Auth::check() ? 'profile.index' : 'home')
+                ->with('error', 'Chu ky VNPay khong hop le.');
+        }
+
+        $processedCacheKey = "vnpay:deposit:processed:{$vnpTxnRef}";
+        if (Cache::has($processedCacheKey)) {
+            return redirect()->route(Auth::check() ? 'profile.index' : 'home')
+                ->with('success', 'Giao dich nap diem da duoc xac nhan truoc do.');
+        }
+
+        $depositCacheKey = "vnpay:deposit:pending:{$vnpTxnRef}";
+        $depositInfo = Cache::get($depositCacheKey);
+
+        if (!$depositInfo || $depositInfo['txn_ref'] !== $vnpTxnRef) {
+            return redirect()->route(Auth::check() ? 'profile.index' : 'home')
+                ->with('error', 'Giao dich khong hop le hoac da het han.');
+        }
+
+        if ((float) $depositInfo['amount'] !== (float) $vnpAmount) {
+            return redirect()->route(Auth::check() ? 'profile.index' : 'home')
+                ->with('error', 'So tien nap diem khong khop voi giao dich.');
+        }
+
+        if ($vnpResponseCode !== '00') {
+            Cache::forget($depositCacheKey);
+
+            return redirect()->route(Auth::check() ? 'profile.index' : 'home')
+                ->with('error', 'Thanh toan that bai hoac bi huy. Ma loi: ' . $vnpResponseCode);
+        }
+
+        try {
+            DB::transaction(function () use ($depositInfo, $processedCacheKey) {
+                $user = User::lockForUpdate()->findOrFail($depositInfo['user_id']);
+                $points = (int) $depositInfo['points'];
+                $txnKey = abs(crc32((string) $depositInfo['txn_ref']));
+
+                $transaction = Transaction::firstOrCreate([
+                    'type' => 'deposit',
+                    'related_id' => $txnKey,
+                ], [
+                    'user_id' => $user->id,
+                    'amount' => $points,
+                    'method' => 'VNPay',
+                    'status' => 'Thành công',
+                ]);
+
+                if ($transaction->wasRecentlyCreated) {
+                    $user->addPoints($points);
+                }
+
+                Cache::put($processedCacheKey, ['user_id' => $user->id], now()->addDay());
+            });
+
+            Cache::forget($depositCacheKey);
+
+            return redirect()->route(Auth::check() ? 'profile.index' : 'home')
+                ->with('success', 'Nap diem thanh cong! So du cua ban da duoc cap nhat.');
+        } catch (\Throwable $e) {
+            return redirect()->route(Auth::check() ? 'profile.index' : 'home')
+                ->with('error', 'Co loi xay ra khi cap nhat so du: ' . $e->getMessage());
+        }
+    }
+
     public function index()
     {
         if (!Auth::check()) {
@@ -171,6 +290,36 @@ class ProfileController extends Controller
     }
     
     /**
+     * Cập nhật mật khẩu
+     */
+    public function updatePassword(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+        
+        $user = Auth::user();
+        
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:6',
+            'confirm_password' => 'required|same:new_password',
+        ]);
+        
+        // Kiểm tra mật khẩu hiện tại
+        if (!Hash::check($request->input('current_password'), $user->password)) {
+            return back()->withErrors(['current_password' => 'Mật khẩu hiện tại không đúng!']);
+        }
+        
+        // Cập nhật mật khẩu mới
+        $user->update([
+            'password' => Hash::make($request->input('new_password'))
+        ]);
+        
+        return redirect()->route('profile.index')->with('success', 'Cập nhật mật khẩu thành công!');
+    }
+    
+    /**
      * Upload avatar riêng (AJAX)
      */
     public function uploadAvatar(Request $request)
@@ -204,125 +353,59 @@ class ProfileController extends Controller
         ]);
     }
     
+
     /**
-     * Nạp điểm qua VNPay
+     * Hiển thị danh sách vé đã đặt
      */
-    public function depositVnpay(Request $request)
+    public function bookings()
     {
         if (!Auth::check()) {
-            return redirect()->route('login');
+            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập');
         }
-        
-        $request->validate([
-            'points' => 'required|integer|min:10000',
-        ]);
         
         $user = Auth::user();
-        $points = $request->input('points');
-        $amount = $points; // 1 điểm = 1 VNĐ
         
-        // Tạo mã giao dịch
-        $vnpTxnRef = 'DEP' . $user->id . '_' . time();
+        $tickets = Ticket::with(['showtime.movie', 'showtime.theater', 'showtime.screen'])
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->paginate(20);
         
-        // Lưu vào session
-        session([
-            'deposit_info' => [
-                'user_id' => $user->id,
-                'points' => $points,
-                'amount' => $amount,
-                'txn_ref' => $vnpTxnRef,
-            ]
-        ]);
-        
-        // Tạo URL thanh toán VNPay
-        $vnpUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-        $vnpTmnCode = config('services.vnpay.tmn_code', 'FK2JNB94');
-        $vnpHashSecret = config('services.vnpay.hash_secret', '6CJXOQ0GAO04RL7SOVVX2BB5AHW5ORGL');
-        $vnpReturnUrl = route('profile.vnpay-deposit-return');
-        
-        $inputData = [
-            "vnp_Version" => "2.1.0",
-            "vnp_TmnCode" => $vnpTmnCode,
-            "vnp_Amount" => $amount * 100,
-            "vnp_Command" => "pay",
-            "vnp_CreateDate" => date('YmdHis'),
-            "vnp_CurrCode" => "VND",
-            "vnp_IpAddr" => $request->ip(),
-            "vnp_Locale" => "vn",
-            "vnp_OrderInfo" => "Nap " . number_format($points) . " diem cho tai khoan " . $user->email,
-            "vnp_OrderType" => "other",
-            "vnp_ReturnUrl" => $vnpReturnUrl,
-            "vnp_TxnRef" => $vnpTxnRef,
-            "vnp_ExpireDate" => date('YmdHis', strtotime('+15 minutes')),
-        ];
-        
-        ksort($inputData);
-        $query = "";
-        $hashdata = "";
-        $i = 0;
-        
-        foreach ($inputData as $key => $value) {
-            if ($i == 1) {
-                $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
-            } else {
-                $hashdata .= urlencode($key) . "=" . urlencode($value);
-                $i = 1;
-            }
-            $query .= urlencode($key) . "=" . urlencode($value) . '&';
-        }
-        
-        $vnpUrl = $vnpUrl . "?" . $query;
-        $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnpHashSecret);
-        $vnpUrl .= 'vnp_SecureHash=' . $vnpSecureHash;
-        
-        return redirect($vnpUrl);
+        return view('profile.bookings', compact('tickets'));
     }
     
     /**
-     * Xử lý kết quả thanh toán VNPay
+     * Hiển thị lịch sử xem phim
      */
-    public function vnpayDepositReturn(Request $request)
+    public function watchHistory()
     {
         if (!Auth::check()) {
-            return redirect()->route('login');
+            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập');
         }
         
         $user = Auth::user();
         
-        $vnpResponseCode = $request->input('vnp_ResponseCode');
-        $vnpTxnRef = $request->input('vnp_TxnRef');
-        $vnpAmount = ($request->input('vnp_Amount', 0)) / 100;
+        $history = WatchHistory::with(['movie', 'episode'])
+            ->where('user_id', $user->id)
+            ->orderByDesc('updated_at')
+            ->paginate(20);
         
-        $depositInfo = session('deposit_info');
-        
-        if (!$depositInfo || $depositInfo['txn_ref'] !== $vnpTxnRef) {
-            return redirect()->route('profile.index')->with('error', 'Giao dịch không hợp lệ!');
+        return view('profile.watch-history', compact('history'));
+    }
+    
+    /**
+     * Hiển thị thông tin subscription
+     */
+    public function subscriptions()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập');
         }
         
-        session()->forget('deposit_info');
+        $user = Auth::user();
+        $currentSubscription = $user->subscription;
+        $allSubscriptions = Subscription::orderBy('price')->get();
         
-        if ($vnpResponseCode === '00') {
-            $points = $depositInfo['points'];
-            
-            // Cộng điểm
-            $user->addPoints($points);
-            
-            // Lưu transaction
-            Transaction::create([
-                'user_id' => $user->id,
-                'type' => 'deposit',
-                'related_id' => 0,
-                'amount' => $points,
-                'method' => 'VNPay',
-                'status' => 'Thành công',
-            ]);
-            
-            return redirect()->route('profile.index')
-                ->with('success', "Nạp điểm thành công! Bạn đã được cộng " . number_format($points) . " điểm.");
-        }
-        
-        return redirect()->route('profile.index')
-            ->with('error', 'Thanh toán thất bại hoặc bị hủy. Mã lỗi: ' . $vnpResponseCode);
+        return view('profile.subscriptions', compact('user', 'currentSubscription', 'allSubscriptions'));
     }
     
     /**

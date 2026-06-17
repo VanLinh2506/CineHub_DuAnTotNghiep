@@ -1,14 +1,10 @@
-@extends('layouts.app')
-
-@php
-    $title = 'Quản lý thể loại';
-@endphp
+@extends('admin.layout')
 
 @section('content')
-<div class="container">
+<div class="container-fluid">
     <div class="stat-card">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="mb-0"><i class="fas fa-tags me-2"></i>{{ $title }}</h5>
+            <h2 class="mb-0"><i class="fas fa-tags me-2"></i>Quản lý thể loại</h2>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
                 <i class="fas fa-plus me-1"></i> Thêm thể loại
             </button>

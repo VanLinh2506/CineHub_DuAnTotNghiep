@@ -3,73 +3,96 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\UserToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+    public function showLogin()
     {
         if (Auth::check()) {
-            if ($request->ajax()) {
-                return response()->json(['success' => true, 'redirect' => route('home')]);
-            }
             return redirect()->route('home');
         }
-        
+        return view('auth.login');
+    }
+    
+    public function showRegister()
+    {
+        if (Auth::check()) {
+            return redirect()->route('home');
+        }
+        return view('auth.register');
+    }
+    
+    public function showForgotPassword()
+    {
+        return view('auth.forgot-password');
+    }
+    
+    public function sendResetLink(Request $request)
+    {
+        // TODO: Implement password reset functionality
+        return back()->with('success', 'Liên kết đặt lại mật khẩu đã được gửi đến email của bạn!');
+    }
+    
+    public function login(Request $request)
+    {
         if ($request->isMethod('post')) {
             $request->validate([
                 'email' => 'required|email',
                 'password' => 'required',
             ]);
             
-            $email = $request->input('email');
-            $password = $request->input('password');
+            $credentials = [
+                'email' => $request->input('email'),
+                'password' => $request->input('password'),
+            ];
             
-            $user = User::where('email', $email)->first();
+            $remember = $request->has('remember_me');
             
-            if ($user && Hash::check($password, $user->password)) {
-                Auth::login($user);
+            if (Auth::attempt($credentials, $remember)) {
+                $request->session()->regenerate();
                 
-                // Tạo token cho user
-                $deviceInfo = $request->header('User-Agent');
-                $ipAddress = $request->ip();
-                $token = Str::random(64);
+                $user = Auth::user();
                 
-                UserToken::create([
-                    'user_id' => $user->id,
-                    'token' => $token,
-                    'device_info' => $deviceInfo,
-                    'ip_address' => $ipAddress,
-                    'expires_at' => now()->addDays(30),
-                ]);
+                // Xác định redirect URL dựa trên role và theater_id
+                $redirectUrl = route('home'); // Default
                 
-                session(['auth_token' => $token]);
-                
-                // Kiểm tra admin
-                $isAdmin = $user->role === 'admin' || 
-                          $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists();
+                // Admin
+                if ($user->role === 'admin' || $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists()) {
+                    $redirectUrl = route('admin.index');
+                }
+                // Moderator (role = moderator VÀ có theater_id)
+                else if ($user->role === 'moderator' && !empty($user->theater_id) && $user->theater_id != '') {
+                    $redirectUrl = route('moderator.index');
+                }
+                // Counter Staff (role = user VÀ có theater_id hợp lệ)
+                else if ($user->role === 'user' && !empty($user->theater_id) && $user->theater_id != '' && is_numeric($user->theater_id)) {
+                    $redirectUrl = route('counter.index');
+                }
+                // User thường - về home
                 
                 if ($request->ajax()) {
                     return response()->json([
                         'success' => true,
-                        'redirect' => $isAdmin ? route('admin.index') : route('home')
+                        'redirect' => $redirectUrl
                     ]);
                 }
                 
-                return $isAdmin ? redirect()->route('admin.index') : redirect()->route('home');
-            } else {
-                $error = 'Email hoặc mật khẩu không đúng!';
-                
-                if ($request->ajax()) {
-                    return response()->json(['success' => false, 'error' => $error]);
-                }
-                
-                return redirect()->route('home')->with('error', $error);
+                return redirect()->intended($redirectUrl)
+                    ->with('success', 'Đăng nhập thành công!');
             }
+            
+            $error = 'Email hoặc mật khẩu không đúng!';
+            
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'error' => $error]);
+            }
+            
+            return back()->withErrors(['email' => $error])->withInput($request->only('email'));
         }
         
         return redirect()->route('home');
@@ -77,13 +100,6 @@ class AuthController extends Controller
     
     public function register(Request $request)
     {
-        if (Auth::check()) {
-            if ($request->ajax()) {
-                return response()->json(['success' => true, 'redirect' => route('home')]);
-            }
-            return redirect()->route('home');
-        }
-        
         if ($request->isMethod('post')) {
             $request->validate([
                 'name' => 'required|string|max:255',
@@ -100,21 +116,7 @@ class AuthController extends Controller
             ]);
             
             Auth::login($user);
-            
-            // Tạo token
-            $deviceInfo = $request->header('User-Agent');
-            $ipAddress = $request->ip();
-            $token = Str::random(64);
-            
-            UserToken::create([
-                'user_id' => $user->id,
-                'token' => $token,
-                'device_info' => $deviceInfo,
-                'ip_address' => $ipAddress,
-                'expires_at' => now()->addDays(30),
-            ]);
-            
-            session(['auth_token' => $token]);
+            $request->session()->regenerate();
             
             if ($request->ajax()) {
                 return response()->json(['success' => true, 'redirect' => route('home')]);
@@ -128,11 +130,6 @@ class AuthController extends Controller
     
     public function logout(Request $request)
     {
-        $token = session('auth_token');
-        if ($token) {
-            UserToken::where('token', $token)->delete();
-        }
-        
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -142,14 +139,86 @@ class AuthController extends Controller
     
     public function logoutAll(Request $request)
     {
-        if (Auth::check()) {
-            UserToken::where('user_id', Auth::id())->delete();
-        }
-        
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         
         return redirect()->route('home')->with('success', 'Đã đăng xuất khỏi tất cả thiết bị!');
+    }
+    
+    /**
+     * Redirect to Google for authentication
+     */
+    public function redirectToGoogle()
+    {
+        try {
+            return Socialite::driver('google')->redirect();
+        } catch (\Exception $e) {
+            return redirect()->route('login')
+                ->with('error', 'Không thể kết nối với Google. Vui lòng thử lại sau.');
+        }
+    }
+    
+    /**
+     * Handle Google callback
+     */
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+
+            // Find or create user
+            $user = User::where('email', $googleUser->getEmail())->first();
+
+            if ($user) {
+                // User exists — update google_id if not set
+                if (!$user->google_id) {
+                    $user->update(['google_id' => $googleUser->getId()]);
+                }
+            } else {
+                // Create new user from Google account
+                $user = User::create([
+                    'name'              => $googleUser->getName(),
+                    'email'             => $googleUser->getEmail(),
+                    'google_id'         => $googleUser->getId(),
+                    'avatar'            => $googleUser->getAvatar(),
+                    'password'          => Hash::make(Str::random(24)),
+                    'email_verified_at' => now(),
+                    'email_verified'    => 1,
+                    'subscription_id'   => 1,
+                ]);
+            }
+
+            Auth::login($user, true);
+
+            // Xác định redirect URL dựa trên role và theater_id
+            $redirectUrl = route('home'); // Default
+            
+            // Admin
+            if ($user->role === 'admin' || $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists()) {
+                $redirectUrl = route('admin.index');
+            }
+            // Moderator (role = moderator VÀ có theater_id)
+            else if ($user->role === 'moderator' && !empty($user->theater_id) && $user->theater_id != '') {
+                $redirectUrl = route('moderator.index');
+            }
+            // Counter Staff (role = user VÀ có theater_id hợp lệ)
+            else if ($user->role === 'user' && !empty($user->theater_id) && $user->theater_id != '' && is_numeric($user->theater_id)) {
+                $redirectUrl = route('counter.index');
+            }
+
+            return redirect()->intended($redirectUrl)
+                ->with('success', 'Đăng nhập bằng Google thành công!');
+
+        } catch (\Laravel\Socialite\Two\InvalidStateException $e) {
+            return redirect()->route('login')
+                ->with('error', 'Phiên đăng nhập Google hết hạn. Vui lòng thử lại.');
+        } catch (\GuzzleHttp\Exception\ClientException $e) {
+            return redirect()->route('login')
+                ->with('error', 'Google Client ID hoặc Secret không đúng. Kiểm tra lại cấu hình.');
+        } catch (\Exception $e) {
+            return redirect()->route('login')
+                ->with('error', 'Đăng nhập Google thất bại: ' . $e->getMessage());
+        }
     }
 }

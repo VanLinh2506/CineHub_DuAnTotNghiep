@@ -1,16 +1,20 @@
 @extends('layouts.app')
 
-@section('content')
-<?php
+@php
 $current_page = 'movie';
-$title = htmlspecialchars($movie['title']);
+// Convert collections/models to arrays recursively for backward compatibility
+$movie = is_object($movie) ? json_decode(json_encode($movie), true) : $movie;
+$episodes = isset($episodes) ? json_decode(json_encode($episodes), true) : [];
+$currentEpisode = isset($currentEpisode) ? json_decode(json_encode($currentEpisode), true) : null;
+$reviews = isset($reviews) ? json_decode(json_encode($reviews), true) : [];
+$comments = isset($comments) ? json_decode(json_encode($comments), true) : [];
+$relatedMovies = isset($relatedMovies) ? json_decode(json_encode($relatedMovies), true) : [];
 
-// Lấy base URL
-if (!class_exists('UrlHelper')) {
-    require_once __DIR__ . '/../../core/UrlHelper.php';
-}
-$baseUrl = UrlHelper::getBaseUrl();
-?>
+$title = htmlspecialchars($movie['title'] ?? 'Movie');
+$baseUrl = url('/');
+@endphp
+
+@section('content')
 
 <section class="watch-section">
     <div class="container">
@@ -81,23 +85,17 @@ $baseUrl = UrlHelper::getBaseUrl();
                 }
                 
                 if ($videoUrl): 
-                    // Nếu video_url là đường dẫn tương đối (không bắt đầu bằng http), thêm baseUrl
-                    $fullVideoUrl = $videoUrl;
-                    if (strpos($videoUrl, 'http') !== 0) {
-                        $fullVideoUrl = $baseUrl . '/' . ltrim($videoUrl, '/');
-                    }
-                    
-                    // Xác định URL video cuối cùng
-                    $finalVideoSrc = $fullVideoUrl;
-                    if ($isPhimBo && $episodeNumber !== null) {
-                        // Phim bộ: kiểm tra xem video_url đã là file hoàn chỉnh chưa
-                        // Nếu video_url kết thúc bằng .mp4 hoặc các định dạng video khác, dùng trực tiếp
-                        if (preg_match('/\.(mp4|mkv|avi|mov|webm)$/i', $fullVideoUrl)) {
-                            $finalVideoSrc = $fullVideoUrl;
-                        } else {
-                            // Nếu là folder path, thêm tên file tập
-                            $finalVideoSrc = rtrim($fullVideoUrl, '/') . '/tap' . $episodeNumber . '.mp4';
-                        }
+                    // Sử dụng storage_url() helper để xử lý đúng đường dẫn
+                    // Helper sẽ tự động thêm /storage/ prefix cho files trong storage
+                    if (strpos($videoUrl, 'http') === 0) {
+                        // Đã là URL đầy đủ
+                        $finalVideoSrc = $videoUrl;
+                    } else {
+                        // Sử dụng storage_url() để xử lý
+                        // Với video_url = "data/phim/phimbo/phamnhantutien/tap_1.mp4"
+                        // storage_url() sẽ trả về: http://127.0.0.1:8000/storage/data/phim/phimbo/phamnhantutien/tap_1.mp4
+                        $fullVideoUrl = storage_url($videoUrl);
+                        $finalVideoSrc = $fullVideoUrl;
                     }
                 ?>
                     <video id="videoPlayer" controls>
@@ -121,7 +119,7 @@ $baseUrl = UrlHelper::getBaseUrl();
                     }
                 ?>
                     <video id="videoPlayer" controls>
-                        <source src="{{ $fullTrailerUrl }}" type="video/mp4">
+                        <source src="/storage/{{ $fullTrailerUrl }}" type="video/mp4">
                         Trình duyệt của bạn không hỗ trợ video.
                     </video>
                 @else
@@ -274,16 +272,16 @@ $baseUrl = UrlHelper::getBaseUrl();
                                 <div style="flex: 1;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                                         <div>
-                                            <strong style="color: #fff;">{{ $review['user_name'] }}</strong>
+                                            <strong style="color: #fff;">{{ $review['user_name'] ?? ($review['user']['name'] ?? 'Anonymous') }}</strong>
                                             <span style="margin-left: 10px; color: #ffc107;">
-                                                @for($i = 0; $i < $review['rating']; $i++)
+                                                @for($i = 0; $i < ($review['rating'] ?? 0); $i++)
                                                     <i class="fas fa-star"></i>
                                                 @endfor
                                             </span>
                                         </div>
-                                        <span style="color: #888; font-size: 0.85rem;">{{ date('d/m/Y', strtotime($review['created_at'])) }}</span>
+                                        <span style="color: #888; font-size: 0.85rem;">{{ isset($review['created_at']) ? date('d/m/Y', strtotime($review['created_at'])) : '' }}</span>
                                     </div>
-                                    @if($review['comment'])
+                                    @if(isset($review['comment']) && $review['comment'])
                                         <p style="margin: 0; color: #ccc;">{{ nl2br(htmlspecialchars($review['comment'])) }}</p>
                                     @endif
                                 </div>
@@ -348,21 +346,21 @@ $baseUrl = UrlHelper::getBaseUrl();
                                     </div>
                                     <div style="flex: 1; background: #1f1f1f; padding: 15px 18px; border-radius: 12px;">
                                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                            <strong style="color: #fff; font-size: 0.95rem;">{{ $comment['user_name'] }}</strong>
-                                            <span style="color: #666; font-size: 0.8rem;"><i class="far fa-clock"></i> {{ date('d/m/Y H:i', strtotime($comment['created_at'])) }}</span>
+                                            <strong style="color: #fff; font-size: 0.95rem;">{{ $comment['user_name'] ?? ($comment['user']['name'] ?? 'Anonymous') }}</strong>
+                                            <span style="color: #666; font-size: 0.8rem;"><i class="far fa-clock"></i> {{ isset($comment['created_at']) ? date('d/m/Y H:i', strtotime($comment['created_at'])) : '' }}</span>
                                         </div>
-                                        <p style="margin: 0 0 12px 0; color: #ddd; line-height: 1.6;">{{ nl2br(htmlspecialchars($comment['content'])) }}</p>
+                                        <p style="margin: 0 0 12px 0; color: #ddd; line-height: 1.6;">{{ nl2br(htmlspecialchars($comment['content'] ?? '')) }}</p>
                                         
                                         <!-- Like/Dislike và Reply buttons -->
                                         <div class="comment-actions" style="display: flex; gap: 20px; align-items: center; padding-top: 10px; border-top: 1px solid #333;">
-                                            <button class="like-btn" onclick="likeComment({{ $comment['id'] }}, 'like')" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; transition: all 0.3s;" onmouseover="this.style.background='rgba(76, 175, 80, 0.2)'; this.style.color='#4caf50'" onmouseout="this.style.background='none'; this.style.color='#888'">
-                                                <i class="far fa-thumbs-up"></i> <span id="likes-{{ $comment['id'] }}">{{ $comment['likes'] ?? 0 }}</span>
+                                            <button class="like-btn" onclick="likeComment({{ $comment['id'] ?? 0 }}, 'like')" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; transition: all 0.3s;" onmouseover="this.style.background='rgba(76, 175, 80, 0.2)'; this.style.color='#4caf50'" onmouseout="this.style.background='none'; this.style.color='#888'">
+                                                <i class="far fa-thumbs-up"></i> <span id="likes-{{ $comment['id'] ?? 0 }}">{{ $comment['likes'] ?? 0 }}</span>
                                             </button>
-                                            <button class="dislike-btn" onclick="likeComment({{ $comment['id'] }}, 'dislike')" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; transition: all 0.3s;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#888'">
-                                                <i class="far fa-thumbs-down"></i> <span id="dislikes-{{ $comment['id'] }}">{{ $comment['dislikes'] ?? 0 }}</span>
+                                            <button class="dislike-btn" onclick="likeComment({{ $comment['id'] ?? 0 }}, 'dislike')" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; transition: all 0.3s;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#888'">
+                                                <i class="far fa-thumbs-down"></i> <span id="dislikes-{{ $comment['id'] ?? 0 }}">{{ $comment['dislikes'] ?? 0 }}</span>
                                             </button>
                                             @if(isset($user) && $user)
-                                                <button onclick="toggleReplyForm({{ $comment['id'] }})" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; transition: all 0.3s;" onmouseover="this.style.background='rgba(33, 150, 243, 0.2)'; this.style.color='#2196f3'" onmouseout="this.style.background='none'; this.style.color='#888'">
+                                                <button onclick="toggleReplyForm({{ $comment['id'] ?? 0 }})" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; transition: all 0.3s;" onmouseover="this.style.background='rgba(33, 150, 243, 0.2)'; this.style.color='#2196f3'" onmouseout="this.style.background='none'; this.style.color='#888'">
                                                     <i class="fas fa-reply"></i> Trả lời
                                                 </button>
                                             @endif
@@ -417,21 +415,21 @@ $baseUrl = UrlHelper::getBaseUrl();
                                                 </div>
                                                 <div style="flex: 1;">
                                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                                        <strong style="color: #fff; font-size: 0.9rem;">{{ $reply['user_name'] }}</strong>
-                                                        <span style="color: #666; font-size: 0.75rem;"><i class="far fa-clock"></i> {{ date('d/m/Y H:i', strtotime($reply['created_at'])) }}</span>
+                                                        <strong style="color: #fff; font-size: 0.9rem;">{{ $reply['user_name'] ?? ($reply['user']['name'] ?? 'Anonymous') }}</strong>
+                                                        <span style="color: #666; font-size: 0.75rem;"><i class="far fa-clock"></i> {{ isset($reply['created_at']) ? date('d/m/Y H:i', strtotime($reply['created_at'])) : '' }}</span>
                                                     </div>
-                                                    <p style="margin: 0 0 8px 0; color: #ccc; font-size: 0.9rem; line-height: 1.5;">{{ nl2br(htmlspecialchars($reply['content'])) }}</p>
+                                                    <p style="margin: 0 0 8px 0; color: #ccc; font-size: 0.9rem; line-height: 1.5;">{{ nl2br(htmlspecialchars($reply['content'] ?? '')) }}</p>
                                                     
                                                     <!-- Like/Dislike cho reply -->
                                                     <div style="display: flex; gap: 15px; align-items: center;">
-                                                        <button class="like-btn" onclick="likeComment({{ $reply['id'] }}, 'like')" style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; padding: 3px 8px; border-radius: 15px; transition: all 0.3s;" onmouseover="this.style.background='rgba(76, 175, 80, 0.2)'; this.style.color='#4caf50'" onmouseout="this.style.background='none'; this.style.color='#666'">
-                                                            <i class="far fa-thumbs-up"></i> <span id="likes-{{ $reply['id'] }}">{{ $reply['likes'] ?? 0 }}</span>
+                                                        <button class="like-btn" onclick="likeComment({{ $reply['id'] ?? 0 }}, 'like')" style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; padding: 3px 8px; border-radius: 15px; transition: all 0.3s;" onmouseover="this.style.background='rgba(76, 175, 80, 0.2)'; this.style.color='#4caf50'" onmouseout="this.style.background='none'; this.style.color='#666'">
+                                                            <i class="far fa-thumbs-up"></i> <span id="likes-{{ $reply['id'] ?? 0 }}">{{ $reply['likes'] ?? 0 }}</span>
                                                         </button>
-                                                        <button class="dislike-btn" onclick="likeComment({{ $reply['id'] }}, 'dislike')" style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; padding: 3px 8px; border-radius: 15px; transition: all 0.3s;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#666'">
-                                                            <i class="far fa-thumbs-down"></i> <span id="dislikes-{{ $reply['id'] }}">{{ $reply['dislikes'] ?? 0 }}</span>
+                                                        <button class="dislike-btn" onclick="likeComment({{ $reply['id'] ?? 0 }}, 'dislike')" style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; padding: 3px 8px; border-radius: 15px; transition: all 0.3s;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#666'">
+                                                            <i class="far fa-thumbs-down"></i> <span id="dislikes-{{ $reply['id'] ?? 0 }}">{{ $reply['dislikes'] ?? 0 }}</span>
                                                         </button>
                                                         @if(isset($isAdmin) && $isAdmin)
-                                                            <a href="{{ $baseUrl }}/?route=review/deleteComment&id={{ $reply['id'] }}&movie_id={{ $movie['id'] }}" onclick="return confirm('Bạn có chắc muốn xóa trả lời này?')" style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; padding: 3px 8px; border-radius: 15px; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#666'">
+                                                            <a href="{{ $baseUrl }}/?route/review/deleteComment&id={{ $reply['id'] ?? 0 }}&movie_id={{ $movie['id'] ?? 0 }}" onclick="return confirm('Bạn có chắc muốn xóa trả lời này?')" style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; padding: 3px 8px; border-radius: 15px; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#666'">
                                                                 <i class="fas fa-trash"></i> Xóa
                                                             </a>
                                                         @endif
