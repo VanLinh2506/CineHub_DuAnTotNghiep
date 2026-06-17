@@ -144,7 +144,7 @@
     <section class="promotion-banners-section">
         <div class="promo-banners-wrapper">
             <a href="<?php echo e(route('profile.index')); ?>" class="promo-banner-vertical">
-                <img src="<?php echo e(asset('data/img/poster/poster_nangcap.jpg')); ?>" alt="Nâng cấp gói VIP">
+                <img src="<?php echo e(storage_url('data/img/poster/poster_nangcap.jpg')); ?>" alt="Nâng cấp gói VIP">
                 <div class="promo-overlay-vertical">
                     <h3 class="promo-title-vertical">Trải nghiệm ngay gói pro vip</h3>
                     <p class="promo-desc-vertical">thoải mái xem phim bản quyền với chất lượng lên đến 4k.</p>
@@ -152,7 +152,7 @@
                 </div>
             </a>
             <a href="<?php echo e(route('movies.index')); ?>" class="promo-banner-vertical">
-                <img src="<?php echo e(asset('data/img/poster/poster_datve.jpg')); ?>" alt="Đặt vé online">
+                <img src="<?php echo e(storage_url('data/img/poster/poster_datve.jpg')); ?>" alt="Đặt vé online">
                 <div class="promo-overlay-vertical">
                     <h3 class="promo-title-vertical">Đặt vé online</h3>
                     <p class="promo-desc-vertical">đặt vé phim mọi lúc, mọi nơi chỉ với một bước nhấn chuột</p>

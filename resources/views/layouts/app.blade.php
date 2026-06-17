@@ -9,7 +9,7 @@
         @endif
         CineHub
     </title>
-    <link rel="icon" href="{{ asset('data/img/avt_webb.png') }}" type="image/png">
+    <link rel="icon" href="{{ storage_url('data/img/avt_webb.png') }}" type="image/png">
     
     @if(isset($meta_description))
         <meta name="description" content="{{ $meta_description }}">

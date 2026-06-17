@@ -16,7 +16,9 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect()->route('home');
         }
-        return view('auth.login');
+
+        // Redirect về home với parameter để mở modal
+        return redirect()->route('home')->with('openLoginModal', true);
     }
     
     public function showRegister()
@@ -24,7 +26,9 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect()->route('home');
         }
-        return view('auth.register');
+
+        // Redirect về home với parameter để mở modal register
+        return redirect()->route('home')->with('openRegisterModal', true);
     }
     
     public function showForgotPassword()
@@ -75,6 +79,10 @@ class AuthController extends Controller
                 }
                 // User thường - về home
                 
+                if ($redirectUrl === route('home')) {
+                    $redirectUrl = session()->pull('url.intended', $redirectUrl);
+                }
+
                 if ($request->ajax()) {
                     return response()->json([
                         'success' => true,

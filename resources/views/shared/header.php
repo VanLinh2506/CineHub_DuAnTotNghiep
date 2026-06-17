@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($title) ? $title . ($title != 'CineHub' ? ' - ' : '') : ''; ?>CineHub</title>
-    <link rel="icon" href="data/img/avt_webb.png" type="image/png">
+    <link rel="icon" href="/storage/data/img/avt_webb.png" type="image/png">
     <?php if (isset($meta_description)): ?>
     <meta name="description" content="<?php echo htmlspecialchars($meta_description); ?>">
     <?php endif; ?>

@@ -15,7 +15,7 @@
         <div class="movie-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px; margin-top: 20px;">
             @foreach($movies as $movie)
             <div class="movie-card" style="background: #1a1a1a; border-radius: 12px; overflow: hidden; transition: transform 0.3s; cursor: pointer;">
-                <a href="{{ route('home') }}?route=booking/index&movie_id={{ $movie['id'] }}" style="text-decoration: none; color: inherit;">
+                <a href="{{ route('booking.index', ['movie' => $movie['id']]) }}" style="text-decoration: none; color: inherit;">
                     <div class="movie-thumbnail" style="position: relative; width: 100%; padding-bottom: 150%; overflow: hidden;">
                         @if($movie['thumbnail'])
                             <img src="{{ $movie['thumbnail'] }}" 
@@ -74,7 +74,7 @@
                             </div>
                         @endif
 
-                        <button class="btn-book" style="width: 100%; background: #e50914; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
+                        <button class="btn-book" style="width: 100%; background: #e50914; color: #fff; border: none; padding: 10px; border-radius: 100px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
                             <i class="fas fa-ticket-alt"></i> Đặt vé ngay
                         </button>
                     </div>

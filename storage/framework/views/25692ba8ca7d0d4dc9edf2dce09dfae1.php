@@ -140,8 +140,8 @@
                     <?php
                         // Nếu phim chiếu rạp, link đến trang đặt vé; nếu không thì xem phim online
                         $movieUrl = ($movie['status'] === 'Chiếu rạp') 
-                            ? route('home') . '?route=booking/index&movie_id=' . $movie['id']
-                            : route('home') . '?route=movie/watch&id=' . $movie['id'];
+                            ? route('booking.index', ['movie' => $movie['id']])
+                            : route('movies.watch', $movie['id']);
                     ?>
                     <a href="<?php echo e($movieUrl); ?>">
                         <div class="movie-thumbnail">
@@ -199,9 +199,9 @@
                         <?php endif; ?>
                         <?php if(isset($movie['status']) && $movie['status'] === 'Chiếu rạp'): ?>
                             <div class="mt-2">
-                                <a href="<?php echo e(route('home')); ?>?route=booking/index&movie=<?php echo e($movie['id']); ?>"
+                                <a href="<?php echo e(route('booking.index', ['movie' => $movie['id']])); ?>"
                                    class="btn btn-primary btn-sm w-100"
-                                   style="background:#e50914;border:none;padding:8px 16px;border-radius:6px;text-decoration:none;display:inline-block;text-align:center;color:white;font-weight:500;">
+                                   style="background:#e50914;border:none;padding:8px 16px;border-radius:100px;text-decoration:none;display:inline-block;text-align:center;color:white;font-weight:500;">
                                     <i class="fas fa-ticket-alt"></i> Đặt vé xem phim
                                 </a>
                             </div>
