@@ -24,7 +24,59 @@ Route::get('/old', function () {
     return view('welcome');
 });
 
-// ==================== MODERATOR ROUTES ====================
+// ==================== MOVIE ROUTES ====================
+Route::prefix('phim')->name('movies.')->group(function () {
+    Route::get('/', [MovieController::class, 'index'])->name('index');
+    Route::get('/phim-le', [MovieController::class, 'phimLe'])->name('phimle');
+    Route::get('/phim-bo', [MovieController::class, 'phimBo'])->name('phimbo');
+    Route::get('/online', [MovieController::class, 'online'])->name('online');
+    Route::get('/rap', [MovieController::class, 'theater'])->name('theater');
+    Route::get('/the-loai/{id}', [MovieController::class, 'category'])->name('category');
+    Route::get('/{id}', [MovieController::class, 'show'])->name('show');
+    Route::get('/{id}/xem', [MovieController::class, 'watch'])->name('watch');
+    Route::get('/{movieId}/tap/{episodeNumber}', [MovieController::class, 'watchEpisode'])->name('watchEpisode');
+    Route::post('/toggle-favorite', [MovieController::class, 'toggleFavorite'])->name('toggleFavorite');
+});
+
+// ==================== AUTH ROUTES ====================
+Route::get('/dang-nhap', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/dang-nhap', [AuthController::class, 'login'])->name('login.post');
+Route::get('/dang-ky', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/dang-ky', [AuthController::class, 'register'])->name('register.post');
+Route::post('/dang-xuat', [AuthController::class, 'logout'])->name('logout');
+Route::get('/quen-mat-khau', [AuthController::class, 'showForgotPassword'])->name('password.request');
+Route::post('/quen-mat-khau', [AuthController::class, 'sendResetLink'])->name('password.email');
+
+// Google OAuth
+Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+
+// ==================== PROFILE ROUTES ====================
+Route::middleware('auth')->prefix('profile')->name('profile.')->group(function () {
+    Route::get('/', [ProfileController::class, 'index'])->name('index');
+    Route::put('/', [ProfileController::class, 'update'])->name('update');
+});
+
+// ==================== BOOKING ROUTES ====================
+Route::middleware('auth')->group(function () {
+    Route::get('/dat-ve', [BookingController::class, 'index'])->name('booking.index');
+    Route::post('/dat-ve/process', [BookingController::class, 'processBooking'])->name('booking.process');
+    Route::get('/dat-ve/ve-cua-toi', [BookingController::class, 'myTickets'])->name('booking.my-tickets');
+    Route::get('/dat-ve/xem-ve/{bookingId}', [BookingController::class, 'viewTicket'])->name('booking.view-ticket');
+});
+Route::get('/dat-ve/vnpay-return', [BookingController::class, 'vnpayReturn'])->name('booking.vnpay-return');
+
+// ==================== NOTIFICATION ROUTES ====================
+Route::middleware('auth')->prefix('notifications')->name('notification.')->group(function () {
+    Route::get('/', [NotificationController::class, 'index'])->name('index');
+    Route::post('/{id}/read', [NotificationController::class, 'markRead'])->name('read');
+});
+
+// ==================== REVIEW ROUTES ====================
+Route::middleware('auth')->prefix('reviews')->name('review.')->group(function () {
+    Route::post('/', [ReviewController::class, 'store'])->name('store');
+    Route::delete('/{id}', [ReviewController::class, 'destroy'])->name('destroy');
+});
 Route::middleware(['auth', 'moderator'])->prefix('moderator')->name('moderator.')->group(function () {
     Route::get('/', [ModeratorController::class, 'index'])->name('index');
     
