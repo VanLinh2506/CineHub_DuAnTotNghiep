@@ -132,6 +132,7 @@
             <p class="text-muted">Hiện tại chưa có phim phù hợp với bộ lọc của bạn</p>
         </div>
         @else
+<<<<<<< HEAD
         <div class="movie-grid">
             @foreach($movies as $movie)
             <div class="movie-card">
@@ -161,6 +162,78 @@
                         </div>
                         @else
                         <span class="movie-level">{{ $movie['level'] }}</span>
+=======
+            <div class="movie-grid">
+                @foreach($movies as $movie)
+                <div class="movie-card">
+                    @php
+                        // Nếu phim chiếu rạp, link đến trang đặt vé; nếu không thì xem phim online
+                        $movieUrl = ($movie['status'] === 'Chiếu rạp') 
+                            ? route('home') . '?route=booking/index&movie_id=' . $movie['id']
+                            : route('home') . '?route=movie/watch&id=' . $movie['id'];
+                    @endphp
+                    <a href="{{ $movieUrl }}">
+                        <div class="movie-thumbnail">
+                            @if($movie['thumbnail'])
+                                <img src="{{ $movie['thumbnail'] }}" alt="{{ $movie['title'] }}">
+                            @else
+                                <div class="movie-placeholder"><i class="fas fa-film"></i></div>
+                            @endif
+                            <div class="movie-overlay">
+                                @if($movie['status'] === 'Chiếu rạp')
+                                    <i class="fas fa-ticket-alt"></i>
+                                @else
+                                    <i class="fas fa-play"></i>
+                                @endif
+                            </div>
+                            @if(($movie['type'] ?? 'phimle') === 'phimbo')
+                                <div class="movie-badge" title="Số tập">
+                                    {{ isset($movie['episode_count']) && $movie['episode_count'] > 0 ? $movie['episode_count'] . ' tập' : '? tập' }}
+                                </div>
+                            @else
+                                <span class="movie-level">{{ $movie['level'] }}</span>
+                            @endif
+                        </div>
+                    </a>
+                    <div class="movie-info">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                            <a href="{{ $movieUrl }}" style="flex:1;text-decoration:none;color:inherit;">
+                                <h3>{{ $movie['title'] }}</h3>
+                            </a>
+                            @if(isset($user) && $user)
+                            <button class="favorite-btn-inline {{ (isset($favorites) && in_array($movie['id'], $favorites)) ? 'active' : '' }}"
+                                    data-movie-id="{{ $movie['id'] }}"
+                                    onclick="event.preventDefault();event.stopPropagation();toggleFavorite(this,{{ $movie['id'] }});">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                            @endif
+                        </div>
+                        <p class="movie-meta">
+                            <span><i class="fas fa-star"></i> {{ number_format($movie['rating'], 1) }}</span>
+                            @if($movie['type'] === 'phimbo')
+                                <span><i class="fas fa-tv"></i> Phim bộ</span>
+                            @else
+                                <span><i class="fas fa-clock"></i> {{ $movie['duration'] }} phút</span>
+                            @endif
+                        </p>
+                        <p class="movie-category">
+                            <span class="movie-type-badge">{{ ($movie['type'] ?? 'phimle') === 'phimbo' ? 'Phim bộ' : 'Phim lẻ' }}</span>
+                            @if($movie['category_name'])
+                                <span> • {{ $movie['category_name'] ?? 'Chưa phân loại' }}</span>
+                            @endif
+                        </p>
+                        @if($movie['description'])
+                            <p class="movie-description">{{ mb_substr($movie['description'], 0, 100) }}...</p>
+                        @endif
+                        @if(isset($movie['status']) && $movie['status'] === 'Chiếu rạp')
+                            <div class="mt-2">
+                                <a href="{{ route('home') }}?route=booking/index&movie={{ $movie['id'] }}"
+                                   class="btn btn-primary btn-sm w-100"
+                                   style="background:#e50914;border:none;padding:8px 16px;border-radius:6px;text-decoration:none;display:inline-block;text-align:center;color:white;font-weight:500;">
+                                    <i class="fas fa-ticket-alt"></i> Đặt vé xem phim
+                                </a>
+                            </div>
+>>>>>>> parent of 7cd8d5d (sửa form đăng ký, luồng + profile)
                         @endif
                     </div>
                 </a>

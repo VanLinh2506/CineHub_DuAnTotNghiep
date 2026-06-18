@@ -1012,9 +1012,9 @@ function validateFormBeforeSubmit() {
                             <?php else: ?>
                                 <div class="movies-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
                                     <?php $__currentLoopData = $allMovies; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $m): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                        <a href="<?php echo e(route('booking.index', ['movie' => $m->id])); ?>"
+                                        <a href="?route=booking/index&movie=<?php echo e($m->id); ?>"
                                             class="movie-card-booking"
-                                            style="display: block; text-decoration: none; border: 2px solid #ddd; border-radius: 24px; overflow: hidden; transition: all 0.3s; background: white; cursor: pointer;"
+                                            style="display: block; text-decoration: none; border: 2px solid #ddd; border-radius: 8px; overflow: hidden; transition: all 0.3s; background: white; cursor: pointer;"
                                             onmouseover="this.style.borderColor='#e50914'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)';"
                                             onmouseout="this.style.borderColor='#ddd'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                                             <?php if($m->thumbnail): ?>
@@ -1359,7 +1359,7 @@ function validateFormBeforeSubmit() {
                                     <?php $__currentLoopData = $foodItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $food): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <div class="food-item-card-compact" data-food-id="<?php echo e($food->id); ?>" data-food-price="<?php echo e($food->price); ?>" style="border: 2px solid #444; border-radius: 10px; padding: 10px; background: #2a2a2a; text-align: center; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='#ffc107'" onmouseout="this.style.borderColor='#444'">
                                             <?php if($food->image): ?>
-                                                <img src="<?php echo e(storage_url($food->image)); ?>" alt="<?php echo e($food->name); ?>" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin: 0 auto 8px;">
+                                                <img src="<?php echo e(asset('storage/' . $food->image)); ?>" alt="<?php echo e($food->name); ?>" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin: 0 auto 8px;">
                                             <?php else: ?>
                                                 <div style="width: 50px; height: 50px; background: #444; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">
                                                     <i class="fas fa-utensils" style="color: #666; font-size: 20px;"></i>
@@ -1831,5 +1831,4 @@ function validateFormBeforeSubmit() {
 </style>
 
 <?php $__env->stopSection(); ?>
-
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/booking/index.blade.php ENDPATH**/ ?>

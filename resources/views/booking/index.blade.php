@@ -1013,9 +1013,9 @@ function validateFormBeforeSubmit() {
                             @else
                                 <div class="movies-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
                                     @foreach($allMovies as $m)
-                                        <a href="{{ route('booking.index', ['movie' => $m->id]) }}"
+                                        <a href="?route=booking/index&movie={{ $m->id }}"
                                             class="movie-card-booking"
-                                            style="display: block; text-decoration: none; border: 2px solid #ddd; border-radius: 24px; overflow: hidden; transition: all 0.3s; background: white; cursor: pointer;"
+                                            style="display: block; text-decoration: none; border: 2px solid #ddd; border-radius: 8px; overflow: hidden; transition: all 0.3s; background: white; cursor: pointer;"
                                             onmouseover="this.style.borderColor='#e50914'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)';"
                                             onmouseout="this.style.borderColor='#ddd'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                                             @if($m->thumbnail)
@@ -1356,7 +1356,7 @@ function validateFormBeforeSubmit() {
                                     @foreach($foodItems as $food)
                                         <div class="food-item-card-compact" data-food-id="{{ $food->id }}" data-food-price="{{ $food->price }}" style="border: 2px solid #444; border-radius: 10px; padding: 10px; background: #2a2a2a; text-align: center; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='#ffc107'" onmouseout="this.style.borderColor='#444'">
                                             @if($food->image)
-                                                <img src="{{ storage_url($food->image) }}" alt="{{ $food->name }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin: 0 auto 8px;">
+                                                <img src="{{ asset('storage/' . $food->image) }}" alt="{{ $food->name }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin: 0 auto 8px;">
                                             @else
                                                 <div style="width: 50px; height: 50px; background: #444; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">
                                                     <i class="fas fa-utensils" style="color: #666; font-size: 20px;"></i>

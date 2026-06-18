@@ -12,6 +12,7 @@
     </div>
 
     @if($movies && count($movies) > 0)
+<<<<<<< HEAD
     <div class="movie-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px; margin-top: 20px;">
         @foreach($movies as $movie)
         <div class="movie-card" style="background: #1a1a1a; border-radius: 12px; overflow: hidden; transition: transform 0.3s; cursor: pointer;">
@@ -26,6 +27,29 @@
                         <i class="fas fa-film" style="font-size: 48px; color: #555;"></i>
                     </div>
                     @endif
+=======
+        <div class="movie-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px; margin-top: 20px;">
+            @foreach($movies as $movie)
+            <div class="movie-card" style="background: #1a1a1a; border-radius: 12px; overflow: hidden; transition: transform 0.3s; cursor: pointer;">
+                <a href="{{ route('home') }}?route=booking/index&movie_id={{ $movie['id'] }}" style="text-decoration: none; color: inherit;">
+                    <div class="movie-thumbnail" style="position: relative; width: 100%; padding-bottom: 150%; overflow: hidden;">
+                        @if($movie['thumbnail'])
+                            <img src="{{ $movie['thumbnail'] }}" 
+                                 alt="{{ $movie['title'] }}" 
+                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+                        @else
+                            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #2a2a2a; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-film" style="font-size: 48px; color: #555;"></i>
+                            </div>
+                        @endif
+                        
+                        <div class="movie-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); opacity: 0; transition: opacity 0.3s; display: flex; align-items: center; justify-content: center;">
+                            <div style="text-align: center;">
+                                <i class="fas fa-ticket-alt" style="font-size: 48px; color: #fff; margin-bottom: 10px;"></i>
+                                <p style="color: #fff; font-weight: bold; font-size: 14px;">Đặt vé ngay</p>
+                            </div>
+                        </div>
+>>>>>>> parent of 7cd8d5d (sửa form đăng ký, luồng + profile)
 
                     <div class="movie-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); opacity: 0; transition: opacity 0.3s; display: flex; align-items: center; justify-content: center;">
                         <div style="text-align: center;">
@@ -74,11 +98,50 @@
                     </div>
                     @endif
 
+<<<<<<< HEAD
                     <button class="btn-book" style="width: 100%; background: #e50914; color: #fff; border: none; padding: 10px; border-radius: 100px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
                         <i class="fas fa-ticket-alt"></i> Đặt vé ngay
                     </button>
                 </div>
             </a>
+=======
+                    <div class="movie-info" style="padding: 15px;">
+                        <h3 style="font-size: 16px; font-weight: bold; color: #fff; margin: 0 0 8px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            {{ $movie['title'] }}
+                        </h3>
+                        
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                            @if(isset($movie['rating']) && $movie['rating'] > 0)
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <i class="fas fa-star" style="color: #f5c518; font-size: 14px;"></i>
+                                    <span style="color: #fff; font-size: 14px;">{{ number_format($movie['rating'], 1) }}</span>
+                                </div>
+                            @endif
+                            
+                            @if(isset($movie['duration']) && $movie['duration'])
+                                <div style="display: flex; align-items: center; gap: 5px;">
+                                    <i class="fas fa-clock" style="color: #aaa; font-size: 12px;"></i>
+                                    <span style="color: #aaa; font-size: 13px;">{{ $movie['duration'] }} phút</span>
+                                </div>
+                            @endif
+                        </div>
+
+                        @if(isset($movie['category_name']))
+                            <div style="margin-bottom: 10px;">
+                                <span style="background: #333; color: #aaa; padding: 4px 8px; border-radius: 4px; font-size: 11px;">
+                                    {{ $movie['category_name'] }}
+                                </span>
+                            </div>
+                        @endif
+
+                        <button class="btn-book" style="width: 100%; background: #e50914; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
+                            <i class="fas fa-ticket-alt"></i> Đặt vé ngay
+                        </button>
+                    </div>
+                </a>
+            </div>
+            @endforeach
+>>>>>>> parent of 7cd8d5d (sửa form đăng ký, luồng + profile)
         </div>
         @endforeach
     </div>
