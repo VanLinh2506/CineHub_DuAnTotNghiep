@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\{User, Movie, Category, Theater, Ticket, Transaction, Showtime, Screen, FoodItem, Episode, Booking, Notification};
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Hash, Storage, Log};
 use Illuminate\Support\Str;
@@ -175,8 +176,10 @@ class AdminController extends Controller
 
         $movies = $query->orderByDesc('created_at')->get();
         $categories = Category::all();
+        $search = $request->search;
+        $status = $request->status;
 
-        return view('admin.movies', compact('movies', 'categories'));
+        return view('admin.movies', compact('movies', 'categories', 'search', 'status'));
     }
 
     public function moviesCreate()
@@ -188,60 +191,17 @@ class AdminController extends Controller
 
     public function moviesStore(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'category_id' => 'nullable|exists:categories,id',
-            'level' => 'nullable|in:Free,Basic,Silver,Gold,Premium',
-            'duration' => 'nullable|integer',
-            'type' => 'required|in:phimle,phimbo',
-            'status' => 'nullable|string',
-            'thumbnail_file' => 'nullable|image|max:5120',
-            'banner_file' => 'nullable|image|max:5120',
-            'trailer_file' => 'nullable|mimes:mp4,avi,mov,mkv,webm|max:102400',
-        ]);
-
-        $data = $request->only(['title', 'category_id', 'level', 'duration', 'description', 'director', 'actors', 'status', 'type', 'country', 'language', 'age_rating']);
+        $validated = $request->validate($this->movieRules($request, false), [], $this->movieAttributes());
+        $data = $this->buildMoviePayload($request, $validated);
         $data['rating'] = 0;
-        $data['status_admin'] = $request->status_admin ?? 'draft';
-
-        // Handle file uploads
-        if ($request->hasFile('thumbnail_file')) {
-            $data['thumbnail'] = $request->file('thumbnail_file')->store('posters', 'public');
-        } else {
-            $data['thumbnail'] = $request->thumbnail;
-        }
-
-        if ($request->hasFile('banner_file')) {
-            $data['banner'] = $request->file('banner_file')->store('banners', 'public');
-        } else {
-            $data['banner'] = $request->banner;
-        }
-
-        if ($request->hasFile('trailer_file')) {
-            $data['trailer_url'] = $request->file('trailer_file')->store('trailers', 'public');
-        } else {
-            $data['trailer_url'] = $request->trailer_url;
-        }
-
-        if ($request->hasFile('video_file')) {
-            $path = $request->type === 'phimbo' ? 'phimbo' : 'phimle';
-            $data['video_url'] = $request->file('video_file')->store($path, 'public');
-        } else {
-            $data['video_url'] = $request->video_url;
-        }
-
-        $data['normal_price'] = $request->normal_price ?? 90000;
-        $data['vip_price'] = $request->vip_price ?? 120000;
-        $data['couple_price'] = $request->couple_price ?? 180000;
 
         $movie = Movie::create($data);
 
-        // Create showtimes if cinema movie
-        if ($request->status === 'Chiếu rạp' && $request->filled(['from_date', 'to_date', 'schedule_theater_id'])) {
+        if (($data['status'] ?? null) === 'Chiếu rạp' && $request->filled(['from_date', 'to_date', 'schedule_theater_id'])) {
             $this->createShowtimes($movie, $request);
         }
 
-        return redirect()->route('admin.movies')->with('success', 'Thêm phim thành công!');
+        return redirect()->route('admin.movies.index')->with('success', 'Thêm phim thành công!');
     }
 
     public function moviesEdit($id)
@@ -250,55 +210,20 @@ class AdminController extends Controller
         $categories = Category::all();
         $theaters = Theater::where('is_active', 1)->orderBy('name')->get();
         $showtimes = Showtime::where('movie_id', $id)->with('theater', 'screen')->get();
+        $episodes = $movie->episodes;
 
-        return view('admin.movies.edit', compact('movie', 'categories', 'theaters', 'showtimes'));
+        return view('admin.movies.edit', compact('movie', 'categories', 'theaters', 'showtimes', 'episodes'));
     }
 
     public function moviesUpdate(Request $request, $id)
     {
         $movie = Movie::findOrFail($id);
 
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'category_id' => 'nullable|exists:categories,id',
-        ]);
-
-        $data = $request->only(['title', 'category_id', 'level', 'duration', 'description', 'director', 'actors', 'status', 'type', 'country', 'language', 'age_rating', 'status_admin']);
-
-        // Handle file uploads
-        if ($request->hasFile('thumbnail_file')) {
-            if ($movie->thumbnail) Storage::disk('public')->delete($movie->thumbnail);
-            $data['thumbnail'] = $request->file('thumbnail_file')->store('posters', 'public');
-        } elseif ($request->thumbnail) {
-            $data['thumbnail'] = $request->thumbnail;
-        }
-
-        if ($request->hasFile('banner_file')) {
-            if ($movie->banner) Storage::disk('public')->delete($movie->banner);
-            $data['banner'] = $request->file('banner_file')->store('banners', 'public');
-        } elseif ($request->banner) {
-            $data['banner'] = $request->banner;
-        }
-
-        if ($request->hasFile('trailer_file')) {
-            if ($movie->trailer_url) Storage::disk('public')->delete($movie->trailer_url);
-            $data['trailer_url'] = $request->file('trailer_file')->store('trailers', 'public');
-        } elseif ($request->trailer_url) {
-            $data['trailer_url'] = $request->trailer_url;
-        }
-
-        if ($request->hasFile('video_file')) {
-            if ($movie->video_url) Storage::disk('public')->delete($movie->video_url);
-            $path = $request->type === 'phimbo' ? 'phimbo' : 'phimle';
-            $data['video_url'] = $request->file('video_file')->store($path, 'public');
-        } elseif ($request->video_url) {
-            $data['video_url'] = $request->video_url;
-        }
-
+        $validated = $request->validate($this->movieRules($request, true), [], $this->movieAttributes());
+        $data = $this->buildMoviePayload($request, $validated, $movie);
         $movie->update($data);
 
-        // Update showtimes if provided
-        if ($request->status === 'Chiếu rạp' && $request->filled(['from_date', 'to_date'])) {
+        if (($data['status'] ?? null) === 'Chiếu rạp' && $request->filled(['from_date', 'to_date'])) {
             $this->createShowtimes($movie, $request);
         }
 
@@ -308,16 +233,17 @@ class AdminController extends Controller
     public function moviesDelete($id)
     {
         $movie = Movie::findOrFail($id);
-        
-        // Delete associated files
-        if ($movie->thumbnail) Storage::disk('public')->delete($movie->thumbnail);
-        if ($movie->banner) Storage::disk('public')->delete($movie->banner);
-        if ($movie->trailer_url) Storage::disk('public')->delete($movie->trailer_url);
-        if ($movie->video_url) Storage::disk('public')->delete($movie->video_url);
 
-        $movie->delete();
+        try {
+            $this->deleteStoredMovieMedia($movie, ['thumbnail', 'banner', 'trailer_url', 'video_url']);
+            $movie->delete();
 
-        return redirect()->route('admin.movies')->with('success', 'Xóa phim thành công!');
+            return redirect()->route('admin.movies.index')->with('success', 'Xóa phim thành công!');
+        } catch (QueryException $e) {
+            return redirect()
+                ->route('admin.movies.index')
+                ->with('error', 'Không thể xóa phim này vì phim đang được liên kết với dữ liệu khác.');
+        }
     }
 
     protected function createShowtimes(Movie $movie, Request $request)
@@ -681,7 +607,7 @@ class AdminController extends Controller
 
         Category::create($request->only(['name', 'parent_id']));
 
-        return redirect()->route('admin.categories')->with('success', 'Thêm thể loại thành công!');
+        return redirect()->route('admin.categories.index')->with('success', 'Thêm thể loại thành công!');
     }
 
     public function categoriesUpdate(Request $request, $id)
@@ -697,12 +623,12 @@ class AdminController extends Controller
         ]);
 
         if ($request->parent_id == $id) {
-            return redirect()->route('admin.categories')->with('error', 'Không thể chọn chính thể loại này làm thể loại cha!');
+            return redirect()->route('admin.categories.index')->with('error', 'Không thể chọn chính thể loại này làm thể loại cha!');
         }
 
         $category->update($request->only(['name', 'parent_id']));
 
-        return redirect()->route('admin.categories')->with('success', 'Cập nhật thể loại thành công!');
+        return redirect()->route('admin.categories.index')->with('success', 'Cập nhật thể loại thành công!');
     }
 
     public function categoriesDelete($id)
@@ -713,12 +639,12 @@ class AdminController extends Controller
         $category = Category::findOrFail($id);
 
         if ($category->movies()->count() > 0) {
-            return redirect()->route('admin.categories')->with('error', 'Không thể xóa! Có phim đang sử dụng thể loại này.');
+            return redirect()->route('admin.categories.index')->with('error', 'Không thể xóa! Có phim đang sử dụng thể loại này.');
         }
 
         $category->delete();
 
-        return redirect()->route('admin.categories')->with('success', 'Xóa thể loại thành công!');
+        return redirect()->route('admin.categories.index')->with('success', 'Xóa thể loại thành công!');
     }
 
     // Admin Logs
@@ -739,5 +665,122 @@ class AdminController extends Controller
         $logs = $query->orderByDesc('admin_logs.created_at')->paginate(50);
 
         return view('admin.logs', compact('logs'));
+    }
+
+    protected function movieRules(Request $request, bool $isUpdate): array
+    {
+        $thumbnailRule = $isUpdate ? 'nullable' : 'required';
+
+        return [
+            'title' => 'required|string|max:255',
+            'category_ids' => 'required|array|min:1',
+            'category_ids.*' => 'exists:categories,id',
+            'level' => 'nullable|in:Free,Silver,Gold,Premium',
+            'duration' => 'nullable|integer|min:1',
+            'type' => 'required|in:phimle,phimbo',
+            'status' => 'nullable|in:Sắp chiếu,Chiếu rạp,Chiếu online',
+            'status_admin' => 'required|in:draft,scheduled,published,archived',
+            'publish_date' => 'nullable|date',
+            'thumbnail_file' => $thumbnailRule . '|image|max:5120',
+            'banner_file' => 'nullable|image|max:5120',
+            'trailer_file' => 'nullable|mimes:mp4,avi,mov,mkv,webm|max:102400',
+            'trailer_url' => 'nullable|url',
+            'video_file' => 'nullable|mimes:mp4,avi,mov,mkv,webm|max:512000',
+            'video_url' => 'nullable|url',
+        ];
+    }
+
+    protected function movieAttributes(): array
+    {
+        return [
+            'title' => 'tên phim',
+            'category_ids' => 'thể loại',
+            'thumbnail_file' => 'poster/thumbnail',
+            'banner_file' => 'banner',
+            'trailer_file' => 'file trailer',
+            'trailer_url' => 'URL trailer',
+            'publish_date' => 'ngày chiếu',
+        ];
+    }
+
+    protected function buildMoviePayload(Request $request, array $validated, ?Movie $movie = null): array
+    {
+        $data = [
+            'title' => trim($validated['title']),
+            'level' => $validated['level'] ?? null,
+            'duration' => $validated['duration'] ?? null,
+            'description' => $request->input('description'),
+            'director' => $request->input('director'),
+            'actors' => $request->input('actors'),
+            'status' => $validated['status'] ?? 'Sắp chiếu',
+            'type' => $validated['type'],
+            'country' => $request->input('country'),
+            'language' => $request->input('language'),
+            'age_rating' => $request->input('age_rating'),
+            'status_admin' => $validated['status_admin'],
+            'publish_date' => empty($validated['publish_date']) ? null : Carbon::parse($validated['publish_date']),
+            'category_id' => $validated['category_ids'][0],
+            'normal_price' => $request->input('normal_price', $movie?->normal_price ?? 90000),
+            'vip_price' => $request->input('vip_price', $movie?->vip_price ?? 120000),
+            'couple_price' => $request->input('couple_price', $movie?->couple_price ?? 180000),
+        ];
+
+        if ($request->hasFile('thumbnail_file')) {
+            if ($movie) {
+                $this->deleteStoredMovieMedia($movie, ['thumbnail']);
+            }
+
+            $data['thumbnail'] = $request->file('thumbnail_file')->store('posters', 'public');
+        } elseif ($movie) {
+            $data['thumbnail'] = $movie->getRawOriginal('thumbnail');
+        }
+
+        if ($request->hasFile('banner_file')) {
+            if ($movie) {
+                $this->deleteStoredMovieMedia($movie, ['banner']);
+            }
+
+            $data['banner'] = $request->file('banner_file')->store('banners', 'public');
+        } elseif ($movie) {
+            $data['banner'] = $movie->getRawOriginal('banner');
+        }
+
+        if ($request->hasFile('trailer_file')) {
+            if ($movie) {
+                $this->deleteStoredMovieMedia($movie, ['trailer_url']);
+            }
+
+            $data['trailer_url'] = $request->file('trailer_file')->store('trailers', 'public');
+        } elseif ($request->filled('trailer_url')) {
+            $data['trailer_url'] = $validated['trailer_url'];
+        } elseif ($movie) {
+            $data['trailer_url'] = $movie->getRawOriginal('trailer_url');
+        }
+
+        if ($request->hasFile('video_file')) {
+            if ($movie) {
+                $this->deleteStoredMovieMedia($movie, ['video_url']);
+            }
+
+            $path = $validated['type'] === 'phimbo' ? 'phimbo' : 'phimle';
+            $data['video_url'] = $request->file('video_file')->store($path, 'public');
+        } elseif ($request->filled('video_url')) {
+            $data['video_url'] = $validated['video_url'];
+        } elseif ($movie) {
+            $data['video_url'] = $movie->getRawOriginal('video_url');
+        }
+
+        return $data;
+    }
+
+    protected function deleteStoredMovieMedia(Movie $movie, array $fields): void
+    {
+        foreach ($fields as $field) {
+            $path = $movie->getRawOriginal($field);
+
+            if (! empty($path)) {
+                delete_storage_file($path);
+            }
+        }
     }
 }

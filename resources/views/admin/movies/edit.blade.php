@@ -168,9 +168,23 @@
 </div>
 
 <div class="stat-card">
-    <form method="POST" action="{{ route('admin.movies.update') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('admin.movies.update', $movie['id']) }}" enctype="multipart/form-data">
 
         @csrf
+        @method('PUT')
+
+        {{-- Hiển thị validation errors --}}
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Có lỗi xảy ra:</strong>
+                <ul class="mb-0 mt-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <input type="hidden" name="id" value="{{ $movie['id'] }}">
 
@@ -834,6 +848,31 @@
                 </div>
 
             @endif
+
+            {{-- Phần thêm tập mới --}}
+            <div class="row mb-3">
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Thêm tập mới</label>
+                    <div class="border rounded p-3">
+                        <div id="episodesContainer">
+                            {{-- Các tập mới sẽ được thêm bởi JavaScript --}}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-3" onclick="addEpisodeInput()">
+                            <i class="fas fa-plus"></i> Thêm tập
+                        </button>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> Thêm các tập phim bộ mới.
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+            <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">Hủy</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Cập nhật
+            </button>
         </div>
     </form>
 </div>
@@ -1109,10 +1148,24 @@
             if (
                 confirm('Bạn có chắc chắn muốn xóa tập này?')
             ) {
-                window.location.href =
-                    "{{ route('admin.movies.delete-episode') }}" +
-                    '?id=' + episodeId +
-                    '&movie_id={{ $movie["id"] }}';
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ route('admin.movies.deleteEpisode', ['movieId' => $movie['id'], 'id' => '__ID__']) }}".replace('__ID__', episodeId);
+
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = '_token';
+                csrf.value = '{{ csrf_token() }}';
+                form.appendChild(csrf);
+
+                const method = document.createElement('input');
+                method.type = 'hidden';
+                method.name = '_method';
+                method.value = 'DELETE';
+                form.appendChild(method);
+
+                document.body.appendChild(form);
+                form.submit();
             }
         }
 

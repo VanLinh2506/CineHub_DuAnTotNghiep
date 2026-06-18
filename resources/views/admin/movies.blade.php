@@ -3,140 +3,127 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Quản lý phim</h2>
+        <h2 class="mb-0">Quan ly phim</h2>
         <div>
-            <a href="{{ url('?route=admin/movies/scanEpisodes') }}" class="btn btn-info me-2">
-                <i class="fas fa-folder-open"></i> Import tập từ folder
+            <a href="{{ route('admin.movies.scanEpisodes') }}" class="btn btn-info me-2">
+                <i class="fas fa-folder-open"></i> Import tap tu folder
             </a>
-            <a href="{{ url('?route=admin/movies/create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Thêm phim mới
+            <a href="{{ route('admin.movies.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Them phim moi
             </a>
         </div>
     </div>
 
-    <!-- Filters -->
-    <form method="GET" class="mb-3">
-        <input type="hidden" name="route" value="admin/movies">
+    <form method="GET" action="{{ route('admin.movies.index') }}" class="mb-3">
         <div class="row g-2">
             <div class="col-md-4">
-                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm phim..." 
-                       value="{{ old('search') ?? ($search ?? '') }}">
+                <input
+                    type="text"
+                    name="search"
+                    class="form-control"
+                    placeholder="Tim kiem phim..."
+                    value="{{ $search ?? '' }}"
+                >
             </div>
             <div class="col-md-3">
-                <select name="status" class="form-select" id="statusFilter" onchange="this.form.submit()">
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="Chiếu online" {{ (isset($status) && $status === 'Chiếu online') ? 'selected' : '' }}>Phim online</option>
-                    <option value="Sắp chiếu" {{ (isset($status) && $status === 'Sắp chiếu') ? 'selected' : '' }}>Phim sắp chiếu</option>
-                    <option value="Chiếu rạp" {{ (isset($status) && $status === 'Chiếu rạp') ? 'selected' : '' }}>Phim chiếu rạp</option>
+                <select name="status" class="form-select">
+                    <option value="">Tat ca trang thai</option>
+                    <option value="Chiếu online" @selected(($status ?? '') === 'Chiếu online')>Phim online</option>
+                    <option value="Sắp chiếu" @selected(($status ?? '') === 'Sắp chiếu')>Phim sap chieu</option>
+                    <option value="Chiếu rạp" @selected(($status ?? '') === 'Chiếu rạp')>Phim chieu rap</option>
                 </select>
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-secondary w-100">
-                    <i class="fas fa-search"></i> Tìm
+                    <i class="fas fa-search"></i> Tim
                 </button>
             </div>
         </div>
     </form>
 
-    <!-- Movies Table -->
     <div class="stat-card">
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover align-middle">
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Poster</th>
-                        <th>Tiêu đề</th>
-                        <th>Loại</th>
-                        <th>Thể loại</th>
-                        <th>Trạng thái</th>
+                        <th>Tieu de</th>
+                        <th>Loai</th>
+                        <th>The loai</th>
+                        <th>Trang thai</th>
+                        <th>Ngay chieu</th>
                         <th>Rating</th>
-                        <th>Ngày tạo</th>
-                        <th>Thao tác</th>
+                        <th>Thao tac</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (empty($movies))
+                    @forelse ($movies as $movie)
                         <tr>
-                            <td colspan="9" class="text-center text-muted">Không có phim nào</td>
-                        </tr>
-                    @else
-                        @foreach ($movies as $m)
-                            <tr>
-                                <td>{{ $m['id'] }}</td>
-                                <td>
-                                    @if ($m['thumbnail'] ?? null)
-                                        <img src="{{ $m['thumbnail'] }}" alt="" style="width: 60px; height: 90px; object-fit: cover; border-radius: 5px;">
-                                    @else
-                                        <div class="bg-secondary d-flex align-items-center justify-content-center" style="width: 60px; height: 90px; border-radius: 5px;">
-                                            <i class="fas fa-film text-white"></i>
-                                        </div>
-                                    @endif
-                                </td>
-                                <td>
-                                    <strong>{{ $m['title'] }}</strong>
-                                    @if ($m['director'] ?? null)
-                                        <br><small class="text-muted">Đạo diễn: {{ $m['director'] }}</small>
-                                    @endif
-                                </td>
-                                <td>
-                                    @php
-                                        $movieType = $m['type'] ?? 'phimle';
-                                    @endphp
-                                    @if ($movieType === 'phimbo')
-                                        <span class="badge bg-primary">Phim bộ</span>
-                                    @else
-                                        <span class="badge bg-secondary">Phim lẻ</span>
-                                    @endif
-                                </td>
-                                <td>{{ $m['category_name'] ?? 'N/A' }}</td>
-                                <td>
-                                    @php
-                                        $movieStatus = $m['status'] ?? 'Sắp chiếu';
-                                        $statusBg = match($movieStatus) {
-                                            'Chiếu online' => 'success',
-                                            'Chiếu rạp' => 'info',
-                                            'Sắp chiếu' => 'warning',
-                                            default => 'secondary'
-                                        };
-                                    @endphp
-                                    <span class="badge bg-{{ $statusBg }}">{{ $movieStatus }}</span>
-                                    @if ($m['status_admin'] ?? null)
-                                        <br><small class="text-muted">{{ $m['status_admin'] }}</small>
-                                    @endif
-                                </td>
-                                <td>
-                                    <i class="fas fa-star" style="color: gold;"></i> {{ $m['rating'] ?? 0 }}/10
-                                </td>
-                                <td>{{ \Carbon\Carbon::parse($m['created_at'])->format('d/m/Y') }}</td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="{{ url('?route=admin/movies/edit&id=' . $m['id']) }}" class="btn btn-outline-primary" title="Sửa">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="{{ url('?route=admin/movies/view&id=' . $m['id']) }}" class="btn btn-outline-info" title="Xem chi tiết">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <button onclick="deleteMovie({{ $m['id'] }}, '{{ $m['title'] }}')" class="btn btn-outline-danger" title="Xóa">
+                            <td>{{ $movie->id }}</td>
+                            <td>
+                                @if ($movie->thumbnail)
+                                    <img src="{{ $movie->thumbnail }}" alt="{{ $movie->title }}" style="width: 60px; height: 90px; object-fit: cover; border-radius: 5px;">
+                                @else
+                                    <div class="bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 60px; height: 90px; border-radius: 5px;">
+                                        <i class="fas fa-film"></i>
+                                    </div>
+                                @endif
+                            </td>
+                            <td>
+                                <strong>{{ $movie->title }}</strong>
+                                @if ($movie->director)
+                                    <br>
+                                    <small class="text-muted">Dao dien: {{ $movie->director }}</small>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ ($movie->type ?? 'phimle') === 'phimbo' ? 'primary' : 'secondary' }}">
+                                    {{ ($movie->type ?? 'phimle') === 'phimbo' ? 'Phim bo' : 'Phim le' }}
+                                </span>
+                            </td>
+                            <td>{{ optional($movie->category)->name ?? 'Chua gan' }}</td>
+                            <td>
+                                @php
+                                    $statusBg = match($movie->status) {
+                                        'Chiếu online' => 'success',
+                                        'Chiếu rạp' => 'info',
+                                        'Sắp chiếu' => 'warning',
+                                        default => 'secondary',
+                                    };
+                                @endphp
+                                <span class="badge bg-{{ $statusBg }}">{{ $movie->status ?? 'Chua cap nhat' }}</span>
+                                <br>
+                                <small class="text-muted">{{ $movie->status_admin ?? 'draft' }}</small>
+                            </td>
+                            <td>{{ optional($movie->publish_date)->format('d/m/Y H:i') ?? '-' }}</td>
+                            <td><i class="fas fa-star text-warning"></i> {{ number_format($movie->rating ?? 0, 1) }}/10</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ route('admin.movies.edit', $movie->id) }}" class="btn btn-outline-primary" title="Sua">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{{ route('movies.show', $movie->id) }}" class="btn btn-outline-info" title="Xem">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <form action="{{ route('admin.movies.destroy', $movie->id) }}" method="POST" onsubmit="return confirm('Ban chac chan muon xoa phim {{ addslashes($movie->title) }}?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-outline-danger" title="Xoa">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    @endif
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">Khong co phim nao</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
     </div>
 </div>
-
-<script>
-    function deleteMovie(movieId, title) {
-        if (confirm('Bạn chắc chắn muốn xóa phim "' + title + '"?')) {
-            // Submit delete action
-            window.location.href = '{{ url("?route=admin/movies/delete&id=") }}' + movieId;
-        }
-    }
-</script>
 @endsection

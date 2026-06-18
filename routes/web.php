@@ -39,9 +39,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 });
 
-Route::middleware('auth')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-});
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 
 // ==================== MOVIES ROUTES ====================
 Route::prefix('movies')->name('movies.')->group(function () {

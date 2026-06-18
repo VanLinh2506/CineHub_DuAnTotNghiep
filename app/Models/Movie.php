@@ -31,6 +31,12 @@ class Movie extends Model
         'total_episodes',
         'language',
         'age_rating',
+        'normal_price',
+        'vip_price',
+        'couple_price',
+        'max_tickets',
+        'geo_restriction',
+        'drm_enabled',
     ];
 
     protected $casts = [
@@ -162,5 +168,10 @@ class Movie extends Model
     public function hasVideo(): bool
     {
         return !empty($this->attributes['video_url']);
+    }
+
+    public function getCategoryNameAttribute()
+    {
+        return $this->category?->name;
     }
 }

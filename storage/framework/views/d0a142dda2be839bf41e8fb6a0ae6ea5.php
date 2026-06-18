@@ -59,9 +59,9 @@
                                         </div>
                                         
                                         <!-- Categories -->
-                                        <?php if($featuredMovie->category_name): ?>
+                                        <?php if(optional($featuredMovie->category)->name): ?>
                                             <div class="hero-categories">
-                                                <span class="category-tag"><?php echo e($featuredMovie->category_name); ?></span>
+                                                <span class="category-tag"><?php echo e($featuredMovie->category->name); ?></span>
                                             </div>
                                         <?php endif; ?>
                                         

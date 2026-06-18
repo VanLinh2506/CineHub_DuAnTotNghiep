@@ -61,9 +61,9 @@
                                         </div>
                                         
                                         <!-- Categories -->
-                                        @if ($featuredMovie->category_name)
+                                        @if (optional($featuredMovie->category)->name)
                                             <div class="hero-categories">
-                                                <span class="category-tag">{{ $featuredMovie->category_name }}</span>
+                                                <span class="category-tag">{{ $featuredMovie->category->name }}</span>
                                             </div>
                                         @endif
                                         
