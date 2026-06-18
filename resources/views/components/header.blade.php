@@ -371,7 +371,7 @@
         <div id="loginTab" class="auth-tab-content active">
             <h2 class="modal-title">Đăng nhập</h2>
             <div id="loginError" class="alert alert-error" style="display: none;"></div>
-            <form id="loginForm" method="POST" action="{{ route('login') }}" onsubmit="handleLogin(event)">
+            <form id="loginForm" onsubmit="handleLogin(event)">
                 @csrf
                 <div class="form-group-new">
                     <input type="email" name="email" required placeholder="Email" class="input-field">
@@ -414,7 +414,7 @@
         <div id="registerTab" class="auth-tab-content" style="display: none;">
             <h2 class="modal-title">Đăng ký</h2>
             <div id="registerError" class="alert alert-error" style="display: none;"></div>
-            <form id="registerForm" method="POST" action="{{ route('register') }}" onsubmit="handleRegister(event)">
+            <form id="registerForm" onsubmit="handleRegister(event)">
                 @csrf
                 <div class="form-group-new">
                     <input type="text" name="name" required placeholder="Họ và tên" class="input-field">
@@ -693,197 +693,6 @@
     }
 </style>
 
-<style>
-    #authModal.modal-overlay {
-        background:
-            radial-gradient(circle at 18% 18%, rgba(229, 9, 20, 0.24), transparent 28%),
-            radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.14), transparent 24%),
-            rgba(5, 5, 8, 0.74);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        padding: 18px;
-    }
-
-    #authModal .modal-content-login {
-        max-width: 460px;
-        padding: 34px;
-        border-radius: 100px;
-        overflow: hidden;
-        background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(18, 18, 24, 0.72));
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.22);
-        backdrop-filter: blur(26px) saturate(145%);
-        -webkit-backdrop-filter: blur(26px) saturate(145%);
-        transform: scale(0.94) translateY(22px);
-        transition: transform 0.32s ease, opacity 0.32s ease;
-    }
-
-    #authModal .modal-content-login::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        background:
-            linear-gradient(120deg, rgba(255,255,255,0.2), transparent 35%, rgba(229,9,20,0.12)),
-            radial-gradient(circle at 50% 0%, rgba(255,255,255,0.2), transparent 34%);
-    }
-
-    #authModal .modal-content-login > * {
-        position: relative;
-        z-index: 1;
-    }
-
-    #authModal.modal-overlay.show .modal-content-login {
-        transform: scale(1) translateY(0);
-    }
-
-    #authModal .modal-close {
-        width: 34px;
-        height: 34px;
-        border-radius: 100px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: rgba(255, 255, 255, 0.86);
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-    }
-
-    #authModal .modal-close:hover {
-        color: #fff;
-        background: rgba(229, 9, 20, 0.72);
-        transform: rotate(90deg);
-    }
-
-    #authModal .modal-title {
-        margin-bottom: 24px;
-        font-weight: 800;
-    }
-
-    #authModal .auth-tabs {
-        gap: 8px;
-        margin-bottom: 28px;
-        padding: 5px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 100px;
-        background: rgba(0, 0, 0, 0.18);
-    }
-
-    #authModal .auth-tab {
-        border-radius: 100px;
-        color: rgba(255, 255, 255, 0.66);
-        transition: color 0.2s ease, background 0.2s ease;
-    }
-
-    #authModal .auth-tab.active {
-        color: #fff;
-        background: rgba(229, 9, 20, 0.78);
-        border-bottom: 0;
-        margin-bottom: 0;
-        box-shadow: 0 10px 22px rgba(229, 9, 20, 0.22);
-    }
-
-    #authModal .input-field {
-        padding: 13px 14px;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        border-radius: 100px;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-    }
-
-    #authModal .input-field:focus {
-        border-color: rgba(255, 85, 98, 0.9);
-        background: rgba(255, 255, 255, 0.14);
-        box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-    }
-
-    #authModal .checkbox-label,
-    #authModal .modal-footer {
-        color: rgba(255, 255, 255, 0.72);
-    }
-
-    #authModal .forgot-password,
-    #authModal .modal-footer a {
-        color: #ff6b75;
-        font-weight: 700;
-    }
-
-    #authModal .btn-login,
-    #authModal .btn-register-form {
-        padding: 13px;
-        border-radius: 100px;
-        background: linear-gradient(135deg, #ff3340, #b7030c);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        font-weight: 800;
-        box-shadow: 0 12px 26px rgba(229, 9, 20, 0.3);
-        transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-    }
-
-    #authModal .btn-login:hover,
-    #authModal .btn-register-form:hover {
-        filter: brightness(1.08);
-        transform: translateY(-1px);
-        box-shadow: 0 16px 34px rgba(229, 9, 20, 0.38);
-    }
-
-    #authModal .btn-login:disabled,
-    #authModal .btn-register-form:disabled {
-        background: rgba(120, 120, 130, 0.5);
-        box-shadow: none;
-        transform: none;
-    }
-
-    #authModal .btn-google-auth {
-        padding: 12px;
-        border-radius: 100px;
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid rgba(255, 255, 255, 0.45);
-        box-shadow: 0 10px 24px rgba(0,0,0,0.18);
-        transition: background 0.2s, box-shadow 0.2s, transform 0.2s ease;
-    }
-
-    #authModal .btn-google-auth:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 14px 28px rgba(0,0,0,0.24);
-    }
-
-    #authModal .alert-error {
-        background: rgba(220, 53, 69, 0.24);
-        border: 1px solid rgba(255, 111, 124, 0.35);
-        border-radius: 100px;
-    }
-
-    #authModal .auth-tab-content.active {
-        animation: authFadeIn 0.22s ease;
-    }
-
-    @keyframes authFadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(8px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @media (max-width: 520px) {
-        #authModal .modal-content-login {
-            padding: 28px 20px;
-            border-radius: 44px;
-        }
-
-        #authModal .form-options {
-            align-items: flex-start;
-            flex-direction: column;
-            gap: 10px;
-        }
-    }
-</style>
-
 
 <script>
 // Auth Modal Functions
@@ -945,25 +754,14 @@ function handleLogin(event) {
     submitBtn.textContent = 'Đang đăng nhập...';
     errorDiv.style.display = 'none';
     
-    fetch(form.action || '{{ route('login') }}', {
+    fetch('{{ route('login') }}', {
         method: 'POST',
         body: formData,
         headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
+            'X-Requested-With': 'XMLHttpRequest'
         }
     })
-    .then(async response => {
-        const contentType = response.headers.get('content-type') || '';
-        const data = contentType.includes('application/json') ? await response.json() : {};
-
-        if (!response.ok) {
-            const firstError = data.errors ? Object.values(data.errors)[0]?.[0] : null;
-            throw new Error(firstError || data.message || 'Khong the dang nhap. Vui long kiem tra lai thong tin.');
-        }
-
-        return data;
-    })
+    .then(response => response.json())
     .then(data => {
         if (data.success) {
             window.location.href = data.redirect;
@@ -995,25 +793,14 @@ function handleRegister(event) {
     submitBtn.textContent = 'Đang đăng ký...';
     errorDiv.style.display = 'none';
     
-    fetch(form.action || '{{ route('register') }}', {
+    fetch('{{ route('register') }}', {
         method: 'POST',
         body: formData,
         headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
+            'X-Requested-With': 'XMLHttpRequest'
         }
     })
-    .then(async response => {
-        const contentType = response.headers.get('content-type') || '';
-        const data = contentType.includes('application/json') ? await response.json() : {};
-
-        if (!response.ok) {
-            const firstError = data.errors ? Object.values(data.errors)[0]?.[0] : null;
-            throw new Error(firstError || data.message || 'Khong the dang ky. Vui long kiem tra lai thong tin.');
-        }
-
-        return data;
-    })
+    .then(response => response.json())
     .then(data => {
         if (data.success) {
             window.location.href = data.redirect;
@@ -1053,23 +840,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (typeof openAuthModal === 'function') {
                 e.preventDefault();
-                openAuthModal(tab);
-                return false;
+                openAuthModal(tab || 'login');
             }
         });
     });
-
-    // Auto open modal from session
-    @if(session('openLoginModal'))
-        setTimeout(function() {
-            openAuthModal('login');
-        }, 300);
-    @endif
-
-    @if(session('openRegisterModal'))
-        setTimeout(function() {
-            openAuthModal('register');
-        }, 300);
+    
+    // Auto open modal if redirected from login/register route
+    @if(session('openAuthModal'))
+        openAuthModal('{{ session('openAuthModal') }}');
     @endif
 });
 </script>

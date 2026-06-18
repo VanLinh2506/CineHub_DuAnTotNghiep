@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th6 17, 2026 lúc 04:53 PM
+-- Thời gian đã tạo: Th6 08, 2026 lúc 07:07 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -403,9 +403,7 @@ INSERT INTO `booking_session_tracking` (`id`, `user_id`, `showtime_id`, `screen_
 (197, 33, 41828, 5, '2026-01-28 00:25:26', NULL, 0, 0, 0, NULL, '2026-01-27 17:25:26'),
 (198, 9, 41828, 5, '2026-01-29 10:11:27', NULL, 0, 0, 0, NULL, '2026-01-29 03:11:27'),
 (199, 33, 41829, 5, '2026-02-03 09:08:36', NULL, 0, 0, 0, NULL, '2026-02-03 02:08:36'),
-(200, 9, 41830, 5, '2026-02-04 14:10:00', NULL, 0, 0, 0, NULL, '2026-02-04 07:10:00'),
-(202, 9, 41893, 3, '2026-06-09 15:40:44', NULL, 0, 0, 0, NULL, '2026-06-09 08:40:44'),
-(203, 3, 41893, 3, '2026-06-09 15:56:14', NULL, 0, 0, 0, NULL, '2026-06-09 08:56:14');
+(200, 9, 41830, 5, '2026-02-04 14:10:00', NULL, 0, 0, 0, NULL, '2026-02-04 07:10:00');
 
 -- --------------------------------------------------------
 
@@ -562,7 +560,7 @@ INSERT INTO `episodes` (`id`, `movie_id`, `episode_number`, `title`, `video_url`
 (4, 8, 4, 'Tập 4', 'data/phim/phimbo/gameofthrones', NULL, NULL, NULL, '2025-11-19 02:21:55', '2025-11-19 02:21:55'),
 (5, 29, 1, 'tập 1', 'data/phim/phimbo/venhadicon', NULL, NULL, NULL, '2025-11-25 03:19:46', '2025-11-24 03:28:37'),
 (12, 28, 1, '', NULL, NULL, NULL, NULL, '2025-12-13 13:43:19', '2025-12-13 13:43:19'),
-(13, 51, 1, '', 'data/phim/phimbo/phamnhantutien/tap_1.mp4', NULL, NULL, NULL, '2025-12-15 01:40:15', '2026-06-16 01:15:33'),
+(13, 51, 1, '', 'data/phim/phimbo/movie_51_episode_1_1765762844.mp4', NULL, NULL, NULL, '2025-12-15 01:40:15', '2025-12-15 01:40:44'),
 (14, 51, 2, '', 'data/phim/phimbo/movie_51_episode_2_1765762844.mp4', NULL, NULL, NULL, '2025-12-15 01:40:15', '2025-12-15 01:40:44'),
 (15, 9, 1, '', 'data/phim/phimbo/movie_9_episode_1_1765766625.mp4', NULL, NULL, NULL, '2025-12-15 02:43:24', '2025-12-15 02:43:45'),
 (16, 9, 2, '', 'data/phim/phimbo/movie_9_episode_2_1765766625.mp4', NULL, NULL, NULL, '2025-12-15 02:43:24', '2025-12-15 02:43:46'),
@@ -940,27 +938,6 @@ INSERT INTO `ip_spam_logs` (`id`, `ip_address`, `action_type`, `is_spam`, `detai
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `migrations`
---
-
-CREATE TABLE `migrations` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `migration` varchar(255) NOT NULL,
-  `batch` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Đang đổ dữ liệu cho bảng `migrations`
---
-
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
-(1, '2026_06_09_064627_add_updated_at_to_watch_history_table', 1),
-(2, '2026_06_16_023006_add_phone_to_users_table', 2),
-(3, '2026_06_16_024417_modify_role_column_in_users_table', 3);
-
--- --------------------------------------------------------
-
---
 -- Cấu trúc bảng cho bảng `moderator_permission_requests`
 --
 
@@ -1065,9 +1042,9 @@ INSERT INTO `movies` (`id`, `title`, `category_id`, `level`, `duration`, `descri
 (36, 'Series: Tình Yêu và Tham Vọng', 7, 'Gold', 45, 'Phim thương trường với những cuộc chiến khốc liệt giữa các tập đoàn và câu chuyện tình yêu phức tạp.', 'Bùi Tiến Huy', 'Nhan Phúc Vinh, Diễm My 9x, Lã Thanh Huyền', 'data/phim/phimbo/tinh_yeu_va_tham_vong', 'https://example.com/tyvtc-trailer.mp4', 'data/img/tinh_yeu_va_tham_vong_img.jpg', 'Chiếu online', 7.8, '2025-11-25 09:25:05', 'published', NULL, NULL, 0, 'data/img/tinh_yeu_va_tham_vong.jpg', 'Việt Nam', 'Tiếng Việt', 'P', 'phimbo', NULL, 90000, 120000, 180000),
 (37, 'Phim ngắn: Ngã Ba Đồng Lộc', 7, 'Free', 30, 'Phim tài liệu/chiến tranh về sự hy sinh anh dũng của 10 cô gái thanh niên xung phong.', 'Nguyễn Minh Chung', 'Nhiều diễn viên', 'data/phim/phimle/nga_ba_dong_loc.mp4', 'https://example.com/nbdl-trailer.mp4', 'data/img/nga_ba_dong_loc_img.jpg', 'Chiếu online', 8.2, '2025-11-25 09:25:05', 'published', NULL, NULL, 0, 'data/img/nga_ba_dong_loc.jpg', 'Việt Nam', 'Tiếng Việt', 'P', 'phimle', NULL, 90000, 120000, 180000),
 (38, 'hheheh', 1, 'Free', 124, 'sdd', '', 'fgd', '', '', 'data/img/hai_phuong_img.jpg', 'Chiếu rạp', 0, '2025-12-04 02:26:18', 'published', NULL, NULL, 0, 'data/img/hai_phuong.jpg', 'fdg', 'dfg', 'p', 'phimle', NULL, 90000, 120000, 180000),
-(51, 'Phàm Nhân Tu Tiên', 1, 'Free', NULL, 'Khúc Hồn thành công kết đan! hai người ở Loạn Tinh hải còn gặp được cơ duyên gì gì? “Tinh Hải Phi Trì” , xin đợi trở về\r\nĐồng thời Manhua cũng đang trong quá trình khẩn trương remake, ngày nào đó sẽ gặp lại', '', 'Hàn Lập, ', 'data/storage/data/phim/phimbo/phamnhantutien/', '', 'data/img/posters/Pha__m_Nh__n_Tu_Ti__n_poster_1765762815.jpg', 'Chiếu online', 0, '2025-12-15 01:40:15', 'draft', NULL, NULL, 0, 'data/img/banners/Pha__m_Nh__n_Tu_Ti__n_banner_1765762815.webp', 'Trung Quốc', '', '12', 'phimbo', NULL, 90000, 120000, 180000),
+(51, 'Phàm Nhân Tu Tiên', 1, 'Free', NULL, 'Khúc Hồn thành công kết đan! hai người ở Loạn Tinh hải còn gặp được cơ duyên gì gì? “Tinh Hải Phi Trì” , xin đợi trở về\r\nĐồng thời Manhua cũng đang trong quá trình khẩn trương remake, ngày nào đó sẽ gặp lại', '', 'Hàn Lập, ', '', '', 'data/img/posters/Pha__m_Nh__n_Tu_Ti__n_poster_1765762815.jpg', 'Chiếu online', 0, '2025-12-15 01:40:15', 'draft', NULL, NULL, 0, 'data/img/banners/Pha__m_Nh__n_Tu_Ti__n_banner_1765762815.webp', 'Trung Quốc', '', '12', 'phimbo', NULL, 90000, 120000, 180000),
 (52, 'mưa đỏ', NULL, 'Gold', 120, 'abc', 'Vince Gilligan', 'Hàn Lập, ', 'data/phim/phimle/m__a___o__.mp4', 'https://www.youtube.com/watch?v=BD6PoZJdt_M', 'data/img/posters/m__a___o___poster_1769519309.jpg', 'Chiếu rạp', 0, '2025-12-15 03:22:07', 'draft', NULL, NULL, 0, 'data/img/banners/m__a___o___banner_1769519309.jpg', 'viet nam', 'tieng viet', '16', 'phimle', NULL, 90000, 120000, 180000),
-(53, 'Tiên nghịch', 1, 'Silver', NULL, '', 'Hàn Lập', 'Vương Lâm', '', 'data/phim/trailers/Ti__n_ngh___ch_trailer_1770606401.mp4', 'data/img/tiennghich.webp', 'Chiếu online', 0, '2026-02-09 03:06:41', 'published', NULL, NULL, 0, 'data/img/tiennghich.webp', 'Trung Quốc', 'Tiếng Trung, Tiếng Việt', '20', 'phimbo', NULL, 90000, 120000, 180000);
+(53, 'Tiên nghịch', 1, 'Silver', NULL, '', 'Hàn Lập', 'Vương Lâm', '', 'data/phim/trailers/Ti__n_ngh___ch_trailer_1770606401.mp4', 'data/img/posters/Ti__n_ngh___ch_poster_1770606401.jpeg', 'Chiếu online', 0, '2026-02-09 03:06:41', 'published', NULL, NULL, 0, 'data/img/banners/Ti__n_ngh___ch_banner_1770606401.jpeg', 'Trung Quốc', 'Tiếng Trung, Tiếng Việt', '20', 'phimbo', NULL, 90000, 120000, 180000);
 
 -- --------------------------------------------------------
 
@@ -1394,6 +1371,13 @@ CREATE TABLE `seat_reservations` (
   `reserved_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `expires_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `seat_reservations`
+--
+
+INSERT INTO `seat_reservations` (`id`, `showtime_id`, `seat`, `user_id`, `session_id`, `reserved_at`, `expires_at`) VALUES
+(972, 41830, 'F4', 9, 'u088j8c91ol48mb247t7l6rqdg', '2026-02-04 07:10:38', '2026-02-04 00:20:38');
 
 -- --------------------------------------------------------
 
@@ -1809,192 +1793,7 @@ INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `show_date`, `show_time
 (41827, 20, 3, '2026-01-28', '10:00:00', 12000.00, '2026-01-27 13:47:11', 5),
 (41828, 19, 3, '2026-01-29', '15:00:00', 36000.00, '2026-01-27 17:24:51', 5),
 (41829, 1, 3, '2026-02-04', '18:00:00', 36000.00, '2026-02-03 02:07:49', 5),
-(41830, 1, 3, '2026-02-04', '08:00:00', 36000.00, '2026-02-03 02:08:04', 5),
-(41861, 1, 1, '2026-06-09', '10:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41862, 1, 1, '2026-06-09', '14:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41863, 1, 1, '2026-06-09', '18:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41864, 1, 1, '2026-06-09', '21:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41865, 1, 1, '2026-06-10', '10:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41866, 1, 1, '2026-06-10', '14:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41867, 1, 1, '2026-06-10', '18:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41868, 1, 1, '2026-06-10', '21:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41869, 1, 1, '2026-06-11', '10:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41870, 1, 1, '2026-06-11', '14:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41871, 1, 1, '2026-06-11', '18:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41872, 1, 1, '2026-06-11', '21:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41873, 1, 1, '2026-06-12', '10:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41874, 1, 1, '2026-06-12', '14:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41875, 1, 1, '2026-06-12', '18:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41876, 1, 1, '2026-06-12', '21:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41877, 1, 1, '2026-06-13', '10:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41878, 1, 1, '2026-06-13', '14:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41879, 1, 1, '2026-06-13', '18:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41880, 1, 1, '2026-06-13', '21:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41881, 1, 1, '2026-06-14', '10:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41882, 1, 1, '2026-06-14', '14:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41883, 1, 1, '2026-06-14', '18:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41884, 1, 1, '2026-06-14', '21:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41885, 1, 1, '2026-06-15', '10:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41886, 1, 1, '2026-06-15', '14:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41887, 1, 1, '2026-06-15', '18:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41888, 1, 1, '2026-06-15', '21:00:00', 90000.00, '2026-06-08 22:40:55', 1),
-(41889, 1, 1, '2026-06-09', '09:00:00', 90000.00, '2026-06-09 00:39:24', 25),
-(41890, 1, 1, '2026-06-09', '15:00:00', 90000.00, '2026-06-09 00:39:24', 25),
-(41891, 1, 1, '2026-06-09', '18:00:00', 90000.00, '2026-06-09 00:39:24', 25),
-(41892, 1, 2, '2026-06-09', '09:00:00', 90000.00, '2026-06-09 00:39:24', 3),
-(41893, 1, 2, '2026-06-09', '12:00:00', 90000.00, '2026-06-09 00:39:24', 3),
-(41894, 1, 2, '2026-06-09', '21:00:00', 90000.00, '2026-06-09 00:39:24', 3),
-(41895, 1, 1, '2026-06-10', '09:00:00', 90000.00, '2026-06-09 00:39:24', 40),
-(41896, 1, 1, '2026-06-10', '12:00:00', 90000.00, '2026-06-09 00:39:24', 40),
-(41897, 1, 1, '2026-06-10', '15:00:00', 90000.00, '2026-06-09 00:39:24', 40),
-(41898, 1, 2, '2026-06-10', '12:00:00', 90000.00, '2026-06-09 00:39:24', 13),
-(41899, 1, 2, '2026-06-10', '15:00:00', 90000.00, '2026-06-09 00:39:24', 13),
-(41900, 1, 2, '2026-06-10', '18:00:00', 90000.00, '2026-06-09 00:39:24', 13),
-(41901, 1, 1, '2026-06-11', '09:00:00', 90000.00, '2026-06-09 00:39:24', 40),
-(41902, 1, 1, '2026-06-11', '12:00:00', 90000.00, '2026-06-09 00:39:24', 40),
-(41903, 1, 1, '2026-06-11', '18:00:00', 90000.00, '2026-06-09 00:39:24', 40),
-(41904, 1, 2, '2026-06-11', '09:00:00', 90000.00, '2026-06-09 00:39:24', 13),
-(41905, 1, 2, '2026-06-11', '18:00:00', 90000.00, '2026-06-09 00:39:24', 13),
-(41906, 1, 2, '2026-06-11', '21:00:00', 90000.00, '2026-06-09 00:39:24', 13),
-(41907, 1, 1, '2026-06-12', '09:00:00', 90000.00, '2026-06-09 00:39:24', 15),
-(41908, 1, 1, '2026-06-12', '18:00:00', 90000.00, '2026-06-09 00:39:24', 15),
-(41909, 1, 1, '2026-06-12', '21:00:00', 90000.00, '2026-06-09 00:39:24', 15),
-(41910, 1, 2, '2026-06-12', '09:00:00', 90000.00, '2026-06-09 00:39:24', 24),
-(41911, 1, 2, '2026-06-12', '12:00:00', 90000.00, '2026-06-09 00:39:24', 24),
-(41912, 1, 2, '2026-06-12', '18:00:00', 90000.00, '2026-06-09 00:39:24', 24),
-(41913, 1, 1, '2026-06-13', '12:00:00', 90000.00, '2026-06-09 00:39:24', 2),
-(41914, 1, 1, '2026-06-13', '15:00:00', 90000.00, '2026-06-09 00:39:24', 2),
-(41915, 1, 1, '2026-06-13', '18:00:00', 90000.00, '2026-06-09 00:39:24', 2),
-(41916, 1, 2, '2026-06-13', '12:00:00', 90000.00, '2026-06-09 00:39:24', 24),
-(41917, 1, 2, '2026-06-13', '18:00:00', 90000.00, '2026-06-09 00:39:24', 24),
-(41918, 1, 2, '2026-06-13', '21:00:00', 90000.00, '2026-06-09 00:39:24', 24),
-(41919, 1, 1, '2026-06-14', '09:00:00', 90000.00, '2026-06-09 00:39:24', 40),
-(41920, 1, 1, '2026-06-14', '12:00:00', 90000.00, '2026-06-09 00:39:24', 40),
-(41921, 1, 1, '2026-06-14', '15:00:00', 90000.00, '2026-06-09 00:39:24', 40),
-(41922, 1, 2, '2026-06-14', '09:00:00', 90000.00, '2026-06-09 00:39:24', 3),
-(41923, 1, 2, '2026-06-14', '15:00:00', 90000.00, '2026-06-09 00:39:24', 3),
-(41924, 1, 2, '2026-06-14', '18:00:00', 90000.00, '2026-06-09 00:39:24', 3),
-(41925, 1, 1, '2026-06-15', '09:00:00', 90000.00, '2026-06-09 00:39:24', 9),
-(41926, 1, 1, '2026-06-15', '15:00:00', 90000.00, '2026-06-09 00:39:24', 9),
-(41927, 1, 1, '2026-06-15', '21:00:00', 90000.00, '2026-06-09 00:39:24', 9),
-(41928, 1, 2, '2026-06-15', '09:00:00', 90000.00, '2026-06-09 00:39:24', 4),
-(41929, 1, 2, '2026-06-15', '15:00:00', 90000.00, '2026-06-09 00:39:24', 4),
-(41930, 1, 2, '2026-06-15', '21:00:00', 90000.00, '2026-06-09 00:39:24', 4),
-(41931, 2, 1, '2026-06-09', '09:00:00', 90000.00, '2026-06-09 00:39:24', 1),
-(41932, 2, 1, '2026-06-09', '15:00:00', 90000.00, '2026-06-09 00:39:24', 1),
-(41934, 1, 1, '2026-06-09', '12:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(41935, 1, 1, '2026-06-09', '12:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41936, 1, 1, '2026-06-09', '15:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41937, 1, 2, '2026-06-09', '18:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41938, 1, 2, '2026-06-09', '09:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41939, 1, 2, '2026-06-09', '12:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41940, 1, 1, '2026-06-10', '12:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(41941, 1, 1, '2026-06-10', '15:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(41942, 1, 1, '2026-06-10', '15:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41943, 1, 1, '2026-06-10', '18:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41944, 1, 2, '2026-06-10', '12:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41945, 1, 2, '2026-06-10', '21:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41946, 1, 2, '2026-06-10', '12:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41947, 1, 2, '2026-06-10', '18:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41948, 1, 1, '2026-06-11', '09:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(41949, 1, 1, '2026-06-11', '15:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(41950, 1, 1, '2026-06-11', '12:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41951, 1, 1, '2026-06-11', '15:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41952, 1, 2, '2026-06-11', '09:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41953, 1, 2, '2026-06-11', '12:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41954, 1, 2, '2026-06-11', '15:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41955, 1, 2, '2026-06-11', '18:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41956, 1, 1, '2026-06-12', '09:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(41957, 1, 1, '2026-06-12', '12:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(41958, 1, 1, '2026-06-12', '12:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41959, 1, 1, '2026-06-12', '18:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41960, 1, 2, '2026-06-12', '09:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41961, 1, 2, '2026-06-12', '18:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41962, 1, 2, '2026-06-12', '15:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41963, 1, 2, '2026-06-12', '21:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41964, 1, 1, '2026-06-13', '09:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(41965, 1, 1, '2026-06-13', '15:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(41966, 1, 1, '2026-06-13', '09:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41967, 1, 2, '2026-06-13', '09:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41968, 1, 2, '2026-06-13', '18:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41969, 1, 2, '2026-06-13', '12:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41970, 1, 2, '2026-06-13', '21:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41971, 1, 1, '2026-06-14', '09:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(41972, 1, 1, '2026-06-14', '12:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(41973, 1, 1, '2026-06-14', '15:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41974, 1, 1, '2026-06-14', '21:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41975, 1, 2, '2026-06-14', '21:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41976, 1, 2, '2026-06-14', '09:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41977, 1, 2, '2026-06-14', '12:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41978, 1, 1, '2026-06-15', '12:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(41979, 1, 1, '2026-06-15', '12:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41980, 1, 1, '2026-06-15', '18:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41981, 1, 2, '2026-06-15', '15:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41982, 1, 2, '2026-06-15', '18:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41983, 1, 2, '2026-06-15', '18:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41984, 2, 1, '2026-06-09', '09:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41985, 2, 2, '2026-06-09', '18:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41986, 2, 2, '2026-06-09', '21:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41987, 2, 1, '2026-06-10', '09:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(41988, 2, 2, '2026-06-10', '09:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41989, 2, 2, '2026-06-10', '15:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41990, 2, 1, '2026-06-11', '12:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(41991, 2, 2, '2026-06-11', '15:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41992, 2, 2, '2026-06-11', '18:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41993, 2, 2, '2026-06-11', '09:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41994, 2, 1, '2026-06-12', '15:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(41995, 2, 2, '2026-06-12', '12:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41996, 2, 2, '2026-06-12', '09:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41997, 2, 2, '2026-06-13', '21:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(41998, 2, 2, '2026-06-13', '15:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(41999, 2, 1, '2026-06-14', '12:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(42000, 2, 1, '2026-06-15', '09:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(42001, 2, 1, '2026-06-15', '15:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(42002, 2, 2, '2026-06-15', '12:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(42003, 2, 2, '2026-06-15', '21:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(42004, 3, 1, '2026-06-09', '18:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(42005, 3, 2, '2026-06-09', '15:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(42006, 3, 1, '2026-06-10', '12:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(42007, 3, 1, '2026-06-10', '21:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(42008, 3, 2, '2026-06-10', '09:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(42009, 3, 1, '2026-06-11', '18:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(42010, 3, 2, '2026-06-11', '21:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(42011, 3, 1, '2026-06-12', '09:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(42012, 3, 2, '2026-06-12', '12:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(42013, 3, 1, '2026-06-13', '12:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(42014, 3, 1, '2026-06-13', '21:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(42015, 3, 2, '2026-06-13', '18:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(42016, 3, 1, '2026-06-14', '15:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(42017, 3, 2, '2026-06-14', '15:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(42018, 3, 2, '2026-06-14', '21:00:00', 90000.00, '2026-06-09 00:40:02', 4),
-(42019, 3, 1, '2026-06-15', '09:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(42020, 3, 1, '2026-06-15', '15:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(42021, 3, 2, '2026-06-15', '09:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(42022, 4, 2, '2026-06-09', '15:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(42023, 4, 1, '2026-06-10', '09:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(42024, 4, 1, '2026-06-11', '09:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(42025, 4, 2, '2026-06-11', '21:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(42026, 4, 1, '2026-06-12', '15:00:00', 90000.00, '2026-06-09 00:40:02', 1),
-(42027, 4, 2, '2026-06-12', '15:00:00', 90000.00, '2026-06-09 00:40:02', 3),
-(42028, 4, 1, '2026-06-14', '18:00:00', 90000.00, '2026-06-09 00:40:02', 2),
-(42029, 4, 2, '2026-06-14', '18:00:00', 90000.00, '2026-06-09 00:40:03', 4),
-(42030, 4, 1, '2026-06-15', '21:00:00', 90000.00, '2026-06-09 00:40:03', 2),
-(42031, 4, 2, '2026-06-15', '12:00:00', 90000.00, '2026-06-09 00:40:03', 4),
-(42032, 5, 2, '2026-06-10', '15:00:00', 90000.00, '2026-06-09 00:40:03', 4),
-(42033, 5, 1, '2026-06-12', '21:00:00', 90000.00, '2026-06-09 00:40:03', 2),
-(42034, 18, 1, '2026-06-09', '21:00:00', 90000.00, '2026-06-09 00:40:03', 2),
-(42035, 18, 2, '2026-06-10', '21:00:00', 90000.00, '2026-06-09 00:40:03', 4),
-(42036, 18, 2, '2026-06-11', '12:00:00', 90000.00, '2026-06-09 00:40:03', 4),
-(42037, 18, 2, '2026-06-12', '21:00:00', 90000.00, '2026-06-09 00:40:03', 3),
-(42038, 18, 2, '2026-06-13', '12:00:00', 90000.00, '2026-06-09 00:40:03', 3),
-(42039, 18, 2, '2026-06-13', '15:00:00', 90000.00, '2026-06-09 00:40:03', 3),
-(42040, 19, 2, '2026-06-10', '18:00:00', 90000.00, '2026-06-09 00:40:03', 3),
-(42041, 19, 1, '2026-06-11', '21:00:00', 90000.00, '2026-06-09 00:40:03', 2),
-(42042, 20, 2, '2026-06-12', '18:00:00', 90000.00, '2026-06-09 00:40:03', 4),
-(42043, 20, 1, '2026-06-14', '09:00:00', 90000.00, '2026-06-09 00:40:03', 2),
-(42044, 23, 2, '2026-06-13', '09:00:00', 90000.00, '2026-06-09 00:40:03', 4),
-(42045, 27, 2, '2026-06-14', '12:00:00', 90000.00, '2026-06-09 00:40:03', 3),
-(42046, 20, 3, '2026-06-17', '08:00:00', 120000.00, '2026-06-15 15:42:54', 5);
+(41830, 1, 3, '2026-02-04', '08:00:00', 36000.00, '2026-02-03 02:08:04', 5);
 
 -- --------------------------------------------------------
 
@@ -2644,7 +2443,6 @@ CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `email` varchar(120) NOT NULL,
-  `phone` varchar(20) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
   `avatar` varchar(255) DEFAULT NULL,
   `birthdate` date DEFAULT NULL,
@@ -2655,7 +2453,7 @@ CREATE TABLE `users` (
   `email_verified` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `role` varchar(50) DEFAULT 'user',
+  `role` enum('user','admin','moderator','manager') DEFAULT 'user',
   `theater_id` int(11) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
   `last_login` datetime DEFAULT NULL
@@ -2665,42 +2463,41 @@ CREATE TABLE `users` (
 -- Đang đổ dữ liệu cho bảng `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `phone`, `password`, `avatar`, `birthdate`, `rank`, `points`, `subscription_id`, `status`, `email_verified`, `created_at`, `updated_at`, `role`, `theater_id`, `is_active`, `last_login`) VALUES
-(1, 'Tuan Anh', 'noble.toad.nict@letterguard.net', NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-10 15:10:16', '2025-11-10 15:10:16', 'user', NULL, 1, NULL),
-(2, 'Super Admin', 'admin@cinehub.com', NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-11-10 16:41:17', '2025-11-10 16:45:54', 'admin', NULL, 1, NULL),
-(3, 'Admin Mới', 'admin2@cinehub.com', NULL, '$2y$12$/AeKoaDJ.CzbUovU0x9F1.U54BECa20QKSYuRc.O./WJZTt1b/bFG', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-11-12 02:39:06', '2026-06-08 10:58:18', 'admin', NULL, 1, NULL),
-(4, 'Nguyễn Văn A', 'nguyenvana@example.com', NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, 'Silver', 500, 2, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL),
-(5, 'Trần Thị B', 'tranthib@example.com', NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, 'Gold', 1200, 3, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL),
-(6, 'Lê Văn C', 'levanc@example.com', NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, 'Bronze', 100, 1, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL),
-(7, 'Phạm Thị D', 'phamthid@example.com', NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, 'Platinum', 2500, 4, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL),
-(8, 'Hoàng Văn E', 'hoangvane@example.com', NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, 'Silver', 800, 2, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL),
-(9, 'vanlinh', 'nguyenvanlinh25062006@gmail.com', NULL, '$2y$12$X9rtzLgIJYy3cWi4VLsth.GZaihA0lIw6ZXMQoK7CXyb6Xi3OrMQ2', 'avatars/avatar_9_1781598424.png', NULL, 'Bronze', 10101000, 4, 'active', 0, '2025-11-14 01:35:37', '2026-06-16 01:27:05', 'moderator', 3, 1, NULL),
-(10, 'Tuan_awh', 'tuanawh@gmail.com', NULL, '$2y$10$5NwNHefnp5jwjr1Vls5HG.dnt4SWC1newqSkuV8X4QTcwZ0Ok1JQ.', 'data/avatars/avatar_10_1765506885.jpg', NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-14 01:45:51', '2025-12-12 02:34:45', 'moderator', 2, 1, NULL),
-(11, 'Hoang Son', 'hsson97805@gmail.com', NULL, '$2y$10$4OBk1HA71jEhbVPP7FA7VueQ8B30EgEy9eB9tAHRFmUvA8I7lwAPe', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-24 08:52:25', '2025-11-24 08:52:25', 'user', NULL, 1, NULL),
-(12, 'jack', 'jack@gmail.com', NULL, '$2y$10$4OPMx0NC7sXIg23/hWQt1u0t52jEDgc5grk/LZAOmmFw8a3DAy.BW', NULL, NULL, 'Bronze', 297000, 3, 'active', 0, '2025-11-25 02:20:46', '2025-11-25 02:27:04', 'user', NULL, 1, NULL),
-(13, 'huung', 'nguyenconghung954@gmail.com', NULL, '$2y$10$0aCzLlyOsSw4IZeDM8Vr8uC.1zWUY/F0SZTjwU8hrS9jxzvUvTgeG', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-25 12:43:00', '2025-11-25 12:43:00', 'user', NULL, 1, NULL),
-(14, 'bom', 'vlinh25062006@gmail.com', NULL, '$2y$10$SGQNRO1gcjuJy76tKCWx7e/9boVMyK2kkgK5D4PMepeswkveVa2qa', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-26 04:03:42', '2025-11-26 04:03:42', 'user', NULL, 1, NULL),
-(15, 'Hải Nam', 'natgao0001@gmail.com', NULL, '$2y$10$62PMj1vSUIjXo4.d8EJ8J.JJVrnO764zQvDZorn2BsfiT9ecJCzGe', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-04 18:01:00', '2025-12-04 18:01:00', 'user', NULL, 1, NULL),
-(16, 'Thanh', 'le3221981@gmail.com', NULL, '$2y$10$bomnjBXwqML823EJUbdDsOh22J4vmfXElcK0M.CMzk9X2NrcpIyGm', 'data/avatars/avatar_16_1764872833.jpeg', NULL, 'Bronze', 400000, 1, 'active', 0, '2025-12-04 18:22:20', '2025-12-04 18:30:11', 'user', NULL, 1, NULL),
-(17, 'Admin Rạp CGV Vincom', 'admin_rap1@cinehub.com', NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 14:43:27', '2025-12-06 14:43:27', 'moderator', 1, 1, NULL),
-(18, 'Nhân viên Quầy 1', 'nhanvien1@cinehub.com', NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 14:43:27', '2025-12-06 14:43:27', 'user', 1, 1, NULL),
-(19, 'Le Van Phat', 'plv@gmail.com', NULL, '$2y$12$sgkGlJx7H08Fi/uiIBtnGujFi5dbkr7Tdh1px6fPGJ7iAkS/G443u', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 15:08:04', '2026-06-15 20:00:42', 'user', 3, 1, NULL),
-(20, 'Tuan Anh', 'awhtuan@gmail.com', NULL, '$2y$10$Gs3zYtOxwS7L4M11Ad0dMOUADYr5Bg.oPl6TJHjqWKBD38FTGLK.u', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 17:27:56', '2025-12-06 17:27:56', 'user', 2, 1, NULL),
-(21, 'Nguyễn Hoàng Sơn', 'hson97805@gmail.com', NULL, '$2y$10$42gA6q4czX5DAA4JsKseSe0uFxBXkI4leaoL9Hbi.iQqdys9RF2q2', NULL, '2025-12-06', 'Bronze', 0, 1, 'active', 0, '2025-12-08 04:08:50', '2025-12-08 04:10:34', 'user', NULL, 1, NULL),
-(22, 'Lotte', 'lotte@gmail.com', NULL, '$2y$10$kDPiqXj7ZfEYGBvrQIHY5eODeYV2y7SWN5EwHytjQWOfK/dpXwx1C', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-08 18:53:32', '2025-12-08 18:54:55', 'moderator', 6, 1, NULL),
-(23, 'betaTH', 'betath@gmail.com', NULL, '$2y$12$nvjw65xDMuV/0RC.jMM5H./9XPIB/Xm0lcH/MZGGfPYQdjk9XSF9u', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-08 18:54:08', '2026-06-15 20:05:19', 'moderator', 7, 1, NULL),
-(24, 'trang', 'thutrang1@gmail.com', NULL, '$2y$10$syT/.T7JUcAhEqFYLS9bfObvzSqkYvueKcalkYQBp5hZF1IA4Hwk.', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 02:30:58', '2025-12-09 02:30:58', 'user', NULL, 1, NULL),
-(25, 'Trùm thiên hạ', 'vanquan2006k@gmail.com', NULL, '$2y$10$Q1jFMT5RHDxdT7nijhzTMOlhOOkPWBrVj2nr2I/azcwg.Gmvt.8xC', 'data/avatars/avatar_25_1765294523.jpg', NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 03:33:26', '2025-12-10 02:30:40', 'user', NULL, 1, NULL),
-(26, 'FAN ANH JACK', 'khoiphuc255@gmail.com', NULL, '$2y$10$mBkdgi4XcgLU6rLbADRfeOmowDvXpsBgRND2L6D5dL8Z2a6dFr8ai', 'data/avatars/avatar_26_1765251965.jpg', NULL, 'Bronze', 9801000, 4, 'active', 0, '2025-12-09 03:36:19', '2025-12-09 03:46:05', 'user', NULL, 1, NULL),
-(27, 'trang', 'thutrang12@gmail.com', NULL, '$2y$10$wKoi2tCHC4qWkYxWyP6VZuMu36aN.04xRNQhdO/CcU1wNYjmW.M76', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 11:33:45', '2025-12-09 11:33:45', 'user', NULL, 1, NULL),
-(28, 'trang', 'trang12@gmail.com', NULL, '$2y$10$M5m.jX22AFNgTpKObCbyPeOwsI9Yk.M/vTChWKCwBKJYPxLWsJ4SG', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 12:35:23', '2025-12-09 12:35:23', 'user', NULL, 1, NULL),
-(29, 'Vũ Đình Tư', 'vtu8531@gmail.com', NULL, '$2y$10$bTIw0qpazioAhDk31ZXQNeRqaVA/qzau6ji0Gff9ucbuhwaP8Ebd6', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-11 08:55:37', '2025-12-11 08:55:37', 'user', NULL, 1, NULL),
-(30, 'Linh', 'nguyenvanlinh250606@gmail.com', NULL, '$2y$10$qGBli/hydJYruPcWlQ3KweLQhLsFXysE8vNsBQsuOtvndfppC80EG', 'data/avatars/avatar_30_1765767345.jpeg', NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-12 02:06:48', '2025-12-15 02:55:45', 'user', 6, 1, NULL),
-(31, 'Dương Hải Cường', 'sccuong5222@gmail.com', NULL, '$2y$10$UmMuWQ0pSc.PaoElXDS2m.h7h4oiPyCYzpoBXUzfLCmM7YQulr.KK', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-14 14:43:40', '2025-12-14 14:43:40', 'user', NULL, 1, NULL),
-(32, 'trung', 'ledinhtrung35@gmail.com', NULL, '$2y$10$/0rHIDMSPL6g3JJwW75CUOoU6H8Po9vLtQhUgCDzZavFUDW9T9RKu', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 12:36:40', '2026-01-27 12:36:40', 'user', NULL, 1, NULL),
-(33, 'coca', 'ledinhtrungkm35@gmail.com', NULL, '$2y$10$pzCzNTULdcpPXQaY5GlKlOGKPN/DwTLhGguEAtkBjM3rB5zfISGVy', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 13:34:52', '2026-01-27 13:34:52', 'user', NULL, 1, NULL),
-(34, 'Lê Đình Trung', 'ledinhtrung12a1@gmail.com', NULL, '$2y$10$3do8eryE78u/sJzquhBSaeTFsEmnUyC2tnfIR1CqibwCVEk4Bod76', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 13:45:23', '2026-01-27 13:45:23', 'user', NULL, 1, NULL),
-(36, 'Nhân viên Test', 'staff@test.com', NULL, '$2y$12$AdgTudGlcDVX9bZq8iy5mO86/U2FS99uOD4C3gfwpFheO7eyRSvze', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2026-06-15 20:25:51', '2026-06-15 20:25:51', 'user', 3, 1, NULL);
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `avatar`, `birthdate`, `rank`, `points`, `subscription_id`, `status`, `email_verified`, `created_at`, `updated_at`, `role`, `theater_id`, `is_active`, `last_login`) VALUES
+(1, 'Tuan Anh', 'noble.toad.nict@letterguard.net', '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-10 15:10:16', '2025-11-10 15:10:16', 'user', NULL, 1, NULL),
+(2, 'Super Admin', 'admin@cinehub.com', '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-11-10 16:41:17', '2025-11-10 16:45:54', 'admin', NULL, 1, NULL),
+(3, 'Admin Mới', 'admin2@cinehub.com', '$2y$10$DcmIe4LT6ByLRbWkKLRrE.r4fPNWpOtQylE4ISfTbP6TeCs/J5T2a', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-11-12 02:39:06', '2025-11-12 02:39:39', 'admin', NULL, 1, NULL),
+(4, 'Nguyễn Văn A', 'nguyenvana@example.com', '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, 'Silver', 500, 2, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL),
+(5, 'Trần Thị B', 'tranthib@example.com', '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, 'Gold', 1200, 3, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL),
+(6, 'Lê Văn C', 'levanc@example.com', '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, 'Bronze', 100, 1, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL),
+(7, 'Phạm Thị D', 'phamthid@example.com', '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, 'Platinum', 2500, 4, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL),
+(8, 'Hoàng Văn E', 'hoangvane@example.com', '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, 'Silver', 800, 2, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL),
+(9, 'vanlinh', 'nguyenvanlinh25062006@gmail.com', '$2y$10$RfY4oVxCmmN5s57rhg2WzuD1eWIFh5MZUNhN.Sa3erAbC5Vt01mwC', 'data/avatars/avatar_9_1765726728.jpg', NULL, 'Bronze', 10101000, 4, 'active', 0, '2025-11-14 01:35:37', '2026-02-04 07:14:59', 'moderator', 3, 1, NULL),
+(10, 'Tuan_awh', 'tuanawh@gmail.com', '$2y$10$5NwNHefnp5jwjr1Vls5HG.dnt4SWC1newqSkuV8X4QTcwZ0Ok1JQ.', 'data/avatars/avatar_10_1765506885.jpg', NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-14 01:45:51', '2025-12-12 02:34:45', 'moderator', 2, 1, NULL),
+(11, 'Hoang Son', 'hsson97805@gmail.com', '$2y$10$4OBk1HA71jEhbVPP7FA7VueQ8B30EgEy9eB9tAHRFmUvA8I7lwAPe', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-24 08:52:25', '2025-11-24 08:52:25', 'user', NULL, 1, NULL),
+(12, 'jack', 'jack@gmail.com', '$2y$10$4OPMx0NC7sXIg23/hWQt1u0t52jEDgc5grk/LZAOmmFw8a3DAy.BW', NULL, NULL, 'Bronze', 297000, 3, 'active', 0, '2025-11-25 02:20:46', '2025-11-25 02:27:04', 'user', NULL, 1, NULL),
+(13, 'huung', 'nguyenconghung954@gmail.com', '$2y$10$0aCzLlyOsSw4IZeDM8Vr8uC.1zWUY/F0SZTjwU8hrS9jxzvUvTgeG', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-25 12:43:00', '2025-11-25 12:43:00', 'user', NULL, 1, NULL),
+(14, 'bom', 'vlinh25062006@gmail.com', '$2y$10$SGQNRO1gcjuJy76tKCWx7e/9boVMyK2kkgK5D4PMepeswkveVa2qa', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-26 04:03:42', '2025-11-26 04:03:42', 'user', NULL, 1, NULL),
+(15, 'Hải Nam', 'natgao0001@gmail.com', '$2y$10$62PMj1vSUIjXo4.d8EJ8J.JJVrnO764zQvDZorn2BsfiT9ecJCzGe', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-04 18:01:00', '2025-12-04 18:01:00', 'user', NULL, 1, NULL),
+(16, 'Thanh', 'le3221981@gmail.com', '$2y$10$bomnjBXwqML823EJUbdDsOh22J4vmfXElcK0M.CMzk9X2NrcpIyGm', 'data/avatars/avatar_16_1764872833.jpeg', NULL, 'Bronze', 400000, 1, 'active', 0, '2025-12-04 18:22:20', '2025-12-04 18:30:11', 'user', NULL, 1, NULL),
+(17, 'Admin Rạp CGV Vincom', 'admin_rap1@cinehub.com', '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 14:43:27', '2025-12-06 14:43:27', 'moderator', 1, 1, NULL),
+(18, 'Nhân viên Quầy 1', 'nhanvien1@cinehub.com', '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 14:43:27', '2025-12-06 14:43:27', 'user', 1, 1, NULL),
+(19, 'Le Van Phat', 'plv@gmail.com', '$2y$10$viyibXt8UKdxjP2GFrMceuzmOav.SlT2q2oidThioSLfVdaLxuaE.', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 15:08:04', '2025-12-06 15:08:04', 'user', 3, 1, NULL),
+(20, 'Tuan Anh', 'awhtuan@gmail.com', '$2y$10$Gs3zYtOxwS7L4M11Ad0dMOUADYr5Bg.oPl6TJHjqWKBD38FTGLK.u', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 17:27:56', '2025-12-06 17:27:56', 'user', 2, 1, NULL),
+(21, 'Nguyễn Hoàng Sơn', 'hson97805@gmail.com', '$2y$10$42gA6q4czX5DAA4JsKseSe0uFxBXkI4leaoL9Hbi.iQqdys9RF2q2', NULL, '2025-12-06', 'Bronze', 0, 1, 'active', 0, '2025-12-08 04:08:50', '2025-12-08 04:10:34', 'user', NULL, 1, NULL),
+(22, 'Lotte', 'lotte@gmail.com', '$2y$10$kDPiqXj7ZfEYGBvrQIHY5eODeYV2y7SWN5EwHytjQWOfK/dpXwx1C', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-08 18:53:32', '2025-12-08 18:54:55', 'moderator', 6, 1, NULL),
+(23, 'betaTH', 'betath@gmail.com', '$2y$10$6IUjJoFmFjNphPqoAdvbuO7isZRQCgnHAW/Oql7TveQBXj886oujK', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-08 18:54:08', '2025-12-08 18:54:47', 'moderator', 7, 1, NULL),
+(24, 'trang', 'thutrang1@gmail.com', '$2y$10$syT/.T7JUcAhEqFYLS9bfObvzSqkYvueKcalkYQBp5hZF1IA4Hwk.', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 02:30:58', '2025-12-09 02:30:58', 'user', NULL, 1, NULL),
+(25, 'Trùm thiên hạ', 'vanquan2006k@gmail.com', '$2y$10$Q1jFMT5RHDxdT7nijhzTMOlhOOkPWBrVj2nr2I/azcwg.Gmvt.8xC', 'data/avatars/avatar_25_1765294523.jpg', NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 03:33:26', '2025-12-10 02:30:40', 'user', NULL, 1, NULL),
+(26, 'FAN ANH JACK', 'khoiphuc255@gmail.com', '$2y$10$mBkdgi4XcgLU6rLbADRfeOmowDvXpsBgRND2L6D5dL8Z2a6dFr8ai', 'data/avatars/avatar_26_1765251965.jpg', NULL, 'Bronze', 9801000, 4, 'active', 0, '2025-12-09 03:36:19', '2025-12-09 03:46:05', 'user', NULL, 1, NULL),
+(27, 'trang', 'thutrang12@gmail.com', '$2y$10$wKoi2tCHC4qWkYxWyP6VZuMu36aN.04xRNQhdO/CcU1wNYjmW.M76', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 11:33:45', '2025-12-09 11:33:45', 'user', NULL, 1, NULL),
+(28, 'trang', 'trang12@gmail.com', '$2y$10$M5m.jX22AFNgTpKObCbyPeOwsI9Yk.M/vTChWKCwBKJYPxLWsJ4SG', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 12:35:23', '2025-12-09 12:35:23', 'user', NULL, 1, NULL),
+(29, 'Vũ Đình Tư', 'vtu8531@gmail.com', '$2y$10$bTIw0qpazioAhDk31ZXQNeRqaVA/qzau6ji0Gff9ucbuhwaP8Ebd6', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-11 08:55:37', '2025-12-11 08:55:37', 'user', NULL, 1, NULL),
+(30, 'Linh', 'nguyenvanlinh250606@gmail.com', '$2y$10$qGBli/hydJYruPcWlQ3KweLQhLsFXysE8vNsBQsuOtvndfppC80EG', 'data/avatars/avatar_30_1765767345.jpeg', NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-12 02:06:48', '2025-12-15 02:55:45', 'user', 6, 1, NULL),
+(31, 'Dương Hải Cường', 'sccuong5222@gmail.com', '$2y$10$UmMuWQ0pSc.PaoElXDS2m.h7h4oiPyCYzpoBXUzfLCmM7YQulr.KK', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-14 14:43:40', '2025-12-14 14:43:40', 'user', NULL, 1, NULL),
+(32, 'trung', 'ledinhtrung35@gmail.com', '$2y$10$/0rHIDMSPL6g3JJwW75CUOoU6H8Po9vLtQhUgCDzZavFUDW9T9RKu', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 12:36:40', '2026-01-27 12:36:40', 'user', NULL, 1, NULL),
+(33, 'coca', 'ledinhtrungkm35@gmail.com', '$2y$10$pzCzNTULdcpPXQaY5GlKlOGKPN/DwTLhGguEAtkBjM3rB5zfISGVy', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 13:34:52', '2026-01-27 13:34:52', 'user', NULL, 1, NULL),
+(34, 'Lê Đình Trung', 'ledinhtrung12a1@gmail.com', '$2y$10$3do8eryE78u/sJzquhBSaeTFsEmnUyC2tnfIR1CqibwCVEk4Bod76', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 13:45:23', '2026-01-27 13:45:23', 'user', NULL, 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -2767,65 +2564,63 @@ CREATE TABLE `watch_history` (
   `last_time` int(11) DEFAULT 0,
   `rating` tinyint(4) DEFAULT NULL,
   `favorite` tinyint(1) DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT NULL
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `watch_history`
 --
 
-INSERT INTO `watch_history` (`id`, `user_id`, `movie_id`, `last_time`, `rating`, `favorite`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 3600, 5, 1, '2025-11-12 07:41:09', NULL),
-(2, 2, 2, 7200, 5, 1, '2025-11-12 07:41:09', NULL),
-(3, 3, 3, 1800, 4, 0, '2025-11-12 07:41:09', NULL),
-(4, 4, 4, 2400, 4, 0, '2025-11-12 07:41:09', NULL),
-(5, 5, 5, 3000, 5, 1, '2025-11-12 07:41:09', NULL),
-(6, 1, 6, 5400, 5, 1, '2025-11-12 07:41:09', NULL),
-(7, 2, 7, 2100, 4, 0, '2025-11-12 07:41:09', NULL),
-(8, 9, 2, 0, NULL, 0, '2025-11-14 01:37:54', NULL),
-(9, 9, 5, 0, NULL, 0, '2025-11-17 08:57:34', NULL),
-(12, 9, 1, 0, NULL, 1, '2025-11-19 01:17:46', NULL),
-(61, 9, 29, 0, NULL, 0, '2025-12-04 19:02:14', NULL),
-(80, 3, 30, 0, NULL, 0, '2025-11-25 13:17:35', NULL),
-(81, 3, 35, 0, NULL, 0, '2025-11-25 13:30:54', NULL),
-(83, 3, 37, 0, NULL, 0, '2025-11-25 14:13:19', NULL),
-(84, 3, 33, 0, NULL, 0, '2025-12-09 01:57:06', NULL),
-(85, 3, 34, 0, NULL, 0, '2025-11-25 14:20:48', NULL),
-(87, 3, 36, 0, NULL, 0, '2025-11-25 14:33:55', NULL),
-(92, 9, 28, 0, NULL, 0, '2025-11-26 02:47:13', NULL),
-(93, 9, 6, 0, NULL, 1, '2025-12-04 19:36:37', NULL),
-(95, 2, 38, 0, NULL, 0, '2025-12-04 03:57:28', NULL),
-(99, 9, 35, 0, NULL, 0, '2025-12-09 01:56:13', NULL),
-(102, 9, 7, 0, NULL, 0, '2025-12-04 19:01:49', NULL),
-(104, 9, 37, 0, NULL, 0, '2025-12-04 19:01:56', NULL),
-(111, 9, 30, 0, NULL, 0, '2025-12-04 19:02:54', NULL),
-(124, 21, 28, 0, NULL, 0, '2025-12-09 01:35:31', NULL),
-(125, 21, 33, 0, NULL, 0, '2025-12-09 01:58:36', NULL),
-(136, 9, 33, 0, NULL, 0, '2025-12-14 15:40:08', NULL),
-(145, 22, 33, 0, NULL, 0, '2025-12-09 01:59:40', NULL),
-(149, 26, 8, 0, NULL, 0, '2025-12-09 03:45:06', NULL),
-(156, 9, 8, 0, NULL, 0, '2026-02-09 02:58:03', NULL),
-(164, 26, 28, 0, NULL, 0, '2025-12-09 03:45:34', NULL),
-(165, 27, 37, 0, NULL, 0, '2025-12-09 11:34:34', NULL),
-(168, 29, 37, 0, NULL, 0, '2025-12-11 08:56:08', NULL),
-(170, 29, 28, 0, NULL, 0, '2025-12-11 08:59:28', NULL),
-(174, 3, 12, 0, NULL, 0, '2025-12-13 12:23:36', NULL),
-(178, 9, 9, 0, NULL, 1, '2025-12-14 15:11:49', NULL),
-(180, 3, 51, 0, NULL, 0, '2025-12-23 14:30:31', NULL),
-(184, 10, 28, 0, NULL, 0, '2025-12-15 02:09:33', NULL),
-(186, 3, 8, 0, NULL, 0, '2025-12-15 02:10:36', NULL),
-(188, 3, 6, 0, NULL, 0, '2026-01-27 13:00:39', NULL),
-(191, 3, 9, 0, NULL, 0, '2025-12-15 02:43:01', NULL),
-(200, 3, 38, 0, NULL, 0, '2025-12-23 14:31:08', NULL),
-(202, 10, 33, 0, NULL, 0, '2025-12-26 18:17:59', NULL),
-(203, 9, 51, 0, NULL, 0, '2026-02-09 02:58:53', NULL),
-(208, 32, 37, 0, NULL, 0, '2026-01-27 12:37:03', NULL),
-(209, 32, 33, 0, NULL, 0, '2026-01-27 12:37:33', NULL),
-(211, 32, 51, 0, NULL, 0, '2026-01-27 13:03:01', NULL),
-(215, 10, 51, 0, NULL, 0, '2026-02-03 02:28:47', NULL),
-(227, 3, 53, 0, NULL, 0, '2026-02-09 03:08:09', NULL),
-(233, 9, 53, 0, NULL, 0, '2026-06-08 23:48:31', '2026-06-08 23:48:31');
+INSERT INTO `watch_history` (`id`, `user_id`, `movie_id`, `last_time`, `rating`, `favorite`, `created_at`) VALUES
+(1, 1, 1, 3600, 5, 1, '2025-11-12 07:41:09'),
+(2, 2, 2, 7200, 5, 1, '2025-11-12 07:41:09'),
+(3, 3, 3, 1800, 4, 0, '2025-11-12 07:41:09'),
+(4, 4, 4, 2400, 4, 0, '2025-11-12 07:41:09'),
+(5, 5, 5, 3000, 5, 1, '2025-11-12 07:41:09'),
+(6, 1, 6, 5400, 5, 1, '2025-11-12 07:41:09'),
+(7, 2, 7, 2100, 4, 0, '2025-11-12 07:41:09'),
+(8, 9, 2, 0, NULL, 0, '2025-11-14 01:37:54'),
+(9, 9, 5, 0, NULL, 0, '2025-11-17 08:57:34'),
+(12, 9, 1, 0, NULL, 1, '2025-11-19 01:17:46'),
+(61, 9, 29, 0, NULL, 0, '2025-12-04 19:02:14'),
+(80, 3, 30, 0, NULL, 0, '2025-11-25 13:17:35'),
+(81, 3, 35, 0, NULL, 0, '2025-11-25 13:30:54'),
+(83, 3, 37, 0, NULL, 0, '2025-11-25 14:13:19'),
+(84, 3, 33, 0, NULL, 0, '2025-12-09 01:57:06'),
+(85, 3, 34, 0, NULL, 0, '2025-11-25 14:20:48'),
+(87, 3, 36, 0, NULL, 0, '2025-11-25 14:33:55'),
+(92, 9, 28, 0, NULL, 0, '2025-11-26 02:47:13'),
+(93, 9, 6, 0, NULL, 1, '2025-12-04 19:36:37'),
+(95, 2, 38, 0, NULL, 0, '2025-12-04 03:57:28'),
+(99, 9, 35, 0, NULL, 0, '2025-12-09 01:56:13'),
+(102, 9, 7, 0, NULL, 0, '2025-12-04 19:01:49'),
+(104, 9, 37, 0, NULL, 0, '2025-12-04 19:01:56'),
+(111, 9, 30, 0, NULL, 0, '2025-12-04 19:02:54'),
+(124, 21, 28, 0, NULL, 0, '2025-12-09 01:35:31'),
+(125, 21, 33, 0, NULL, 0, '2025-12-09 01:58:36'),
+(136, 9, 33, 0, NULL, 0, '2025-12-14 15:40:08'),
+(145, 22, 33, 0, NULL, 0, '2025-12-09 01:59:40'),
+(149, 26, 8, 0, NULL, 0, '2025-12-09 03:45:06'),
+(156, 9, 8, 0, NULL, 0, '2026-02-09 02:58:03'),
+(164, 26, 28, 0, NULL, 0, '2025-12-09 03:45:34'),
+(165, 27, 37, 0, NULL, 0, '2025-12-09 11:34:34'),
+(168, 29, 37, 0, NULL, 0, '2025-12-11 08:56:08'),
+(170, 29, 28, 0, NULL, 0, '2025-12-11 08:59:28'),
+(174, 3, 12, 0, NULL, 0, '2025-12-13 12:23:36'),
+(178, 9, 9, 0, NULL, 1, '2025-12-14 15:11:49'),
+(180, 3, 51, 0, NULL, 0, '2025-12-23 14:30:31'),
+(184, 10, 28, 0, NULL, 0, '2025-12-15 02:09:33'),
+(186, 3, 8, 0, NULL, 0, '2025-12-15 02:10:36'),
+(188, 3, 6, 0, NULL, 0, '2026-01-27 13:00:39'),
+(191, 3, 9, 0, NULL, 0, '2025-12-15 02:43:01'),
+(200, 3, 38, 0, NULL, 0, '2025-12-23 14:31:08'),
+(202, 10, 33, 0, NULL, 0, '2025-12-26 18:17:59'),
+(203, 9, 51, 0, NULL, 0, '2026-02-09 02:58:53'),
+(208, 32, 37, 0, NULL, 0, '2026-01-27 12:37:03'),
+(209, 32, 33, 0, NULL, 0, '2026-01-27 12:37:33'),
+(211, 32, 51, 0, NULL, 0, '2026-01-27 13:03:01'),
+(215, 10, 51, 0, NULL, 0, '2026-02-03 02:28:47'),
+(227, 3, 53, 0, NULL, 0, '2026-02-09 03:08:09');
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -2951,12 +2746,6 @@ ALTER TABLE `ip_spam_logs`
   ADD KEY `idx_created_at` (`created_at`),
   ADD KEY `idx_ip_action_spam` (`ip_address`,`action_type`,`is_spam`),
   ADD KEY `idx_user_id` (`user_id`);
-
---
--- Chỉ mục cho bảng `migrations`
---
-ALTER TABLE `migrations`
-  ADD PRIMARY KEY (`id`);
 
 --
 -- Chỉ mục cho bảng `moderator_permission_requests`
@@ -3188,7 +2977,7 @@ ALTER TABLE `booking_pending`
 -- AUTO_INCREMENT cho bảng `booking_session_tracking`
 --
 ALTER TABLE `booking_session_tracking`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=204;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=201;
 
 --
 -- AUTO_INCREMENT cho bảng `categories`
@@ -3243,12 +3032,6 @@ ALTER TABLE `ip_room_tracking`
 --
 ALTER TABLE `ip_spam_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
-
---
--- AUTO_INCREMENT cho bảng `migrations`
---
-ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT cho bảng `moderator_permission_requests`
@@ -3308,7 +3091,7 @@ ALTER TABLE `role_permissions`
 -- AUTO_INCREMENT cho bảng `seat_reservations`
 --
 ALTER TABLE `seat_reservations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1004;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=987;
 
 --
 -- AUTO_INCREMENT cho bảng `seat_selection_logs`
@@ -3320,7 +3103,7 @@ ALTER TABLE `seat_selection_logs`
 -- AUTO_INCREMENT cho bảng `showtimes`
 --
 ALTER TABLE `showtimes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42047;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41831;
 
 --
 -- AUTO_INCREMENT cho bảng `subscriptions`
@@ -3374,7 +3157,7 @@ ALTER TABLE `transactions`
 -- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT cho bảng `user_roles`
@@ -3386,7 +3169,7 @@ ALTER TABLE `user_roles`
 -- AUTO_INCREMENT cho bảng `watch_history`
 --
 ALTER TABLE `watch_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=234;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=233;
 
 --
 -- Các ràng buộc cho các bảng đã đổ

@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
@@ -258,7 +259,6 @@ class ProfileController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|max:20',
             'birthdate' => 'nullable|date',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
         ]);
@@ -266,7 +266,6 @@ class ProfileController extends Controller
         $data = [
             'name' => $request->input('name'),
             'email' => $request->input('email'),
-            'phone' => $request->input('phone'),
             'birthdate' => $request->input('birthdate'),
         ];
         
@@ -276,8 +275,8 @@ class ProfileController extends Controller
             $fileName = 'avatar_' . $user->id . '_' . time() . '.' . $avatar->getClientOriginalExtension();
             
             // Xóa avatar cũ
-            if ($user->avatar && storage_path_exists($user->avatar)) {
-                delete_storage_file($user->avatar);
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
             }
             
             // Lưu avatar mới
@@ -338,8 +337,8 @@ class ProfileController extends Controller
         $fileName = 'avatar_' . $user->id . '_' . time() . '.' . $avatar->getClientOriginalExtension();
         
         // Xóa avatar cũ
-        if ($user->avatar && storage_path_exists($user->avatar)) {
-            delete_storage_file($user->avatar);
+        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+            Storage::disk('public')->delete($user->avatar);
         }
         
         // Lưu avatar mới
@@ -350,7 +349,7 @@ class ProfileController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Cập nhật ảnh đại diện thành công!',
-            'avatar_url' => storage_url($path),
+            'avatar_url' => Storage::url($path),
         ]);
     }
     

@@ -12,12 +12,15 @@ class Subscription extends Model
     protected $fillable = [
         'name',
         'price',
+        'duration_days',
         'description',
-        'benefits',
+        'features',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'duration_days' => 'integer',
+        'features' => 'array',
     ];
 
     // Relationships
