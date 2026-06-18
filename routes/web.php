@@ -52,6 +52,7 @@ Route::prefix('movies')->name('movies.')->group(function () {
     Route::get('/phim-bo', [MovieController::class, 'phimBo'])->name('phimbo');
     Route::get('/category/{id}', [MovieController::class, 'category'])->name('category');
     Route::get('/{id}', [MovieController::class, 'show'])->name('show');
+    Route::get('/{id}/introduce', [MovieController::class, 'introduce'])->name('introduce');
 
     // Routes require authentication
     Route::middleware('auth')->group(function () {
