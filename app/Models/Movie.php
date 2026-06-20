@@ -123,7 +123,7 @@ class Movie extends Model
         
         // If path starts with data/img/ or data/phim/, use it directly
         if (str_starts_with($rawValue, 'data/img/') || str_starts_with($rawValue, 'data/phim/')) {
-            return asset('storage/' . $rawValue);
+            return asset($rawValue);
         }
         
         return storage_url($rawValue);
@@ -143,7 +143,7 @@ class Movie extends Model
         
         // If path starts with data/img/ or data/phim/, use it directly
         if (str_starts_with($rawValue, 'data/img/') || str_starts_with($rawValue, 'data/phim/')) {
-            return asset('storage/' . $rawValue);
+            return asset($rawValue);
         }
         
         return storage_url($rawValue);

@@ -1,4 +1,4 @@
-<a href="{{ route('movies.introduce', $movie->id) }}" class="movie-card-link">
+<div onclick="window.location='{{ route('movies.introduce', $movie->id) }}'" class="movie-card-link" style="cursor: pointer;">
 <div class="movie-card">
     <div class="movie-card-image">
         @if ($movie->thumbnail)
@@ -9,7 +9,7 @@
             </div>
         @endif
         <div class="movie-card-overlay">
-            <a href="{{ route('movies.watch', $movie->id) }}" class="play-button">
+            <a href="{{ route('movies.watch', $movie->id) }}" class="play-button" onclick="event.stopPropagation();">
                 <i class="fas fa-play"></i>
             </a>
         </div>
@@ -28,7 +28,7 @@
         </p>
     </div>
 </div>
-</a>
+</div>
 
 <style>
     .movie-card-link {

@@ -1,3 +1,4 @@
+<div onclick="window.location='<?php echo e(route('movies.introduce', $movie->id)); ?>'" class="movie-card-link" style="cursor: pointer;">
 <div class="movie-card">
     <div class="movie-card-image">
         <?php if($movie->thumbnail): ?>
@@ -8,7 +9,7 @@
             </div>
         <?php endif; ?>
         <div class="movie-card-overlay">
-            <a href="<?php echo e(route('movies.watch', $movie->id)); ?>" class="play-button">
+            <a href="<?php echo e(route('movies.watch', $movie->id)); ?>" class="play-button" onclick="event.stopPropagation();">
                 <i class="fas fa-play"></i>
             </a>
         </div>
@@ -28,20 +29,31 @@
         </p>
     </div>
 </div>
+</div>
 
 <style>
+    .movie-card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .movie-card-link:hover {
+        color: inherit;
+    }
+
     .movie-card {
         background: #1a1a1a;
         border-radius: 8px;
         overflow: hidden;
         transition: transform 0.3s, box-shadow 0.3s;
     }
-    
+
     .movie-card:hover {
         transform: translateY(-10px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
-    
+
     .movie-card-image {
         position: relative;
         width: 100%;
@@ -49,13 +61,13 @@
         overflow: hidden;
         background: #2a2a2a;
     }
-    
+
     .movie-poster {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
-    
+
     .movie-poster-placeholder {
         width: 100%;
         height: 100%;
@@ -65,7 +77,7 @@
         color: #666;
         font-size: 2rem;
     }
-    
+
     .movie-card-overlay {
         position: absolute;
         top: 0;
@@ -79,11 +91,11 @@
         opacity: 0;
         transition: opacity 0.3s;
     }
-    
+
     .movie-card:hover .movie-card-overlay {
         opacity: 1;
     }
-    
+
     .play-button {
         width: 50px;
         height: 50px;
@@ -97,18 +109,18 @@
         transition: background 0.3s;
         text-decoration: none;
     }
-    
+
     .play-button:hover {
         background: #ff1f1f;
     }
-    
+
     .movie-card-badge {
         position: absolute;
         top: 10px;
         right: 10px;
         z-index: 10;
     }
-    
+
     .rating-badge {
         background: #e50914;
         color: white;
@@ -117,11 +129,11 @@
         font-weight: bold;
         font-size: 0.8rem;
     }
-    
+
     .movie-card-info {
         padding: 0.75rem;
     }
-    
+
     .movie-title {
         font-size: 0.9rem;
         color: #fff;
@@ -131,7 +143,7 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    
+
     .movie-meta {
         font-size: 0.75rem;
         color: #999;
