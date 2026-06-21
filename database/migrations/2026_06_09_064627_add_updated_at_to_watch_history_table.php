@@ -6,25 +6,27 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        if (! Schema::hasTable('watch_history')) {
-            return;
-        }
-
         Schema::table('watch_history', function (Blueprint $table) {
-            if (! Schema::hasColumn('watch_history', 'updated_at')) {
+            if (!Schema::hasColumn('watch_history', 'updated_at')) {
                 $table->timestamp('updated_at')->nullable()->after('created_at');
             }
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        if (Schema::hasTable('watch_history') && Schema::hasColumn('watch_history', 'updated_at')) {
-            Schema::table('watch_history', function (Blueprint $table) {
+        Schema::table('watch_history', function (Blueprint $table) {
+            if (Schema::hasColumn('watch_history', 'updated_at')) {
                 $table->dropColumn('updated_at');
-            });
-        }
+            }
+        });
     }
 };

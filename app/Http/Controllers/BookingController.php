@@ -297,7 +297,7 @@ class BookingController extends Controller
         
         // Get only movies with upcoming showtimes (phim đang chiếu = phim có suất chiếu trong tương lai)
         $allMovies = Movie::whereHas('showtimes', function($query) {
-                $query->where(DB::raw("(show_date || ' ' || show_time)"), '>=', now()->format('Y-m-d H:i:s'));
+                $query->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'));
             })
             ->orderBy('title')
             ->get();
@@ -360,7 +360,7 @@ class BookingController extends Controller
             
             $theaters = Theater::whereHas('showtimes', function($q) use ($selectedMovieId) {
                     $q->where('movie_id', $selectedMovieId)
-                      ->where(DB::raw("(show_date || ' ' || show_time)"), '>=', now()->format('Y-m-d H:i:s'));
+                      ->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'));
                 })
                 ->select('theaters.*')
                 ->when($userLat && $userLng, function($query) use ($userLat, $userLng) {
@@ -381,7 +381,7 @@ class BookingController extends Controller
                 ->where('movie_id', $selectedMovieId)
                 ->where('theater_id', $selectedTheater)
                 ->where('show_date', $selectedDate)
-                ->where(DB::raw("(show_date || ' ' || show_time)"), '>=', now()->format('Y-m-d H:i:s'))
+                ->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'))
                 ->orderBy('show_time')
                 ->get();
         }
@@ -520,7 +520,7 @@ class BookingController extends Controller
             ->where('movie_id', $movieId)
             ->where('theater_id', $theaterId)
             ->where('show_date', $date)
-            ->where(DB::raw("(show_date || ' ' || show_time)"), '>=', now()->format('Y-m-d H:i:s'))
+            ->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'))
             ->orderBy('show_time')
             ->get();
         

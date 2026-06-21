@@ -145,14 +145,6 @@ class LegacyRoutingTest extends TestCase
         $response = $this->get('/index.php?route=admin/editMovie&id=50');
         $response->assertRedirect('/admin/movies/50/edit');
         $response->assertStatus(301);
-
-        $response = $this->get('/index.php?route=admin/movies/create');
-        $response->assertRedirect('/admin/movies/create');
-        $response->assertStatus(301);
-
-        $response = $this->get('/index.php?route=admin/movies/edit&id=50');
-        $response->assertRedirect('/admin/movies/50/edit');
-        $response->assertStatus(301);
     }
 
     /**

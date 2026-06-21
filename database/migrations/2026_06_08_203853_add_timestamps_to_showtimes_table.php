@@ -6,37 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        if (! Schema::hasTable('showtimes')) {
-            return;
-        }
-
         Schema::table('showtimes', function (Blueprint $table) {
-            if (! Schema::hasColumn('showtimes', 'created_at')) {
-                $table->timestamp('created_at')->nullable();
-            }
-
-            if (! Schema::hasColumn('showtimes', 'updated_at')) {
-                $table->timestamp('updated_at')->nullable();
-            }
+            $table->timestamps(); // Thêm created_at và updated_at
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        if (! Schema::hasTable('showtimes')) {
-            return;
-        }
-
         Schema::table('showtimes', function (Blueprint $table) {
-            if (Schema::hasColumn('showtimes', 'updated_at')) {
-                $table->dropColumn('updated_at');
-            }
-
-            if (Schema::hasColumn('showtimes', 'created_at')) {
-                $table->dropColumn('created_at');
-            }
+            $table->dropTimestamps();
         });
     }
 };

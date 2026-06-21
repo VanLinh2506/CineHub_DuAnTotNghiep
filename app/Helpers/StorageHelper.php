@@ -40,6 +40,33 @@ if (!function_exists('old_to_new_path')) {
     }
 }
 
+if (!function_exists('normalize_storage_path')) {
+    /**
+     * Normalize a public disk path without losing compatibility with old values.
+     *
+     * @param string|null $path
+     * @return string|null
+     */
+    function normalize_storage_path(?string $path): ?string
+    {
+        if (empty($path)) return null;
+
+        $path = trim(str_replace('\\', '/', $path));
+        $path = preg_replace('#^(\.\./)+#', '', $path);
+        $path = ltrim($path, '/');
+
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, strlen('storage/'));
+        }
+
+        if (str_starts_with($path, 'data/storage/')) {
+            $path = substr($path, strlen('data/storage/'));
+        }
+
+        return $path;
+    }
+}
+
 if (!function_exists('storage_url')) {
     /**
      * Get full URL for storage file
@@ -51,29 +78,26 @@ if (!function_exists('storage_url')) {
     function storage_url(?string $path): ?string
     {
         if (empty($path)) return null;
+
+        $path = trim($path);
         
         // If path already starts with http, return as is
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             return $path;
         }
-        
-        // If path starts with data/img/ or data/phim/, these are in storage/app/public
-        // so we need to prepend /storage/ to access them
-        if (str_starts_with($path, 'data/img/') || str_starts_with($path, 'data/phim/')) {
-            return asset('storage/' . $path);
+
+        $normalizedPath = normalize_storage_path($path);
+        $convertedPath = old_to_new_path($normalizedPath);
+
+        if (
+            $convertedPath !== $normalizedPath &&
+            !\Illuminate\Support\Facades\Storage::disk('public')->exists($normalizedPath) &&
+            \Illuminate\Support\Facades\Storage::disk('public')->exists($convertedPath)
+        ) {
+            $normalizedPath = $convertedPath;
         }
-        
-        // If path starts with data/storage/, remove the duplicate
-        if (str_starts_with($path, 'data/storage/')) {
-            $path = substr($path, strlen('data/storage/'));
-            return asset('storage/' . $path);
-        }
-        
-        // Convert old paths to new paths for compatibility
-        $path = old_to_new_path($path);
-        
-        // Return full URL with storage prefix
-        return asset('storage/' . ltrim($path, '/'));
+
+        return asset('storage/' . ltrim($normalizedPath, '/'));
     }
 }
 
@@ -88,8 +112,11 @@ if (!function_exists('storage_path_exists')) {
     {
         if (empty($path)) return false;
         
-        $path = old_to_new_path($path);
-        return \Illuminate\Support\Facades\Storage::disk('public')->exists($path);
+        $path = normalize_storage_path($path);
+        $convertedPath = old_to_new_path($path);
+
+        return \Illuminate\Support\Facades\Storage::disk('public')->exists($path)
+            || ($convertedPath !== $path && \Illuminate\Support\Facades\Storage::disk('public')->exists($convertedPath));
     }
 }
 
@@ -104,10 +131,15 @@ if (!function_exists('delete_storage_file')) {
     {
         if (empty($path)) return false;
         
-        $path = old_to_new_path($path);
+        $path = normalize_storage_path($path);
+        $convertedPath = old_to_new_path($path);
         
         if (\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
             return \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
+        }
+
+        if ($convertedPath !== $path && \Illuminate\Support\Facades\Storage::disk('public')->exists($convertedPath)) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->delete($convertedPath);
         }
         
         return false;

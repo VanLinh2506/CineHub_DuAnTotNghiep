@@ -15,10 +15,6 @@ return Application::configure(basePath: dirname(__DIR__))
         // Legacy route middleware để tương thích với PHP cũ
         $middleware->append(\App\Http\Middleware\LegacyRouteMiddleware::class);
         
-        $middleware->validateCsrfTokens(except: [
-            'logout',
-        ]);
-        
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'moderator' => \App\Http\Middleware\ModeratorMiddleware::class,
