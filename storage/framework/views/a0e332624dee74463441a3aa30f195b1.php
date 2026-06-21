@@ -1,11 +1,11 @@
 <div class="movie-card">
     <div class="movie-card-image">
         <?php if($movie->thumbnail): ?>
-            <img src="<?php echo e($movie->thumbnail); ?>" alt="<?php echo e($movie->title); ?>" class="movie-poster">
+        <img src="<?php echo e($movie->thumbnail); ?>" alt="<?php echo e($movie->title); ?>" class="movie-poster">
         <?php else: ?>
-            <div class="movie-poster-placeholder">
-                <i class="fas fa-image"></i>
-            </div>
+        <div class="movie-poster-placeholder">
+            <i class="fas fa-image"></i>
+        </div>
         <?php endif; ?>
         <div class="movie-card-overlay">
             <a href="<?php echo e(route('movies.watch', $movie->id)); ?>" class="play-button">
@@ -14,7 +14,7 @@
         </div>
         <div class="movie-card-badge">
             <?php if($movie->rating): ?>
-                <span class="rating-badge"><?php echo e(number_format($movie->rating, 1)); ?></span>
+            <span class="rating-badge"><?php echo e(number_format($movie->rating, 1)); ?></span>
             <?php endif; ?>
         </div>
     </div>
@@ -22,7 +22,7 @@
         <h3 class="movie-title"><?php echo e($movie->title); ?></h3>
         <p class="movie-meta">
             <?php if($movie->category): ?>
-                <?php echo e($movie->category->name); ?>
+            <?php echo e($movie->category->name); ?>
 
             <?php endif; ?>
         </p>
@@ -36,12 +36,12 @@
         overflow: hidden;
         transition: transform 0.3s, box-shadow 0.3s;
     }
-    
+
     .movie-card:hover {
         transform: translateY(-10px);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
-    
+
     .movie-card-image {
         position: relative;
         width: 100%;
@@ -49,13 +49,13 @@
         overflow: hidden;
         background: #2a2a2a;
     }
-    
+
     .movie-poster {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
-    
+
     .movie-poster-placeholder {
         width: 100%;
         height: 100%;
@@ -65,7 +65,7 @@
         color: #666;
         font-size: 2rem;
     }
-    
+
     .movie-card-overlay {
         position: absolute;
         top: 0;
@@ -79,11 +79,11 @@
         opacity: 0;
         transition: opacity 0.3s;
     }
-    
+
     .movie-card:hover .movie-card-overlay {
         opacity: 1;
     }
-    
+
     .play-button {
         width: 50px;
         height: 50px;
@@ -97,18 +97,18 @@
         transition: background 0.3s;
         text-decoration: none;
     }
-    
+
     .play-button:hover {
         background: #ff1f1f;
     }
-    
+
     .movie-card-badge {
         position: absolute;
         top: 10px;
         right: 10px;
         z-index: 10;
     }
-    
+
     .rating-badge {
         background: #e50914;
         color: white;
@@ -117,11 +117,11 @@
         font-weight: bold;
         font-size: 0.8rem;
     }
-    
+
     .movie-card-info {
         padding: 0.75rem;
     }
-    
+
     .movie-title {
         font-size: 0.9rem;
         color: #fff;
@@ -131,7 +131,7 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    
+
     .movie-meta {
         font-size: 0.75rem;
         color: #999;

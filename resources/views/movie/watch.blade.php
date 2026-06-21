@@ -4,7 +4,7 @@
 $current_page = 'movie';
 // Convert collections/models to arrays recursively for backward compatibility
 $movie = is_object($movie) ? json_decode(json_encode($movie), true) : $movie;
-$episodes = isset($episodes) ? json_decode(json_encode($episodes), true) : [];
+$episodes = isset($movie['episodes']) ? $movie['episodes'] : [];
 $currentEpisode = isset($currentEpisode) ? json_decode(json_encode($currentEpisode), true) : null;
 $reviews = isset($reviews) ? json_decode(json_encode($reviews), true) : [];
 $comments = isset($comments) ? json_decode(json_encode($comments), true) : [];
@@ -15,7 +15,14 @@ $baseUrl = url('/');
 @endphp
 
 @section('content')
-
+@php
+// Sắp xếp episodes từ tập nhỏ đến tập lớn
+if (!empty($episodes)) {
+    usort($episodes, function($a, $b) {
+        return ($a['episode_number'] ?? 0) - ($b['episode_number'] ?? 0);
+    });
+}
+@endphp
 <section class="watch-section">
     <div class="container">
         <div class="watch-container">
@@ -26,28 +33,28 @@ $baseUrl = url('/');
                 </a>
                 <h1 class="watch-movie-title">{{ $movie['title'] }}</h1>
             </div>
-            
+
             <div class="video-wrapper">
-                <?php 
+                <?php
                 // Xác định video URL để hiển thị
                 $videoUrl = null;
                 $noVideoMessage = null;
                 $episodeNumber = null;
                 $isPhimBo = ($movie['type'] ?? 'phimle') === 'phimbo';
-                
+
                 if ($isPhimBo) {
                     // Xử lý phim bộ
                     $folderPath = null;
-                    
+
                     // Debug: Kiểm tra episodes từ database
                     error_log("Watch view - Episodes count from DB: " . (isset($episodes) ? count($episodes) : 0));
                     error_log("Watch view - Current episode: " . (isset($currentEpisode) && $currentEpisode ? "Yes (ID: " . $currentEpisode['id'] . ", Number: " . $currentEpisode['episode_number'] . ")" : "No"));
                     error_log("Watch view - Movie video_url: " . ($movie['video_url'] ?? 'N/A'));
-                    
+
                     if (isset($currentEpisode) && $currentEpisode) {
                         // Có tập được chọn
                         $episodeNumber = $currentEpisode['episode_number'];
-                        
+
                         if (!empty($currentEpisode['video_url'])) {
                             // Sử dụng trực tiếp video_url từ episode
                             $videoUrl = $currentEpisode['video_url'];
@@ -66,7 +73,7 @@ $baseUrl = url('/');
                                 break;
                             }
                         }
-                        
+
                         // Nếu không tìm thấy tập có video_url
                         if (!$found) {
                             $episodeNumber = $episodes[0]['episode_number'] ?? 1;
@@ -83,8 +90,8 @@ $baseUrl = url('/');
                         $noVideoMessage = "Video chưa có sẵn.";
                     }
                 }
-                
-                if ($videoUrl): 
+
+                if ($videoUrl):
                     // Sử dụng storage_url() helper để xử lý đúng đường dẫn
                     // Helper sẽ tự động thêm /storage/ prefix cho files trong storage
                     if (strpos($videoUrl, 'http') === 0) {
@@ -112,7 +119,7 @@ $baseUrl = url('/');
                             </p>
                         @endif
                     </div>
-                @elseif($movie['trailer_url']): 
+                @elseif($movie['trailer_url']):
                     $fullTrailerUrl = $movie['trailer_url'];
                     if (strpos($movie['trailer_url'], 'http') !== 0) {
                         $fullTrailerUrl = $baseUrl . '/' . ltrim($movie['trailer_url'], '/');
@@ -129,33 +136,33 @@ $baseUrl = url('/');
                     </div>
                 @endif
             </div>
-            
-            <?php 
+
+            <?php
             // Luôn hiển thị phần episodes nếu phim có type là 'phimbo'
             $isPhimBo = ($movie['type'] ?? 'phimle') === 'phimbo';
-            
+
             // Debug: Kiểm tra episodes
             error_log("Watch page - Movie ID: " . ($movie['id'] ?? 'N/A') . ", Type: " . ($movie['type'] ?? 'N/A') . ", Is Phim Bo: " . ($isPhimBo ? 'Yes' : 'No'));
             error_log("Watch page - Episodes count: " . (isset($episodes) ? count($episodes) : 0));
             if (isset($episodes) && !empty($episodes)) {
                 error_log("Watch page - First episode: " . print_r($episodes[0], true));
             }
-            
-            if ($isPhimBo): 
+
+            if ($isPhimBo):
             ?>
             <div class="episodes-section">
-                <h3><i class="fas fa-list"></i> Danh sách tập 
+                <h3><i class="fas fa-list"></i> Danh sách tập
                     @if(isset($episodes) && !empty($episodes))
                         <span class="badge bg-primary ms-2">{{ count($episodes) }} tập</span>
                     @else
                         <span class="badge bg-warning ms-2">Chưa có tập</span>
                     @endif
                 </h3>
-                
+
                 @if(isset($episodes) && !empty($episodes))
                     <div class="episodes-list">
                         @foreach($episodes as $episode)
-                            <a href="?route=movie/watch&id={{ $movie['id'] }}&episode_id={{ $episode['id'] }}" 
+                            <a href="?route=movie/watch&id={{ $movie['id'] }}&episode_id={{ $episode['id'] }}"
                                class="episode-item {{ (isset($currentEpisode) && $currentEpisode && $currentEpisode['id'] == $episode['id']) ? 'active' : '' }} {{ empty($episode['video_url']) ? 'episode-no-video' : '' }}"
                                title="{{ $episode['title'] ?? 'Tập ' . $episode['episode_number'] }}">
                                 <div class="episode-number">{{ $episode['episode_number'] }}</div>
@@ -164,7 +171,7 @@ $baseUrl = url('/');
                     </div>
                 @else
                     <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i> 
+                        <i class="fas fa-exclamation-triangle"></i>
                         <strong>Chưa có tập nào được thêm vào phim này.</strong>
                         <p class="mb-0 mt-2">Để hiển thị danh sách tập, vui lòng thêm các tập cho phim bộ này trong phần quản trị.</p>
                         @if(isset($isAdmin) && $isAdmin)
@@ -189,24 +196,24 @@ $baseUrl = url('/');
                     <span class="movie-type-badge-inline">{{ ($movie['type'] ?? 'phimle') === 'phimbo' ? 'Phim bộ' : 'Phim lẻ' }}</span>
                     <span><i class="fas fa-layer-group"></i> {{ $movie['level'] }}</span>
                 </div>
-                
+
                 @if(isset($movie['status']) && $movie['status'] === 'Chiếu rạp')
                     <div class="mt-3 mb-3">
-                        <a href="?route=booking/index&movie={{ $movie['id'] }}" 
-                           class="btn btn-primary btn-lg" 
+                        <a href="?route=booking/index&movie={{ $movie['id'] }}"
+                           class="btn btn-primary btn-lg"
                            style="background: #e50914; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block; color: white; font-weight: 600; font-size: 1.1rem;">
                             <i class="fas fa-ticket-alt"></i> Đặt vé xem phim
                         </a>
                     </div>
                 @endif
-                
+
                 @if($movie['description'])
                     <div class="movie-description-full">
                         <h3>Nội dung</h3>
                         <p>{{ nl2br(htmlspecialchars($movie['description'])) }}</p>
                     </div>
                 @endif
-                
+
                 @if($movie['director'] || $movie['actors'])
                     <div class="movie-cast">
                         @if($movie['director'])
@@ -222,12 +229,12 @@ $baseUrl = url('/');
             <!-- PHẦN ĐÁNH GIÁ (có sao, mỗi user 1 lần) -->
             <div class="reviews-section" id="reviews">
                 <h2><i class="fas fa-star"></i> Đánh giá phim</h2>
-                
+
                 @if(isset($user) && $user)
                     @if(isset($userHasRated) && $userHasRated)
                         <div class="user-rating-info" style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
                             <p style="margin: 0; color: #d4af37;">
-                                <i class="fas fa-check-circle"></i> Bạn đã đánh giá phim này: 
+                                <i class="fas fa-check-circle"></i> Bạn đã đánh giá phim này:
                                 <strong>{{ $userRating }} sao</strong>
                             </p>
                         </div>
@@ -252,7 +259,7 @@ $baseUrl = url('/');
                 @else
                     <p style="color: var(--text-secondary);">Vui lòng <a href="{{ $baseUrl }}/?route=auth/login" style="color: #e50914;">đăng nhập</a> để đánh giá phim.</p>
                 @endif
-                
+
                 <!-- Danh sách đánh giá -->
                 <div class="reviews-list" style="margin-top: 20px;">
                     @if(empty($reviews))
@@ -290,11 +297,11 @@ $baseUrl = url('/');
                     @endif
                 </div>
             </div>
-            
+
             <!-- PHẦN BÌNH LUẬN (không có sao, có reply, like/dislike) -->
             <div class="comments-section" id="comments" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
                 <h2><i class="fas fa-comments"></i> Bình luận <span class="badge bg-secondary ms-2">{{ count($comments ?? []) }}</span></h2>
-                
+
                 @if(isset($user) && $user)
                     <form method="POST" action="{{ $baseUrl }}/?route=review/comment" class="comment-form" id="commentForm" style="margin-bottom: 25px;">
                         <input type="hidden" name="movie_id" value="{{ $movie['id'] }}">
@@ -323,7 +330,7 @@ $baseUrl = url('/');
                         </p>
                     </div>
                 @endif
-                
+
                 <!-- Danh sách bình luận -->
                 <div class="comments-list" id="commentsList">
                     @if(empty($comments ?? []))
@@ -350,7 +357,7 @@ $baseUrl = url('/');
                                             <span style="color: #666; font-size: 0.8rem;"><i class="far fa-clock"></i> {{ isset($comment['created_at']) ? date('d/m/Y H:i', strtotime($comment['created_at'])) : '' }}</span>
                                         </div>
                                         <p style="margin: 0 0 12px 0; color: #ddd; line-height: 1.6;">{{ nl2br(htmlspecialchars($comment['content'] ?? '')) }}</p>
-                                        
+
                                         <!-- Like/Dislike và Reply buttons -->
                                         <div class="comment-actions" style="display: flex; gap: 20px; align-items: center; padding-top: 10px; border-top: 1px solid #333;">
                                             <button class="like-btn" onclick="likeComment({{ $comment['id'] ?? 0 }}, 'like')" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; transition: all 0.3s;" onmouseover="this.style.background='rgba(76, 175, 80, 0.2)'; this.style.color='#4caf50'" onmouseout="this.style.background='none'; this.style.color='#888'">
@@ -370,7 +377,7 @@ $baseUrl = url('/');
                                                 </a>
                                             @endif
                                         </div>
-                                        
+
                                         <!-- Form trả lời (ẩn mặc định) -->
                                         @if(isset($user) && $user)
                                         <div id="reply-form-{{ $comment['id'] }}" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #333;">
@@ -398,7 +405,7 @@ $baseUrl = url('/');
                                             </form>
                                         </div>
                                         @endif
-                                        
+
                                         <!-- Replies -->
                                         @if(!empty($comment['replies']))
                                         <div class="replies" style="margin-top: 15px; padding-left: 15px; border-left: 3px solid #e50914;">
@@ -419,7 +426,7 @@ $baseUrl = url('/');
                                                         <span style="color: #666; font-size: 0.75rem;"><i class="far fa-clock"></i> {{ isset($reply['created_at']) ? date('d/m/Y H:i', strtotime($reply['created_at'])) : '' }}</span>
                                                     </div>
                                                     <p style="margin: 0 0 8px 0; color: #ccc; font-size: 0.9rem; line-height: 1.5;">{{ nl2br(htmlspecialchars($reply['content'] ?? '')) }}</p>
-                                                    
+
                                                     <!-- Like/Dislike cho reply -->
                                                     <div style="display: flex; gap: 15px; align-items: center;">
                                                         <button class="like-btn" onclick="likeComment({{ $reply['id'] ?? 0 }}, 'like')" style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; padding: 3px 8px; border-radius: 15px; transition: all 0.3s;" onmouseover="this.style.background='rgba(76, 175, 80, 0.2)'; this.style.color='#4caf50'" onmouseout="this.style.background='none'; this.style.color='#666'">
@@ -446,14 +453,14 @@ $baseUrl = url('/');
                     @endif
                 </div>
             </div>
-            
+
             <!-- Phim cùng thể loại -->
             @if(!empty($relatedMovies))
             <div class="related-movies-section" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
                 <h2 style="margin-bottom: 1.5rem;"><i class="fas fa-film"></i> Phim cùng thể loại</h2>
                 <div class="related-movies-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem;">
                     @foreach($relatedMovies as $related)
-                    <a href="{{ $baseUrl }}/?route=movie/watch&id={{ $related['id'] }}" class="related-movie-card" style="text-decoration: none; color: inherit;">
+                    <a href="{{ route('movies.introduce', $related['id']) }}" class="related-movie-card" style="text-decoration: none; color: inherit;">
                         <div style="position: relative; border-radius: 8px; overflow: hidden; background: #1f1f1f;">
                             @if($related['thumbnail'])
                                 <img src="{{ $related['thumbnail'] }}" alt="{{ $related['title'] }}" style="width: 100%; aspect-ratio: 2/3; object-fit: cover;">
@@ -521,7 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const ratingValue = document.getElementById('ratingValue');
         const ratingText = document.getElementById('ratingText');
         const submitBtn = document.getElementById('submitReview');
-        
+
         const ratingTexts = {
             1: 'Rất tệ',
             2: 'Tệ',
@@ -529,14 +536,14 @@ document.addEventListener('DOMContentLoaded', function() {
             4: 'Hay',
             5: 'Rất hay'
         };
-        
+
         stars.forEach(star => {
             star.addEventListener('mouseenter', function() {
                 const value = this.dataset.value;
                 highlightStars(value);
                 ratingText.textContent = ratingTexts[value];
             });
-            
+
             star.addEventListener('mouseleave', function() {
                 const currentValue = ratingValue.value;
                 if (currentValue) {
@@ -547,7 +554,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     ratingText.textContent = 'Chọn số sao';
                 }
             });
-            
+
             star.addEventListener('click', function() {
                 const value = this.dataset.value;
                 ratingValue.value = value;
@@ -555,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ratingText.textContent = ratingTexts[value] + ' - Đã chọn!';
             });
         });
-        
+
         function highlightStars(value) {
             stars.forEach(s => {
                 const starValue = s.dataset.value;
@@ -568,14 +575,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-        
+
         function resetStars() {
             stars.forEach(s => {
                 s.classList.remove('active');
                 s.querySelector('i').className = 'far fa-star';
             });
         }
-        
+
         // Validate form before submit
         if (submitBtn) {
             submitBtn.closest('form').addEventListener('submit', function(e) {
@@ -587,7 +594,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
-    
+
     // Scroll đến phần reviews nếu có hash trong URL
     if (window.location.hash === '#reviews') {
         setTimeout(function() {
@@ -597,7 +604,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 100);
     }
-    
+
     // Scroll mượt đến reviews sau khi submit (fallback)
     const reviewForm = document.getElementById('reviewForm');
     if (reviewForm) {
@@ -605,7 +612,7 @@ document.addEventListener('DOMContentLoaded', function() {
             sessionStorage.setItem('scrollToReviews', 'true');
         });
     }
-    
+
     // Kiểm tra nếu cần scroll sau khi reload
     if (sessionStorage.getItem('scrollToReviews') === 'true') {
         sessionStorage.removeItem('scrollToReviews');
@@ -616,7 +623,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 300);
     }
-    
+
     // Scroll đến comments nếu có hash
     if (window.location.hash === '#comments') {
         setTimeout(function() {

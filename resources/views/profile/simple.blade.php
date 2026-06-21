@@ -109,7 +109,7 @@
                 @foreach($history->take(6) as $item)
                     <div class="movie-card" style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                         @if($item->movie)
-                            <a href="{{ route('movies.show', $item->movie->id) }}" style="text-decoration: none; color: inherit;">
+                            <a href="{{ route('movies.introduce', $item->movie->id) }}" style="text-decoration: none; color: inherit;">
                                 @if($item->movie->poster_path)
                                     <img src="{{ Storage::url($item->movie->poster_path) }}" alt="{{ $item->movie->title }}" style="width: 100%; height: 225px; object-fit: cover;">
                                 @else
