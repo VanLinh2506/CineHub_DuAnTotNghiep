@@ -28,17 +28,17 @@ class NotificationController extends Controller
             ->where('is_read', 0)
             ->count();
         
-        return view('notifications.index', compact('notifications', 'unreadCount'));
+        return view('user.notifications.index', compact('notifications', 'unreadCount'));
     }
     
-    public function markAsRead(Request $request)
+    public function markAsRead(Request $request, $id = null)
     {
         if (!Auth::check()) {
             return response()->json(['success' => false, 'message' => 'Chưa đăng nhập']);
         }
         
         $userId = Auth::id();
-        $notificationId = $request->input('id');
+        $notificationId = $id ?? $request->input('id');
         
         if ($notificationId) {
             DB::table('notifications')
@@ -52,6 +52,23 @@ class NotificationController extends Controller
         }
         
         return response()->json(['success' => true]);
+    }
+
+    public function markAllAsRead(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['success' => false, 'message' => 'Chua dang nhap'], 401);
+        }
+
+        DB::table('notifications')
+            ->where('user_id', Auth::id())
+            ->update(['is_read' => 1]);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->route('notifications.index')->with('success', 'Đã đánh dấu tất cả thông báo là đã đọc.');
     }
     
     public function delete(Request $request, $id)
@@ -98,14 +115,50 @@ class NotificationController extends Controller
             ->orderByDesc('created_at')
             ->limit($limit)
             ->get()
-            ->map(function($notif) {
+            ->map(function ($notif) {
                 $notif->time_ago = $this->timeAgo($notif->created_at);
+                $notif->link = $this->normalizeLink($notif->link ?? null);
+
                 return $notif;
             });
         
         return response()->json(['notifications' => $notifications]);
     }
     
+    private function normalizeLink(?string $link): string
+    {
+        if (!$link) {
+            return route('notifications.index');
+        }
+
+        if (str_starts_with($link, 'http://') || str_starts_with($link, 'https://')) {
+            return $link;
+        }
+
+        $legacyMap = [
+            'booking/myTickets' => 'booking.history',
+            'booking/history' => 'booking.history',
+            'profile/index' => 'profile.index',
+            'notification/index' => 'notifications.index',
+            'notifications/index' => 'notifications.index',
+        ];
+
+        if (str_starts_with($link, '?route=')) {
+            $legacyRoute = substr($link, 7);
+            if (isset($legacyMap[$legacyRoute])) {
+                return route($legacyMap[$legacyRoute]);
+            }
+
+            return url('/?' . ltrim($link, '?'));
+        }
+
+        if (str_starts_with($link, '/')) {
+            return url($link);
+        }
+
+        return url('/' . ltrim($link, '/'));
+    }
+
     private function timeAgo($datetime)
     {
         $timestamp = strtotime($datetime);

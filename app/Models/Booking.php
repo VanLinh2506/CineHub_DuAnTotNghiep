@@ -11,6 +11,8 @@ class Booking extends Model
 
     protected $table = 'booking_pending';
 
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'user_id',
         'showtime_id',

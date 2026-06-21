@@ -1,2 +1,6 @@
 *
 !.gitignore
+!data/
+data/*
+!data/img/
+!data/img/**

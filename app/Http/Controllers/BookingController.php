@@ -29,6 +29,21 @@ class BookingController extends Controller
         return $this->processBooking($request);
     }
 
+    public function saveLocation(Request $request)
+    {
+        $data = $request->validate([
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
+        ]);
+
+        session([
+            'user_latitude' => (float) $data['latitude'],
+            'user_longitude' => (float) $data['longitude'],
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
     public function vnpayCallback(Request $request)
     {
         $vnpTxnRef = $request->input('vnp_TxnRef');
@@ -44,7 +59,7 @@ class BookingController extends Controller
         }
 
         if ($booking->status === 'completed') {
-            return redirect()->route('booking.history')
+            return redirect()->route('booking.confirmation', $booking->id)
                 ->with('success', 'Giao dich VNPay da duoc xac nhan truoc do.');
         }
 
@@ -71,65 +86,12 @@ class BookingController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($booking) {
-                $lockedBooking = Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
-
-                if ($lockedBooking->status === 'completed') {
-                    return;
-                }
-
-                $showtime = Showtime::with('screen')->findOrFail($lockedBooking->showtime_id);
-                $basePrice = $showtime->price;
-                $screenType = $showtime->screen->screen_type ?? '2D';
-                $screenSurcharge = $this->getScreenTypeSurcharge($screenType);
-
-                foreach ($lockedBooking->seats as $seat) {
-                    $existingTicket = Ticket::where('booking_pending_id', $lockedBooking->id)
-                        ->where('seat', $seat)
-                        ->first();
-
-                    if ($existingTicket) {
-                        continue;
-                    }
-
-                    $seatType = $this->getSeatType($seat);
-                    $price = $this->calculateSeatPrice($basePrice, $screenSurcharge, $seatType);
-
-                    Ticket::create([
-                        'user_id' => $lockedBooking->user_id,
-                        'showtime_id' => $lockedBooking->showtime_id,
-                        'booking_pending_id' => $lockedBooking->id,
-                        'seat' => $seat,
-                        'seat_type' => $seatType,
-                        'price' => $price,
-                        'qr_code' => 'TICKET_' . uniqid() . '_' . time(),
-                        'status' => 'Đã đặt',
-                    ]);
-                }
-
-                Transaction::firstOrCreate(
-                    [
-                        'type' => 'ticket',
-                        'related_id' => $lockedBooking->id,
-                    ],
-                    [
-                        'user_id' => $lockedBooking->user_id,
-                        'amount' => $lockedBooking->total_amount,
-                        'method' => 'VNPay',
-                        'status' => 'Thành công',
-                    ]
-                );
-
-                $lockedBooking->update([
-                    'status' => 'completed',
-                    'qr_code' => $lockedBooking->qr_code ?: 'BOOKING_' . uniqid() . '_' . $lockedBooking->id,
-                ]);
-            });
+            $this->finalizeBooking($booking, 'VNPay');
 
             session()->forget(['pending_booking_id', 'showtime_id']);
 
-            return redirect()->route('booking.history')
-                ->with('success', 'Dat ve thanh cong!');
+            return redirect()->route('booking.confirmation', $booking->id)
+                ->with('success', 'Dat ve thanh cong! Quet ma QR de check ve.');
         } catch (\Exception $e) {
             Log::error('Complete booking error', [
                 'txn_ref' => $vnpTxnRef,
@@ -226,11 +188,12 @@ class BookingController extends Controller
      */
     private function getSeatGroupsInRow($row, $seatLayout)
     {
-        if (!$seatLayout) {
+        if ($seatLayout === null) {
             return [];
         }
         
         $groups = [];
+        $coupleRows = $seatLayout['couple_rows'] ?? ['J'];
         
         if (isset($seatLayout['seat_groups']) && is_array($seatLayout['seat_groups'])) {
             foreach ($seatLayout['seat_groups'] as $group) {
@@ -242,10 +205,71 @@ class BookingController extends Controller
                 }
             }
         } elseif (isset($seatLayout['cols']) && is_array($seatLayout['cols'])) {
-            $groups[] = ['cols' => $seatLayout['cols']];
+            if (in_array($row, $coupleRows, true)) {
+                $groups = [
+                    ['cols' => [1, 2, 3]],
+                    ['cols' => [4, 5, 6]],
+                ];
+            } else {
+                $groups = [
+                    ['cols' => [1, 2, 3, 4, 5, 6]],
+                    ['cols' => [7, 8, 9, 10, 11, 12]],
+                ];
+            }
+        }
+
+        if (empty($groups)) {
+            if (in_array($row, $coupleRows, true)) {
+                $groups = [
+                    ['cols' => [1, 2, 3]],
+                    ['cols' => [4, 5, 6]],
+                ];
+            } else {
+                $groups = [
+                    ['cols' => [1, 2, 3, 4, 5, 6]],
+                    ['cols' => [7, 8, 9, 10, 11, 12]],
+                ];
+            }
         }
         
         return $groups;
+    }
+
+    private function splitColsByAisles(array $cols): array
+    {
+        sort($cols);
+        $groups = [[]];
+
+        foreach ($cols as $col) {
+            if (!empty($groups[count($groups) - 1]) && $col - end($groups[count($groups) - 1]) > 1) {
+                $groups[] = [];
+            }
+            $groups[count($groups) - 1][] = $col;
+        }
+
+        return array_values(array_filter($groups));
+    }
+
+    private function resolveSeatGroupsForRow(string $row, ?array $seatLayout, array $coupleRows): array
+    {
+        $groups = $this->getSeatGroupsInRow($row, $seatLayout);
+        if (!empty($groups)) {
+            return array_values(array_filter(array_map(
+                static fn ($group) => array_values(array_unique($group['cols'] ?? [])),
+                $groups
+            )));
+        }
+
+        $rowCols = $this->getAllColumnsInRow($row, $seatLayout);
+        if (!empty($rowCols)) {
+            return $this->splitColsByAisles($rowCols);
+        }
+
+        if (in_array($row, $coupleRows, true)) {
+            return [[1, 2, 3], [4, 5, 6]];
+        }
+
+        return [[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]];
     }
     
     /**
@@ -258,6 +282,30 @@ class BookingController extends Controller
         }
         
         $allCols = [];
+
+        if (array_is_list($seatLayout)) {
+            foreach ($seatLayout as $rowConfig) {
+                if (($rowConfig['row'] ?? null) !== $row || empty($rowConfig['seats']) || !is_array($rowConfig['seats'])) {
+                    continue;
+                }
+
+                foreach ($rowConfig['seats'] as $seat) {
+                    if (($seat['type'] ?? null) === 'disabled' || (isset($seat['available']) && !$seat['available'])) {
+                        continue;
+                    }
+
+                    $seatNumber = $seat['number'] ?? null;
+                    if (!$seatNumber) {
+                        continue;
+                    }
+
+                    $allCols[] = (int) substr($seatNumber, 1);
+                }
+            }
+
+            sort($allCols);
+            return array_values(array_unique($allCols));
+        }
         
         if (isset($seatLayout['seat_groups']) && is_array($seatLayout['seat_groups'])) {
             foreach ($seatLayout['seat_groups'] as $group) {
@@ -402,6 +450,7 @@ class BookingController extends Controller
         $normalPrice = $basePrice + $screenSurcharge;
         $vipPrice = $basePrice + $screenSurcharge + ($basePrice * 0.3);
         $couplePrice = $basePrice + $screenSurcharge + ($basePrice * 0.5);
+        $vnpayConfigured = $this->isVnpayConfigured();
         
         // Generate dates (7 days)
         $dates = collect(range(0, 6))->map(function($i) {
@@ -419,8 +468,14 @@ class BookingController extends Controller
             'selectedTheater', 'selectedDate', 'selectedShowtimeId', 'dates',
             'bookedSeats', 'reservedSeats', 'seatLayout', 'normalPrice', 'vipPrice',
             'couplePrice', 'foodItems', 'screenInfo', 'theaterInfo', 'screenType',
-            'basePrice', 'screenSurcharge'
+            'basePrice', 'screenSurcharge', 'vnpayConfigured'
         ));
+    }
+
+    private function isVnpayConfigured(): bool
+    {
+        return (string) config('services.vnpay.tmn_code') !== ''
+            && (string) config('services.vnpay.hash_secret') !== '';
     }
     
     /**
@@ -558,6 +613,7 @@ class BookingController extends Controller
             'seats' => 'required|array|min:1|max:8',
             'customer_email' => 'required|email',
             'food_items' => 'nullable|array',
+            'payment_method' => 'required|in:vnpay,wallet',
         ]);
         
         $user = Auth::user();
@@ -565,6 +621,7 @@ class BookingController extends Controller
         $seats = $request->input('seats');
         $customerEmail = $request->input('customer_email');
         $foodItems = $request->input('food_items', []);
+        $paymentMethod = $request->input('payment_method', 'vnpay');
         
         // Validate seats với logic phức tạp
         $validationError = $this->validateSeatSelection($seats, $showtimeId);
@@ -657,19 +714,55 @@ class BookingController extends Controller
                 'pending_booking_id' => $booking->id,
                 'showtime_id' => $showtimeId,
             ]);
-            
-            DB::commit();
+
+            if ($paymentMethod === 'wallet') {
+                $lockedUser = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+
+                if (($lockedUser->points ?? 0) < $totalAmount) {
+                    DB::rollBack();
+                    return redirect()->back()->withInput()->with('error', 'Số dư ví CineHub không đủ để thanh toán vé này.');
+                }
+
+                $lockedUser->decrement('points', (int) $totalAmount);
+
+                $this->finalizeBooking($booking, 'Wallet', $seatPrices, $basePrice, $screenSurcharge);
+
+                DB::commit();
+
+                session()->forget(['pending_booking_id', 'showtime_id']);
+
+                return redirect()->route('booking.confirmation', $booking->id)
+                    ->with('success', 'Đặt vé thành công bằng ví CineHub! Quét mã QR để check vé.');
+            }
+
+            if (!$this->isVnpayConfigured()) {
+                DB::rollBack();
+                return redirect()->back()->withInput()->with(
+                    'error',
+                    'VNPay chưa được cấu hình. Vui lòng chọn Ví CineHub hoặc thêm VNPAY_TMN_CODE và VNPAY_HASH_SECRET vào file .env.'
+                );
+            }
             
             // Redirect to VNPay
             $orderInfo = 'Thanh toan ve xem phim ' . $showtime->movie->title;
             Log::info('Creating VNPay payment URL');
             
-            $paymentUrl = $this->vnpay->createBookingPaymentUrl(
-                $booking,
-                $orderInfo,
-                route('payment.vnpay.callback'),
-                $request->ip()
-            );
+            try {
+                $paymentUrl = $this->vnpay->createBookingPaymentUrl(
+                    $booking,
+                    $orderInfo,
+                    route('payment.vnpay.callback'),
+                    $request->ip()
+                );
+            } catch (\Throwable $vnpayError) {
+                DB::rollBack();
+                Log::error('VNPay URL creation failed', ['message' => $vnpayError->getMessage()]);
+
+                return redirect()->back()->withInput()->with(
+                    'error',
+                    'Không tạo được liên kết VNPay: ' . $vnpayError->getMessage()
+                );
+            }
             
             Log::info('VNPay payment URL created:', ['url' => $paymentUrl]);
             Log::info('Booking created successfully', ['booking_id' => $booking->id, 'vnp_txn_ref' => $vnpTxnRef]);
@@ -678,13 +771,15 @@ class BookingController extends Controller
             // Debug: Also store in session
             session(['last_payment_url' => $paymentUrl]);
 
+            DB::commit();
+
             return redirect()->away($paymentUrl);
             
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Booking error: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
-            return redirect()->back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
     
@@ -755,6 +850,8 @@ class BookingController extends Controller
             }
             $seatsByRow[$row][] = $col;
         }
+
+        return $this->validateSeatSelectionSimple($seatsByRow, $seatLayout, $bookedSeats, $coupleRows);
         
         // Kiểm tra từng hàng
         foreach ($seatsByRow as $row => $cols) {
@@ -909,7 +1006,358 @@ class BookingController extends Controller
         
         return null; // Valid
     }
+
+    private function validateSeatSelectionSimple(array $seatsByRow, ?array $seatLayout, array $bookedSeats, array $coupleRows): ?string
+    {
+        foreach ($seatsByRow as $row => $selectedCols) {
+            sort($selectedCols);
+
+            if (in_array($row, $coupleRows, true)) {
+                continue;
+            }
+
+            $groups = $this->resolveSeatGroupsForRow($row, $seatLayout, $coupleRows);
+
+            foreach ($groups as $groupCols) {
+                sort($groupCols);
+                $selectedInGroup = array_values(array_intersect($selectedCols, $groupCols));
+                if (empty($selectedInGroup)) {
+                    continue;
+                }
+
+                for ($i = 0; $i < count($selectedInGroup) - 1; $i++) {
+                    if ($selectedInGroup[$i + 1] - $selectedInGroup[$i] > 1) {
+                        $hasFreeGap = false;
+                        for ($gapCol = $selectedInGroup[$i] + 1; $gapCol < $selectedInGroup[$i + 1]; $gapCol++) {
+                            $gapSeat = $row . $gapCol;
+                            if (!in_array($gapSeat, $bookedSeats, true)) {
+                                $hasFreeGap = true;
+                                break;
+                            }
+                        }
+                        if ($hasFreeGap) {
+                            return "Khong duoc bo trong ghe o giua cum ghe hang {$row}. Vui long chon cac ghe lien ke nhau trong cung mot cum.";
+                        }
+                    }
+                }
+
+                $groupError = $this->validateGroupOrphanSeats($row, $groupCols, $selectedInGroup, $bookedSeats);
+                if ($groupError) {
+                    return $groupError;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function splitGroupColsByBooked(array $groupCols, string $row, array $bookedSeats): array
+    {
+        $segments = [];
+        $current = [];
+
+        foreach ($groupCols as $col) {
+            $seat = $row . $col;
+            if (in_array($seat, $bookedSeats, true)) {
+                if (!empty($current)) {
+                    $segments[] = $current;
+                    $current = [];
+                }
+                continue;
+            }
+            $current[] = $col;
+        }
+
+        if (!empty($current)) {
+            $segments[] = $current;
+        }
+
+        return !empty($segments) ? $segments : [$groupCols];
+    }
+
+    private function countFreeSeatsFromEdge(array $segmentCols, string $row, array $selectedCols, array $bookedSeats, bool $fromLeft): int
+    {
+        $count = 0;
+        $cols = $fromLeft ? $segmentCols : array_reverse($segmentCols);
+        $selectedLookup = array_fill_keys($selectedCols, true);
+
+        foreach ($cols as $col) {
+            $seat = $row . $col;
+            if (in_array($seat, $bookedSeats, true) || isset($selectedLookup[$col])) {
+                break;
+            }
+            $count++;
+        }
+
+        return $count;
+    }
+
+    private function isSelectionAnchoredToBooked(array $selectedCols, string $row, array $bookedSeats, string $side): bool
+    {
+        if (empty($selectedCols)) {
+            return false;
+        }
+
+        $minSel = min($selectedCols);
+        $maxSel = max($selectedCols);
+
+        if ($side === 'left') {
+            return in_array($row . ($minSel - 1), $bookedSeats, true);
+        }
+
+        return in_array($row . ($maxSel + 1), $bookedSeats, true);
+    }
+
+    private function isSelectionTouchingSegmentEdge(array $selectedCols, array $segmentCols, string $side): bool
+    {
+        if (empty($selectedCols) || empty($segmentCols)) {
+            return false;
+        }
+
+        $minSel = min($selectedCols);
+        $maxSel = max($selectedCols);
+        $minSeg = min($segmentCols);
+        $maxSeg = max($segmentCols);
+
+        return $side === 'left' ? $minSel === $minSeg : $maxSel === $maxSeg;
+    }
+
+    private function validateGroupOrphanSeats(string $row, array $groupCols, array $selectedCols, array $bookedSeats): ?string
+    {
+        if (count($groupCols) < 2 || empty($selectedCols)) {
+            return null;
+        }
+
+        sort($groupCols);
+        sort($selectedCols);
+
+        $segments = $this->splitGroupColsByBooked($groupCols, $row, $bookedSeats);
+
+        foreach ($segments as $segmentCols) {
+            sort($segmentCols);
+            $selectedInSegment = array_values(array_intersect($selectedCols, $segmentCols));
+
+            if (empty($selectedInSegment)) {
+                continue;
+            }
+
+            if (count($selectedInSegment) > 2) {
+                $leftFree = $this->countFreeSeatsFromEdge($segmentCols, $row, $selectedCols, $bookedSeats, true);
+                $rightFree = $this->countFreeSeatsFromEdge($segmentCols, $row, $selectedCols, $bookedSeats, false);
+                $anchoredLeft = $this->isSelectionAnchoredToBooked($selectedInSegment, $row, $bookedSeats, 'left');
+                $anchoredRight = $this->isSelectionAnchoredToBooked($selectedInSegment, $row, $bookedSeats, 'right');
+                $touchesLeft = $this->isSelectionTouchingSegmentEdge($selectedInSegment, $segmentCols, 'left') || $anchoredLeft;
+                $touchesRight = $this->isSelectionTouchingSegmentEdge($selectedInSegment, $segmentCols, 'right') || $anchoredRight;
+
+                if (!$touchesRight && $leftFree === 1) {
+                    return "Khi dat hon 2 ghe o hang {$row}, phai de trong 0 hoac it nhat 2 ghe o dau cum. Hien dang de le 1 ghe.";
+                }
+
+                if (!$touchesLeft && $rightFree === 1) {
+                    return "Khi dat hon 2 ghe o hang {$row}, phai de trong 0 hoac it nhat 2 ghe o cuoi cum. Hien dang de le 1 ghe.";
+                }
+            }
+
+            $existingSingles = $this->findSingleFreeColsInGroup($row, $segmentCols, [], $bookedSeats);
+            $newSingles = $this->findSingleFreeColsInGroup($row, $segmentCols, $selectedCols, $bookedSeats);
+
+            foreach ($newSingles as $col) {
+                if (in_array($col, $existingSingles, true)) {
+                    continue;
+                }
+
+                if ($this->isInvalidSingleOrphanCol((int) $col, $segmentCols, $row, $selectedInSegment, $bookedSeats)) {
+                    return "Khong duoc de le 1 ghe trong cum hang {$row} (ghe {$row}{$col}). Vui long chon them ghe do, chon tu phia ghe da dat, hoac chua toi thieu 2 ghe trong lien tiep.";
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function findSingleFreeColsInGroup(string $row, array $groupCols, array $selectedCols, array $bookedSeats): array
+    {
+        $selectedLookup = array_fill_keys($selectedCols, true);
+        $singles = [];
+        $freeRun = [];
+
+        foreach ($groupCols as $col) {
+            $seat = $row . $col;
+            $occupied = in_array($seat, $bookedSeats, true)
+                || (!empty($selectedLookup) && isset($selectedLookup[$col]));
+
+            if (!$occupied) {
+                $freeRun[] = $col;
+                continue;
+            }
+
+            if (count($freeRun) === 1) {
+                $singles[] = (string) $freeRun[0];
+            }
+            $freeRun = [];
+        }
+
+        if (count($freeRun) === 1) {
+            $singles[] = (string) $freeRun[0];
+        }
+
+        return $singles;
+    }
+
+    private function isInvalidSingleOrphanCol(int $col, array $groupCols, string $row, array $selectedCols, array $bookedSeats): bool
+    {
+        $idx = array_search($col, $groupCols, true);
+        if ($idx === false) {
+            return false;
+        }
+
+        $leftCol = $idx > 0 ? $groupCols[$idx - 1] : null;
+        $rightCol = $idx < count($groupCols) - 1 ? $groupCols[$idx + 1] : null;
+
+        $isOccupied = function (?int $seatCol) use ($row, $bookedSeats, $selectedCols): bool {
+            if ($seatCol === null) {
+                return false;
+            }
+
+            $seat = $row . $seatCol;
+            return in_array($seat, $bookedSeats, true) || in_array($seatCol, $selectedCols, true);
+        };
+
+        $leftOcc = $isOccupied($leftCol);
+        $rightOcc = $isOccupied($rightCol);
+
+        if ($leftOcc && $rightOcc) {
+            return true;
+        }
+
+        $minSel = min($selectedCols);
+        $maxSel = max($selectedCols);
+
+        if (!$leftOcc && $rightOcc && $col < $minSel) {
+            if ($maxSel === max($groupCols)) {
+                return false;
+            }
+            if (in_array($row . ($maxSel + 1), $bookedSeats, true)) {
+                return false;
+            }
+            if (count($selectedCols) >= 2) {
+                return true;
+            }
+        }
+
+        if ($leftOcc && !$rightOcc && $col > $maxSel) {
+            if ($minSel === min($groupCols)) {
+                return false;
+            }
+            if (in_array($row . ($minSel - 1), $bookedSeats, true)) {
+                return false;
+            }
+            if (count($selectedCols) >= 2) {
+                $leftSeat = $row . $leftCol;
+                if (in_array($leftSeat, $bookedSeats, true)) {
+                    return false;
+                }
+                if (in_array($leftCol, $selectedCols, true)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function validateNoSingleSeatAtRowStart(string $row, array $selectedCols, ?array $seatLayout, array $bookedSeats): ?string
+    {
+        $rowCols = $this->getAllColumnsInRow($row, $seatLayout);
+        if (empty($rowCols)) {
+            $rowCols = range(1, max($selectedCols));
+        }
+
+        sort($rowCols);
+
+        if (count($rowCols) < 2) {
+            return null;
+        }
+
+        $selectedLookup = array_fill_keys($selectedCols, true);
+        $leftFree = 0;
+
+        foreach ($rowCols as $col) {
+            $seat = $row . $col;
+            if (in_array($seat, $bookedSeats, true) || isset($selectedLookup[$col])) {
+                break;
+            }
+            $leftFree++;
+        }
+
+        if ($leftFree === 1) {
+            return "Khi dat hon 2 ghe o hang {$row}, khong duoc de le 1 ghe o dau hang. Vui long chon them ghe do hoac chua toi thieu 2 ghe trong o dau hang.";
+        }
+
+        return null;
+    }
+
+    private function validateNoSingleSeatAtRowEnds($row, array $selectedCols, ?array $seatLayout, array $bookedSeats): ?string
+    {
+        sort($selectedCols);
+
+        $rowCols = $this->getAllColumnsInRow($row, $seatLayout);
+        if (empty($rowCols)) {
+            $rowCols = range(1, max($selectedCols));
+        }
+
+        sort($rowCols);
+
+        if (count($rowCols) < 2) {
+            return null;
+        }
+
+        $selectedLookup = array_fill_keys($selectedCols, true);
+
+        $leftFree = 0;
+        foreach ($rowCols as $col) {
+            $seat = $row . $col;
+            if (in_array($seat, $bookedSeats, true) || isset($selectedLookup[$col])) {
+                break;
+            }
+            $leftFree++;
+        }
+
+        $rightFree = 0;
+        for ($i = count($rowCols) - 1; $i >= 0; $i--) {
+            $col = $rowCols[$i];
+            $seat = $row . $col;
+            if (in_array($seat, $bookedSeats, true) || isset($selectedLookup[$col])) {
+                break;
+            }
+            $rightFree++;
+        }
+
+        if ($leftFree === 1 || $rightFree === 1) {
+            return "Khong duoc de le 1 ghe o dau hoac cuoi hang {$row}. Vui long chon sat dau hang hoac chua toi thieu 2 ghe.";
+        }
+
+        return null;
+    }
     
+    /**
+     * Booking success page with QR codes
+     */
+    public function confirmation($bookingId)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        $booking = Booking::with(['showtime.movie', 'showtime.theater', 'showtime.screen', 'tickets'])
+            ->where('id', $bookingId)
+            ->where('user_id', Auth::id())
+            ->where('status', 'completed')
+            ->firstOrFail();
+
+        return view('booking.confirmation', compact('booking'));
+    }
+
     /**
      * My tickets page
      */
@@ -938,6 +1386,94 @@ class BookingController extends Controller
             ->firstOrFail();
         
         return view('booking.view-ticket', compact('booking'));
+    }
+
+    private function finalizeBooking(
+        Booking $booking,
+        string $paymentMethod,
+        array $seatPrices = [],
+        ?float $basePrice = null,
+        ?float $screenSurcharge = null
+    ): void {
+        $finalize = function () use ($booking, $paymentMethod, $seatPrices, $basePrice, $screenSurcharge) {
+            $lockedBooking = Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
+
+            if ($lockedBooking->status === 'completed') {
+                return;
+            }
+
+            $showtime = Showtime::with('screen')->findOrFail($lockedBooking->showtime_id);
+            $basePrice = $basePrice ?? $showtime->price;
+            $screenSurcharge = $screenSurcharge ?? $this->getScreenTypeSurcharge($showtime->screen->screen_type ?? '2D');
+
+            foreach ($lockedBooking->seats as $seat) {
+                $existingTicket = Ticket::where('booking_pending_id', $lockedBooking->id)
+                    ->where('seat', $seat)
+                    ->first();
+
+                if ($existingTicket) {
+                    continue;
+                }
+
+                $seatType = $this->getSeatType($seat);
+                $price = $seatPrices[$seat] ?? $this->calculateSeatPrice($basePrice, $screenSurcharge, $seatType);
+
+                Ticket::create([
+                    'user_id' => $lockedBooking->user_id,
+                    'showtime_id' => $lockedBooking->showtime_id,
+                    'booking_pending_id' => $lockedBooking->id,
+                    'seat' => $seat,
+                    'seat_type' => $seatType,
+                    'price' => $price,
+                    'qr_code' => 'TICKET_' . Str::random(24),
+                    'status' => 'Đã đặt',
+                ]);
+            }
+
+            Transaction::firstOrCreate(
+                [
+                    'type' => 'ticket',
+                    'related_id' => $lockedBooking->id,
+                ],
+                [
+                    'user_id' => $lockedBooking->user_id,
+                    'amount' => $lockedBooking->total_amount,
+                    'method' => $this->mapTransactionMethod($paymentMethod),
+                    'status' => 'Thành công',
+                ]
+            );
+
+            $lockedBooking->update([
+                'status' => 'completed',
+                'qr_code' => $lockedBooking->qr_code ?: ('BOOKING_' . Str::random(24)),
+            ]);
+
+            $this->createBookingNotification($lockedBooking->fresh(['showtime.movie']));
+        };
+
+        if (DB::transactionLevel() > 0) {
+            $finalize();
+        } else {
+            DB::transaction($finalize);
+        }
+    }
+
+    private function createBookingNotification(Booking $booking): void
+    {
+        $showtime = $booking->showtime;
+        $movieTitle = $showtime?->movie?->title ?? 'phim';
+        $seatList = implode(', ', $booking->seats ?? []);
+        $seatCount = count($booking->seats ?? []);
+
+        DB::table('notifications')->insert([
+            'user_id' => $booking->user_id,
+            'type' => 'success',
+            'title' => 'Đặt vé thành công',
+            'message' => "Bạn đã đặt thành công {$seatCount} vé xem phim \"{$movieTitle}\" tại ghế {$seatList}. Quét mã QR để check vé.",
+            'link' => route('booking.history'),
+            'is_read' => 0,
+            'created_at' => now(),
+        ]);
     }
     
     // Helper methods
@@ -970,6 +1506,19 @@ class BookingController extends Controller
             '3D' => 30000,
             '4DX' => 70000,
             default => 0,
+        };
+    }
+
+    private function mapTransactionMethod(string $method): string
+    {
+        return match (strtolower($method)) {
+            'wallet' => 'Bank',
+            'vnpay', 'momo' => 'Momo',
+            'zalopay' => 'ZaloPay',
+            'stripe' => 'Stripe',
+            'cash' => 'Cash',
+            'bank' => 'Bank',
+            default => 'Bank',
         };
     }
 }

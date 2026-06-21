@@ -260,6 +260,8 @@ class ProfileController extends Controller
             'email' => 'required|email|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
             'birthdate' => 'nullable|date',
+            'birth_date' => 'nullable|date',
+            'address' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
         ]);
         
@@ -267,7 +269,8 @@ class ProfileController extends Controller
             'name' => $request->input('name'),
             'email' => $request->input('email'),
             'phone' => $request->input('phone'),
-            'birthdate' => $request->input('birthdate'),
+            'birthdate' => $request->input('birthdate', $request->input('birth_date')),
+            'address' => $request->input('address'),
         ];
         
         // Xử lý avatar
@@ -290,6 +293,20 @@ class ProfileController extends Controller
         return redirect()->route('profile.index')->with('success', 'Cập nhật thông tin thành công!');
     }
     
+    public function updatePreferences(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        Auth::user()->update([
+            'newsletter' => $request->boolean('newsletter'),
+            'notifications_enabled' => $request->boolean('notifications'),
+        ]);
+
+        return redirect()->route('profile.index')->with('success', 'Da cap nhat tuy chinh tai khoan.');
+    }
+
     /**
      * Cập nhật mật khẩu
      */

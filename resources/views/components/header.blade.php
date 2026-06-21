@@ -169,7 +169,7 @@
         <div class="mobile-menu-user">
             <div class="mobile-user-avatar">
                 @if (!empty($user->avatar))
-                    <img src="{{ $user->avatar }}" alt="Avatar">
+                    <img src="{{ $user->avatar_url }}" alt="Avatar">
                 @else
                     <i class="fas fa-user"></i>
                 @endif

@@ -111,4 +111,36 @@
         background: #f40612 !important;
     }
 </style>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(function(position) {
+        fetch('{{ route('booking.location') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude
+            })
+        }).catch(function(err) {
+            console.warn('Could not save location:', err);
+        });
+    }, function() {
+        console.warn('Geolocation permission denied on theater page');
+    }, {
+        enableHighAccuracy: true,
+        timeout: 8000,
+        maximumAge: 300000
+    });
+});
+</script>
+@endpush
 @endsection

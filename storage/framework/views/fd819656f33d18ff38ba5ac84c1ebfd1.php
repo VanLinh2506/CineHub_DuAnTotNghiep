@@ -8,6 +8,150 @@ var currentMovieId = <?php echo e(isset($movie) && $movie->id ? $movie->id : 'nu
 var selectedTheaterId = null;
 var selectedDate = null;
 var selectedShowtimeId = null;
+var currentBookedSeats = [];
+
+window.requestUserLocation = function() {
+    var badge = document.getElementById('userLocationBadge');
+    var text = document.getElementById('userLocationText');
+    if (badge) badge.style.display = 'inline-flex';
+    if (text) text.textContent = 'Đang lấy vị trí...';
+
+    if (!navigator.geolocation) {
+        if (text) text.textContent = 'Trình duyệt không hỗ trợ vị trí';
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(function(position) {
+        userLat = position.coords.latitude;
+        userLng = position.coords.longitude;
+        if (text) text.textContent = 'Đã ưu tiên rạp gần nhất';
+        updateTheaterDistances();
+
+        fetch('<?php echo e(route('booking.location')); ?>', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ latitude: userLat, longitude: userLng })
+        }).catch(function(error) {
+            console.error('Could not save user location:', error);
+        });
+    }, function(error) {
+        if (text) text.textContent = 'Không lấy được vị trí';
+        console.warn('Geolocation error:', error);
+    }, {
+        enableHighAccuracy: true,
+        timeout: 8000,
+        maximumAge: 300000
+    });
+};
+
+function calculateDistanceKm(lat1, lng1, lat2, lng2) {
+    var rad = Math.PI / 180;
+    var dLat = (lat2 - lat1) * rad;
+    var dLng = (lng2 - lng1) * rad;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 6371 * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+function updateTheaterDistances() {
+    if (userLat === null || userLng === null) return;
+
+    var container = document.getElementById('theatersContainer');
+    if (!container) return;
+
+    var cards = Array.from(container.querySelectorAll('.theater-card'));
+    cards.forEach(function(card) {
+        var lat = parseFloat(card.dataset.lat);
+        var lng = parseFloat(card.dataset.lng);
+        if (Number.isNaN(lat) || Number.isNaN(lng)) {
+            card.dataset.distance = '999999';
+            return;
+        }
+
+        var distance = calculateDistanceKm(userLat, userLng, lat, lng);
+        card.dataset.distance = distance.toString();
+
+        var distanceBox = card.querySelector('.theater-distance');
+        var distanceText = card.querySelector('.distance-text');
+        if (distanceBox && distanceText) {
+            distanceBox.style.display = 'block';
+            distanceText.textContent = distance < 1
+                ? Math.round(distance * 1000) + ' m'
+                : distance.toFixed(1) + ' km';
+        }
+    });
+
+    cards.sort(function(a, b) {
+        return parseFloat(a.dataset.distance || '999999') - parseFloat(b.dataset.distance || '999999');
+    }).forEach(function(card) {
+        container.appendChild(card);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.querySelector('.theater-card')) {
+        requestUserLocation();
+    }
+});
+
+function formatLocalDate(date) {
+    var year = date.getFullYear();
+    var month = String(date.getMonth() + 1).padStart(2, '0');
+    var day = String(date.getDate()).padStart(2, '0');
+    return year + '-' + month + '-' + day;
+}
+
+function getSeatGroupsFromRow(rowEl) {
+    var groups = [[]];
+    var children = rowEl.children;
+
+    for (var i = 0; i < children.length; i++) {
+        var child = children[i];
+        if (child.classList.contains('seat-space')) {
+            if (groups[groups.length - 1].length > 0) {
+                groups.push([]);
+            }
+            continue;
+        }
+        if (child.classList.contains('seat') && child.dataset.seat && !child.classList.contains('seat-disabled')) {
+            groups[groups.length - 1].push(child);
+        }
+    }
+
+    var result = groups.filter(function(group) { return group.length > 0; });
+    if (result.length !== 1) {
+        return result;
+    }
+
+    var seats = result[0].slice().sort(function(a, b) {
+        return parseInt(a.dataset.seat.substring(1), 10) - parseInt(b.dataset.seat.substring(1), 10);
+    });
+
+    var rowName = seats[0].dataset.seat.charAt(0);
+    var splitGroups = [[]];
+    for (var s = 0; s < seats.length; s++) {
+        var col = parseInt(seats[s].dataset.seat.substring(1), 10);
+        if (splitGroups[splitGroups.length - 1].length > 0) {
+            var prevCol = parseInt(splitGroups[splitGroups.length - 1][splitGroups[splitGroups.length - 1].length - 1].dataset.seat.substring(1), 10);
+            if (col - prevCol > 1 || (prevCol <= 6 && col >= 7) || (rowName === 'J' && prevCol <= 3 && col >= 4)) {
+                splitGroups.push([]);
+            }
+        }
+        splitGroups[splitGroups.length - 1].push(seats[s]);
+    }
+
+    return splitGroups.filter(function(group) { return group.length > 0; });
+}
+
+function isSeatOccupied(seatNo, selected, booked) {
+    return booked.indexOf(seatNo) !== -1 || selected.indexOf(seatNo) !== -1;
+}
 
 // Declare selectDate function FIRST (before it's used)
 window.selectDate = function(dateValue) {
@@ -177,6 +321,7 @@ function loadSeatMapNow(showtimeId) {
 // Generate default seat layout
 function generateDefaultSeatLayoutNow(bookedSeats) {
     bookedSeats = bookedSeats || [];
+    currentBookedSeats = bookedSeats;
     
     // Default 10 rows x 12 seats layout
     var rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
@@ -246,6 +391,7 @@ function generateDefaultSeatLayoutNow(bookedSeats) {
 // Render seat map from custom layout
 function renderSeatMapFull(layout, bookedSeats, prices) {
     bookedSeats = bookedSeats || [];
+    currentBookedSeats = bookedSeats;
     var seatMapContainer = document.getElementById('seatMap');
     var html = '';
     
@@ -262,6 +408,11 @@ function renderSeatMapFull(layout, bookedSeats, prices) {
         for (var j = 0; j < row.seats.length; j++) {
             var seat = row.seats[j];
             var seatClass = 'seat';
+
+            if (seat.type === 'space' || seat.type === 'aisle') {
+                html += '<div class="seat-space"></div>';
+                continue;
+            }
             
             if (seat.type === 'vip') seatClass += ' seat-vip';
             if (seat.type === 'couple') seatClass += ' seat-couple';
@@ -273,8 +424,21 @@ function renderSeatMapFull(layout, bookedSeats, prices) {
                 : '';
             
             html += '<div class="' + seatClass + '" data-seat="' + seat.number + '" ' + onclick + '>';
-            html += (seat.label || '');
+            html += (seat.label || seat.number || '');
             html += '</div>';
+
+            if (seat.number) {
+                var colNum = parseInt(String(seat.number).substring(1), 10);
+                var nextSeat = row.seats[j + 1];
+                var nextCol = nextSeat && nextSeat.number ? parseInt(String(nextSeat.number).substring(1), 10) : null;
+                if (nextCol !== null && nextCol - colNum > 1) {
+                    html += '<div class="seat-space"></div>';
+                } else if (colNum === 6 && nextCol === 7) {
+                    html += '<div class="seat-space"></div>';
+                } else if (row.row === 'J' && colNum === 3 && nextCol === 4) {
+                    html += '<div class="seat-space"></div>';
+                }
+            }
         }
         
         html += '</div>';
@@ -314,7 +478,7 @@ window.toggleSeat = function(seatNumber) {
             showErrorMsg('Chỉ được đặt tối đa 8 ghế!');
             return;
         }
-        
+
         seatElement.classList.add('seat-selected');
         window.selectedSeats.push(seatNumber);
     }
@@ -337,41 +501,294 @@ function showSuccessMsg(message) {
 
 // Validate seat selection
 function validateSeatSelectionNow(showAlert) {
-    if (!window.selectedSeats || window.selectedSeats.length === 0) {
+    return validateSeatSelectionForSeats(window.selectedSeats || [], showAlert);
+}
+
+function validateSeatSelectionForSeats(seats, showAlert) {
+    if (!seats || seats.length === 0) {
         if (showAlert) showErrorMsg('Vui lòng chọn ít nhất 1 ghế!');
         return { valid: false, message: 'Vui lòng chọn ít nhất 1 ghế!' };
     }
-    
-    if (window.selectedSeats.length > 8) {
+
+    if (seats.length > 8) {
         if (showAlert) showErrorMsg('Chỉ được đặt tối đa 8 ghế!');
         return { valid: false, message: 'Chỉ được đặt tối đa 8 ghế!' };
     }
-    
-    // Check for gaps (seats must be adjacent in same row)
-    var seatsByRow = {};
-    for (var i = 0; i < window.selectedSeats.length; i++) {
-        var seat = window.selectedSeats[i];
-        var row = seat.charAt(0);
-        var col = parseInt(seat.substring(1));
-        if (!seatsByRow[row]) seatsByRow[row] = [];
-        seatsByRow[row].push(col);
-    }
-    
-    for (var row in seatsByRow) {
-        var cols = seatsByRow[row].sort(function(a, b) { return a - b; });
-        
-        // Check if there are gaps between selected seats
-        for (var i = 0; i < cols.length - 1; i++) {
-            var gap = cols[i + 1] - cols[i];
-            if (gap > 1) {
-                var message = 'Ghế trong hàng ' + row + ' phải liền kề nhau!\nKhông được bỏ trống ghế ở giữa (ghế ' + row + cols[i] + ' và ' + row + cols[i+1] + ' cách nhau ' + (gap-1) + ' ghế)';
-                if (showAlert) showErrorMsg(message);
-                return { valid: false, message: message };
+
+    var booked = currentBookedSeats || [];
+    var rows = document.querySelectorAll('.seat-row');
+
+    for (var r = 0; r < rows.length; r++) {
+        var rowEl = rows[r];
+        var groups = getSeatGroupsFromRow(rowEl);
+        if (!groups.length) continue;
+
+        var rowName = groups[0][0].dataset.seat.charAt(0);
+
+        for (var g = 0; g < groups.length; g++) {
+            var groupSeats = groups[g];
+            var groupSeatNumbers = groupSeats.map(function(seatEl) { return seatEl.dataset.seat; });
+            var selectedInGroup = seats.filter(function(seat) { return groupSeatNumbers.indexOf(seat) !== -1; });
+
+            if (selectedInGroup.length === 0) continue;
+
+            var cols = selectedInGroup.map(function(seat) { return parseInt(seat.substring(1), 10); }).sort(function(a, b) { return a - b; });
+
+            for (var i = 0; i < cols.length - 1; i++) {
+                if (cols[i + 1] - cols[i] > 1) {
+                    var hasFreeGap = false;
+                    for (var gapCol = cols[i] + 1; gapCol < cols[i + 1]; gapCol++) {
+                        var gapSeat = rowName + gapCol;
+                        if (booked.indexOf(gapSeat) === -1) {
+                            hasFreeGap = true;
+                            break;
+                        }
+                    }
+                    if (hasFreeGap) {
+                        var message = 'Ghế trong cụm hàng ' + rowName + ' phải liền kề nhau! Không được bỏ trống ghế ở giữa (ví dụ: ' + rowName + cols[i] + ' và ' + rowName + cols[i + 1] + ').';
+                        if (showAlert) showErrorMsg(message);
+                        return { valid: false, message: message };
+                    }
+                }
+            }
+
+            var orphanValidation = validateGroupOrphanSeats(groupSeats, seats, booked, rowName);
+            if (!orphanValidation.valid) {
+                if (showAlert) showErrorMsg(orphanValidation.message);
+                return orphanValidation;
             }
         }
     }
-    
+
     return { valid: true, message: '' };
+}
+
+function splitGroupColsByBooked(groupCols, rowName, booked) {
+    var segments = [];
+    var current = [];
+
+    for (var i = 0; i < groupCols.length; i++) {
+        var col = groupCols[i];
+        var seatNo = rowName + col;
+        if (booked.indexOf(seatNo) !== -1) {
+            if (current.length > 0) {
+                segments.push(current.slice());
+                current = [];
+            }
+            continue;
+        }
+        current.push(col);
+    }
+
+    if (current.length > 0) {
+        segments.push(current);
+    }
+
+    return segments.length ? segments : [groupCols.slice()];
+}
+
+function countFreeSeatsFromEdge(segmentCols, rowName, selected, booked, fromLeft) {
+    var count = 0;
+    var cols = fromLeft ? segmentCols.slice() : segmentCols.slice().reverse();
+
+    for (var i = 0; i < cols.length; i++) {
+        var seatNo = rowName + cols[i];
+        if (isSeatOccupied(seatNo, selected, booked)) {
+            break;
+        }
+        count++;
+    }
+
+    return count;
+}
+
+function isSelectionAnchoredToBooked(selectedCols, rowName, booked, side) {
+    if (!selectedCols.length) {
+        return false;
+    }
+
+    var minSel = Math.min.apply(null, selectedCols);
+    var maxSel = Math.max.apply(null, selectedCols);
+
+    if (side === 'left') {
+        return booked.indexOf(rowName + (minSel - 1)) !== -1;
+    }
+
+    return booked.indexOf(rowName + (maxSel + 1)) !== -1;
+}
+
+function isSelectionTouchingSegmentEdge(selectedCols, segmentCols, side) {
+    if (!selectedCols.length || !segmentCols.length) {
+        return false;
+    }
+
+    var minSel = Math.min.apply(null, selectedCols);
+    var maxSel = Math.max.apply(null, selectedCols);
+    var minSeg = Math.min.apply(null, segmentCols);
+    var maxSeg = Math.max.apply(null, segmentCols);
+
+    return side === 'left' ? minSel === minSeg : maxSel === maxSeg;
+}
+
+function validateGroupOrphanSeats(groupSeats, selected, booked, rowName) {
+    if (groupSeats.length < 2) {
+        return { valid: true, message: '' };
+    }
+
+    var groupCols = groupSeats.map(function(seatEl) {
+        return parseInt(seatEl.dataset.seat.substring(1), 10);
+    }).sort(function(a, b) { return a - b; });
+
+    var selectedCols = groupSeats
+        .map(function(seatEl) { return seatEl.dataset.seat; })
+        .filter(function(seatNo) { return selected.indexOf(seatNo) !== -1; })
+        .map(function(seatNo) { return parseInt(seatNo.substring(1), 10); })
+        .sort(function(a, b) { return a - b; });
+
+    if (selectedCols.length === 0) {
+        return { valid: true, message: '' };
+    }
+
+    var segments = splitGroupColsByBooked(groupCols, rowName, booked);
+
+    for (var s = 0; s < segments.length; s++) {
+        var segmentCols = segments[s];
+        var selectedInSegment = selectedCols.filter(function(col) {
+            return segmentCols.indexOf(col) !== -1;
+        });
+
+        if (selectedInSegment.length === 0) {
+            continue;
+        }
+
+        if (selectedInSegment.length > 2) {
+            var leftFree = countFreeSeatsFromEdge(segmentCols, rowName, selected, booked, true);
+            var rightFree = countFreeSeatsFromEdge(segmentCols, rowName, selected, booked, false);
+            var anchoredLeft = isSelectionAnchoredToBooked(selectedInSegment, rowName, booked, 'left');
+            var anchoredRight = isSelectionAnchoredToBooked(selectedInSegment, rowName, booked, 'right');
+            var touchesLeft = isSelectionTouchingSegmentEdge(selectedInSegment, segmentCols, 'left') || anchoredLeft;
+            var touchesRight = isSelectionTouchingSegmentEdge(selectedInSegment, segmentCols, 'right') || anchoredRight;
+
+            // Chỉ chặn ghế lẻ ở đầu cụm nếu KHÔNG chọn sát cuối cụm (và ngược lại)
+            if (!touchesRight && leftFree === 1) {
+                return {
+                    valid: false,
+                    message: 'Khi đặt hơn 2 ghế ở hàng ' + rowName + ', phải để trống 0 hoặc ít nhất 2 ghế ở đầu cụm. Hiện đang để lẻ 1 ghế.'
+                };
+            }
+
+            if (!touchesLeft && rightFree === 1) {
+                return {
+                    valid: false,
+                    message: 'Khi đặt hơn 2 ghế ở hàng ' + rowName + ', phải để trống 0 hoặc ít nhất 2 ghế ở cuối cụm. Hiện đang để lẻ 1 ghế.'
+                };
+            }
+        }
+
+        var existingSingles = findSingleFreeColsInGroup(segmentCols, rowName, [], booked);
+        var newSingles = findSingleFreeColsInGroup(segmentCols, rowName, selected, booked);
+
+        for (var i = 0; i < newSingles.length; i++) {
+            var col = newSingles[i];
+            if (existingSingles.indexOf(col) !== -1) {
+                continue;
+            }
+
+            if (isInvalidSingleOrphanCol(col, segmentCols, rowName, selectedInSegment, selected, booked)) {
+                return {
+                    valid: false,
+                    message: 'Không được để lẻ 1 ghế trống ở hàng ' + rowName + ' (ghế ' + rowName + col + '). Vui lòng chọn thêm ghế đó, chọn từ phía ghế đã đặt, hoặc chừa tối thiểu 2 ghế trống liền nhau.'
+                };
+            }
+        }
+    }
+
+    return { valid: true, message: '' };
+}
+
+function findSingleFreeColsInGroup(groupCols, rowName, selected, booked) {
+    var singles = [];
+    var freeRun = [];
+
+    for (var i = 0; i < groupCols.length; i++) {
+        var col = groupCols[i];
+        var seatNo = rowName + col;
+        var occupied = isSeatOccupied(seatNo, selected, booked);
+
+        if (!occupied) {
+            freeRun.push(col);
+            continue;
+        }
+
+        if (freeRun.length === 1) {
+            singles.push(freeRun[0]);
+        }
+        freeRun = [];
+    }
+
+    if (freeRun.length === 1) {
+        singles.push(freeRun[0]);
+    }
+
+    return singles;
+}
+
+function isInvalidSingleOrphanCol(col, groupCols, rowName, selectedCols, selected, booked) {
+    var idx = groupCols.indexOf(col);
+    if (idx === -1) {
+        return false;
+    }
+
+    var leftCol = idx > 0 ? groupCols[idx - 1] : null;
+    var rightCol = idx < groupCols.length - 1 ? groupCols[idx + 1] : null;
+    var leftOcc = leftCol !== null && isSeatOccupied(rowName + leftCol, selected, booked);
+    var rightOcc = rightCol !== null && isSeatOccupied(rowName + rightCol, selected, booked);
+
+    // Ghế lẻ 1 ở giữa hai ghế đã chiếm (đã chọn hoặc đã đặt)
+    if (leftOcc && rightOcc) {
+        return true;
+    }
+
+    var minSel = Math.min.apply(null, selectedCols);
+    var maxSel = Math.max.apply(null, selectedCols);
+
+    // Một ghế trống ở đầu cụm: được phép nếu chọn sát cuối cụm hoặc sát ghế đã đặt
+    if (!leftOcc && rightOcc && col < minSel) {
+        if (maxSel === Math.max.apply(null, groupCols)) {
+            return false;
+        }
+        if (booked.indexOf(rowName + (maxSel + 1)) !== -1) {
+            return false;
+        }
+        if (selectedCols.length >= 2) {
+            return true;
+        }
+    }
+
+    // Một ghế trống ở cuối cụm: được phép nếu chọn sát đầu cụm hoặc sát ghế đã đặt
+    if (leftOcc && !rightOcc && col > maxSel) {
+        if (minSel === Math.min.apply(null, groupCols)) {
+            return false;
+        }
+        if (booked.indexOf(rowName + (minSel - 1)) !== -1) {
+            return false;
+        }
+        if (selectedCols.length >= 2) {
+            var leftSeat = rowName + leftCol;
+            if (booked.indexOf(leftSeat) !== -1) {
+                return false;
+            }
+            if (selected.indexOf(leftSeat) !== -1) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+function validateNoSingleSeatAtRowEnds() {
+    return validateSeatSelectionForSeats(window.selectedSeats || [], false);
 }
 
 // Update seat summary
@@ -529,6 +946,13 @@ window.confirmSeats = function() {
     }
     
     updateBookingSummaryFull();
+
+    var emailSection = document.getElementById('emailSection');
+    if (emailSection) {
+        setTimeout(function() {
+            emailSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 120);
+    }
     
     return true;
 };
@@ -593,6 +1017,17 @@ window.updateFoodQuantity = function(foodId, change) {
 
 // Also make it available without window prefix
 var updateFoodQuantity = window.updateFoodQuantity;
+
+document.addEventListener('change', function(event) {
+    if (event.target && event.target.name === 'payment_method') {
+        var bookBtn = document.getElementById('bookBtn');
+        if (bookBtn) {
+            bookBtn.innerHTML = event.target.value === 'wallet'
+                ? '<i class="fas fa-wallet"></i> Thanh toán bằng ví CineHub'
+                : '<i class="fas fa-credit-card"></i> Tiếp tục thanh toán VNPay';
+        }
+    }
+});
 
 // Update booking summary (full)
 function updateBookingSummaryFull() {
@@ -683,8 +1118,20 @@ function updateBookingSummaryFull() {
     var totalEl = document.getElementById('totalPrice');
     if (totalEl) totalEl.textContent = new Intl.NumberFormat('vi-VN').format(totalPrice) + ' ₫';
     
+    updatePayButtonState();
+}
+
+function updatePayButtonState() {
     var bookBtn = document.getElementById('bookBtn');
-    if (bookBtn) bookBtn.disabled = false;
+    if (!bookBtn) return;
+
+    var terms = document.querySelector('input[name="accept_terms"]');
+    var emailInput = document.getElementById('customerEmail');
+    var emailOk = emailInput && emailInput.value.trim().length > 0;
+    var termsOk = terms && terms.checked;
+    var seatsOk = window.seatsConfirmed === true;
+
+    bookBtn.disabled = !(seatsOk && termsOk && emailOk);
 }
 
 // Update booking summary
@@ -806,7 +1253,7 @@ function doSelectTheater(theaterId) {
             var date = new Date();
             date.setDate(date.getDate() + i);
             
-            var dateStr = date.toISOString().split('T')[0];
+            var dateStr = formatLocalDate(date);
             var dayOfWeek = date.getDay();
             var day = String(date.getDate()).padStart(2, '0');
             var month = String(date.getMonth() + 1).padStart(2, '0');
@@ -870,6 +1317,23 @@ function validateFormBeforeSubmit() {
         console.error('Validation failed: Seats not confirmed');
         return false;
     }
+
+    if (!email || !email.trim()) {
+        alert('Vui lòng nhập email nhận vé!');
+        return false;
+    }
+
+    var terms = document.querySelector('input[name="accept_terms"]');
+    if (!terms || !terms.checked) {
+        alert('Vui lòng đồng ý với điều khoản và chính sách!');
+        return false;
+    }
+
+    var bookBtn = document.getElementById('bookBtn');
+    if (bookBtn) {
+        bookBtn.disabled = true;
+        bookBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý thanh toán...';
+    }
     
     console.log('✅ Form validation passed! Submitting...');
     console.log('Final form data:');
@@ -879,6 +1343,27 @@ function validateFormBeforeSubmit() {
     
     return true;
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    var terms = document.querySelector('input[name="accept_terms"]');
+    var emailInput = document.getElementById('customerEmail');
+
+    if (terms) {
+        terms.addEventListener('change', updatePayButtonState);
+    }
+    if (emailInput) {
+        emailInput.addEventListener('input', updatePayButtonState);
+    }
+
+    updatePayButtonState();
+
+    <?php if(session('error')): ?>
+        alert(<?php echo json_encode(session('error'), 15, 512) ?>);
+    <?php endif; ?>
+    <?php if($errors->any()): ?>
+        alert(<?php echo json_encode($errors->first(), 15, 512) ?>);
+    <?php endif; ?>
+});
 </script>
 <?php $__env->stopPush(); ?>
 
@@ -1045,11 +1530,11 @@ function validateFormBeforeSubmit() {
                         </div>
                     <?php else: ?>
                     
-                    <form id="bookingForm" method="POST" action="<?php echo e(route('booking.processBooking')); ?>" class="booking-form" onsubmit="return validateFormBeforeSubmit()">
+                    <form id="bookingForm" method="POST" action="<?php echo e(route('booking.processBooking')); ?>" class="booking-form" novalidate onsubmit="return validateFormBeforeSubmit()">
                         <?php echo csrf_field(); ?>
                         
                         <!-- Hidden inputs for form submission -->
-                        <input type="hidden" name="showtime_id" id="showtimeIdInput" value="">
+                        <input type="hidden" name="showtime_id" id="showtimeIdInput" value="<?php echo e(old('showtime_id', $selectedShowtimeId ?? '')); ?>">
                         <div id="seatsInputContainer" style="display: none;"></div>
                         
                         <!-- Theater Selection as Cards -->
@@ -1067,7 +1552,7 @@ function validateFormBeforeSubmit() {
                                 </div>
                             </div>
                             
-                            <input type="hidden" name="theater_id" id="theaterIdInput" required>
+                            <input type="hidden" name="theater_id" id="theaterIdInput">
                             
                             <!-- Test button for debugging -->
                             <button type="button" onclick="alert('Button works! Theater cards: ' + document.querySelectorAll('.theater-card').length)" style="margin-bottom: 10px; padding: 8px 16px; background: #e50914; color: white; border: none; border-radius: 4px;">
@@ -1286,8 +1771,7 @@ function validateFormBeforeSubmit() {
                                    id="customerEmail" 
                                    class="form-control" 
                                    placeholder="email@example.com"
-                                   value="<?php echo e(Auth::check() ? Auth::user()->email : ''); ?>"
-                                   required>
+                                   value="<?php echo e(old('customer_email', Auth::check() ? Auth::user()->email : '')); ?>">
                             <small class="text-muted" style="font-size: 11px; display: block; margin-top: 5px;">
                                 <i class="fas fa-info-circle"></i> Vé điện tử sẽ được gửi đến email này
                             </small>
@@ -1345,11 +1829,17 @@ function validateFormBeforeSubmit() {
                             </div>
                         </div>
                         
-                        <!-- Food Items Section - Grid cards -->
+                        <!-- Food Items Section - iframe-style scrollable panel -->
                         <div id="foodSection" class="form-group" style="display: none;">
                             <label class="form-label" style="margin-bottom: 10px;">
                                 <i class="fas fa-utensils me-2"></i>Combo Đồ Ăn & Nước (Tùy chọn)
                             </label>
+                            <div class="food-iframe-shell">
+                                <div class="food-iframe-header">
+                                    <span><i class="fas fa-shopping-basket"></i> Chọn combo</span>
+                                    <small>Cuộn xuống để xem thêm</small>
+                                </div>
+                                <div class="food-order-frame">
                             <div id="foodItemsContainer" class="food-items-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
                                 <?php
                                     $hasFoodItems = isset($foodItems) && count($foodItems) > 0;
@@ -1378,9 +1868,53 @@ function validateFormBeforeSubmit() {
                                     <p class="text-muted" style="text-align: center; grid-column: 1 / -1;">Không có combo đồ ăn nào</p>
                                 <?php endif; ?>
                             </div>
+                            </div>
+                            </div>
                         </div>
                         
                         <style>
+                            .food-iframe-shell {
+                                border: 2px solid rgba(255, 255, 255, 0.18);
+                                border-radius: 14px;
+                                overflow: hidden;
+                                background: #151515;
+                                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+                            }
+                            .food-iframe-header {
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                padding: 10px 14px;
+                                background: linear-gradient(90deg, #2a2a2a, #1f1f1f);
+                                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                                color: #fff;
+                                font-size: 13px;
+                                font-weight: 600;
+                            }
+                            .food-iframe-header small {
+                                color: #aaa;
+                                font-weight: normal;
+                                font-size: 11px;
+                            }
+                            .food-order-frame {
+                                max-height: 360px;
+                                overflow-y: auto;
+                                overflow-x: hidden;
+                                padding: 14px;
+                                background: #1f1f1f;
+                                box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+                            }
+                            .food-order-frame::-webkit-scrollbar {
+                                width: 10px;
+                            }
+                            .food-order-frame::-webkit-scrollbar-track {
+                                background: #2a2a2a;
+                                border-radius: 999px;
+                            }
+                            .food-order-frame::-webkit-scrollbar-thumb {
+                                background: #b5121b;
+                                border-radius: 999px;
+                            }
                             .btn-quantity-compact:hover {
                                 background: #4a4a4a !important;
                                 transform: scale(1.05);
@@ -1396,9 +1930,15 @@ function validateFormBeforeSubmit() {
                             <label class="form-label" style="margin-bottom: 10px;">
                                 <i class="fas fa-credit-card me-2"></i>Phương thức thanh toán
                             </label>
+                            <?php if(empty($vnpayConfigured)): ?>
+                                <div class="alert alert-warning" style="font-size: 13px; margin-bottom: 10px;">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    VNPay chưa cấu hình (.env). Bạn có thể thanh toán bằng <strong>Ví CineHub</strong>.
+                                </div>
+                            <?php endif; ?>
                             <div class="payment-methods" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                <label class="payment-method-card" style="border: 2px solid #444; border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.3s; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                                    <input type="radio" name="payment_method" value="vnpay" checked style="position: absolute; opacity: 0;">
+                                <label class="payment-method-card" style="border: 2px solid #444; border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.3s; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; <?php echo e(empty($vnpayConfigured) ? 'opacity:0.55;' : ''); ?>">
+                                    <input type="radio" name="payment_method" value="vnpay" <?php echo e(!empty($vnpayConfigured) ? 'checked' : 'disabled'); ?> style="position: absolute; opacity: 0;">
                                     <i class="fas fa-credit-card" style="color: #1e88e5; font-size: 24px;"></i>
                                     <div>
                                         <div style="color: #fff; font-weight: bold; font-size: 13px;">VNPay</div>
@@ -1406,7 +1946,7 @@ function validateFormBeforeSubmit() {
                                     </div>
                                 </label>
                                 <label class="payment-method-card" style="border: 2px solid #444; border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.3s; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                                    <input type="radio" name="payment_method" value="wallet" style="position: absolute; opacity: 0;">
+                                    <input type="radio" name="payment_method" value="wallet" <?php echo e(empty($vnpayConfigured) ? 'checked' : ''); ?> style="position: absolute; opacity: 0;">
                                     <i class="fas fa-wallet" style="color: #28a745; font-size: 24px;"></i>
                                     <div>
                                         <div style="color: #fff; font-weight: bold; font-size: 13px;">Ví CineHub</div>
@@ -1452,7 +1992,7 @@ function validateFormBeforeSubmit() {
                         <!-- Terms -->
                         <div class="form-group">
                             <label class="checkbox-label">
-                                <input type="checkbox" name="accept_terms" required>
+                                <input type="checkbox" name="accept_terms" value="1">
                                 <span>Tôi đồng ý với điều khoản và chính sách</span>
                             </label>
                         </div>

@@ -1,5 +1,9 @@
+<?php
+    $movieUrl = route('movies.introduce', $movie->id);
+?>
+
 <div class="movie-card">
-    <div class="movie-card-image">
+    <a href="<?php echo e($movieUrl); ?>" class="movie-card-image">
         <?php if($movie->thumbnail): ?>
         <img src="<?php echo e($movie->thumbnail); ?>" alt="<?php echo e($movie->title); ?>" class="movie-poster">
         <?php else: ?>
@@ -8,18 +12,20 @@
         </div>
         <?php endif; ?>
         <div class="movie-card-overlay">
-            <a href="<?php echo e(route('movies.watch', $movie->id)); ?>" class="play-button">
+            <span class="play-button">
                 <i class="fas fa-play"></i>
-            </a>
+            </span>
         </div>
         <div class="movie-card-badge">
             <?php if($movie->rating): ?>
             <span class="rating-badge"><?php echo e(number_format($movie->rating, 1)); ?></span>
             <?php endif; ?>
         </div>
-    </div>
+    </a>
     <div class="movie-card-info">
-        <h3 class="movie-title"><?php echo e($movie->title); ?></h3>
+        <h3 class="movie-title">
+            <a href="<?php echo e($movieUrl); ?>"><?php echo e($movie->title); ?></a>
+        </h3>
         <p class="movie-meta">
             <?php if($movie->category): ?>
             <?php echo e($movie->category->name); ?>
@@ -130,6 +136,11 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    .movie-title a {
+        color: inherit;
+        text-decoration: none;
     }
 
     .movie-meta {

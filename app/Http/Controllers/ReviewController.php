@@ -164,6 +164,31 @@ class ReviewController extends Controller
         return redirect()->route('movies.watch', $movieId)->with('success', 'Đánh giá của bạn đã được gửi!');
     }
     
+    public function update(Request $request, $id)
+    {
+        $review = Review::where('user_id', Auth::id())->findOrFail($id);
+
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:10',
+            'comment' => 'nullable|string|max:1000',
+        ]);
+
+        $review->update([
+            'rating' => $request->input('rating'),
+            'comment' => trim($request->input('comment', '')),
+        ]);
+
+        return redirect()->route('movies.watch', $review->movie_id)->with('success', 'Da cap nhat danh gia.');
+    }
+
+    public function like(Request $request, $id)
+    {
+        return response()->json([
+            'success' => false,
+            'message' => 'Tinh nang like danh gia chua duoc ho tro. Hay dung like binh luan.',
+        ], 422);
+    }
+
     /**
      * Xóa đánh giá (chỉ admin)
      */

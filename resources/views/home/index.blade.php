@@ -79,7 +79,7 @@
 
                                         <!-- Action Buttons -->
                                         <div class="hero-actions">
-                                            <a href="{{ route('movies.watch', $featuredMovie->id) }}" class="btn-play-large">
+                                            <a href="{{ route('movies.introduce', $featuredMovie->id) }}" class="btn-play-large">
                                                 <i class="fas fa-play"></i>
                                             </a>
                                             <button class="btn-action-icon" title="Yêu thích">
