@@ -63,3 +63,24 @@ if (!function_exists('generate_booking_qr')) {
         return $service->generateBookingQrCode($bookingId, $verificationCode);
     }
 }
+
+if (!function_exists('movie_img')) {
+    /**
+     * Trả về URL ảnh phim đúng cách.
+     * - Nếu đã là URL đầy đủ (http/https) → giữ nguyên
+     * - Nếu là path tương đối → dùng asset()
+     * - Nếu rỗng → trả về placeholder
+     */
+    function movie_img(?string $path, string $placeholder = ''): string
+    {
+        if (empty($path)) {
+            return $placeholder ?: asset('data/img/placeholder.svg');
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        return storage_url($path);
+    }
+}

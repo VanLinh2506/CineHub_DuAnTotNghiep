@@ -107,19 +107,16 @@ class Movie extends Model
     {
         // Access raw attribute value to avoid recursion
         $rawValue = $this->attributes['thumbnail'] ?? null;
-        
-        if (empty($rawValue)) return null;
-        
+
+        if (empty($rawValue)) {
+            return asset('data/img/placeholder.svg');
+        }
+
         // If already full URL, return as is
         if (str_starts_with($rawValue, 'http://') || str_starts_with($rawValue, 'https://')) {
             return $rawValue;
         }
-        
-        // If path starts with data/img/ or data/phim/, use it directly
-        if (str_starts_with($rawValue, 'data/img/') || str_starts_with($rawValue, 'data/phim/')) {
-            return asset('storage/' . $rawValue);
-        }
-        
+
         return storage_url($rawValue);
     }
 
@@ -127,19 +124,16 @@ class Movie extends Model
     {
         // Access raw attribute value to avoid recursion
         $rawValue = $this->attributes['banner'] ?? null;
-        
-        if (empty($rawValue)) return null;
-        
+
+        if (empty($rawValue)) {
+            return asset('data/img/placeholder.svg');
+        }
+
         // If already full URL, return as is
         if (str_starts_with($rawValue, 'http://') || str_starts_with($rawValue, 'https://')) {
             return $rawValue;
         }
-        
-        // If path starts with data/img/ or data/phim/, use it directly
-        if (str_starts_with($rawValue, 'data/img/') || str_starts_with($rawValue, 'data/phim/')) {
-            return asset('storage/' . $rawValue);
-        }
-        
+
         return storage_url($rawValue);
     }
 

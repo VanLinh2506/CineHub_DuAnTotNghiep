@@ -107,24 +107,34 @@ class AuthController extends Controller
                 'password' => 'required|min:6',
                 'confirm_password' => 'required|same:password',
             ]);
-            
-            $user = User::create([
-                'name' => $request->input('name'),
-                'email' => $request->input('email'),
-                'password' => Hash::make($request->input('password')),
-                'subscription_id' => 1,
-            ]);
-            
-            Auth::login($user);
-            $request->session()->regenerate();
-            
-            if ($request->ajax()) {
-                return response()->json(['success' => true, 'redirect' => route('home')]);
+
+            try {
+                $user = User::create([
+                    'name'     => $request->input('name'),
+                    'email'    => $request->input('email'),
+                    'password' => Hash::make($request->input('password')),
+                ]);
+
+                Auth::login($user);
+                $request->session()->regenerate();
+
+                if ($request->ajax()) {
+                    return response()->json(['success' => true, 'redirect' => route('home')]);
+                }
+
+                return redirect()->route('home')->with('success', 'Đăng ký thành công!');
+
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Register error: ' . $e->getMessage());
+
+                if ($request->ajax()) {
+                    return response()->json(['success' => false, 'error' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
+                }
+
+                return back()->with('error', 'Có lỗi xảy ra. Vui lòng thử lại!')->withInput($request->only('name', 'email'));
             }
-            
-            return redirect()->route('home')->with('success', 'Đăng ký thành công!');
         }
-        
+
         return redirect()->route('home');
     }
     

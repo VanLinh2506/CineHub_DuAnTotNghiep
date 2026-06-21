@@ -21,7 +21,7 @@
                             $durationText = 'Phim bộ';
                         }
                         $imdbRating = number_format($featuredMovie->rating * 1.1, 1);
-                        $bgImage = !empty($featuredMovie->banner) ? $featuredMovie->banner : $featuredMovie->thumbnail;
+                        $bgImage = !empty($featuredMovie->banner) ? movie_img($featuredMovie->banner) : movie_img($featuredMovie->thumbnail);
                     ?>
                     <div class="hero-slide <?php if($index === 0): ?> active <?php endif; ?>" data-slide="<?php echo e($index); ?>">
                         <!-- Film Grain Overlay - Hiệu ứng hạt tròn -->
@@ -107,7 +107,7 @@
             <div class="hero-slider-thumbnails">
                 <?php $__currentLoopData = $sliderMovies; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $movie): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <?php
-                        $thumbImage = !empty($movie->thumbnail) ? $movie->thumbnail : $movie->banner;
+                        $thumbImage = !empty($movie->thumbnail) ? movie_img($movie->thumbnail) : movie_img($movie->banner);
                     ?>
                     <div class="thumbnail-item <?php if($index === 0): ?> active <?php endif; ?>" 
                          onclick="goToSlide(<?php echo e($index); ?>)" 

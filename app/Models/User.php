@@ -34,6 +34,7 @@ class User extends Authenticatable
         'theater_id',
         'is_active',
         'status',
+        'remember_token',
     ];
 
     /**

@@ -57,7 +57,7 @@
             <div>
                 <label class="block text-sm text-gray-400 mb-1">Ngày chiếu</label>
                 <input type="date" name="show_date" required
-                       value="{{ old('show_date', $showtime->show_date?->format('Y-m-d') ?? '') }}"
+                       value="{{ old('show_date', isset($showtime) ? $showtime->show_date?->format('Y-m-d') : '') }}"
                        min="{{ today()->toDateString() }}"
                        class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white">
                 @error('show_date') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
@@ -74,7 +74,7 @@
         <div>
             <label class="block text-sm text-gray-400 mb-1">Giá vé (VND)</label>
             <input type="number" name="price" required min="1000" step="1000"
-                   value="{{ old('price', $showtime->price ?? '') }}"
+                   value="{{ old('price', isset($showtime) ? $showtime->price : '') }}"
                    class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white">
             @error('price') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
         </div>

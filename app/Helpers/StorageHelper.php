@@ -57,23 +57,36 @@ if (!function_exists('storage_url')) {
             return $path;
         }
         
-        // If path starts with data/img/ or data/phim/, these are in storage/app/public
-        // so we need to prepend /storage/ to access them
-        if (str_starts_with($path, 'data/img/') || str_starts_with($path, 'data/phim/')) {
-            return asset('storage/' . $path);
-        }
-        
-        // If path starts with data/storage/, remove the duplicate
-        if (str_starts_with($path, 'data/storage/')) {
-            $path = substr($path, strlen('data/storage/'));
-            return asset('storage/' . $path);
-        }
-        
-        // Convert old paths to new paths for compatibility
+        // Normalize and convert legacy paths
         $path = old_to_new_path($path);
-        
-        // Return full URL with storage prefix
-        return asset('storage/' . ltrim($path, '/'));
+        $path = ltrim($path, '/');
+
+        // If path already points to the public storage link, use it directly
+        if (str_starts_with($path, 'storage/')) {
+            return asset($path);
+        }
+
+        // If file exists directly in public/, use direct asset URL
+        if (file_exists(public_path($path))) {
+            return asset($path);
+        }
+
+        // If file exists in public/storage/, use storage asset path
+        if (file_exists(public_path('storage/' . $path))) {
+            return asset('storage/' . $path);
+        }
+
+        // If file is available through Laravel public storage disk, use storage URL
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+            return asset('storage/' . $path);
+        }
+
+        // If the requested path is missing, use fallback placeholder image.
+        if (file_exists(public_path('data/img/placeholder.svg'))) {
+            return asset('data/img/placeholder.svg');
+        }
+
+        return asset('data/img/poster/poster_datve.jpg');
     }
 }
 
