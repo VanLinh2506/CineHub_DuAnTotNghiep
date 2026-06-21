@@ -9,7 +9,7 @@
         <?php endif; ?>
         CineHub
     </title>
-    <link rel="icon" href="<?php echo e(storage_url('data/img/avt_webb.png')); ?>" type="image/png">
+    <link rel="icon" href="<?php echo e(asset('data/img/avt_webb.png')); ?>" type="image/png">
     
     <?php if(isset($meta_description)): ?>
         <meta name="description" content="<?php echo e($meta_description); ?>">

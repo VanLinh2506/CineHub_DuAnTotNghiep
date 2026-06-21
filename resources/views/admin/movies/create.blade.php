@@ -5,7 +5,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Thêm phim mới</h2>
 
-        <a href="{{ route('admin.movies') }}" class="btn btn-secondary">
+        <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Quay lại
         </a>
     </div>
@@ -14,6 +14,19 @@
         <form method="POST" action="{{ route('admin.movies.store') }}" enctype="multipart/form-data">
 
             @csrf
+
+            {{-- Hiển thị validation errors --}}
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Có lỗi xảy ra:</strong>
+                    <ul class="mb-0 mt-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <div class="row">
 
@@ -298,6 +311,8 @@
 
 @push('scripts')
     <script>
+        let episodeCount = 0;
+
         // Preview Image
         function previewImage(input, previewId, boxId) {
             const preview = document.getElementById(previewId);

@@ -14,8 +14,9 @@ class SyncEpisodeVideos extends Command
 
     public function handle()
     {
-        // Scan videos from storage/app/public only.
+        // Ưu tiên quét trong storage trước, sau đó mới quét public
         $storagePath = storage_path('app/public/data/phim/phimbo');
+        $publicPath = public_path('data/phim/phimbo');
         
         // Kiểm tra xem folder nào có videos
         $baseVideoPath = null;
@@ -25,10 +26,15 @@ class SyncEpisodeVideos extends Command
             $baseVideoPath = $storagePath;
             $urlPrefix = 'data/phim/phimbo'; // Sẽ được truy cập qua /storage/data/phim/phimbo
             $this->line("Sử dụng: storage/app/public/data/phim/phimbo");
+        } elseif (File::isDirectory($publicPath) && !empty(File::directories($publicPath))) {
+            $baseVideoPath = $publicPath;
+            $urlPrefix = 'data/phim/phimbo'; // Truy cập trực tiếp
+            $this->line("Sử dụng: public/data/phim/phimbo");
         } else {
             $this->error('Không tìm thấy folder phim bộ nào!');
             $this->line('Đã kiểm tra:');
             $this->line('  - ' . $storagePath);
+            $this->line('  - ' . $publicPath);
             return 1;
         }
         

@@ -9,6 +9,20 @@
                 <i class="fas fa-plus me-1"></i> Thêm thể loại
             </button>
         </div>
+
+        {{-- Hiển thị validation errors --}}
+        @if ($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Có lỗi xảy ra:</strong>
+                <ul class="mb-0 mt-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
         
         <div class="table-responsive">
             <table class="table table-hover">
@@ -22,60 +36,49 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (empty($categories))
+                    @forelse ($categories as $category)
+                        <tr>
+                            <td>{{ $category->id }}</td>
+                            <td>
+                                <strong>{{ $category->name }}</strong>
+                            </td>
+                            <td>
+                                @if ($category->parent_id)
+                                    {{ $category->parent?->name ?? '-' }}
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ $category->movies_count ?? 0 }} phim</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" 
+                                        onclick="editCategory({{ $category->id }}, '{{ addslashes($category->name) }}', '{{ $category->parent_id }}')"
+                                        title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                @if (($category->movies_count ?? 0) == 0)
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="deleteCategory({{ $category->id }}, '{{ addslashes($category->name) }}')"
+                                            title="Xóa">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                @else
+                                    <button class="btn btn-sm btn-outline-secondary" disabled title="Không thể xóa - có phim đang sử dụng">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
                         <tr>
                             <td colspan="5" class="text-center py-4">
                                 <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
                                 Chưa có thể loại nào
                             </td>
                         </tr>
-                    @else
-                        @foreach ($categories as $category)
-                            <tr>
-                                <td>{{ $category['id'] }}</td>
-                                <td>
-                                    <strong>{{ $category['name'] }}</strong>
-                                </td>
-                                <td>
-                                    @if ($category['parent_id'])
-                                        @php
-                                            $parentName = '';
-                                            foreach ($categories as $parent) {
-                                                if ($parent['id'] == $category['parent_id']) {
-                                                    $parentName = $parent['name'];
-                                                    break;
-                                                }
-                                            }
-                                        @endphp
-                                        {{ $parentName }}
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">{{ $category['movie_count'] ?? 0 }} phim</span>
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary me-1" 
-                                            onclick="editCategory(@json($category))"
-                                            title="Sửa">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    @if (($category['movie_count'] ?? 0) == 0)
-                                        <button class="btn btn-sm btn-outline-danger" 
-                                                onclick="deleteCategory({{ $category['id'] }}, '{{ $category['name'] }}')"
-                                                title="Xóa">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    @else
-                                        <button class="btn btn-sm btn-outline-secondary" disabled title="Không thể xóa - có phim đang sử dụng">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    @endif
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -86,7 +89,7 @@
 <div class="modal fade" id="addCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ url('?route=admin/categories/store') }}" method="POST">
+            <form action="{{ route('admin.categories.store') }}" method="POST">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Thêm thể loại mới</h5>
@@ -95,14 +98,18 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Tên thể loại <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control" required placeholder="Nhập tên thể loại">
+                        <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" 
+                               required placeholder="Nhập tên thể loại" value="{{ old('name') }}">
+                        @error('name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Thể loại cha (tùy chọn)</label>
                         <select name="parent_id" class="form-select">
                             <option value="">-- Không có --</option>
                             @foreach ($categories as $cat)
-                                <option value="{{ $cat['id'] }}">{{ $cat['name'] }}</option>
+                                <option value="{{ $cat->id }}" @selected(old('parent_id') == $cat->id)>{{ $cat->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -120,9 +127,9 @@
 <div class="modal fade" id="editCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ url('?route=admin/categories/update') }}" method="POST">
+            <form id="editCategoryForm" method="POST">
                 @csrf
-                <input type="hidden" name="id" id="edit_id">
+                @method('PUT')
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Sửa thể loại</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -137,7 +144,7 @@
                         <select name="parent_id" id="edit_parent_id" class="form-select">
                             <option value="">-- Không có --</option>
                             @foreach ($categories as $cat)
-                                <option value="{{ $cat['id'] }}">{{ $cat['name'] }}</option>
+                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -155,9 +162,9 @@
 <div class="modal fade" id="deleteCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ url('?route=admin/categories/delete') }}" method="POST">
+            <form id="deleteCategoryForm" method="POST">
                 @csrf
-                <input type="hidden" name="id" id="delete_id">
+                @method('DELETE')
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Xóa thể loại</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -176,17 +183,24 @@
 </div>
 
 <script>
-    function editCategory(category) {
-        document.getElementById('edit_id').value = category.id;
-        document.getElementById('edit_name').value = category.name;
-        document.getElementById('edit_parent_id').value = category.parent_id || '';
+    function editCategory(id, name, parentId) {
+        document.getElementById('edit_name').value = name;
+        document.getElementById('edit_parent_id').value = parentId || '';
+        document.getElementById('editCategoryForm').action = '{{ url("admin/categories") }}/' + id;
         new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
     }
 
     function deleteCategory(id, name) {
-        document.getElementById('delete_id').value = id;
         document.getElementById('delete_name').textContent = name;
+        document.getElementById('deleteCategoryForm').action = '{{ url("admin/categories") }}/' + id;
         new bootstrap.Modal(document.getElementById('deleteCategoryModal')).show();
     }
+
+    // Auto-open add modal if there are validation errors
+    @if ($errors->any() && old('name'))
+        document.addEventListener('DOMContentLoaded', function() {
+            new bootstrap.Modal(document.getElementById('addCategoryModal')).show();
+        });
+    @endif
 </script>
 @endsection
