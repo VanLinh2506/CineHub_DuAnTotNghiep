@@ -28,7 +28,7 @@ class NotificationController extends Controller
             ->where('is_read', 0)
             ->count();
         
-        return view('user.notifications.index', compact('notifications', 'unreadCount'));
+        return view('notifications.index', compact('notifications', 'unreadCount'));
     }
     
     public function markAsRead(Request $request)
@@ -54,19 +54,6 @@ class NotificationController extends Controller
         return response()->json(['success' => true]);
     }
     
-    public function markAllAsRead()
-    {
-        if (!Auth::check()) {
-            return response()->json(['success' => false, 'message' => 'ChÆ°a Ä‘Äƒng nháº­p']);
-        }
-
-        DB::table('notifications')
-            ->where('user_id', Auth::id())
-            ->update(['is_read' => 1]);
-
-        return response()->json(['success' => true]);
-    }
-
     public function delete(Request $request, $id)
     {
         if (!Auth::check()) {
@@ -137,3 +124,4 @@ class NotificationController extends Controller
         }
     }
 }
+

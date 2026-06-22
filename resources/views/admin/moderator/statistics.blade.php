@@ -27,46 +27,9 @@
 .progress-bar-modern.good { background:linear-gradient(90deg,#ffc107,#ffb300); }
 .progress-bar-modern.poor { background:linear-gradient(90deg,#dc3545,#c82333); }
 .filter-group { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:20px; padding:16px; background:linear-gradient(135deg,#f8f9ff 0%,#fff 100%); border-radius:12px; border:1px solid #e9ecef; }
-.filter-group > div { flex: 1 1 180px; min-width: 0; }
-.filter-group .form-select { width: 100% !important; max-width: 100% !important; }
 .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:16px; border-bottom:2px solid #e9ecef; }
 .section-header h6 { margin:0; font-size:20px; font-weight:700; color:#2d1b3d; display:flex; align-items:center; gap:10px; }
 .section-header h6 i { color:#6c5ce7; }
-@media (max-width: 768px) {
-    .chart-container,
-    .stats-table-container {
-        padding: 16px;
-    }
-
-    .section-header,
-    .d-flex.justify-content-between.align-items-center.mb-3,
-    .d-flex.justify-content-between.align-items-center.mb-4 {
-        flex-direction: column;
-        align-items: flex-start !important;
-        gap: 12px;
-    }
-
-    .filter-group {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .filter-group > div {
-        width: 100%;
-    }
-
-    #fillRateDateFilter,
-    #fillRateMovieFilter,
-    #fillRateDateFilterTable,
-    #fillRateScreenFilter,
-    #fillRateTimeFilter {
-        width: 100% !important;
-    }
-
-    .chart-wrapper {
-        height: 300px;
-    }
-}
 </style>
 @endpush
 

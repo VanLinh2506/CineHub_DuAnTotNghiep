@@ -3,7 +3,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h5>Chi tiết vé #{{ $ticket['id'] }}</h5>
-    <a href="{{ route('admin.tickets.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    <a href="?route=admin/tickets" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
 </div>
 
 <div class="row">
@@ -112,7 +112,7 @@
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
                                 <h6 class="mb-1">
-                                    <a href="#" class="text-decoration-none">{{ '#'. $st['id'] }} - {{ $st['subject'] }}</a>
+                                    <a href="?route=admin/support/view&id={{ $st['id'] }}" class="text-decoration-none">#{{ $st['id'] }} - {{ $st['subject'] }}</a>
                                 </h6>
                                 <small class="text-muted"><i class="fas fa-calendar me-1"></i>{{ date('d/m/Y H:i', strtotime($st['created_at'])) }}</small>
                             </div>
@@ -127,7 +127,7 @@
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted"><i class="fas fa-user me-1"></i>{{ $st['user_name'] }}</small>
-                            <a href="#" class="btn btn-sm btn-outline-primary disabled" tabindex="-1" aria-disabled="true"><i class="fas fa-eye me-1"></i>Xem chi tiết</a>
+                            <a href="?route=admin/support/view&id={{ $st['id'] }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye me-1"></i>Xem chi tiết</a>
                         </div>
                     </div>
                     @endforeach
@@ -148,15 +148,26 @@
 
         <div class="stat-card">
             <h6 class="mb-3"><i class="fas fa-tasks me-2"></i>Thao tác</h6>
-                @if($ticket['status'] === 'Đã đặt')
-                    <div class="alert alert-info mb-3">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Các thao tác hoàn thành, hủy và hoàn tiền cho vé đang được hoàn thiện ở backend.
-                    </div>
+            @if($ticket['status'] === 'Đã đặt')
+                @if(empty($ticket['qr_code']))
+                    <form method="POST" action="?route=admin/tickets/complete" class="mb-2" onsubmit="return confirm('Bạn chắc chắn muốn hoàn thành vé thủ công? Hệ thống sẽ tạo QR code cho vé.');">
+                        <input type="hidden" name="ticket_id" value="{{ $ticket['id'] }}">
+                        <button type="submit" class="btn btn-success w-100 mb-2"><i class="fas fa-check-circle me-2"></i>Hoàn thành vé thủ công</button>
+                    </form>
+                    <small class="text-muted d-block mb-3"><i class="fas fa-info-circle me-1"></i>Sử dụng khi khách hàng đã thanh toán nhưng chưa nhận được vé.</small>
                 @else
-                    <div class="alert alert-secondary"><i class="fas fa-info-circle me-2"></i>Vé đã bị hủy. Không thể thực hiện thao tác.</div>
+                    <div class="alert alert-success mb-3"><i class="fas fa-check-circle me-2"></i>Vé đã có QR code. Khách hàng có thể sử dụng vé này.</div>
                 @endif
-            </div>
+                <a href="?route=admin/tickets/cancel&id={{ $ticket['id'] }}" class="btn btn-outline-warning w-100 mb-2" onclick="return confirm('Bạn chắc chắn muốn hủy vé?')">
+                    <i class="fas fa-times me-2"></i>Hủy vé
+                </a>
+                <a href="?route=admin/tickets/refund&id={{ $ticket['id'] }}" class="btn btn-outline-danger w-100" onclick="return confirm('Bạn chắc chắn muốn hoàn tiền?')">
+                    <i class="fas fa-undo me-2"></i>Hoàn tiền
+                </a>
+            @else
+                <div class="alert alert-secondary"><i class="fas fa-info-circle me-2"></i>Vé đã bị hủy. Không thể thực hiện thao tác.</div>
+            @endif
+        </div>
     </div>
 </div>
 @endsection

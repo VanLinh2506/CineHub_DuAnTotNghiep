@@ -5,10 +5,10 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Quản lý phim</h2>
         <div>
-            <a href="{{ route('admin.movies.scanEpisodes') }}" class="btn btn-info me-2">
+            <a href="{{ url('?route=admin/movies/scanEpisodes') }}" class="btn btn-info me-2">
                 <i class="fas fa-folder-open"></i> Import tập từ folder
             </a>
-            <a href="{{ route('admin.movies.create') }}" class="btn btn-primary">
+            <a href="{{ url('?route=admin/movies/create') }}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Thêm phim mới
             </a>
         </div>
@@ -111,19 +111,15 @@
                                 <td>{{ \Carbon\Carbon::parse($m['created_at'])->format('d/m/Y') }}</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{{ route('admin.movies.edit', $m['id']) }}" class="btn btn-outline-primary" title="Sửa">
+                                        <a href="{{ url('?route=admin/movies/edit&id=' . $m['id']) }}" class="btn btn-outline-primary" title="Sửa">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{{ route('movies.show', $m['id']) }}" class="btn btn-outline-info" title="Xem chi tiết">
+                                        <a href="{{ url('?route=admin/movies/view&id=' . $m['id']) }}" class="btn btn-outline-info" title="Xem chi tiết">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <form method="POST" action="{{ route('admin.movies.destroy', $m['id']) }}" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn xóa phim &quot;{{ $m['title'] }}&quot;?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-outline-danger" title="Xóa">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                        <button onclick="deleteMovie({{ $m['id'] }}, '{{ $m['title'] }}')" class="btn btn-outline-danger" title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -136,5 +132,11 @@
 </div>
 
 <script>
+    function deleteMovie(movieId, title) {
+        if (confirm('Bạn chắc chắn muốn xóa phim "' + title + '"?')) {
+            // Submit delete action
+            window.location.href = '{{ url("?route=admin/movies/delete&id=") }}' + movieId;
+        }
+    }
 </script>
 @endsection

@@ -1,42 +1,34 @@
-<a href="{{ route('movies.introduce', $movie->id) }}" class="movie-card-link">
-    <div class="movie-card">
-        <div class="movie-card-image">
-            @if ($movie->thumbnail)
-            <img src="{{ $movie->thumbnail }}" alt="{{ $movie->title }}" class="movie-poster">
-            @else
-            <div class="movie-poster-placeholder">
-                <i class="fas fa-image"></i>
-            </div>
-            @endif
-            <div class="movie-card-overlay">
-                <span class="play-button">
-                    <i class="fas fa-play"></i>
-                </span>
-            </div>
-            <div class="movie-card-badge">
-                @if ($movie->rating)
-                <span class="rating-badge">{{ number_format($movie->rating, 1) }}</span>
-                @endif
-            </div>
+<div class="movie-card">
+    <div class="movie-card-image">
+        @if ($movie->thumbnail)
+        <img src="{{ $movie->thumbnail }}" alt="{{ $movie->title }}" class="movie-poster">
+        @else
+        <div class="movie-poster-placeholder">
+            <i class="fas fa-image"></i>
         </div>
-        <div class="movie-card-info">
-            <h3 class="movie-title">{{ $movie->title }}</h3>
-            <p class="movie-meta">
-                @if ($movie->category)
-                {{ $movie->category->name }}
-                @endif
-            </p>
+        @endif
+        <div class="movie-card-overlay">
+            <a href="{{ route('movies.watch', $movie->id) }}" class="play-button">
+                <i class="fas fa-play"></i>
+            </a>
+        </div>
+        <div class="movie-card-badge">
+            @if ($movie->rating)
+            <span class="rating-badge">{{ number_format($movie->rating, 1) }}</span>
+            @endif
         </div>
     </div>
-</a>
+    <div class="movie-card-info">
+        <h3 class="movie-title">{{ $movie->title }}</h3>
+        <p class="movie-meta">
+            @if ($movie->category)
+            {{ $movie->category->name }}
+            @endif
+        </p>
+    </div>
+</div>
 
 <style>
-    .movie-card-link {
-        display: block;
-        color: inherit;
-        text-decoration: none;
-    }
-
     .movie-card {
         background: #1a1a1a;
         border-radius: 8px;
@@ -103,7 +95,6 @@
         font-size: 20px;
         transition: background 0.3s;
         text-decoration: none;
-        pointer-events: none;
     }
 
     .play-button:hover {

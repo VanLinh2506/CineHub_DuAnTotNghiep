@@ -23,41 +23,10 @@
         .stat-card * { color: #333; }
         .staff-main { color: #333; }
         .staff-main > h4, .staff-main > h5, .staff-main > h6 { color: #333 !important; }
-        .staff-main form {
-            width: 100%;
-            max-width: 100%;
-        }
-        .staff-main .row {
-            min-width: 0;
-        }
-        .staff-main .d-inline-flex {
-            flex-wrap: wrap;
-        }
-        .form-control, .form-select {
-            width: 100%;
-            max-width: 100%;
-            border-radius: 8px;
-        }
-        textarea.form-control {
-            resize: vertical;
-        }
         @media screen and (max-width: 768px) {
             .staff-sidebar { position: fixed; left: -250px; transition: left 0.3s ease; z-index: 9999; }
             .staff-sidebar.active { left: 0; }
             .staff-main { margin-left: 0; padding: 15px; padding-top: 70px; }
-            .staff-main .d-flex {
-                flex-wrap: wrap;
-            }
-            .staff-main .btn-group {
-                flex-wrap: wrap;
-            }
-            .staff-main .btn-group .btn,
-            .staff-main .d-flex > .btn,
-            .staff-main .d-flex > .form-control,
-            .staff-main .d-flex > .form-select {
-                width: 100%;
-                max-width: 100%;
-            }
             .mobile-menu-toggle { display: block !important; position: fixed; top: 15px; left: 15px; z-index: 10000; background: #1a1a2e; border: none; color: #fff; padding: 10px 15px; border-radius: 8px; font-size: 1.2rem; }
             .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998; }
             .sidebar-overlay.active { display: block; }

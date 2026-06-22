@@ -53,7 +53,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="badge bg-info">{{ $category['movie_count'] ?? $category['movies_count'] ?? 0 }} phim</span>
+                                    <span class="badge bg-info">{{ $category['movie_count'] ?? 0 }} phim</span>
                                 </td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary me-1" 
@@ -61,7 +61,7 @@
                                             title="Sửa">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    @if (($category['movie_count'] ?? $category['movies_count'] ?? 0) == 0)
+                                    @if (($category['movie_count'] ?? 0) == 0)
                                         <button class="btn btn-sm btn-outline-danger" 
                                                 onclick="deleteCategory({{ $category['id'] }}, '{{ $category['name'] }}')"
                                                 title="Xóa">
@@ -86,7 +86,7 @@
 <div class="modal fade" id="addCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ route('admin.categories.store') }}" method="POST">
+            <form action="{{ url('?route=admin/categories/store') }}" method="POST">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Thêm thể loại mới</h5>
@@ -120,9 +120,9 @@
 <div class="modal fade" id="editCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="" method="POST" id="editCategoryForm">
+            <form action="{{ url('?route=admin/categories/update') }}" method="POST">
                 @csrf
-                @method('PUT')
+                <input type="hidden" name="id" id="edit_id">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Sửa thể loại</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -155,9 +155,9 @@
 <div class="modal fade" id="deleteCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="" method="POST" id="deleteCategoryForm">
+            <form action="{{ url('?route=admin/categories/delete') }}" method="POST">
                 @csrf
-                @method('DELETE')
+                <input type="hidden" name="id" id="delete_id">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Xóa thể loại</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -177,16 +177,14 @@
 
 <script>
     function editCategory(category) {
-        const form = document.getElementById('editCategoryForm');
-        form.action = "{{ route('admin.categories.update', ['id' => '__ID__']) }}".replace('__ID__', category.id);
+        document.getElementById('edit_id').value = category.id;
         document.getElementById('edit_name').value = category.name;
         document.getElementById('edit_parent_id').value = category.parent_id || '';
         new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
     }
 
     function deleteCategory(id, name) {
-        const form = document.getElementById('deleteCategoryForm');
-        form.action = "{{ route('admin.categories.destroy', ['id' => '__ID__']) }}".replace('__ID__', id);
+        document.getElementById('delete_id').value = id;
         document.getElementById('delete_name').textContent = name;
         new bootstrap.Modal(document.getElementById('deleteCategoryModal')).show();
     }

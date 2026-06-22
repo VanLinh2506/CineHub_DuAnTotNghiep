@@ -5,7 +5,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Thêm phim mới</h2>
 
-        <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">
+        <a href="{{ route('admin.movies') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Quay lại
         </a>
     </div>
@@ -36,19 +36,23 @@
                 {{-- Thể loại --}}
                 <div class="col-md-6 mb-3">
                     <label for="category_ids" class="form-label">
-                    Thể loại
-                </label>
+                        Thể loại
+                        <small class="text-muted">(có thể chọn nhiều)</small>
+                    </label>
 
-                    <select class="form-select" id="category_id" name="category_id">
-                        <option value="">-- Chọn thể loại --</option>
+                    <select class="form-select" id="category_ids" name="category_ids[]" multiple size="4">
 
                         @foreach($categories as $cat)
-                            <option value="{{ $cat->id }}" @selected(old('category_id') == $cat->id)>
+                            <option value="{{ $cat->id }}" @selected(in_array($cat->id, old('category_ids', [])))>
                                 {{ $cat->name }}
                             </option>
                         @endforeach
 
                     </select>
+
+                    <small class="text-muted">
+                        Giữ Ctrl (Windows) hoặc Cmd (Mac) để chọn nhiều thể loại
+                    </small>
                 </div>
 
                 {{-- Level --}}
@@ -283,7 +287,7 @@
             </div>
 
             <div class="d-flex justify-content-end gap-2 mt-4">
-                <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">Hủy</a>
+                <a href="?route=admin/movies" class="btn btn-secondary">Hủy</a>
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Lưu
                 </button>

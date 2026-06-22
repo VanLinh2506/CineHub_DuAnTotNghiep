@@ -185,34 +185,16 @@
         .btn-sm { padding: 5px 12px; font-size: 0.875rem; }
         
         /* Forms */
-        .admin-main form {
-            width: 100%;
-            max-width: 100%;
-        }
-        .admin-main .row {
-            min-width: 0;
-        }
-        .admin-main .d-inline-flex {
-            flex-wrap: wrap;
-        }
         .form-control, .form-select { 
             border-radius: 8px; 
             border: 1px solid #e0e0e0;
             padding: 10px 15px;
-            width: 100%;
-            max-width: 100%;
-        }
-        textarea.form-control {
-            resize: vertical;
         }
         .form-control:focus, .form-select:focus { 
             border-color: #667eea; 
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25); 
         }
         .form-label { font-weight: 500; margin-bottom: 8px; }
-        input[type="file"].form-control {
-            padding: 8px 12px;
-        }
         
         /* Alerts */
         .alert { 
@@ -241,19 +223,6 @@
             .stat-card { padding: 15px; }
             .stat-card .stat-value { font-size: 1.5rem; }
             .stat-card .stat-icon { width: 50px; height: 50px; font-size: 1.3rem; }
-            .admin-main .d-flex {
-                flex-wrap: wrap;
-            }
-            .admin-main .btn-group {
-                flex-wrap: wrap;
-            }
-            .admin-main .btn-group .btn,
-            .admin-main .d-flex > .btn,
-            .admin-main .d-flex > .form-control,
-            .admin-main .d-flex > .form-select {
-                width: 100%;
-                max-width: 100%;
-            }
             .mobile-menu-toggle { 
                 display: block !important; 
                 position: fixed; 

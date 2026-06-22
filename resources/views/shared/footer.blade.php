@@ -198,7 +198,7 @@
         list.innerHTML =
             '<div class="notification-loading"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
 
-        fetch(`{{ route('notifications.getNotifications') }}?limit=10`)
+        fetch('?route=notifications/getNotifications&limit=10')
             .then(response => {
 
                 if (!response.ok) {
@@ -255,7 +255,7 @@
 
                         const link =
                             notif.link ||
-                            `{{ route('notifications.index') }}`;
+                            '?route=notifications/index';
 
                         html += `
                         <div
@@ -362,8 +362,15 @@
 
     function markAsRead(notificationId) {
 
-        fetch(`{{ route('notifications.markAsRead') }}?id=` + notificationId, {
-            method: 'GET'
+        fetch('?route=notifications/markAsRead', {
+            method: 'POST',
+
+            headers: {
+                'Content-Type':
+                    'application/x-www-form-urlencoded'
+            },
+
+            body: 'id=' + notificationId
         })
             .then(response => response.json())
             .then(data => {
@@ -376,7 +383,7 @@
 
     function updateNotificationBadge() {
 
-        fetch(`{{ route('notifications.getUnreadCount') }}`)
+        fetch('?route=notifications/getUnreadCount')
             .then(response => response.json())
             .then(data => {
 

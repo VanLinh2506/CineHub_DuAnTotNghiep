@@ -15,21 +15,21 @@
                 <label class="form-label small">Module</label>
                 <select name="module" class="form-select" id="moduleFilter" onchange="this.form.submit()">
                     <option value="">Tất cả modules</option>
-                    <option value="Movie" @selected(($module ?? null)==='Movie' )>Phim</option>
-                    <option value="Theater" @selected(($module ?? null)==='Theater' )>Rạp</option>
-                    <option value="Review" @selected(($module ?? null)==='Review' )>Bình luận</option>
-                    <option value="User" @selected(($module ?? null)==='User' )>Người dùng</option>
-                    <option value="System" @selected(($module ?? null)==='System' )>Hệ thống</option>
+                    <option value="Movie" {{ (isset($module) && $module === 'Movie') ? 'selected' : '' }}>Phim</option>
+                    <option value="Theater" {{ (isset($module) && $module === 'Theater') ? 'selected' : '' }}>Rạp</option>
+                    <option value="Review" {{ (isset($module) && $module === 'Review') ? 'selected' : '' }}>Bình luận</option>
+                    <option value="User" {{ (isset($module) && $module === 'User') ? 'selected' : '' }}>Người dùng</option>
+                    <option value="System" {{ (isset($module) && $module === 'System') ? 'selected' : '' }}>Hệ thống</option>
                 </select>
             </div>
             <div class="col-md-4">
                 <label class="form-label small">Hành động</label>
                 <select name="action" class="form-select" id="actionFilter" onchange="this.form.submit()">
                     <option value="">Tất cả hành động</option>
-                    <option value="Thêm" @selected(isset($action) && strpos($action, 'Thêm' ) !==false)>Thêm</option>
-                    <option value="Xóa" @selected(isset($action) && strpos($action, 'Xóa' ) !==false)>Xóa</option>
-                    <option value="Cập nhật" @selected(isset($action) && strpos($action, 'Cập nhật' ) !==false)>Cập nhật</option>
-                    <option value="Ghim" @selected(isset($action) && strpos($action, 'Ghim' ) !==false)>Ghim/Bỏ ghim</option>
+                    <option value="Thêm" {{ (isset($action) && strpos($action, 'Thêm') !== false) ? 'selected' : '' }}>Thêm</option>
+                    <option value="Xóa" {{ (isset($action) && strpos($action, 'Xóa') !== false) ? 'selected' : '' }}>Xóa</option>
+                    <option value="Cập nhật" {{ (isset($action) && strpos($action, 'Cập nhật') !== false) ? 'selected' : '' }}>Cập nhật</option>
+                    <option value="Ghim" {{ (isset($action) && strpos($action, 'Ghim') !== false) ? 'selected' : '' }}>Ghim/Bỏ ghim</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -40,7 +40,7 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label small">&nbsp;</label>
-                <a href="{{ route('admin.logs') }}" class="btn btn-outline-secondary w-100">
+                <a href="{{ url('?route=admin/logs') }}" class="btn btn-outline-secondary w-100">
                     <i class="fas fa-redo"></i> Xóa lọc
                 </a>
             </div>
@@ -64,46 +64,46 @@
                 </thead>
                 <tbody>
                     @if (empty($logs))
-                    <tr>
-                        <td colspan="7" class="text-center text-muted">Không có log nào</td>
-                    </tr>
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">Không có log nào</td>
+                        </tr>
                     @else
-                    @foreach ($logs as $log)
-                    <tr>
-                        <td>{{ data_get($log, 'id') }}</td>
-                        <td>
-                            <strong>{{ data_get($log, 'user_name', 'N/A') }}</strong>
-                            <br><small class="text-muted">{{ data_get($log, 'user_email', 'N/A') }}</small>
-                        </td>
-                        <td>
-                            <span class="badge bg-{{
-                                        data_get($log, 'module') === 'Movie' ? 'primary' :
-                                        (data_get($log, 'module') === 'Theater' ? 'success' :
-                                        (data_get($log, 'module') === 'User' ? 'info' : 'warning'))
+                        @foreach ($logs as $log)
+                            <tr>
+                                <td>{{ $log['id'] }}</td>
+                                <td>
+                                    <strong>{{ $log['user_name'] ?? 'N/A' }}</strong>
+                                    <br><small class="text-muted">{{ $log['user_email'] ?? 'N/A' }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 
+                                        $log['module'] === 'Movie' ? 'primary' : 
+                                        ($log['module'] === 'Theater' ? 'success' : 
+                                        ($log['module'] === 'User' ? 'info' : 'warning'))
                                     }}">
-                                {{ data_get($log, 'module', 'N/A') }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge bg-{{
-                                        strpos((string) data_get($log, 'action', ''), 'Thêm') !== false ? 'success' :
-                                        (strpos((string) data_get($log, 'action', ''), 'Xóa') !== false ? 'danger' :
-                                        (strpos((string) data_get($log, 'action', ''), 'Cập nhật') !== false ? 'warning' : 'secondary'))
+                                        {{ $log['module'] ?? 'N/A' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 
+                                        strpos($log['action'], 'Thêm') !== false ? 'success' : 
+                                        (strpos($log['action'], 'Xóa') !== false ? 'danger' : 
+                                        (strpos($log['action'], 'Cập nhật') !== false ? 'warning' : 'secondary'))
                                     }}">
-                                {{ data_get($log, 'action', 'N/A') }}
-                            </span>
-                        </td>
-                        <td>
-                            <small>{{ Str::limit(data_get($log, 'details', ''), 50) }}</small>
-                        </td>
-                        <td>
-                            <code>{{ data_get($log, 'ip_address', 'N/A') }}</code>
-                        </td>
-                        <td>
-                            <small>{{ \Carbon\Carbon::parse(data_get($log, 'created_at'))->format('d/m/Y H:i') }}</small>
-                        </td>
-                    </tr>
-                    @endforeach
+                                        {{ $log['action'] ?? 'N/A' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>{{ Str::limit($log['details'] ?? '', 50) }}</small>
+                                </td>
+                                <td>
+                                    <code>{{ $log['ip_address'] ?? 'N/A' }}</code>
+                                </td>
+                                <td>
+                                    <small>{{ \Carbon\Carbon::parse($log['created_at'])->format('d/m/Y H:i') }}</small>
+                                </td>
+                            </tr>
+                        @endforeach
                     @endif
                 </tbody>
             </table>

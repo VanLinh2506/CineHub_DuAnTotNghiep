@@ -5,7 +5,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Quản lý rạp chiếu</h2>
         @if (!isset(auth()->user()['role']) || auth()->user()['role'] !== 'moderator')
-            <a href="{{ route('admin.theaters.create') }}" class="btn btn-primary">
+            <a href="{{ url('?route=admin/theaters/create') }}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Thêm rạp mới
             </a>
         @endif
@@ -43,7 +43,7 @@
                             </p>
                         @endif
                         <div class="mt-3">
-                            <a href="{{ route('admin.theaters.show', $theater['id']) }}" class="btn btn-sm btn-outline-primary w-100">
+                            <a href="{{ url('?route=admin/theaters/view&id=' . $theater['id']) }}" class="btn btn-sm btn-outline-primary w-100">
                                 <i class="fas fa-eye"></i> Xem thông tin rạp
                             </a>
                             @php
@@ -55,7 +55,7 @@
                             @endphp
                             @if ($canEdit || (isset($user['role']) && $user['role'] === 'admin'))
                                 <div class="mt-2">
-                                    <a href="{{ route('admin.theaters.edit', $theater['id']) }}" class="btn btn-sm btn-outline-warning w-100">
+                                    <a href="{{ url('?route=admin/theaters/edit&id=' . $theater['id']) }}" class="btn btn-sm btn-outline-warning w-100">
                                         <i class="fas fa-edit"></i> Chỉnh sửa
                                     </a>
                                 </div>

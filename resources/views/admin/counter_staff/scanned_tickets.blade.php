@@ -5,9 +5,9 @@
     <h5 class="mb-4"><i class="fas fa-ticket-alt"></i> Vé đã quét hôm nay</h5>
 
     <div class="mb-3">
-        <form method="GET" class="d-flex gap-2 flex-wrap">
+        <form method="GET" class="d-flex gap-2">
             <input type="hidden" name="route" value="counterStaff/scannedTickets">
-            <input type="date" name="date" class="form-control" value="{{ $date }}" style="max-width: 100%; width: 100%;">
+            <input type="date" name="date" class="form-control" value="{{ $date }}" style="max-width: 200px;">
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-search"></i> Xem
             </button>

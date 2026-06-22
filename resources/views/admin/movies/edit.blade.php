@@ -157,308 +157,252 @@
         background: #fff;
         border-color: #e0e0e0 !important;
     }
-
-    .movie-edit-page {
-        max-width: 100%;
-        overflow-x: hidden;
-    }
-
-    .movie-edit-page .stat-card {
-        overflow: hidden;
-    }
-
-    .movie-edit-page .row {
-        min-width: 0;
-    }
-
-    .movie-edit-page .form-control,
-    .movie-edit-page .form-select,
-    .movie-edit-page textarea {
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .movie-edit-page img,
-    .movie-edit-page video {
-        max-width: 100%;
-        height: auto;
-    }
-
-    .movie-edit-page .table-responsive {
-        overflow-x: auto;
-    }
-
-    .movie-edit-page .upload-box {
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .movie-edit-page .btn-group {
-        flex-wrap: wrap;
-        gap: 0.35rem;
-    }
-
-    @media (max-width: 768px) {
-        .movie-edit-page .stat-card {
-            padding: 16px;
-        }
-
-        .movie-edit-page .upload-box {
-            min-height: 120px;
-            padding: 16px;
-        }
-
-        .movie-edit-page .episode-item {
-            padding: 14px;
-        }
-
-        .movie-edit-page .btn,
-        .movie-edit-page .btn-group .btn {
-            width: 100%;
-        }
-    }
 </style>
 
-<div class="movie-edit-page">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5>Sửa phim</h5>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5>Sửa phim</h5>
 
-        <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Quay lại
-        </a>
-    </div>
+    <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Quay lại
+    </a>
+</div>
 
-    <div class="stat-card">
-        <form method="POST" action="{{ route('admin.movies.update', $movie['id']) }}" enctype="multipart/form-data">
+<div class="stat-card">
+    <form method="POST" action="{{ route('admin.movies.update') }}" enctype="multipart/form-data">
 
-            @csrf
-            @method('PUT')
+        @csrf
 
-            <input type="hidden" name="id" value="{{ $movie['id'] }}">
+        <input type="hidden" name="id" value="{{ $movie['id'] }}">
 
-            <div class="row">
+        <div class="row">
 
-                <div class="col-md-12 mb-3">
-                    <label for="title" class="form-label">
-                        Tiêu đề phim
-                        <span class="text-danger">*</span>
-                    </label>
+            <div class="col-md-12 mb-3">
+                <label for="title" class="form-label">
+                    Tiêu đề phim
+                    <span class="text-danger">*</span>
+                </label>
 
-                    <input type="text" class="form-control" id="title" name="title"
-                        value="{{ old('title', $movie['title']) }}" required>
-                </div>
+                <input type="text" class="form-control" id="title" name="title"
+                    value="{{ old('title', $movie['title']) }}" required>
+            </div>
 
-                @php
+            @php
                 $selectedCategoryIds = [];
 
                 if (!empty($movieCategories)) {
-                $selectedCategoryIds = collect($movieCategories)
-                ->pluck('category_id')
-                ->toArray();
+                    $selectedCategoryIds = collect($movieCategories)
+                        ->pluck('category_id')
+                        ->toArray();
                 } elseif (!empty($movie['category_id'])) {
-                $selectedCategoryIds = [$movie['category_id']];
+                    $selectedCategoryIds = [$movie['category_id']];
                 }
-                @endphp
+            @endphp
 
-                <div class="col-md-6 mb-3">
-                    <label for="category_id" class="form-label">
-                        Thể loại
-                    </label>
+            <div class="col-md-6 mb-3">
+                <label for="category_ids" class="form-label">
+                    Thể loại
+                    <small class="text-muted">
+                        (có thể chọn nhiều)
+                    </small>
+                </label>
 
-                    <select class="form-select" id="category_id" name="category_id">
-                        <option value="">-- Chọn thể loại --</option>
+                <select class="form-select" id="category_ids" name="category_ids[]" multiple size="4">
 
-                        @foreach($categories as $cat)
-                        <option value="{{ $cat['id'] }}" {{ old('category_id', $movie['category_id'] ?? '') == $cat['id'] ? 'selected' : '' }}>
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat['id'] }}" {{ in_array($cat['id'], $selectedCategoryIds) ? 'selected' : '' }}>
                             {{ $cat['name'] }}
                         </option>
-                        @endforeach
+                    @endforeach
 
-                    </select>
-                </div>
+                </select>
 
-                <div class="col-md-3 mb-3">
-                    <label for="level" class="form-label">
-                        Cấp độ
-                    </label>
+                <small class="text-muted">
+                    Giữ Ctrl (Windows) hoặc Cmd (Mac) để chọn nhiều thể loại
+                </small>
+            </div>
 
-                    <select class="form-select" id="level" name="level">
+            <div class="col-md-3 mb-3">
+                <label for="level" class="form-label">
+                    Cấp độ
+                </label>
 
-                        <option value="Free" {{ $movie['level'] == 'Free' ? 'selected' : '' }}>
-                            Free
-                        </option>
+                <select class="form-select" id="level" name="level">
 
-                        <option value="Silver" {{ $movie['level'] == 'Silver' ? 'selected' : '' }}>
-                            Silver
-                        </option>
+                    <option value="Free" {{ $movie['level'] == 'Free' ? 'selected' : '' }}>
+                        Free
+                    </option>
 
-                        <option value="Gold" {{ $movie['level'] == 'Gold' ? 'selected' : '' }}>
-                            Gold
-                        </option>
+                    <option value="Silver" {{ $movie['level'] == 'Silver' ? 'selected' : '' }}>
+                        Silver
+                    </option>
 
-                        <option value="Premium" {{ $movie['level'] == 'Premium' ? 'selected' : '' }}>
-                            Premium
-                        </option>
+                    <option value="Gold" {{ $movie['level'] == 'Gold' ? 'selected' : '' }}>
+                        Gold
+                    </option>
 
-                    </select>
-                </div>
+                    <option value="Premium" {{ $movie['level'] == 'Premium' ? 'selected' : '' }}>
+                        Premium
+                    </option>
 
-                <div class="col-md-3 mb-3">
-                    <label for="status_admin" class="form-label">
-                        Trạng thái Admin
-                    </label>
+                </select>
+            </div>
 
-                    <select class="form-select" id="status_admin" name="status_admin">
+            <div class="col-md-3 mb-3">
+                <label for="status_admin" class="form-label">
+                    Trạng thái Admin
+                </label>
 
-                        <option value="draft" {{ ($movie['status_admin'] ?? 'draft') == 'draft' ? 'selected' : '' }}>
-                            Draft
-                        </option>
+                <select class="form-select" id="status_admin" name="status_admin">
 
-                        <option value="scheduled" {{ ($movie['status_admin'] ?? '') == 'scheduled' ? 'selected' : '' }}>
-                            Scheduled
-                        </option>
+                    <option value="draft" {{ ($movie['status_admin'] ?? 'draft') == 'draft' ? 'selected' : '' }}>
+                        Draft
+                    </option>
 
-                        <option value="published" {{ ($movie['status_admin'] ?? '') == 'published' ? 'selected' : '' }}>
-                            Published
-                        </option>
+                    <option value="scheduled" {{ ($movie['status_admin'] ?? '') == 'scheduled' ? 'selected' : '' }}>
+                        Scheduled
+                    </option>
 
-                        <option value="archived" {{ ($movie['status_admin'] ?? '') == 'archived' ? 'selected' : '' }}>
-                            Archived
-                        </option>
+                    <option value="published" {{ ($movie['status_admin'] ?? '') == 'published' ? 'selected' : '' }}>
+                        Published
+                    </option>
 
-                    </select>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label for="type" class="form-label">
-                        Loại phim
-                        <span class="text-danger">*</span>
-                    </label>
+                    <option value="archived" {{ ($movie['status_admin'] ?? '') == 'archived' ? 'selected' : '' }}>
+                        Archived
+                    </option>
 
-                    <select class="form-select" id="type" name="type"
-                        onchange="toggleSeriesSection(); toggleDurationField();">
+                </select>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label for="type" class="form-label">
+                    Loại phim
+                    <span class="text-danger">*</span>
+                </label>
 
-                        <option value="phimle" {{ ($movie['type'] ?? 'phimle') == 'phimle' ? 'selected' : '' }}>
-                            Phim lẻ
-                        </option>
+                <select class="form-select" id="type" name="type"
+                    onchange="toggleSeriesSection(); toggleDurationField();">
 
-                        <option value="phimbo" {{ ($movie['type'] ?? '') == 'phimbo' ? 'selected' : '' }}>
-                            Phim bộ
-                        </option>
+                    <option value="phimle" {{ ($movie['type'] ?? 'phimle') == 'phimle' ? 'selected' : '' }}>
+                        Phim lẻ
+                    </option>
 
-                    </select>
-                </div>
+                    <option value="phimbo" {{ ($movie['type'] ?? '') == 'phimbo' ? 'selected' : '' }}>
+                        Phim bộ
+                    </option>
 
-                <div class="col-md-3 mb-3">
-                    <label for="status" class="form-label">
-                        Trạng thái
-                    </label>
+                </select>
+            </div>
 
-                    <select class="form-select" id="status" name="status"
-                        onchange="toggleTheaterSection(); toggleDurationField();">
+            <div class="col-md-3 mb-3">
+                <label for="status" class="form-label">
+                    Trạng thái
+                </label>
 
-                        <option value="Sắp chiếu" {{ $movie['status'] == 'Sắp chiếu' ? 'selected' : '' }}>
-                            Sắp chiếu
-                        </option>
+                <select class="form-select" id="status" name="status"
+                    onchange="toggleTheaterSection(); toggleDurationField();">
 
-                        <option value="Chiếu rạp" {{ $movie['status'] == 'Chiếu rạp' ? 'selected' : '' }}>
-                            Chiếu rạp
-                        </option>
+                    <option value="Sắp chiếu" {{ $movie['status'] == 'Sắp chiếu' ? 'selected' : '' }}>
+                        Sắp chiếu
+                    </option>
 
-                        <option value="Chiếu online" {{ $movie['status'] == 'Chiếu online' ? 'selected' : '' }}>
-                            Chiếu online
-                        </option>
+                    <option value="Chiếu rạp" {{ $movie['status'] == 'Chiếu rạp' ? 'selected' : '' }}>
+                        Chiếu rạp
+                    </option>
 
-                    </select>
-                </div>
+                    <option value="Chiếu online" {{ $movie['status'] == 'Chiếu online' ? 'selected' : '' }}>
+                        Chiếu online
+                    </option>
 
-                {{-- Thời lượng chỉ hiện cho phim lẻ chiếu rạp --}}
-                <div class="col-md-3 mb-3" id="durationSection"
-                    style="display: {{ (($movie['type'] ?? 'phimle') == 'phimle' && $movie['status'] == 'Chiếu rạp') ? 'block' : 'none' }};">
+                </select>
+            </div>
 
-                    <label for="duration" class="form-label">
-                        Thời lượng (phút)
-                    </label>
+            {{-- Thời lượng chỉ hiện cho phim lẻ chiếu rạp --}}
+            <div class="col-md-3 mb-3" id="durationSection"
+                style="display: {{ (($movie['type'] ?? 'phimle') == 'phimle' && $movie['status'] == 'Chiếu rạp') ? 'block' : 'none' }};">
 
-                    <input type="number" class="form-control" id="duration" name="duration"
-                        value="{{ $movie['duration'] ?? '' }}" min="0">
+                <label for="duration" class="form-label">
+                    Thời lượng (phút)
+                </label>
 
-                    <small class="text-muted">
-                        Chỉ áp dụng cho phim chiếu rạp
-                    </small>
-                </div>
+                <input type="number" class="form-control" id="duration" name="duration"
+                    value="{{ $movie['duration'] ?? '' }}" min="0">
 
-                <div class="col-md-3 mb-3">
-                    {{-- Placeholder giữ layout --}}
-                </div>
+                <small class="text-muted">
+                    Chỉ áp dụng cho phim chiếu rạp
+                </small>
+            </div>
 
-                <div class="col-md-3 mb-3">
-                    <label for="age_rating" class="form-label">
-                        Độ tuổi
-                    </label>
+            <div class="col-md-3 mb-3">
+                {{-- Placeholder giữ layout --}}
+            </div>
 
-                    <input type="text" class="form-control" id="age_rating" name="age_rating"
-                        value="{{ old('age_rating', $movie['age_rating'] ?? '') }}" placeholder="VD: T18, P">
-                </div>
+            <div class="col-md-3 mb-3">
+                <label for="age_rating" class="form-label">
+                    Độ tuổi
+                </label>
 
-                <div class="col-md-6 mb-3">
-                    <label for="director" class="form-label">
-                        Đạo diễn
-                    </label>
+                <input type="text" class="form-control" id="age_rating" name="age_rating"
+                    value="{{ old('age_rating', $movie['age_rating'] ?? '') }}" placeholder="VD: T18, P">
+            </div>
 
-                    <input type="text" class="form-control" id="director" name="director"
-                        value="{{ old('director', $movie['director'] ?? '') }}">
-                </div>
+            <div class="col-md-6 mb-3">
+                <label for="director" class="form-label">
+                    Đạo diễn
+                </label>
 
-                <div class="col-md-6 mb-3">
-                    <label for="actors" class="form-label">
-                        Diễn viên
-                    </label>
+                <input type="text" class="form-control" id="director" name="director"
+                    value="{{ old('director', $movie['director'] ?? '') }}">
+            </div>
 
-                    <input type="text" class="form-control" id="actors" name="actors"
-                        value="{{ old('actors', $movie['actors'] ?? '') }}" placeholder="VD: Diễn viên 1, Diễn viên 2">
-                </div>
+            <div class="col-md-6 mb-3">
+                <label for="actors" class="form-label">
+                    Diễn viên
+                </label>
 
-                <div class="col-md-6 mb-3">
-                    <label for="country" class="form-label">
-                        Quốc gia
-                    </label>
+                <input type="text" class="form-control" id="actors" name="actors"
+                    value="{{ old('actors', $movie['actors'] ?? '') }}" placeholder="VD: Diễn viên 1, Diễn viên 2">
+            </div>
 
-                    <input type="text" class="form-control" id="country" name="country"
-                        value="{{ old('country', $movie['country'] ?? '') }}" placeholder="VD: Việt Nam, Mỹ">
-                </div>
+            <div class="col-md-6 mb-3">
+                <label for="country" class="form-label">
+                    Quốc gia
+                </label>
 
-                <div class="col-md-6 mb-3">
-                    <label for="language" class="form-label">
-                        Ngôn ngữ
-                    </label>
+                <input type="text" class="form-control" id="country" name="country"
+                    value="{{ old('country', $movie['country'] ?? '') }}" placeholder="VD: Việt Nam, Mỹ">
+            </div>
 
-                    <input type="text" class="form-control" id="language" name="language"
-                        value="{{ old('language', $movie['language'] ?? '') }}" placeholder="VD: Tiếng Việt, Tiếng Anh">
-                </div>
+            <div class="col-md-6 mb-3">
+                <label for="language" class="form-label">
+                    Ngôn ngữ
+                </label>
 
-                <div class="col-md-12 mb-3">
-                    <label for="description" class="form-label">
-                        Mô tả
-                    </label>
+                <input type="text" class="form-control" id="language" name="language"
+                    value="{{ old('language', $movie['language'] ?? '') }}" placeholder="VD: Tiếng Việt, Tiếng Anh">
+            </div>
 
-                    <textarea class="form-control" id="description" name="description"
-                        rows="4">{{ old('description', $movie['description'] ?? '') }}</textarea>
-                </div>
+            <div class="col-md-12 mb-3">
+                <label for="description" class="form-label">
+                    Mô tả
+                </label>
 
-                {{-- Upload Poster / Thumbnail --}}
-                <div class="col-md-6 mb-3">
+                <textarea class="form-control" id="description" name="description"
+                    rows="4">{{ old('description', $movie['description'] ?? '') }}</textarea>
+            </div>
 
-                    <label for="thumbnail_file" class="form-label">
-                        Poster / Thumbnail
-                    </label>
+            {{-- Upload Poster / Thumbnail --}}
+            <div class="col-md-6 mb-3">
 
-                    <div class="upload-box" id="thumbnailUploadBox"
-                        onclick="document.getElementById('thumbnail_file').click()">
+                <label for="thumbnail_file" class="form-label">
+                    Poster / Thumbnail
+                </label>
 
-                        <input type="file" class="form-control d-none" id="thumbnail_file" name="thumbnail_file"
-                            accept="image/*" onchange="previewImage(this, 'thumbnailPreview', 'thumbnailUploadBox')">
+                <div class="upload-box" id="thumbnailUploadBox"
+                    onclick="document.getElementById('thumbnail_file').click()">
 
-                        @if(!empty($movie['thumbnail']))
+                    <input type="file" class="form-control d-none" id="thumbnail_file" name="thumbnail_file"
+                        accept="image/*" onchange="previewImage(this, 'thumbnailPreview', 'thumbnailUploadBox')">
+
+                    @if(!empty($movie['thumbnail']))
 
                         <img id="thumbnailPreview" class="upload-preview" src="{{ $movie['thumbnail'] }}" alt="Preview">
 
@@ -476,7 +420,7 @@
 
                         </div>
 
-                        @else
+                    @else
 
                         <div class="upload-placeholder" id="thumbnailPlaceholder">
 
@@ -494,29 +438,29 @@
 
                         <img id="thumbnailPreview" class="upload-preview d-none" alt="Preview">
 
-                        @endif
-
-                    </div>
-
-                    <small class="text-muted">
-                        Click để thay đổi ảnh poster
-                    </small>
+                    @endif
 
                 </div>
 
-                {{-- Upload Banner --}}
-                <div class="col-md-6 mb-3">
+                <small class="text-muted">
+                    Click để thay đổi ảnh poster
+                </small>
 
-                    <label for="banner_file" class="form-label">
-                        Banner
-                    </label>
+            </div>
 
-                    <div class="upload-box" id="bannerUploadBox" onclick="document.getElementById('banner_file').click()">
+            {{-- Upload Banner --}}
+            <div class="col-md-6 mb-3">
 
-                        <input type="file" class="form-control d-none" id="banner_file" name="banner_file" accept="image/*"
-                            onchange="previewImage(this, 'bannerPreview', 'bannerUploadBox')">
+                <label for="banner_file" class="form-label">
+                    Banner
+                </label>
 
-                        @if(!empty($movie['banner']))
+                <div class="upload-box" id="bannerUploadBox" onclick="document.getElementById('banner_file').click()">
+
+                    <input type="file" class="form-control d-none" id="banner_file" name="banner_file" accept="image/*"
+                        onchange="previewImage(this, 'bannerPreview', 'bannerUploadBox')">
+
+                    @if(!empty($movie['banner']))
 
                         <img id="bannerPreview" class="upload-preview" src="{{ $movie['banner'] }}" alt="Preview">
 
@@ -534,7 +478,7 @@
 
                         </div>
 
-                        @else
+                    @else
 
                         <div class="upload-placeholder" id="bannerPlaceholder">
 
@@ -552,30 +496,30 @@
 
                         <img id="bannerPreview" class="upload-preview d-none" alt="Preview">
 
-                        @endif
-
-                    </div>
-
-                    <small class="text-muted">
-                        Click để thay đổi ảnh banner
-                    </small>
+                    @endif
 
                 </div>
-                {{-- Upload Video (chỉ hiện cho phim lẻ) --}}
-                <div class="col-md-6 mb-3" id="videoSection"
-                    style="display: {{ (($movie['type'] ?? 'phimle') == 'phimle') ? 'block' : 'none' }};">
 
-                    <label for="video_file" class="form-label">
-                        Video phim
-                    </label>
+                <small class="text-muted">
+                    Click để thay đổi ảnh banner
+                </small>
 
-                    <div class="upload-box video-upload" id="videoUploadBox"
-                        onclick="document.getElementById('video_file').click()">
+            </div>
+            {{-- Upload Video (chỉ hiện cho phim lẻ) --}}
+            <div class="col-md-6 mb-3" id="videoSection"
+                style="display: {{ (($movie['type'] ?? 'phimle') == 'phimle') ? 'block' : 'none' }};">
 
-                        <input type="file" class="form-control d-none" id="video_file" name="video_file" accept="video/*"
-                            onchange="previewVideo(this)">
+                <label for="video_file" class="form-label">
+                    Video phim
+                </label>
 
-                        @if(!empty($movie['video_url']))
+                <div class="upload-box video-upload" id="videoUploadBox"
+                    onclick="document.getElementById('video_file').click()">
+
+                    <input type="file" class="form-control d-none" id="video_file" name="video_file" accept="video/*"
+                        onchange="previewVideo(this)">
+
+                    @if(!empty($movie['video_url']))
 
                         <div id="videoInfo">
 
@@ -605,7 +549,7 @@
 
                         </div>
 
-                        @else
+                    @else
 
                         <div class="upload-placeholder" id="videoPlaceholder">
 
@@ -631,15 +575,15 @@
 
                         </div>
 
-                        @endif
+                    @endif
 
-                    </div>
+                </div>
 
-                    <small class="text-muted">
-                        Click để thay đổi video phim
-                    </small>
+                <small class="text-muted">
+                    Click để thay đổi video phim
+                </small>
 
-                    @if(!empty($movie['video_url']))
+                @if(!empty($movie['video_url']))
                     <div class="mt-2">
 
                         <small class="text-muted">
@@ -647,60 +591,60 @@
 
                             @if(Str::startsWith($movie['video_url'], 'http'))
 
-                            <a href="{{ $movie['video_url'] }}" target="_blank">
-                                {{ $movie['video_url'] }}
-                            </a>
+                                <a href="{{ $movie['video_url'] }}" target="_blank">
+                                    {{ $movie['video_url'] }}
+                                </a>
 
                             @else
 
-                            {{ $movie['video_url'] }}
+                                {{ $movie['video_url'] }}
 
                             @endif
 
                         </small>
 
                     </div>
-                    @endif
+                @endif
 
-                </div>
+            </div>
 
-                {{-- Thông báo cho phim bộ --}}
-                <div class="col-md-6 mb-3" id="videoSeriesNotice"
-                    style="display: {{ (($movie['type'] ?? 'phimle') == 'phimbo') ? 'block' : 'none' }};">
+            {{-- Thông báo cho phim bộ --}}
+            <div class="col-md-6 mb-3" id="videoSeriesNotice"
+                style="display: {{ (($movie['type'] ?? 'phimle') == 'phimbo') ? 'block' : 'none' }};">
 
-                    <label class="form-label">
-                        Video phim
-                    </label>
+                <label class="form-label">
+                    Video phim
+                </label>
 
-                    <div class="alert alert-info mb-0" style="min-height: 120px; display:flex; align-items:center;">
+                <div class="alert alert-info mb-0" style="min-height: 120px; display:flex; align-items:center;">
 
-                        <div>
-                            <i class="fas fa-info-circle me-2"></i>
+                    <div>
+                        <i class="fas fa-info-circle me-2"></i>
 
-                            <strong>Phim bộ:</strong>
+                        <strong>Phim bộ:</strong>
 
-                            Video được quản lý theo từng tập ở phần
-                            "Quản lý tập phim bộ" bên dưới.
-                        </div>
-
+                        Video được quản lý theo từng tập ở phần
+                        "Quản lý tập phim bộ" bên dưới.
                     </div>
 
                 </div>
 
-                {{-- Upload Trailer --}}
-                <div class="col-md-6 mb-3">
+            </div>
 
-                    <label for="trailer_file" class="form-label">
-                        Trailer
-                    </label>
+            {{-- Upload Trailer --}}
+            <div class="col-md-6 mb-3">
 
-                    <div class="upload-box video-upload" id="trailerUploadBox"
-                        onclick="document.getElementById('trailer_file').click()">
+                <label for="trailer_file" class="form-label">
+                    Trailer
+                </label>
 
-                        <input type="file" class="form-control d-none" id="trailer_file" name="trailer_file"
-                            accept="video/*" onchange="previewTrailer(this)">
+                <div class="upload-box video-upload" id="trailerUploadBox"
+                    onclick="document.getElementById('trailer_file').click()">
 
-                        @if(!empty($movie['trailer_url']) && !Str::startsWith($movie['trailer_url'], 'http'))
+                    <input type="file" class="form-control d-none" id="trailer_file" name="trailer_file"
+                        accept="video/*" onchange="previewTrailer(this)">
+
+                    @if(!empty($movie['trailer_url']) && !Str::startsWith($movie['trailer_url'], 'http'))
 
                         <div id="trailerInfo">
 
@@ -730,7 +674,7 @@
 
                         </div>
 
-                        @else
+                    @else
 
                         <div class="upload-placeholder" id="trailerPlaceholder">
 
@@ -756,33 +700,33 @@
 
                         </div>
 
-                        @endif
-
-                    </div>
-
-                    <small class="text-muted mt-1 d-block">
-                        Hoặc nhập URL YouTube:
-                    </small>
-
-                    <input type="url" class="form-control mt-1" id="trailer_url" name="trailer_url"
-                        value="{{ old('trailer_url', $movie['trailer_url'] ?? '') }}"
-                        placeholder="https://youtube.com/watch?v=...">
+                    @endif
 
                 </div>
 
+                <small class="text-muted mt-1 d-block">
+                    Hoặc nhập URL YouTube:
+                </small>
+
+                <input type="url" class="form-control mt-1" id="trailer_url" name="trailer_url"
+                    value="{{ old('trailer_url', $movie['trailer_url'] ?? '') }}"
+                    placeholder="https://youtube.com/watch?v=...">
+
             </div>
 
-            {{-- PHẦN QUẢN LÝ PHIM BỘ --}}
-            <div id="seriesSection" style="display: {{ (($movie['type'] ?? 'phimle') == 'phimbo') ? 'block' : 'none' }};">
+        </div>
 
-                <hr class="my-4">
+        {{-- PHẦN QUẢN LÝ PHIM BỘ --}}
+        <div id="seriesSection" style="display: {{ (($movie['type'] ?? 'phimle') == 'phimbo') ? 'block' : 'none' }};">
 
-                <h6 class="mb-3">
-                    <i class="fas fa-list me-2"></i>
-                    Quản lý tập phim bộ
-                </h6>
+            <hr class="my-4">
 
-                @if(!empty($episodes))
+            <h6 class="mb-3">
+                <i class="fas fa-list me-2"></i>
+                Quản lý tập phim bộ
+            </h6>
+
+            @if(!empty($episodes))
 
                 <div class="mb-4">
 
@@ -809,75 +753,75 @@
 
                                 @foreach($episodes as $episode)
 
-                                <tr>
+                                                    <tr>
 
-                                    <td class="text-center fw-bold">
-                                        {{ $episode['episode_number'] }}
-                                    </td>
+                                                        <td class="text-center fw-bold">
+                                                            {{ $episode['episode_number'] }}
+                                                        </td>
 
-                                    <td>
-                                        {{ $episode['title'] ?? ('Tập ' . $episode['episode_number']) }}
-                                    </td>
+                                                        <td>
+                                                            {{ $episode['title'] ?? ('Tập ' . $episode['episode_number']) }}
+                                                        </td>
 
-                                    <td>
+                                                        <td>
 
-                                        @if(!empty($episode['video_url']))
+                                                            @if(!empty($episode['video_url']))
 
-                                        <span class="text-success">
+                                                                <span class="text-success">
 
-                                            <i class="fas fa-check-circle"></i>
+                                                                    <i class="fas fa-check-circle"></i>
 
-                                            <a href="{{ $episode['video_url'] }}" target="_blank" class="text-success">
+                                                                    <a href="{{ $episode['video_url'] }}" target="_blank" class="text-success">
 
-                                                {{ basename($episode['video_url']) }}
+                                                                        {{ basename($episode['video_url']) }}
 
-                                            </a>
+                                                                    </a>
 
-                                        </span>
+                                                                </span>
 
-                                        @else
+                                                            @else
 
-                                        <span class="text-warning">
-                                            <i class="fas fa-exclamation-triangle"></i>
-                                            Chưa có video
-                                        </span>
+                                                                <span class="text-warning">
+                                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                                    Chưa có video
+                                                                </span>
 
-                                        @endif
+                                                            @endif
 
-                                    </td>
+                                                        </td>
 
-                                    <td>
+                                                        <td>
 
-                                        <input type="file" class="form-control form-control-sm"
-                                            name="episode_video_{{ $episode['id'] }}" accept="video/*"
-                                            data-episode-id="{{ $episode['id'] }}">
+                                                            <input type="file" class="form-control form-control-sm"
+                                                                name="episode_video_{{ $episode['id'] }}" accept="video/*"
+                                                                data-episode-id="{{ $episode['id'] }}">
 
-                                        <small class="text-muted">
-                                            Chọn file để thay đổi video
-                                        </small>
+                                                            <small class="text-muted">
+                                                                Chọn file để thay đổi video
+                                                            </small>
 
-                                    </td>
+                                                        </td>
 
-                                    <td class="text-center">
+                                                        <td class="text-center">
 
-                                        {{ $episode['duration']
+                                                            {{ $episode['duration']
                                     ? $episode['duration'] . ' phút'
                                     : 'N/A' }}
 
-                                    </td>
+                                                        </td>
 
-                                    <td class="text-center">
+                                                        <td class="text-center">
 
-                                        <button type="button" class="btn btn-sm btn-danger"
-                                            onclick="deleteEpisode({{ $episode['id'] }})" title="Xóa tập">
+                                                            <button type="button" class="btn btn-sm btn-danger"
+                                                                onclick="deleteEpisode({{ $episode['id'] }})" title="Xóa tập">
 
-                                            <i class="fas fa-trash"></i>
+                                                                <i class="fas fa-trash"></i>
 
-                                        </button>
+                                                            </button>
 
-                                    </td>
+                                                        </td>
 
-                                </tr>
+                                                    </tr>
 
                                 @endforeach
 
@@ -889,204 +833,202 @@
 
                 </div>
 
-                @endif
-            </div>
-        </form>
-    </div>
-
+            @endif
+        </div>
+    </form>
 </div>
 
 @push('scripts')
-<script>
-    let episodeCount = 0;
+    <script>
+        let episodeCount = 0;
 
-    // Preview Image
-    function previewImage(input, previewId, boxId) {
-        const preview = document.getElementById(previewId);
-        const placeholder = document.getElementById(previewId.replace('Preview', 'Placeholder'));
-        const box = document.getElementById(boxId);
+        // Preview Image
+        function previewImage(input, previewId, boxId) {
+            const preview = document.getElementById(previewId);
+            const placeholder = document.getElementById(previewId.replace('Preview', 'Placeholder'));
+            const box = document.getElementById(boxId);
 
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
 
-            if (file.size > 5 * 1024 * 1024) {
-                alert('File ảnh quá lớn! Vui lòng chọn file nhỏ hơn 5MB.');
-                input.value = '';
-                return;
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File ảnh quá lớn! Vui lòng chọn file nhỏ hơn 5MB.');
+                    input.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+
+                    if (placeholder) {
+                        placeholder.classList.add('d-none');
+                    }
+
+                    box.classList.add('has-file');
+                };
+
+                reader.readAsDataURL(file);
             }
+        }
 
-            const reader = new FileReader();
+        // Preview Video
+        function previewVideo(input) {
+            const placeholder = document.getElementById('videoPlaceholder');
+            const info = document.getElementById('videoInfo');
+            const box = document.getElementById('videoUploadBox');
 
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.classList.remove('d-none');
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+
+                if (file.size > 500 * 1024 * 1024) {
+                    alert('File video quá lớn! Vui lòng chọn file nhỏ hơn 500MB.');
+                    input.value = '';
+                    return;
+                }
+
+                info.querySelector('.video-name').textContent = file.name;
+                info.querySelector('.video-size').textContent = formatFileSize(file.size);
 
                 if (placeholder) {
                     placeholder.classList.add('d-none');
                 }
 
+                info.classList.remove('d-none');
                 box.classList.add('has-file');
-            };
-
-            reader.readAsDataURL(file);
-        }
-    }
-
-    // Preview Video
-    function previewVideo(input) {
-        const placeholder = document.getElementById('videoPlaceholder');
-        const info = document.getElementById('videoInfo');
-        const box = document.getElementById('videoUploadBox');
-
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-
-            if (file.size > 500 * 1024 * 1024) {
-                alert('File video quá lớn! Vui lòng chọn file nhỏ hơn 500MB.');
-                input.value = '';
-                return;
-            }
-
-            info.querySelector('.video-name').textContent = file.name;
-            info.querySelector('.video-size').textContent = formatFileSize(file.size);
-
-            if (placeholder) {
-                placeholder.classList.add('d-none');
-            }
-
-            info.classList.remove('d-none');
-            box.classList.add('has-file');
-        }
-    }
-
-    // Preview Trailer
-    function previewTrailer(input) {
-        const placeholder = document.getElementById('trailerPlaceholder');
-        const info = document.getElementById('trailerInfo');
-        const box = document.getElementById('trailerUploadBox');
-
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-
-            if (file.size > 100 * 1024 * 1024) {
-                alert('File trailer quá lớn! Vui lòng chọn file nhỏ hơn 100MB.');
-                input.value = '';
-                return;
-            }
-
-            info.querySelector('.trailer-name').textContent = file.name;
-            info.querySelector('.trailer-size').textContent = formatFileSize(file.size);
-
-            if (placeholder) {
-                placeholder.classList.add('d-none');
-            }
-
-            info.classList.remove('d-none');
-            box.classList.add('has-file');
-        }
-    }
-
-    // Format file size
-    function formatFileSize(bytes) {
-        if (bytes === 0) {
-            return '0 Bytes';
-        }
-
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-        return parseFloat(
-            (bytes / Math.pow(k, i)).toFixed(2)
-        ) + ' ' + sizes[i];
-    }
-
-    // Hiện/ẩn thời lượng
-    function toggleDurationField() {
-        const type = document.getElementById('type').value;
-        const status = document.getElementById('status').value;
-        const durationSection = document.getElementById('durationSection');
-
-        if (type === 'phimle' && status === 'Chiếu rạp') {
-            if (durationSection) {
-                durationSection.style.display = 'block';
-            }
-        } else {
-            if (durationSection) {
-                durationSection.style.display = 'none';
             }
         }
-    }
 
-    // Hiện/ẩn khu vực phim bộ
-    function toggleSeriesSection() {
-        const type = document.getElementById('type').value;
+        // Preview Trailer
+        function previewTrailer(input) {
+            const placeholder = document.getElementById('trailerPlaceholder');
+            const info = document.getElementById('trailerInfo');
+            const box = document.getElementById('trailerUploadBox');
 
-        const section = document.getElementById('seriesSection');
-        const videoSection = document.getElementById('videoSection');
-        const videoSeriesNotice = document.getElementById('videoSeriesNotice');
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
 
-        if (type === 'phimbo') {
-            section.style.display = 'block';
+                if (file.size > 100 * 1024 * 1024) {
+                    alert('File trailer quá lớn! Vui lòng chọn file nhỏ hơn 100MB.');
+                    input.value = '';
+                    return;
+                }
 
-            if (videoSection) {
-                videoSection.style.display = 'none';
-            }
+                info.querySelector('.trailer-name').textContent = file.name;
+                info.querySelector('.trailer-size').textContent = formatFileSize(file.size);
 
-            if (videoSeriesNotice) {
-                videoSeriesNotice.style.display = 'block';
-            }
-        } else {
-            section.style.display = 'none';
+                if (placeholder) {
+                    placeholder.classList.add('d-none');
+                }
 
-            if (videoSection) {
-                videoSection.style.display = 'block';
-            }
-
-            if (videoSeriesNotice) {
-                videoSeriesNotice.style.display = 'none';
+                info.classList.remove('d-none');
+                box.classList.add('has-file');
             }
         }
-    }
 
-    // Thêm tập mới
-    function addEpisodeInput() {
-        episodeCount++;
-
-        const container = document.getElementById('episodesContainer');
-
-        const existingEpisodes = @json(
-            collect($episodes ?? [])->pluck('episode_number')->toArray()
-        );
-
-        const maxExisting =
-            existingEpisodes.length > 0 ?
-            Math.max(...existingEpisodes) :
-            0;
-
-        const addedInputs =
-            container.querySelectorAll('.episode-number');
-
-        let maxAdded = 0;
-
-        addedInputs.forEach(input => {
-            const val = parseInt(input.value) || 0;
-
-            if (val > maxAdded) {
-                maxAdded = val;
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) {
+                return '0 Bytes';
             }
-        });
 
-        const nextEpisode =
-            Math.max(maxExisting, maxAdded) + 1;
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
 
-        const episodeDiv = document.createElement('div');
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-        episodeDiv.className = 'row mb-3 episode-item';
-        episodeDiv.id = 'episode-' + episodeCount;
+            return parseFloat(
+                (bytes / Math.pow(k, i)).toFixed(2)
+            ) + ' ' + sizes[i];
+        }
 
-        episodeDiv.innerHTML = `
+        // Hiện/ẩn thời lượng
+        function toggleDurationField() {
+            const type = document.getElementById('type').value;
+            const status = document.getElementById('status').value;
+            const durationSection = document.getElementById('durationSection');
+
+            if (type === 'phimle' && status === 'Chiếu rạp') {
+                if (durationSection) {
+                    durationSection.style.display = 'block';
+                }
+            } else {
+                if (durationSection) {
+                    durationSection.style.display = 'none';
+                }
+            }
+        }
+
+        // Hiện/ẩn khu vực phim bộ
+        function toggleSeriesSection() {
+            const type = document.getElementById('type').value;
+
+            const section = document.getElementById('seriesSection');
+            const videoSection = document.getElementById('videoSection');
+            const videoSeriesNotice = document.getElementById('videoSeriesNotice');
+
+            if (type === 'phimbo') {
+                section.style.display = 'block';
+
+                if (videoSection) {
+                    videoSection.style.display = 'none';
+                }
+
+                if (videoSeriesNotice) {
+                    videoSeriesNotice.style.display = 'block';
+                }
+            } else {
+                section.style.display = 'none';
+
+                if (videoSection) {
+                    videoSection.style.display = 'block';
+                }
+
+                if (videoSeriesNotice) {
+                    videoSeriesNotice.style.display = 'none';
+                }
+            }
+        }
+
+        // Thêm tập mới
+        function addEpisodeInput() {
+            episodeCount++;
+
+            const container = document.getElementById('episodesContainer');
+
+            const existingEpisodes = @json(
+                collect($episodes ?? [])->pluck('episode_number')->toArray()
+            );
+
+            const maxExisting =
+                existingEpisodes.length > 0
+                    ? Math.max(...existingEpisodes)
+                    : 0;
+
+            const addedInputs =
+                container.querySelectorAll('.episode-number');
+
+            let maxAdded = 0;
+
+            addedInputs.forEach(input => {
+                const val = parseInt(input.value) || 0;
+
+                if (val > maxAdded) {
+                    maxAdded = val;
+                }
+            });
+
+            const nextEpisode =
+                Math.max(maxExisting, maxAdded) + 1;
+
+            const episodeDiv = document.createElement('div');
+
+            episodeDiv.className = 'row mb-3 episode-item';
+            episodeDiv.id = 'episode-' + episodeCount;
+
+            episodeDiv.innerHTML = `
                         <div class="col-md-2">
                             <label class="form-label">
                                 Tập số
@@ -1149,41 +1091,41 @@
                         </div>
                     `;
 
-        container.appendChild(episodeDiv);
-    }
-
-    // Xóa tập mới thêm
-    function removeEpisode(id) {
-        const episode =
-            document.getElementById('episode-' + id);
-
-        if (episode) {
-            episode.remove();
+            container.appendChild(episodeDiv);
         }
-    }
 
-    // Xóa tập hiện có
-    function deleteEpisode(episodeId) {
-        if (
-            confirm('Bạn có chắc chắn muốn xóa tập này?')
-        ) {
-            window.location.href =
-                "{{ route('admin.movies.deleteEpisode', ['movieId' => $movie['id'], 'id' => '__EPISODE__']) }}"
-                .replace('__EPISODE__', episodeId);
+        // Xóa tập mới thêm
+        function removeEpisode(id) {
+            const episode =
+                document.getElementById('episode-' + id);
+
+            if (episode) {
+                episode.remove();
+            }
         }
-    }
 
-    // Placeholder cho lịch chiếu
-    function toggleTheaterSection() {
-        // Lịch chiếu rạp được quản lý bởi moderator
-    }
+        // Xóa tập hiện có
+        function deleteEpisode(episodeId) {
+            if (
+                confirm('Bạn có chắc chắn muốn xóa tập này?')
+            ) {
+                window.location.href =
+                    "{{ route('admin.movies.delete-episode') }}" +
+                    '?id=' + episodeId +
+                    '&movie_id={{ $movie["id"] }}';
+            }
+        }
 
-    // Init
-    document.addEventListener('DOMContentLoaded', function() {
-        toggleTheaterSection();
-        toggleSeriesSection();
-        toggleDurationField();
-    });
-</script>
+        // Placeholder cho lịch chiếu
+        function toggleTheaterSection() {
+            // Lịch chiếu rạp được quản lý bởi moderator
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', function () {
+            toggleTheaterSection();
+            toggleSeriesSection();
+            toggleDurationField();
+        });
+    </script>
 @endpush
-@endsection

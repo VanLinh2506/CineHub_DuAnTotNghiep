@@ -84,7 +84,7 @@
                     </button>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
-                    <a href="{{ route('admin.tickets.index') }}" class="btn btn-outline-secondary w-100">
+                    <a href="{{ url('?route=admin/tickets') }}" class="btn btn-outline-secondary w-100">
                         <i class="fas fa-redo"></i> Xóa bộ lọc
                     </a>
                 </div>
@@ -136,7 +136,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <form method="POST" action="{{ route('admin.tickets.updateMovie') }}" class="d-inline-flex align-items-center gap-2">
+                                    <form method="POST" action="{{ url('?route=admin/ticketsUpdateMovie') }}" class="d-inline-flex align-items-center gap-2" style="min-width: 200px;">
                                         @csrf
                                         <input type="hidden" name="movie_id" value="{{ $stat['movie_id'] }}">
                                         <input type="number" 
@@ -145,7 +145,7 @@
                                                value="{{ $max_tickets !== null ? $max_tickets : '' }}" 
                                                placeholder="Không giới hạn"
                                                min="0"
-                                               style="max-width: 120px;">
+                                               style="width: 120px;">
                                         <button type="submit" class="btn btn-sm btn-primary" title="Cập nhật">
                                             <i class="fas fa-save"></i>
                                         </button>
@@ -168,7 +168,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <a href="{{ route('admin.tickets.index', ['movie_id' => $stat['movie_id']]) }}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{{ url('?route=admin/tickets&movie_id=' . $stat['movie_id']) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-list"></i> Chi tiết
                                     </a>
                                 </td>
@@ -225,7 +225,7 @@
                                 </td>
                                 <td>{{ \Carbon\Carbon::parse($ticket['created_at'])->format('d/m/Y H:i') }}</td>
                                 <td>
-                                    <a href="{{ route('admin.tickets.show', $ticket['id']) }}" class="btn btn-sm btn-outline-info">
+                                    <a href="{{ url('?route=admin/tickets/view&id=' . $ticket['id']) }}" class="btn btn-sm btn-outline-info">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </td>
