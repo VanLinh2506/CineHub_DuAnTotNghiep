@@ -49,6 +49,7 @@ class LegacyRouteMiddleware
         'booking/success' => '/booking/{bookingId}/confirmation',
         'booking/confirmation' => '/booking/{bookingId}/confirmation',
         'booking/history' => '/booking/history',
+        'booking/myTickets' => '/booking/history',
         'booking/ticketDetail' => '/booking/history',
         'booking/api/showtimes' => '/api/booking/showtimes',
         
@@ -68,6 +69,9 @@ class LegacyRouteMiddleware
         // ==================== NOTIFICATIONS ====================
         'notification/index' => '/notifications',
         'notification/markAsRead' => '/notifications',
+        'notifications/index' => '/notifications',
+        'notifications/markAsRead' => '/notifications',
+        'notifications/getUnreadCount' => '/notifications/unread-count',
         
         // ==================== ADMIN ====================
         'admin/dashboard' => '/admin',

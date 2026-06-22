@@ -8,7 +8,7 @@
 <div class="container my-tickets-container">
     <h1 class="page-title">Vé Của Tôi</h1>
     
-    @if (empty($tickets))
+    @if ($tickets->isEmpty())
         <div class="empty-state">
             <i class="fas fa-ticket-alt empty-icon"></i>
             <h2>Bạn chưa có vé nào</h2>
@@ -29,11 +29,11 @@
                     <div class="ticket-body">
                         <div class="ticket-info-row">
                             <span class="label">Rạp:</span>
-                            <span class="value">{{ $ticket->showtime->screen->theater->name ?? 'N/A' }}</span>
+                            <span class="value">{{ $ticket->showtime->theater->name ?? 'N/A' }}</span>
                         </div>
                         <div class="ticket-info-row">
                             <span class="label">Màn hình:</span>
-                            <span class="value">{{ $ticket->showtime->screen->name ?? 'N/A' }}</span>
+                            <span class="value">{{ $ticket->showtime->screen->screen_name ?? 'N/A' }}</span>
                         </div>
                         <div class="ticket-info-row">
                             <span class="label">Ngày chiếu:</span>
@@ -45,7 +45,7 @@
                         </div>
                         <div class="ticket-info-row">
                             <span class="label">Ghế:</span>
-                            <span class="value seat-info">{{ $ticket->seat_number ?? 'N/A' }}</span>
+                            <span class="value seat-info">{{ $ticket->seat ?? 'N/A' }}</span>
                         </div>
                         <div class="ticket-info-row">
                             <span class="label">Giá vé:</span>
@@ -53,6 +53,11 @@
                         </div>
                     </div>
                     
+                    <div class="ticket-qr">
+                        <img src="{{ qr_code_data_uri($ticket->qr_code ?: ('TICKET-' . $ticket->id), 180) }}" alt="QR ve {{ $ticket->seat }}">
+                        <span>Đưa mã này cho nhân viên để check vé.</span>
+                    </div>
+
                     <div class="ticket-footer">
                         @if ($ticket->status === 'active')
                             <a href="{{ url('/?route=ticket/qrcode&id=' . $ticket->id) }}" class="btn btn-sm btn-primary">
@@ -217,9 +222,33 @@
         padding: 1rem;
         background: rgba(255, 255, 255, 0.02);
         border-top: 1px solid rgba(255, 255, 255, 0.05);
-        display: flex;
+        display: none;
         gap: 0.5rem;
         justify-content: flex-end;
+    }
+
+    .ticket-qr {
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .ticket-qr img {
+        width: 112px;
+        height: 112px;
+        background: #fff;
+        border-radius: 8px;
+        padding: 6px;
+        flex: 0 0 auto;
+    }
+
+    .ticket-qr span {
+        color: #ddd;
+        font-size: 0.9rem;
+        line-height: 1.4;
     }
     
     .btn {

@@ -97,7 +97,12 @@
         
         list.innerHTML = '<div class="notification-loading"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
         
-        fetch('?route=notifications/getNotifications&limit=10')
+        fetch('<?php echo e(route('notifications.list')); ?>?limit=10', {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok: ' + response.status);
@@ -118,7 +123,7 @@
                         const iconClass = getIconClass(notif.type);
                         const iconName = getIconName(notif.type);
                         const unreadClass = notif.is_read == 0 ? 'unread' : '';
-                        const link = notif.link || '?route=notifications/index';
+                        const link = notif.link || '<?php echo e(route('notifications.index')); ?>';
                         
                         html += `
                             <div class="notification-item-dropdown ${unreadClass}" onclick="window.location.href='${link}'; markAsRead(${notif.id});">
@@ -179,8 +184,13 @@
     }
     
     function markAsRead(notificationId) {
-        fetch('?route=notifications/markAsRead&id=' + notificationId, {
-            method: 'POST'
+        fetch('<?php echo e(url('/notifications')); ?>/' + notificationId + '/read', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         }).catch(error => console.error('Error marking notification as read:', error));
     }
     

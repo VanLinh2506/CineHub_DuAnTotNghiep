@@ -15,7 +15,7 @@
                 <div class="profile-avatar-wrapper" onclick="document.getElementById('avatarInput').click()">
                     <div class="profile-avatar-container">
                         <?php if($user && $user->avatar): ?>
-                            <img src="<?php echo e($user->avatar); ?>" alt="Avatar">
+                            <img src="<?php echo e($user->avatar_url); ?>" alt="Avatar">
                         <?php else: ?>
                             <div class="avatar-placeholder-luxury">
                                 <i class="fas fa-user"></i>
@@ -100,7 +100,7 @@
                         </div>
                         <div class="form-group">
                             <label>Ngày sinh</label>
-                            <input type="date" name="birth_date" value="<?php echo e($user && $user->birth_date ? date('Y-m-d', strtotime($user->birth_date)) : ''); ?>" class="form-control" disabled>
+                            <input type="date" name="birth_date" value="<?php echo e($user && $user->birthdate ? date('Y-m-d', strtotime($user->birthdate)) : ''); ?>" class="form-control" disabled>
                         </div>
                     </div>
                     
@@ -192,18 +192,19 @@
                     <h2>Tùy chỉnh</h2>
                 </div>
                 
-                <form method="POST" action="<?php echo e(url('/?route=profile/updatePreferences')); ?>" class="profile-form">
+                <form method="POST" action="<?php echo e(route('profile.updatePreferences')); ?>" class="profile-form">
                     <?php echo csrf_field(); ?>
+                    <?php echo method_field('PUT'); ?>
                     <div class="form-group">
                         <label class="checkbox-label">
-                            <input type="checkbox" name="newsletter" value="1" <?php if($user && $user->preferences && $user->preferences->newsletter): ?> checked <?php endif; ?>>
+                            <input type="checkbox" name="newsletter" value="1" <?php if($user && $user->newsletter): echo 'checked'; endif; ?>>
                             <span>Đăng ký nhận tin tức</span>
                         </label>
                     </div>
                     
                     <div class="form-group">
                         <label class="checkbox-label">
-                            <input type="checkbox" name="notifications" value="1" <?php if($user && $user->preferences && $user->preferences->notifications): ?> checked <?php endif; ?>>
+                            <input type="checkbox" name="notifications" value="1" <?php if(!$user || $user->notifications_enabled): echo 'checked'; endif; ?>>
                             <span>Nhận thông báo</span>
                         </label>
                     </div>
@@ -221,11 +222,38 @@
                 <div class="subscription-info">
                     <?php if($user && $user->subscription): ?>
                         <p><strong>Gói hiện tại:</strong> <?php echo e($user->subscription->name); ?></p>
-                        <p><strong>Ngày hết hạn:</strong> <?php echo e($user->subscription->expires_at ? date('d/m/Y', strtotime($user->subscription->expires_at)) : 'Không xác định'); ?></p>
-                        <a href="<?php echo e(url('/?route=subscription/upgrade')); ?>" class="btn-primary">Nâng cấp</a>
                     <?php else: ?>
                         <p>Bạn chưa có gói dịch vụ nào. Hãy chọn một gói để tận hưởng các lợi ích.</p>
-                        <a href="<?php echo e(url('/?route=subscription/plans')); ?>" class="btn-primary">Xem các gói</a>
+                    <?php endif; ?>
+                </div>
+
+                <div class="subscription-plans">
+                    <?php $__empty_1 = true; $__currentLoopData = $allSubscriptions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $package): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                        <?php
+                            $currentPrice = optional($user->subscription)->price;
+                            $isCurrent = $user->subscription_id === $package->id;
+                            $isDowngrade = $currentPrice !== null && $package->price <= $currentPrice && !$isCurrent;
+                        ?>
+                        <div class="subscription-plan">
+                            <h3><?php echo e($package->name); ?></h3>
+                            <p class="plan-price"><?php echo e(number_format((float) $package->price, 0, ',', '.')); ?> điểm</p>
+                            <?php if($package->description): ?>
+                                <p><?php echo e($package->description); ?></p>
+                            <?php endif; ?>
+                            <?php if($isCurrent): ?>
+                                <button class="btn-secondary" type="button" disabled>Gói hiện tại</button>
+                            <?php elseif($isDowngrade): ?>
+                                <button class="btn-secondary" type="button" disabled>Gói thấp hơn</button>
+                            <?php else: ?>
+                                <form method="POST" action="<?php echo e(route('profile.upgradeSubscription')); ?>">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="subscription_id" value="<?php echo e($package->id); ?>">
+                                    <button type="submit" class="btn-primary">Nâng cấp</button>
+                                </form>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                        <p style="color: #999;">Chưa có gói dịch vụ nào.</p>
                     <?php endif; ?>
                 </div>
             </div>
@@ -523,6 +551,36 @@
     .subscription-info p {
         color: #fff;
         margin: 0.5rem 0;
+    }
+
+    .subscription-plans {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .subscription-plan {
+        background: #202020;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 1.25rem;
+    }
+
+    .subscription-plan h3 {
+        color: #fff;
+        font-size: 1.05rem;
+        margin: 0 0 0.5rem;
+    }
+
+    .subscription-plan p {
+        color: #bbb;
+        margin: 0 0 1rem;
+    }
+
+    .subscription-plan .plan-price {
+        color: #e50914;
+        font-weight: 700;
     }
     
     .wallet-balance {

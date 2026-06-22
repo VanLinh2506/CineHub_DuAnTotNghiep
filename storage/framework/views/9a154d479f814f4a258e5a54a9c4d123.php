@@ -171,7 +171,7 @@
         <div class="mobile-menu-user">
             <div class="mobile-user-avatar">
                 <?php if(!empty($user->avatar)): ?>
-                    <img src="<?php echo e($user->avatar); ?>" alt="Avatar">
+                    <img src="<?php echo e($user->avatar_url); ?>" alt="Avatar">
                 <?php else: ?>
                     <i class="fas fa-user"></i>
                 <?php endif; ?>

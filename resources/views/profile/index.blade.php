@@ -17,7 +17,7 @@
                 <div class="profile-avatar-wrapper" onclick="document.getElementById('avatarInput').click()">
                     <div class="profile-avatar-container">
                         @if ($user && $user->avatar)
-                            <img src="{{ $user->avatar }}" alt="Avatar">
+                            <img src="{{ $user->avatar_url }}" alt="Avatar">
                         @else
                             <div class="avatar-placeholder-luxury">
                                 <i class="fas fa-user"></i>
@@ -102,7 +102,7 @@
                         </div>
                         <div class="form-group">
                             <label>Ngày sinh</label>
-                            <input type="date" name="birth_date" value="{{ $user && $user->birth_date ? date('Y-m-d', strtotime($user->birth_date)) : '' }}" class="form-control" disabled>
+                            <input type="date" name="birth_date" value="{{ $user && $user->birthdate ? date('Y-m-d', strtotime($user->birthdate)) : '' }}" class="form-control" disabled>
                         </div>
                     </div>
                     
@@ -194,18 +194,19 @@
                     <h2>Tùy chỉnh</h2>
                 </div>
                 
-                <form method="POST" action="{{ url('/?route=profile/updatePreferences') }}" class="profile-form">
+                <form method="POST" action="{{ route('profile.updatePreferences') }}" class="profile-form">
                     @csrf
+                    @method('PUT')
                     <div class="form-group">
                         <label class="checkbox-label">
-                            <input type="checkbox" name="newsletter" value="1" @if($user && $user->preferences && $user->preferences->newsletter) checked @endif>
+                            <input type="checkbox" name="newsletter" value="1" @checked($user && $user->newsletter)>
                             <span>Đăng ký nhận tin tức</span>
                         </label>
                     </div>
                     
                     <div class="form-group">
                         <label class="checkbox-label">
-                            <input type="checkbox" name="notifications" value="1" @if($user && $user->preferences && $user->preferences->notifications) checked @endif>
+                            <input type="checkbox" name="notifications" value="1" @checked(!$user || $user->notifications_enabled)>
                             <span>Nhận thông báo</span>
                         </label>
                     </div>
@@ -223,12 +224,39 @@
                 <div class="subscription-info">
                     @if ($user && $user->subscription)
                         <p><strong>Gói hiện tại:</strong> {{ $user->subscription->name }}</p>
-                        <p><strong>Ngày hết hạn:</strong> {{ $user->subscription->expires_at ? date('d/m/Y', strtotime($user->subscription->expires_at)) : 'Không xác định' }}</p>
-                        <a href="{{ url('/?route=subscription/upgrade') }}" class="btn-primary">Nâng cấp</a>
                     @else
                         <p>Bạn chưa có gói dịch vụ nào. Hãy chọn một gói để tận hưởng các lợi ích.</p>
-                        <a href="{{ url('/?route=subscription/plans') }}" class="btn-primary">Xem các gói</a>
                     @endif
+                </div>
+
+                <div class="subscription-plans">
+                    @forelse($allSubscriptions as $package)
+                        @php
+                            $currentPrice = optional($user->subscription)->price;
+                            $isCurrent = $user->subscription_id === $package->id;
+                            $isDowngrade = $currentPrice !== null && $package->price <= $currentPrice && !$isCurrent;
+                        @endphp
+                        <div class="subscription-plan">
+                            <h3>{{ $package->name }}</h3>
+                            <p class="plan-price">{{ number_format((float) $package->price, 0, ',', '.') }} điểm</p>
+                            @if($package->description)
+                                <p>{{ $package->description }}</p>
+                            @endif
+                            @if($isCurrent)
+                                <button class="btn-secondary" type="button" disabled>Gói hiện tại</button>
+                            @elseif($isDowngrade)
+                                <button class="btn-secondary" type="button" disabled>Gói thấp hơn</button>
+                            @else
+                                <form method="POST" action="{{ route('profile.upgradeSubscription') }}">
+                                    @csrf
+                                    <input type="hidden" name="subscription_id" value="{{ $package->id }}">
+                                    <button type="submit" class="btn-primary">Nâng cấp</button>
+                                </form>
+                            @endif
+                        </div>
+                    @empty
+                        <p style="color: #999;">Chưa có gói dịch vụ nào.</p>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -525,6 +553,36 @@
     .subscription-info p {
         color: #fff;
         margin: 0.5rem 0;
+    }
+
+    .subscription-plans {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .subscription-plan {
+        background: #202020;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 1.25rem;
+    }
+
+    .subscription-plan h3 {
+        color: #fff;
+        font-size: 1.05rem;
+        margin: 0 0 0.5rem;
+    }
+
+    .subscription-plan p {
+        color: #bbb;
+        margin: 0 0 1rem;
+    }
+
+    .subscription-plan .plan-price {
+        color: #e50914;
+        font-weight: 700;
     }
     
     .wallet-balance {

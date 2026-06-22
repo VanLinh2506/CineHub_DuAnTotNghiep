@@ -9,6 +9,8 @@ $currentEpisode = isset($currentEpisode) ? json_decode(json_encode($currentEpiso
 $reviews = isset($reviews) ? json_decode(json_encode($reviews), true) : [];
 $comments = isset($comments) ? json_decode(json_encode($comments), true) : [];
 $relatedMovies = isset($relatedMovies) ? json_decode(json_encode($relatedMovies), true) : [];
+$viewer = auth()->user();
+$viewerAvatar = $viewer?->avatar_url;
 
 $title = htmlspecialchars($movie['title'] ?? 'Movie');
 $baseUrl = url('/');
@@ -230,7 +232,7 @@ if (!empty($episodes)) {
             <div class="reviews-section" id="reviews">
                 <h2><i class="fas fa-star"></i> Đánh giá phim</h2>
 
-                @if(isset($user) && $user)
+                @if($viewer)
                     @if(isset($userHasRated) && $userHasRated)
                         <div class="user-rating-info" style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
                             <p style="margin: 0; color: #d4af37;">
@@ -239,7 +241,8 @@ if (!empty($episodes)) {
                             </p>
                         </div>
                     @else
-                        <form method="POST" action="{{ $baseUrl }}/?route=review/create" class="review-form" id="reviewForm">
+                        <form method="POST" action="{{ route('reviews.store') }}" class="review-form" id="reviewForm">
+                            @csrf
                             <input type="hidden" name="movie_id" value="{{ $movie['id'] }}">
                             <div class="rating-input">
                                 <label>Đánh giá của bạn:</label>
@@ -257,7 +260,7 @@ if (!empty($episodes)) {
                         </form>
                     @endif
                 @else
-                    <p style="color: var(--text-secondary);">Vui lòng <a href="{{ $baseUrl }}/?route=auth/login" style="color: #e50914;">đăng nhập</a> để đánh giá phim.</p>
+                    <p style="color: var(--text-secondary);">Vui lòng <a href="{{ route('login') }}" style="color: #e50914;">đăng nhập</a> để đánh giá phim.</p>
                 @endif
 
                 <!-- Danh sách đánh giá -->
@@ -268,8 +271,8 @@ if (!empty($episodes)) {
                         @foreach($reviews as $review)
                             <div class="review-item" style="display: flex; gap: 15px; padding: 15px; background: #1f1f1f; border-radius: 10px; margin-bottom: 10px;">
                                 <div class="review-avatar" style="flex-shrink: 0;">
-                                    @if(!empty($review['user_avatar']))
-                                        <img src="{{ $baseUrl . '/' . htmlspecialchars($review['user_avatar']) }}" alt="Avatar" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover;">
+                                    @if(!empty($review['user']['avatar_url']))
+                                        <img src="{{ $review['user']['avatar_url'] }}" alt="Avatar" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover;">
                                     @else
                                         <div style="width: 45px; height: 45px; border-radius: 50%; background: #333; display: flex; align-items: center; justify-content: center;">
                                             <i class="fas fa-user" style="color: #666;"></i>
@@ -302,13 +305,14 @@ if (!empty($episodes)) {
             <div class="comments-section" id="comments" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
                 <h2><i class="fas fa-comments"></i> Bình luận <span class="badge bg-secondary ms-2">{{ count($comments ?? []) }}</span></h2>
 
-                @if(isset($user) && $user)
-                    <form method="POST" action="{{ $baseUrl }}/?route=review/comment" class="comment-form" id="commentForm" style="margin-bottom: 25px;">
+                @if($viewer)
+                    <form method="POST" action="{{ route('comments.store') }}" class="comment-form" id="commentForm" style="margin-bottom: 25px;">
+                        @csrf
                         <input type="hidden" name="movie_id" value="{{ $movie['id'] }}">
                         <div style="display: flex; gap: 15px; align-items: flex-start;">
                             <div style="flex-shrink: 0;">
-                                @if(!empty($user['avatar']))
-                                    <img src="{{ $baseUrl . '/' . htmlspecialchars($user['avatar']) }}" alt="Avatar" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #444;">
+                                @if($viewerAvatar)
+                                    <img src="{{ $viewerAvatar }}" alt="Avatar" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #444;">
                                 @else
                                     <div style="width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
                                         <i class="fas fa-user" style="color: #fff;"></i>
@@ -326,7 +330,7 @@ if (!empty($episodes)) {
                 @else
                     <div style="background: rgba(229, 9, 20, 0.1); border: 1px solid rgba(229, 9, 20, 0.3); border-radius: 10px; padding: 15px; margin-bottom: 20px; text-align: center;">
                         <p style="color: #ccc; margin: 0;">
-                            <i class="fas fa-lock"></i> Vui lòng <a href="{{ $baseUrl }}/?route=auth/login" style="color: #e50914; font-weight: 600;">đăng nhập</a> để bình luận.
+                            <i class="fas fa-lock"></i> Vui lòng <a href="{{ route('login') }}" style="color: #e50914; font-weight: 600;">đăng nhập</a> để bình luận.
                         </p>
                     </div>
                 @endif
@@ -343,8 +347,8 @@ if (!empty($episodes)) {
                             <div class="comment-item" id="comment-{{ $comment['id'] }}" style="margin-bottom: 20px;">
                                 <div style="display: flex; gap: 15px;">
                                     <div style="flex-shrink: 0;">
-                                        @if(!empty($comment['user_avatar']))
-                                            <img src="{{ $baseUrl . '/' . htmlspecialchars($comment['user_avatar']) }}" alt="Avatar" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #333;">
+                                        @if(!empty($comment['user']['avatar_url']))
+                                            <img src="{{ $comment['user']['avatar_url'] }}" alt="Avatar" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #333;">
                                         @else
                                             <div style="width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
                                                 <i class="fas fa-user" style="color: #fff;"></i>
@@ -366,7 +370,7 @@ if (!empty($episodes)) {
                                             <button class="dislike-btn" onclick="likeComment({{ $comment['id'] ?? 0 }}, 'dislike')" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; transition: all 0.3s;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#888'">
                                                 <i class="far fa-thumbs-down"></i> <span id="dislikes-{{ $comment['id'] ?? 0 }}">{{ $comment['dislikes'] ?? 0 }}</span>
                                             </button>
-                                            @if(isset($user) && $user)
+                                            @if($viewer)
                                                 <button onclick="toggleReplyForm({{ $comment['id'] ?? 0 }})" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; transition: all 0.3s;" onmouseover="this.style.background='rgba(33, 150, 243, 0.2)'; this.style.color='#2196f3'" onmouseout="this.style.background='none'; this.style.color='#888'">
                                                     <i class="fas fa-reply"></i> Trả lời
                                                 </button>
@@ -379,15 +383,16 @@ if (!empty($episodes)) {
                                         </div>
 
                                         <!-- Form trả lời (ẩn mặc định) -->
-                                        @if(isset($user) && $user)
+                                        @if($viewer)
                                         <div id="reply-form-{{ $comment['id'] }}" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #333;">
-                                            <form method="POST" action="{{ $baseUrl }}/?route=review/comment">
+                                            <form method="POST" action="{{ route('comments.store') }}">
+                                                @csrf
                                                 <input type="hidden" name="movie_id" value="{{ $movie['id'] }}">
                                                 <input type="hidden" name="parent_id" value="{{ $comment['id'] }}">
                                                 <div style="display: flex; gap: 10px; align-items: flex-start;">
                                                     <div style="flex-shrink: 0;">
-                                                        @if(!empty($user['avatar']))
-                                                            <img src="{{ $baseUrl . '/' . htmlspecialchars($user['avatar']) }}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                                                        @if($viewerAvatar)
+                                                            <img src="{{ $viewerAvatar }}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
                                                         @else
                                                             <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
                                                                 <i class="fas fa-user" style="color: #fff; font-size: 0.7rem;"></i>
@@ -412,8 +417,8 @@ if (!empty($episodes)) {
                                             @foreach($comment['replies'] as $reply)
                                             <div style="display: flex; gap: 12px; margin-bottom: 15px; padding: 12px; background: #252525; border-radius: 10px;">
                                                 <div style="flex-shrink: 0;">
-                                                    @if(!empty($reply['user_avatar']))
-                                                        <img src="{{ $baseUrl . '/' . htmlspecialchars($reply['user_avatar']) }}" alt="Avatar" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid #333;">
+                                                    @if(!empty($reply['user']['avatar_url']))
+                                                        <img src="{{ $reply['user']['avatar_url'] }}" alt="Avatar" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid #333;">
                                                     @else
                                                         <div style="width: 35px; height: 35px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
                                                             <i class="fas fa-user" style="color: #fff; font-size: 0.7rem;"></i>
@@ -645,12 +650,14 @@ function toggleReplyForm(commentId) {
 
 // Like/Dislike comment
 function likeComment(commentId, action) {
-    fetch('{{ $baseUrl }}/?route=review/likeComment', {
+    fetch('{{ route('comments.like') }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
         },
-        body: 'comment_id=' + commentId + '&action=' + action
+        body: new URLSearchParams({ comment_id: commentId, action: action })
     })
     .then(response => response.json())
     .then(data => {

@@ -70,13 +70,15 @@ Route::middleware('auth')->prefix('booking')->name('booking.')->group(function (
     // Booking process
     Route::post('/process', [BookingController::class, 'processBooking'])->name('processBooking');
     Route::get('/showtime/{showtimeId}', [BookingController::class, 'selectSeats'])->name('selectSeats');
+    Route::get('/history', [BookingController::class, 'myTickets'])->name('history');
+    Route::get('/my-tickets', [BookingController::class, 'myTickets'])->name('my-tickets');
     Route::post('/create', [BookingController::class, 'create'])->name('create');
     Route::get('/{bookingId}/payment', [BookingController::class, 'payment'])->name('payment');
     Route::get('/{bookingId}/confirmation', [BookingController::class, 'confirmation'])->name('confirmation');
     Route::post('/{bookingId}/cancel', [BookingController::class, 'cancel'])->name('cancel');
-    Route::get('/history', [BookingController::class, 'myTickets'])->name('history');
-    Route::get('/my-tickets', [BookingController::class, 'myTickets'])->name('my-tickets');
 });
+
+Route::post('/booking/location', [BookingController::class, 'saveLocation'])->name('booking.location');
 
 // API routes for getting data (can be public or require auth based on your needs)
 Route::get('/api/booking/showtimes', [BookingController::class, 'getShowtimesByDate'])->name('api.booking.showtimes');
@@ -96,6 +98,7 @@ Route::middleware('auth')->prefix('profile')->name('profile.')->group(function (
     Route::get('/', [ProfileController::class, 'index'])->name('index');
     Route::put('/update', [ProfileController::class, 'update'])->name('update');
     Route::put('/update-password', [ProfileController::class, 'updatePassword'])->name('updatePassword');
+    Route::put('/preferences', [ProfileController::class, 'updatePreferences'])->name('updatePreferences');
     Route::post('/upload-avatar', [ProfileController::class, 'uploadAvatar'])->name('uploadAvatar');
     Route::post('/deposit-vnpay', [ProfileController::class, 'startVnpayDeposit'])->name('depositVnpay');
     Route::post('/upgrade-subscription', [ProfileController::class, 'upgradeSubscription'])->name('upgradeSubscription');
@@ -107,16 +110,25 @@ Route::middleware('auth')->prefix('profile')->name('profile.')->group(function (
 // ==================== NOTIFICATIONS ====================
 Route::middleware('auth')->prefix('notifications')->name('notifications.')->group(function () {
     Route::get('/', [NotificationController::class, 'index'])->name('index');
+    Route::get('/list', [NotificationController::class, 'getNotifications'])->name('list');
+    Route::get('/unread-count', [NotificationController::class, 'getUnreadCount'])->name('unreadCount');
     Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('markAsRead');
     Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('markAllAsRead');
+    Route::delete('/{id}', [NotificationController::class, 'delete'])->name('delete');
 });
 
 // ==================== REVIEWS ====================
 Route::middleware('auth')->prefix('reviews')->name('reviews.')->group(function () {
-    Route::post('/', [ReviewController::class, 'store'])->name('store');
+    Route::post('/', [ReviewController::class, 'create'])->name('store');
     Route::put('/{id}', [ReviewController::class, 'update'])->name('update');
-    Route::delete('/{id}', [ReviewController::class, 'destroy'])->name('destroy');
+    Route::delete('/{id}', [ReviewController::class, 'delete'])->name('destroy');
     Route::post('/{id}/like', [ReviewController::class, 'like'])->name('like');
+});
+
+Route::middleware('auth')->prefix('comments')->name('comments.')->group(function () {
+    Route::post('/', [ReviewController::class, 'comment'])->name('store');
+    Route::post('/like', [ReviewController::class, 'likeComment'])->name('like');
+    Route::delete('/{id}', [ReviewController::class, 'deleteComment'])->name('destroy');
 });
 
 // ==================== ADMIN ROUTES ====================
