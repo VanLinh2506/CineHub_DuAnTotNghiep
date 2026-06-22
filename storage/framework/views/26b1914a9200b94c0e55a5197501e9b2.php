@@ -1,45 +1,44 @@
-@extends('admin.layout')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h5>Thông tin rạp chiếu</h5>
-    <a href="{{ route('admin.theaters.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    <a href="<?php echo e(route('admin.theaters.index')); ?>" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
 </div>
 
 <div class="row">
     <div class="col-md-8">
         <div class="stat-card">
             <h6 class="mb-4">Thông tin cơ bản</h6>
-            @if(!empty($theater['image']))
+            <?php if(!empty($theater['image'])): ?>
                 <div class="mb-4" style="width:100%;height:400px;overflow:hidden;border-radius:8px;">
-                    <img src="{{ $theater['image'] }}" alt="{{ $theater['name'] }}" style="width:100%;height:100%;object-fit:cover;">
+                    <img src="<?php echo e($theater['image']); ?>" alt="<?php echo e($theater['name']); ?>" style="width:100%;height:100%;object-fit:cover;">
                 </div>
-            @endif
+            <?php endif; ?>
             <table class="table table-borderless">
-                <tr><td style="width:200px;font-weight:bold;">Tên rạp:</td><td>{{ $theater['name'] }}</td></tr>
-                <tr><td style="font-weight:bold;">Địa điểm:</td><td><i class="fas fa-map-marker-alt"></i> {{ $theater['location'] ?? 'N/A' }}</td></tr>
-                @if($theater['address'])
-                <tr><td style="font-weight:bold;">Địa chỉ:</td><td>{{ $theater['address'] }}</td></tr>
-                @endif
-                @if($theater['phone'])
-                <tr><td style="font-weight:bold;">Số điện thoại:</td><td><i class="fas fa-phone"></i> {{ $theater['phone'] }}</td></tr>
-                @endif
-                @if(isset($theater['latitude']) && isset($theater['longitude']))
+                <tr><td style="width:200px;font-weight:bold;">Tên rạp:</td><td><?php echo e($theater['name']); ?></td></tr>
+                <tr><td style="font-weight:bold;">Địa điểm:</td><td><i class="fas fa-map-marker-alt"></i> <?php echo e($theater['location'] ?? 'N/A'); ?></td></tr>
+                <?php if($theater['address']): ?>
+                <tr><td style="font-weight:bold;">Địa chỉ:</td><td><?php echo e($theater['address']); ?></td></tr>
+                <?php endif; ?>
+                <?php if($theater['phone']): ?>
+                <tr><td style="font-weight:bold;">Số điện thoại:</td><td><i class="fas fa-phone"></i> <?php echo e($theater['phone']); ?></td></tr>
+                <?php endif; ?>
+                <?php if(isset($theater['latitude']) && isset($theater['longitude'])): ?>
                 <tr>
                     <td style="font-weight:bold;">Tọa độ:</td>
                     <td>
-                        <i class="fas fa-map-pin"></i> Latitude: {{ $theater['latitude'] }}, Longitude: {{ $theater['longitude'] }}
+                        <i class="fas fa-map-pin"></i> Latitude: <?php echo e($theater['latitude']); ?>, Longitude: <?php echo e($theater['longitude']); ?>
+
                         <br>
-                        <a href="https://www.google.com/maps?q={{ urlencode($theater['latitude'] . ',' . $theater['longitude']) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                        <a href="https://www.google.com/maps?q=<?php echo e(urlencode($theater['latitude'] . ',' . $theater['longitude'])); ?>" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
                             <i class="fas fa-external-link-alt"></i> Xem trên Google Maps
                         </a>
                     </td>
                 </tr>
-                @endif
-                <tr><td style="font-weight:bold;">Số phòng chiếu:</td><td>{{ $theater['total_screens'] ?? 0 }} phòng</td></tr>
+                <?php endif; ?>
+                <tr><td style="font-weight:bold;">Số phòng chiếu:</td><td><?php echo e($theater['total_screens'] ?? 0); ?> phòng</td></tr>
                 <tr>
                     <td style="font-weight:bold;">Trạng thái:</td>
-                    <td><span class="badge bg-{{ $theater['is_active'] ? 'success' : 'secondary' }}">{{ $theater['is_active'] ? 'Hoạt động' : 'Ngừng hoạt động' }}</span></td>
+                    <td><span class="badge bg-<?php echo e($theater['is_active'] ? 'success' : 'secondary'); ?>"><?php echo e($theater['is_active'] ? 'Hoạt động' : 'Ngừng hoạt động'); ?></span></td>
                 </tr>
             </table>
         </div>
@@ -48,13 +47,13 @@
     <div class="col-md-4">
         <div class="stat-card">
             <h6 class="mb-4">Admin của rạp</h6>
-            @if($moderator)
-                <p><strong>Tên:</strong></p><p>{{ $moderator['name'] }}</p>
-                <p><strong>Email:</strong></p><p>{{ $moderator['email'] }}</p>
-                <p><strong>Ngày tạo:</strong></p><p>{{ date('d/m/Y H:i', strtotime($moderator['created_at'])) }}</p>
-            @else
+            <?php if($moderator): ?>
+                <p><strong>Tên:</strong></p><p><?php echo e($moderator['name']); ?></p>
+                <p><strong>Email:</strong></p><p><?php echo e($moderator['email']); ?></p>
+                <p><strong>Ngày tạo:</strong></p><p><?php echo e(date('d/m/Y H:i', strtotime($moderator['created_at']))); ?></p>
+            <?php else: ?>
                 <p class="text-muted">Chưa có admin được gán cho rạp này</p>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -67,15 +66,15 @@
                 <h6 style="margin:0;">Danh sách phòng chiếu</h6>
                 <span class="badge bg-secondary"><i class="fas fa-info-circle me-1"></i> Chỉ xem - Liên hệ Admin rạp để chỉnh sửa</span>
             </div>
-            @if(!empty($screens))
+            <?php if(!empty($screens)): ?>
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
                         <tr><th>Tên phòng</th><th>Loại</th><th>Số ghế</th><th>Ghế VIP</th><th>Ghế đôi</th><th>Trạng thái</th><th>Xem sơ đồ</th></tr>
                     </thead>
                     <tbody>
-                        @foreach($screens as $screen)
-                            @php
+                        <?php $__currentLoopData = $screens; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $screen): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php
                                 $layout = $screen['seat_layout_config'] ?? [];
                                 if (is_string($layout)) {
                                     $layout = json_decode($layout, true) ?: [];
@@ -87,27 +86,27 @@
 
                                 $vipRows = $layout['vip_rows'] ?? [];
                                 $coupleRows = $layout['couple_rows'] ?? [];
-                            @endphp
+                            ?>
                             <tr>
-                                <td>{{ $screen['screen_name'] }}</td>
-                                <td><span class="badge bg-info">{{ $screen['screen_type'] ?? '2D' }}</span></td>
-                                <td>{{ $screen['total_seats'] ?? 0 }} ghế</td>
-                                <td>{{ !empty($vipRows) ? implode(', ', $vipRows) : 'Chưa cấu hình' }}</td>
-                                <td>{{ !empty($coupleRows) ? implode(', ', $coupleRows) : 'Chưa cấu hình' }}</td>
-                                <td><span class="badge bg-{{ $screen['is_active'] ? 'success' : 'secondary' }}">{{ $screen['is_active'] ? 'Hoạt động' : 'Tắt' }}</span></td>
+                                <td><?php echo e($screen['screen_name']); ?></td>
+                                <td><span class="badge bg-info"><?php echo e($screen['screen_type'] ?? '2D'); ?></span></td>
+                                <td><?php echo e($screen['total_seats'] ?? 0); ?> ghế</td>
+                                <td><?php echo e(!empty($vipRows) ? implode(', ', $vipRows) : 'Chưa cấu hình'); ?></td>
+                                <td><?php echo e(!empty($coupleRows) ? implode(', ', $coupleRows) : 'Chưa cấu hình'); ?></td>
+                                <td><span class="badge bg-<?php echo e($screen['is_active'] ? 'success' : 'secondary'); ?>"><?php echo e($screen['is_active'] ? 'Hoạt động' : 'Tắt'); ?></span></td>
                                 <td>
-                                    <button type="button" class="btn btn-sm btn-outline-info" onclick="viewScreenLayout({{ $screen['id'] }})" title="Xem sơ đồ ghế">
+                                    <button type="button" class="btn btn-sm btn-outline-info" onclick="viewScreenLayout(<?php echo e($screen['id']); ?>)" title="Xem sơ đồ ghế">
                                         <i class="fas fa-eye"></i> Xem
                                     </button>
                                 </td>
                             </tr>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </tbody>
                 </table>
             </div>
-            @else
+            <?php else: ?>
             <p class="text-center text-muted">Chưa có phòng chiếu nào.</p>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -146,11 +145,11 @@
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
-const screensData = @json($screens ?? []);
+const screensData = <?php echo json_encode($screens ?? [], 15, 512) ?>;
 
 function viewScreenLayout(screenId) {
     const screen = screensData.find(s => s.id == screenId);
@@ -205,4 +204,6 @@ function renderSeatPreviewView(rows, vipRows, coupleRows, numGroups, seatsPerGro
     });
 }
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('admin.layout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/admin/theaters/view.blade.php ENDPATH**/ ?>

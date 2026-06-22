@@ -270,58 +270,21 @@ class MovieController extends Controller
      */
     public function show($id)
     {
-        $movie = Movie::with(['category', 'episodes' => function ($q) {
-            $q->orderBy('episode_number');
-        }])->findOrFail($id);
+        $movie = Movie::with(['category', 'episodes', 'reviews.user'])->findOrFail($id);
 
-        // Reviews and Comments
-        $reviews = $movie->reviews()
-            ->with('user')
-            ->orderByDesc('is_pinned')
-            ->orderByDesc('created_at')
-            ->limit(10)
-            ->get();
-
-        $comments = $movie->comments()
-            ->with(['user', 'replies.user'])
-            ->whereNull('parent_id')
-            ->orderByDesc('created_at')
-            ->limit(50)
-            ->get();
-
-        // Check if user rated
-        $userHasRated = false;
-        $userRating = null;
-        $user = Auth::user();
-
-        if ($user) {
-            $userReview = $movie->reviews()->where('user_id', $user->id)->first();
-            if ($userReview) {
-                $userHasRated = true;
-                $userRating = $userReview->rating;
-            }
-        }
-
-        // Related movies
-        $relatedMovies = Movie::with('category')
-            ->where('category_id', $movie->category_id)
-            ->where('id', '!=', $movie->id)
-            ->orderByDesc('rating')
+        $relatedMovies = Movie::where('category_id', $movie->category_id)
+            ->where('id', '!=', $id)
+            ->where('status_admin', 'published')
             ->limit(6)
             ->get();
 
-        $isAdmin = $user && ($user->role === 'admin' ||
-            $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists());
+        $ratingStats = [
+            'average' => $movie->reviews->avg('rating') ?? 0,
+            'count' => $movie->reviews->count(),
+            'distribution' => $this->getRatingDistribution($movie->reviews)
+        ];
 
-        return view('movie.show', compact(
-            'movie',
-            'reviews',
-            'comments',
-            'userHasRated',
-            'userRating',
-            'relatedMovies',
-            'isAdmin'
-        ));
+        return view('movie.introduce', compact('movie', 'relatedMovies', 'ratingStats'));
     }
 
     /**

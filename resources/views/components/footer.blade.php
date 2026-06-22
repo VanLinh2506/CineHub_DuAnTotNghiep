@@ -97,7 +97,7 @@
         
         list.innerHTML = '<div class="notification-loading"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
         
-        fetch('?route=notifications/getNotifications&limit=10')
+        fetch(`{{ route('notifications.getNotifications') }}?limit=10`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok: ' + response.status);
@@ -118,7 +118,7 @@
                         const iconClass = getIconClass(notif.type);
                         const iconName = getIconName(notif.type);
                         const unreadClass = notif.is_read == 0 ? 'unread' : '';
-                        const link = notif.link || '?route=notifications/index';
+                        const link = notif.link || `{{ route('notifications.index') }}`;
                         
                         html += `
                             <div class="notification-item-dropdown ${unreadClass}" onclick="window.location.href='${link}'; markAsRead(${notif.id});">
@@ -179,8 +179,8 @@
     }
     
     function markAsRead(notificationId) {
-        fetch('?route=notifications/markAsRead&id=' + notificationId, {
-            method: 'POST'
+        fetch(`{{ route('notifications.markAsRead') }}?id=` + notificationId, {
+            method: 'GET'
         }).catch(error => console.error('Error marking notification as read:', error));
     }
     

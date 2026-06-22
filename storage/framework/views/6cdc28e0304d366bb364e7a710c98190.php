@@ -1,6 +1,4 @@
-@extends('admin.layout')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 
 <style>
     /* Upload Box Styling */
@@ -223,18 +221,18 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h5>Sửa phim</h5>
 
-        <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">
+        <a href="<?php echo e(route('admin.movies.index')); ?>" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Quay lại
         </a>
     </div>
 
     <div class="stat-card">
-        <form method="POST" action="{{ route('admin.movies.update', $movie['id']) }}" enctype="multipart/form-data">
+        <form method="POST" action="<?php echo e(route('admin.movies.update', $movie['id'])); ?>" enctype="multipart/form-data">
 
-            @csrf
-            @method('PUT')
+            <?php echo csrf_field(); ?>
+            <?php echo method_field('PUT'); ?>
 
-            <input type="hidden" name="id" value="{{ $movie['id'] }}">
+            <input type="hidden" name="id" value="<?php echo e($movie['id']); ?>">
 
             <div class="row">
 
@@ -245,10 +243,10 @@
                     </label>
 
                     <input type="text" class="form-control" id="title" name="title"
-                        value="{{ old('title', $movie['title']) }}" required>
+                        value="<?php echo e(old('title', $movie['title'])); ?>" required>
                 </div>
 
-                @php
+                <?php
                 $selectedCategoryIds = [];
 
                 if (!empty($movieCategories)) {
@@ -258,7 +256,7 @@
                 } elseif (!empty($movie['category_id'])) {
                 $selectedCategoryIds = [$movie['category_id']];
                 }
-                @endphp
+                ?>
 
                 <div class="col-md-6 mb-3">
                     <label for="category_id" class="form-label">
@@ -268,11 +266,12 @@
                     <select class="form-select" id="category_id" name="category_id">
                         <option value="">-- Chọn thể loại --</option>
 
-                        @foreach($categories as $cat)
-                        <option value="{{ $cat['id'] }}" {{ old('category_id', $movie['category_id'] ?? '') == $cat['id'] ? 'selected' : '' }}>
-                            {{ $cat['name'] }}
+                        <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($cat['id']); ?>" <?php echo e(old('category_id', $movie['category_id'] ?? '') == $cat['id'] ? 'selected' : ''); ?>>
+                            <?php echo e($cat['name']); ?>
+
                         </option>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                     </select>
                 </div>
@@ -284,19 +283,19 @@
 
                     <select class="form-select" id="level" name="level">
 
-                        <option value="Free" {{ $movie['level'] == 'Free' ? 'selected' : '' }}>
+                        <option value="Free" <?php echo e($movie['level'] == 'Free' ? 'selected' : ''); ?>>
                             Free
                         </option>
 
-                        <option value="Silver" {{ $movie['level'] == 'Silver' ? 'selected' : '' }}>
+                        <option value="Silver" <?php echo e($movie['level'] == 'Silver' ? 'selected' : ''); ?>>
                             Silver
                         </option>
 
-                        <option value="Gold" {{ $movie['level'] == 'Gold' ? 'selected' : '' }}>
+                        <option value="Gold" <?php echo e($movie['level'] == 'Gold' ? 'selected' : ''); ?>>
                             Gold
                         </option>
 
-                        <option value="Premium" {{ $movie['level'] == 'Premium' ? 'selected' : '' }}>
+                        <option value="Premium" <?php echo e($movie['level'] == 'Premium' ? 'selected' : ''); ?>>
                             Premium
                         </option>
 
@@ -310,19 +309,19 @@
 
                     <select class="form-select" id="status_admin" name="status_admin">
 
-                        <option value="draft" {{ ($movie['status_admin'] ?? 'draft') == 'draft' ? 'selected' : '' }}>
+                        <option value="draft" <?php echo e(($movie['status_admin'] ?? 'draft') == 'draft' ? 'selected' : ''); ?>>
                             Draft
                         </option>
 
-                        <option value="scheduled" {{ ($movie['status_admin'] ?? '') == 'scheduled' ? 'selected' : '' }}>
+                        <option value="scheduled" <?php echo e(($movie['status_admin'] ?? '') == 'scheduled' ? 'selected' : ''); ?>>
                             Scheduled
                         </option>
 
-                        <option value="published" {{ ($movie['status_admin'] ?? '') == 'published' ? 'selected' : '' }}>
+                        <option value="published" <?php echo e(($movie['status_admin'] ?? '') == 'published' ? 'selected' : ''); ?>>
                             Published
                         </option>
 
-                        <option value="archived" {{ ($movie['status_admin'] ?? '') == 'archived' ? 'selected' : '' }}>
+                        <option value="archived" <?php echo e(($movie['status_admin'] ?? '') == 'archived' ? 'selected' : ''); ?>>
                             Archived
                         </option>
 
@@ -337,11 +336,11 @@
                     <select class="form-select" id="type" name="type"
                         onchange="toggleSeriesSection(); toggleDurationField();">
 
-                        <option value="phimle" {{ ($movie['type'] ?? 'phimle') == 'phimle' ? 'selected' : '' }}>
+                        <option value="phimle" <?php echo e(($movie['type'] ?? 'phimle') == 'phimle' ? 'selected' : ''); ?>>
                             Phim lẻ
                         </option>
 
-                        <option value="phimbo" {{ ($movie['type'] ?? '') == 'phimbo' ? 'selected' : '' }}>
+                        <option value="phimbo" <?php echo e(($movie['type'] ?? '') == 'phimbo' ? 'selected' : ''); ?>>
                             Phim bộ
                         </option>
 
@@ -356,31 +355,31 @@
                     <select class="form-select" id="status" name="status"
                         onchange="toggleTheaterSection(); toggleDurationField();">
 
-                        <option value="Sắp chiếu" {{ $movie['status'] == 'Sắp chiếu' ? 'selected' : '' }}>
+                        <option value="Sắp chiếu" <?php echo e($movie['status'] == 'Sắp chiếu' ? 'selected' : ''); ?>>
                             Sắp chiếu
                         </option>
 
-                        <option value="Chiếu rạp" {{ $movie['status'] == 'Chiếu rạp' ? 'selected' : '' }}>
+                        <option value="Chiếu rạp" <?php echo e($movie['status'] == 'Chiếu rạp' ? 'selected' : ''); ?>>
                             Chiếu rạp
                         </option>
 
-                        <option value="Chiếu online" {{ $movie['status'] == 'Chiếu online' ? 'selected' : '' }}>
+                        <option value="Chiếu online" <?php echo e($movie['status'] == 'Chiếu online' ? 'selected' : ''); ?>>
                             Chiếu online
                         </option>
 
                     </select>
                 </div>
 
-                {{-- Thời lượng chỉ hiện cho phim lẻ chiếu rạp --}}
+                
                 <div class="col-md-3 mb-3" id="durationSection"
-                    style="display: {{ (($movie['type'] ?? 'phimle') == 'phimle' && $movie['status'] == 'Chiếu rạp') ? 'block' : 'none' }};">
+                    style="display: <?php echo e((($movie['type'] ?? 'phimle') == 'phimle' && $movie['status'] == 'Chiếu rạp') ? 'block' : 'none'); ?>;">
 
                     <label for="duration" class="form-label">
                         Thời lượng (phút)
                     </label>
 
                     <input type="number" class="form-control" id="duration" name="duration"
-                        value="{{ $movie['duration'] ?? '' }}" min="0">
+                        value="<?php echo e($movie['duration'] ?? ''); ?>" min="0">
 
                     <small class="text-muted">
                         Chỉ áp dụng cho phim chiếu rạp
@@ -388,7 +387,7 @@
                 </div>
 
                 <div class="col-md-3 mb-3">
-                    {{-- Placeholder giữ layout --}}
+                    
                 </div>
 
                 <div class="col-md-3 mb-3">
@@ -397,7 +396,7 @@
                     </label>
 
                     <input type="text" class="form-control" id="age_rating" name="age_rating"
-                        value="{{ old('age_rating', $movie['age_rating'] ?? '') }}" placeholder="VD: T18, P">
+                        value="<?php echo e(old('age_rating', $movie['age_rating'] ?? '')); ?>" placeholder="VD: T18, P">
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -406,7 +405,7 @@
                     </label>
 
                     <input type="text" class="form-control" id="director" name="director"
-                        value="{{ old('director', $movie['director'] ?? '') }}">
+                        value="<?php echo e(old('director', $movie['director'] ?? '')); ?>">
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -415,7 +414,7 @@
                     </label>
 
                     <input type="text" class="form-control" id="actors" name="actors"
-                        value="{{ old('actors', $movie['actors'] ?? '') }}" placeholder="VD: Diễn viên 1, Diễn viên 2">
+                        value="<?php echo e(old('actors', $movie['actors'] ?? '')); ?>" placeholder="VD: Diễn viên 1, Diễn viên 2">
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -424,7 +423,7 @@
                     </label>
 
                     <input type="text" class="form-control" id="country" name="country"
-                        value="{{ old('country', $movie['country'] ?? '') }}" placeholder="VD: Việt Nam, Mỹ">
+                        value="<?php echo e(old('country', $movie['country'] ?? '')); ?>" placeholder="VD: Việt Nam, Mỹ">
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -433,7 +432,7 @@
                     </label>
 
                     <input type="text" class="form-control" id="language" name="language"
-                        value="{{ old('language', $movie['language'] ?? '') }}" placeholder="VD: Tiếng Việt, Tiếng Anh">
+                        value="<?php echo e(old('language', $movie['language'] ?? '')); ?>" placeholder="VD: Tiếng Việt, Tiếng Anh">
                 </div>
 
                 <div class="col-md-12 mb-3">
@@ -442,10 +441,10 @@
                     </label>
 
                     <textarea class="form-control" id="description" name="description"
-                        rows="4">{{ old('description', $movie['description'] ?? '') }}</textarea>
+                        rows="4"><?php echo e(old('description', $movie['description'] ?? '')); ?></textarea>
                 </div>
 
-                {{-- Upload Poster / Thumbnail --}}
+                
                 <div class="col-md-6 mb-3">
 
                     <label for="thumbnail_file" class="form-label">
@@ -458,9 +457,9 @@
                         <input type="file" class="form-control d-none" id="thumbnail_file" name="thumbnail_file"
                             accept="image/*" onchange="previewImage(this, 'thumbnailPreview', 'thumbnailUploadBox')">
 
-                        @if(!empty($movie['thumbnail']))
+                        <?php if(!empty($movie['thumbnail'])): ?>
 
-                        <img id="thumbnailPreview" class="upload-preview" src="{{ $movie['thumbnail'] }}" alt="Preview">
+                        <img id="thumbnailPreview" class="upload-preview" src="<?php echo e($movie['thumbnail']); ?>" alt="Preview">
 
                         <div class="upload-placeholder d-none" id="thumbnailPlaceholder">
 
@@ -476,7 +475,7 @@
 
                         </div>
 
-                        @else
+                        <?php else: ?>
 
                         <div class="upload-placeholder" id="thumbnailPlaceholder">
 
@@ -494,7 +493,7 @@
 
                         <img id="thumbnailPreview" class="upload-preview d-none" alt="Preview">
 
-                        @endif
+                        <?php endif; ?>
 
                     </div>
 
@@ -504,7 +503,7 @@
 
                 </div>
 
-                {{-- Upload Banner --}}
+                
                 <div class="col-md-6 mb-3">
 
                     <label for="banner_file" class="form-label">
@@ -516,9 +515,9 @@
                         <input type="file" class="form-control d-none" id="banner_file" name="banner_file" accept="image/*"
                             onchange="previewImage(this, 'bannerPreview', 'bannerUploadBox')">
 
-                        @if(!empty($movie['banner']))
+                        <?php if(!empty($movie['banner'])): ?>
 
-                        <img id="bannerPreview" class="upload-preview" src="{{ $movie['banner'] }}" alt="Preview">
+                        <img id="bannerPreview" class="upload-preview" src="<?php echo e($movie['banner']); ?>" alt="Preview">
 
                         <div class="upload-placeholder d-none" id="bannerPlaceholder">
 
@@ -534,7 +533,7 @@
 
                         </div>
 
-                        @else
+                        <?php else: ?>
 
                         <div class="upload-placeholder" id="bannerPlaceholder">
 
@@ -552,7 +551,7 @@
 
                         <img id="bannerPreview" class="upload-preview d-none" alt="Preview">
 
-                        @endif
+                        <?php endif; ?>
 
                     </div>
 
@@ -561,9 +560,9 @@
                     </small>
 
                 </div>
-                {{-- Upload Video (chỉ hiện cho phim lẻ) --}}
+                
                 <div class="col-md-6 mb-3" id="videoSection"
-                    style="display: {{ (($movie['type'] ?? 'phimle') == 'phimle') ? 'block' : 'none' }};">
+                    style="display: <?php echo e((($movie['type'] ?? 'phimle') == 'phimle') ? 'block' : 'none'); ?>;">
 
                     <label for="video_file" class="form-label">
                         Video phim
@@ -575,14 +574,15 @@
                         <input type="file" class="form-control d-none" id="video_file" name="video_file" accept="video/*"
                             onchange="previewVideo(this)">
 
-                        @if(!empty($movie['video_url']))
+                        <?php if(!empty($movie['video_url'])): ?>
 
                         <div id="videoInfo">
 
                             <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
 
                             <p class="mb-1 video-name">
-                                {{ basename($movie['video_url']) }}
+                                <?php echo e(basename($movie['video_url'])); ?>
+
                             </p>
 
                             <small class="text-muted video-size">
@@ -605,7 +605,7 @@
 
                         </div>
 
-                        @else
+                        <?php else: ?>
 
                         <div class="upload-placeholder" id="videoPlaceholder">
 
@@ -631,7 +631,7 @@
 
                         </div>
 
-                        @endif
+                        <?php endif; ?>
 
                     </div>
 
@@ -639,34 +639,36 @@
                         Click để thay đổi video phim
                     </small>
 
-                    @if(!empty($movie['video_url']))
+                    <?php if(!empty($movie['video_url'])): ?>
                     <div class="mt-2">
 
                         <small class="text-muted">
                             Video hiện tại:
 
-                            @if(Str::startsWith($movie['video_url'], 'http'))
+                            <?php if(Str::startsWith($movie['video_url'], 'http')): ?>
 
-                            <a href="{{ $movie['video_url'] }}" target="_blank">
-                                {{ $movie['video_url'] }}
+                            <a href="<?php echo e($movie['video_url']); ?>" target="_blank">
+                                <?php echo e($movie['video_url']); ?>
+
                             </a>
 
-                            @else
+                            <?php else: ?>
 
-                            {{ $movie['video_url'] }}
+                            <?php echo e($movie['video_url']); ?>
 
-                            @endif
+
+                            <?php endif; ?>
 
                         </small>
 
                     </div>
-                    @endif
+                    <?php endif; ?>
 
                 </div>
 
-                {{-- Thông báo cho phim bộ --}}
+                
                 <div class="col-md-6 mb-3" id="videoSeriesNotice"
-                    style="display: {{ (($movie['type'] ?? 'phimle') == 'phimbo') ? 'block' : 'none' }};">
+                    style="display: <?php echo e((($movie['type'] ?? 'phimle') == 'phimbo') ? 'block' : 'none'); ?>;">
 
                     <label class="form-label">
                         Video phim
@@ -687,7 +689,7 @@
 
                 </div>
 
-                {{-- Upload Trailer --}}
+                
                 <div class="col-md-6 mb-3">
 
                     <label for="trailer_file" class="form-label">
@@ -700,14 +702,15 @@
                         <input type="file" class="form-control d-none" id="trailer_file" name="trailer_file"
                             accept="video/*" onchange="previewTrailer(this)">
 
-                        @if(!empty($movie['trailer_url']) && !Str::startsWith($movie['trailer_url'], 'http'))
+                        <?php if(!empty($movie['trailer_url']) && !Str::startsWith($movie['trailer_url'], 'http')): ?>
 
                         <div id="trailerInfo">
 
                             <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
 
                             <p class="mb-1 trailer-name">
-                                {{ basename($movie['trailer_url']) }}
+                                <?php echo e(basename($movie['trailer_url'])); ?>
+
                             </p>
 
                             <small class="text-muted trailer-size">
@@ -730,7 +733,7 @@
 
                         </div>
 
-                        @else
+                        <?php else: ?>
 
                         <div class="upload-placeholder" id="trailerPlaceholder">
 
@@ -756,7 +759,7 @@
 
                         </div>
 
-                        @endif
+                        <?php endif; ?>
 
                     </div>
 
@@ -765,15 +768,15 @@
                     </small>
 
                     <input type="url" class="form-control mt-1" id="trailer_url" name="trailer_url"
-                        value="{{ old('trailer_url', $movie['trailer_url'] ?? '') }}"
+                        value="<?php echo e(old('trailer_url', $movie['trailer_url'] ?? '')); ?>"
                         placeholder="https://youtube.com/watch?v=...">
 
                 </div>
 
             </div>
 
-            {{-- PHẦN QUẢN LÝ PHIM BỘ --}}
-            <div id="seriesSection" style="display: {{ (($movie['type'] ?? 'phimle') == 'phimbo') ? 'block' : 'none' }};">
+            
+            <div id="seriesSection" style="display: <?php echo e((($movie['type'] ?? 'phimle') == 'phimbo') ? 'block' : 'none'); ?>;">
 
                 <hr class="my-4">
 
@@ -782,7 +785,7 @@
                     Quản lý tập phim bộ
                 </h6>
 
-                @if(!empty($episodes))
+                <?php if(!empty($episodes)): ?>
 
                 <div class="mb-4">
 
@@ -807,50 +810,53 @@
 
                             <tbody>
 
-                                @foreach($episodes as $episode)
+                                <?php $__currentLoopData = $episodes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $episode): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
 
                                 <tr>
 
                                     <td class="text-center fw-bold">
-                                        {{ $episode['episode_number'] }}
+                                        <?php echo e($episode['episode_number']); ?>
+
                                     </td>
 
                                     <td>
-                                        {{ $episode['title'] ?? ('Tập ' . $episode['episode_number']) }}
+                                        <?php echo e($episode['title'] ?? ('Tập ' . $episode['episode_number'])); ?>
+
                                     </td>
 
                                     <td>
 
-                                        @if(!empty($episode['video_url']))
+                                        <?php if(!empty($episode['video_url'])): ?>
 
                                         <span class="text-success">
 
                                             <i class="fas fa-check-circle"></i>
 
-                                            <a href="{{ $episode['video_url'] }}" target="_blank" class="text-success">
+                                            <a href="<?php echo e($episode['video_url']); ?>" target="_blank" class="text-success">
 
-                                                {{ basename($episode['video_url']) }}
+                                                <?php echo e(basename($episode['video_url'])); ?>
+
 
                                             </a>
 
                                         </span>
 
-                                        @else
+                                        <?php else: ?>
 
                                         <span class="text-warning">
                                             <i class="fas fa-exclamation-triangle"></i>
                                             Chưa có video
                                         </span>
 
-                                        @endif
+                                        <?php endif; ?>
 
                                     </td>
 
                                     <td>
 
                                         <input type="file" class="form-control form-control-sm"
-                                            name="episode_video_{{ $episode['id'] }}" accept="video/*"
-                                            data-episode-id="{{ $episode['id'] }}">
+                                            name="episode_video_<?php echo e($episode['id']); ?>" accept="video/*"
+                                            data-episode-id="<?php echo e($episode['id']); ?>">
 
                                         <small class="text-muted">
                                             Chọn file để thay đổi video
@@ -860,16 +866,17 @@
 
                                     <td class="text-center">
 
-                                        {{ $episode['duration']
+                                        <?php echo e($episode['duration']
                                     ? $episode['duration'] . ' phút'
-                                    : 'N/A' }}
+                                    : 'N/A'); ?>
+
 
                                     </td>
 
                                     <td class="text-center">
 
                                         <button type="button" class="btn btn-sm btn-danger"
-                                            onclick="deleteEpisode({{ $episode['id'] }})" title="Xóa tập">
+                                            onclick="deleteEpisode(<?php echo e($episode['id']); ?>)" title="Xóa tập">
 
                                             <i class="fas fa-trash"></i>
 
@@ -879,7 +886,7 @@
 
                                 </tr>
 
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                             </tbody>
 
@@ -889,14 +896,14 @@
 
                 </div>
 
-                @endif
+                <?php endif; ?>
             </div>
         </form>
     </div>
 
 </div>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
     let episodeCount = 0;
 
@@ -1056,9 +1063,9 @@
 
         const container = document.getElementById('episodesContainer');
 
-        const existingEpisodes = @json(
+        const existingEpisodes = <?php echo json_encode(
             collect($episodes ?? [])->pluck('episode_number')->toArray()
-        );
+        , 15, 512) ?>;
 
         const maxExisting =
             existingEpisodes.length > 0 ?
@@ -1168,7 +1175,7 @@
             confirm('Bạn có chắc chắn muốn xóa tập này?')
         ) {
             window.location.href =
-                "{{ route('admin.movies.deleteEpisode', ['movieId' => $movie['id'], 'id' => '__EPISODE__']) }}"
+                "<?php echo e(route('admin.movies.deleteEpisode', ['movieId' => $movie['id'], 'id' => '__EPISODE__'])); ?>"
                 .replace('__EPISODE__', episodeId);
         }
     }
@@ -1185,5 +1192,7 @@
         toggleDurationField();
     });
 </script>
-@endpush
-@endsection
+<?php $__env->stopPush(); ?>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('admin.layout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/admin/movies/edit.blade.php ENDPATH**/ ?>

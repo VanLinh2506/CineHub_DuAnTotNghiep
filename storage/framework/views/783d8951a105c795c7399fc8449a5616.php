@@ -1,6 +1,4 @@
-@extends('admin.layout')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-fluid">
     <div class="stat-card">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -22,23 +20,23 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (empty($categories))
+                    <?php if(empty($categories)): ?>
                         <tr>
                             <td colspan="5" class="text-center py-4">
                                 <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
                                 Chưa có thể loại nào
                             </td>
                         </tr>
-                    @else
-                        @foreach ($categories as $category)
+                    <?php else: ?>
+                        <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr>
-                                <td>{{ $category['id'] }}</td>
+                                <td><?php echo e($category['id']); ?></td>
                                 <td>
-                                    <strong>{{ $category['name'] }}</strong>
+                                    <strong><?php echo e($category['name']); ?></strong>
                                 </td>
                                 <td>
-                                    @if ($category['parent_id'])
-                                        @php
+                                    <?php if($category['parent_id']): ?>
+                                        <?php
                                             $parentName = '';
                                             foreach ($categories as $parent) {
                                                 if ($parent['id'] == $category['parent_id']) {
@@ -46,36 +44,37 @@
                                                     break;
                                                 }
                                             }
-                                        @endphp
-                                        {{ $parentName }}
-                                    @else
+                                        ?>
+                                        <?php echo e($parentName); ?>
+
+                                    <?php else: ?>
                                         <span class="text-muted">-</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                                 <td>
-                                    <span class="badge bg-info">{{ $category['movie_count'] ?? $category['movies_count'] ?? 0 }} phim</span>
+                                    <span class="badge bg-info"><?php echo e($category['movie_count'] ?? $category['movies_count'] ?? 0); ?> phim</span>
                                 </td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary me-1" 
-                                            onclick="editCategory(@json($category))"
+                                            onclick="editCategory(<?php echo json_encode($category, 15, 512) ?>)"
                                             title="Sửa">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    @if (($category['movie_count'] ?? $category['movies_count'] ?? 0) == 0)
+                                    <?php if(($category['movie_count'] ?? $category['movies_count'] ?? 0) == 0): ?>
                                         <button class="btn btn-sm btn-outline-danger" 
-                                                onclick="deleteCategory({{ $category['id'] }}, '{{ $category['name'] }}')"
+                                                onclick="deleteCategory(<?php echo e($category['id']); ?>, '<?php echo e($category['name']); ?>')"
                                                 title="Xóa">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                    @else
+                                    <?php else: ?>
                                         <button class="btn btn-sm btn-outline-secondary" disabled title="Không thể xóa - có phim đang sử dụng">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                             </tr>
-                        @endforeach
-                    @endif
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -86,8 +85,8 @@
 <div class="modal fade" id="addCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ route('admin.categories.store') }}" method="POST">
-                @csrf
+            <form action="<?php echo e(route('admin.categories.store')); ?>" method="POST">
+                <?php echo csrf_field(); ?>
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Thêm thể loại mới</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -101,9 +100,9 @@
                         <label class="form-label">Thể loại cha (tùy chọn)</label>
                         <select name="parent_id" class="form-select">
                             <option value="">-- Không có --</option>
-                            @foreach ($categories as $cat)
-                                <option value="{{ $cat['id'] }}">{{ $cat['name'] }}</option>
-                            @endforeach
+                            <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($cat['id']); ?>"><?php echo e($cat['name']); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                 </div>
@@ -121,8 +120,8 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form action="" method="POST" id="editCategoryForm">
-                @csrf
-                @method('PUT')
+                <?php echo csrf_field(); ?>
+                <?php echo method_field('PUT'); ?>
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Sửa thể loại</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -136,9 +135,9 @@
                         <label class="form-label">Thể loại cha (tùy chọn)</label>
                         <select name="parent_id" id="edit_parent_id" class="form-select">
                             <option value="">-- Không có --</option>
-                            @foreach ($categories as $cat)
-                                <option value="{{ $cat['id'] }}">{{ $cat['name'] }}</option>
-                            @endforeach
+                            <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($cat['id']); ?>"><?php echo e($cat['name']); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                 </div>
@@ -156,8 +155,8 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form action="" method="POST" id="deleteCategoryForm">
-                @csrf
-                @method('DELETE')
+                <?php echo csrf_field(); ?>
+                <?php echo method_field('DELETE'); ?>
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Xóa thể loại</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -178,7 +177,7 @@
 <script>
     function editCategory(category) {
         const form = document.getElementById('editCategoryForm');
-        form.action = "{{ route('admin.categories.update', ['id' => '__ID__']) }}".replace('__ID__', category.id);
+        form.action = "<?php echo e(route('admin.categories.update', ['id' => '__ID__'])); ?>".replace('__ID__', category.id);
         document.getElementById('edit_name').value = category.name;
         document.getElementById('edit_parent_id').value = category.parent_id || '';
         new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
@@ -186,9 +185,11 @@
 
     function deleteCategory(id, name) {
         const form = document.getElementById('deleteCategoryForm');
-        form.action = "{{ route('admin.categories.destroy', ['id' => '__ID__']) }}".replace('__ID__', id);
+        form.action = "<?php echo e(route('admin.categories.destroy', ['id' => '__ID__'])); ?>".replace('__ID__', id);
         document.getElementById('delete_name').textContent = name;
         new bootstrap.Modal(document.getElementById('deleteCategoryModal')).show();
     }
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('admin.layout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/admin/categories.blade.php ENDPATH**/ ?>

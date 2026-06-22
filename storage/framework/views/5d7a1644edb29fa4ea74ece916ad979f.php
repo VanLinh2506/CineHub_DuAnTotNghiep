@@ -1,27 +1,27 @@
-﻿@extends('admin.layout')
+﻿
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-fluid">
     <!-- Filter -->
     <div class="stat-card mb-4">
-        <form method="GET" action="{{ route('admin.analytics') }}" class="row align-items-end">
+        <form method="GET" action="<?php echo e(route('admin.analytics')); ?>" class="row align-items-end">
             <div class="col-md-3">
                 <label class="form-label">Khoảng thời gian</label>
                 <select name="period" class="form-select" onchange="this.form.submit()">
-                    <option value="7days" {{ ($period ?? '7days') == '7days' ? 'selected' : '' }}>7 ngày gần nhất</option>
-                    <option value="30days" {{ ($period ?? '') == '30days' ? 'selected' : '' }}>30 ngày gần nhất</option>
-                    <option value="thismonth" {{ ($period ?? '') == 'thismonth' ? 'selected' : '' }}>Tháng này</option>
-                    <option value="lastmonth" {{ ($period ?? '') == 'lastmonth' ? 'selected' : '' }}>Tháng trước</option>
-                    <option value="thisyear" {{ ($period ?? '') == 'thisyear' ? 'selected' : '' }}>Năm nay</option>
+                    <option value="7days" <?php echo e(($period ?? '7days') == '7days' ? 'selected' : ''); ?>>7 ngày gần nhất</option>
+                    <option value="30days" <?php echo e(($period ?? '') == '30days' ? 'selected' : ''); ?>>30 ngày gần nhất</option>
+                    <option value="thismonth" <?php echo e(($period ?? '') == 'thismonth' ? 'selected' : ''); ?>>Tháng này</option>
+                    <option value="lastmonth" <?php echo e(($period ?? '') == 'lastmonth' ? 'selected' : ''); ?>>Tháng trước</option>
+                    <option value="thisyear" <?php echo e(($period ?? '') == 'thisyear' ? 'selected' : ''); ?>>Năm nay</option>
                 </select>
             </div>
             <div class="col-md-3">
                 <label class="form-label">Từ ngày</label>
-                <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
+                <input type="date" name="start_date" class="form-control" value="<?php echo e(request('start_date')); ?>">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Đến ngày</label>
-                <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
+                <input type="date" name="end_date" class="form-control" value="<?php echo e(request('end_date')); ?>">
             </div>
             <div class="col-md-3">
                 <button type="submit" class="btn btn-primary w-100">
@@ -38,7 +38,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="stat-label">Tổng doanh thu</div>
-                        <div class="stat-value text-primary">{{ number_format($summaryStats['total_revenue'] ?? 0) }}đ</div>
+                        <div class="stat-value text-primary"><?php echo e(number_format($summaryStats['total_revenue'] ?? 0)); ?>đ</div>
                     </div>
                     <div class="stat-icon bg-primary">
                         <i class="fas fa-dollar-sign"></i>
@@ -51,7 +51,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="stat-label">Số giao dịch</div>
-                        <div class="stat-value text-success">{{ number_format($summaryStats['total_transactions'] ?? 0) }}</div>
+                        <div class="stat-value text-success"><?php echo e(number_format($summaryStats['total_transactions'] ?? 0)); ?></div>
                     </div>
                     <div class="stat-icon bg-success">
                         <i class="fas fa-receipt"></i>
@@ -64,7 +64,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="stat-label">Tổng số vé</div>
-                        <div class="stat-value text-info">{{ number_format($summaryStats['total_tickets'] ?? 0) }}</div>
+                        <div class="stat-value text-info"><?php echo e(number_format($summaryStats['total_tickets'] ?? 0)); ?></div>
                     </div>
                     <div class="stat-icon bg-info">
                         <i class="fas fa-ticket-alt"></i>
@@ -77,7 +77,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="stat-label">Giá vé TB</div>
-                        <div class="stat-value text-warning">{{ number_format($summaryStats['avg_ticket_price'] ?? 0) }}đ</div>
+                        <div class="stat-value text-warning"><?php echo e(number_format($summaryStats['avg_ticket_price'] ?? 0)); ?>đ</div>
                     </div>
                     <div class="stat-icon bg-warning">
                         <i class="fas fa-chart-line"></i>
@@ -92,19 +92,19 @@
         <h5 class="mb-4">
             <i class="fas fa-chart-area me-2"></i>
             Doanh thu
-            @if(($period ?? '7days') == '7days')
+            <?php if(($period ?? '7days') == '7days'): ?>
             7 ngày gần nhất
-            @elseif($period == '30days')
+            <?php elseif($period == '30days'): ?>
             30 ngày gần nhất
-            @elseif($period == 'thismonth')
+            <?php elseif($period == 'thismonth'): ?>
             tháng này
-            @elseif($period == 'lastmonth')
+            <?php elseif($period == 'lastmonth'): ?>
             tháng trước
-            @elseif($period == 'thisyear')
+            <?php elseif($period == 'thisyear'): ?>
             năm nay
-            @else
+            <?php else: ?>
             theo thời gian đã chọn
-            @endif
+            <?php endif; ?>
             <span class="badge bg-primary ms-2">Doanh thu</span>
         </h5>
         <div style="position: relative; height: 350px; max-height: 350px;">
@@ -146,7 +146,7 @@
                 <h5 class="mb-4">
                     <i class="fas fa-list me-2 text-success"></i>Top 10 phim doanh thu cao nhất - Chi tiết
                 </h5>
-                @if($topMoviesByRevenue && $topMoviesByRevenue->count() > 0)
+                <?php if($topMoviesByRevenue && $topMoviesByRevenue->count() > 0): ?>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
@@ -159,52 +159,53 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
+                            <?php
                             $totalRevenue = $topMoviesByRevenue->sum('revenue');
-                            @endphp
-                            @foreach($topMoviesByRevenue as $index => $movie)
+                            ?>
+                            <?php $__currentLoopData = $topMoviesByRevenue; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $movie): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr>
                                 <td>
-                                    @if($index == 0)
+                                    <?php if($index == 0): ?>
                                     <i class="fas fa-crown text-warning"></i>
-                                    @elseif($index == 1)
+                                    <?php elseif($index == 1): ?>
                                     <i class="fas fa-medal text-secondary"></i>
-                                    @elseif($index == 2)
+                                    <?php elseif($index == 2): ?>
                                     <i class="fas fa-medal" style="color: #cd7f32;"></i>
-                                    @else
-                                    {{ $index + 1 }}
-                                    @endif
+                                    <?php else: ?>
+                                    <?php echo e($index + 1); ?>
+
+                                    <?php endif; ?>
                                 </td>
-                                <td><strong>{{ $movie->title }}</strong></td>
-                                <td>{{ number_format($movie->ticket_count) }} vé</td>
+                                <td><strong><?php echo e($movie->title); ?></strong></td>
+                                <td><?php echo e(number_format($movie->ticket_count)); ?> vé</td>
                                 <td>
-                                    <strong class="text-primary">{{ number_format($movie->revenue) }}đ</strong>
+                                    <strong class="text-primary"><?php echo e(number_format($movie->revenue)); ?>đ</strong>
                                 </td>
                                 <td>
-                                    @php
+                                    <?php
                                     $percentage = $totalRevenue > 0 ? ($movie->revenue / $totalRevenue * 100) : 0;
-                                    @endphp
+                                    ?>
                                     <div class="d-flex align-items-center">
                                         <div class="progress flex-grow-1 me-2" style="height: 20px;">
                                             <div class="progress-bar bg-success" role="progressbar"
-                                                style="width: {{ $percentage }}%"
-                                                aria-valuenow="{{ $percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                                style="width: <?php echo e($percentage); ?>%"
+                                                aria-valuenow="<?php echo e($percentage); ?>" aria-valuemin="0" aria-valuemax="100">
                                             </div>
                                         </div>
-                                        <span class="badge bg-success">{{ number_format($percentage, 1) }}%</span>
+                                        <span class="badge bg-success"><?php echo e(number_format($percentage, 1)); ?>%</span>
                                     </div>
                                 </td>
                             </tr>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
-                @else
+                <?php else: ?>
                 <div class="text-center py-5">
                     <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
                     <p class="text-muted">Chưa có dữ liệu doanh thu</p>
                 </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -216,7 +217,7 @@
         // Revenue Chart
         const ctx = document.getElementById('revenueChart');
         if (ctx) {
-            const revenueData = @json($revenueData ?? []);
+            const revenueData = <?php echo json_encode($revenueData ?? [], 15, 512) ?>;
 
             const formatDate = (dateString) => {
                 const date = new Date(dateString);
@@ -338,7 +339,7 @@
         // Top Movies Bar Chart
         const topMoviesCtx = document.getElementById('topMoviesChart');
         if (topMoviesCtx) {
-            const topMovies = @json($topMoviesByRevenue ?? collect());
+            const topMovies = <?php echo json_encode($topMoviesByRevenue ?? collect(), 15, 512) ?>;
             const top5Movies = topMovies.slice(0, 5);
 
             const movieLabels = top5Movies.map(movie => {
@@ -418,13 +419,13 @@
         const movieTypeCtx = document.getElementById('movieTypeChart');
         if (movieTypeCtx) {
             // Sample data - you'll need to pass real data from controller
-            @php
+            <?php
                 $movieTypes = [
                     ['Phim lẻ', $topMoviesByRevenue->where('type', 'phimle')->sum('revenue') ?? 0],
                     ['Phim bộ', $topMoviesByRevenue->where('type', 'phimbo')->sum('revenue') ?? 0],
                 ];
-            @endphp
-            const movieTypes = @json($movieTypes);
+            ?>
+            const movieTypes = <?php echo json_encode($movieTypes, 15, 512) ?>;
 
             const typeLabels = movieTypes.map(item => item[0]);
             const typeData = movieTypes.map(item => parseFloat(item[1]) || 0);
@@ -483,4 +484,6 @@
         }
     });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('admin.layout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/admin/analytics.blade.php ENDPATH**/ ?>

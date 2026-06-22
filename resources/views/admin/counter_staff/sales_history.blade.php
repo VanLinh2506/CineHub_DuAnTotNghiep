@@ -127,9 +127,9 @@
 .stat-label { font-size: 14px; opacity: 0.9; }
 .filter-section { background: #2a2a2a; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
 .filter-form { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
-.filter-group { display: flex; flex-direction: column; gap: 5px; }
+.filter-group { display: flex; flex-direction: column; gap: 5px; flex: 1 1 200px; }
 .filter-group label { color: #aaa; font-size: 14px; }
-.form-control { padding: 10px 15px; border: 1px solid #444; border-radius: 5px; background: #333; color: #fff; min-width: 150px; }
+.form-control { padding: 10px 15px; border: 1px solid #444; border-radius: 5px; background: #333; color: #fff; min-width: 0; width: 100%; max-width: 100%; }
 .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; }
 .btn-primary { background: #e50914; color: #fff; }
 .btn-secondary { background: #666; color: #fff; }
@@ -158,5 +158,11 @@
 .page-link { padding: 8px 15px; background: #333; color: #fff; text-decoration: none; border-radius: 5px; }
 .page-link.active { background: #e50914; }
 .total-info { text-align: center; margin-top: 15px; color: #aaa; }
+
+@media (max-width: 768px) {
+    .filter-form { flex-direction: column; align-items: stretch; }
+    .filter-group { width: 100%; }
+    .filter-form .btn { width: 100%; justify-content: center; }
+}
 </style>
 @endsection

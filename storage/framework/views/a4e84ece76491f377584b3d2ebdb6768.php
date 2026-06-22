@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo e(isset($title) ? $title . ' - ' : ''); ?>Quản lý rạp - CineHub</title>
+    <title><?php echo e(isset($title) ? $title . ' - ' : ''); ?>CineHub Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -294,43 +294,47 @@
 
     <div class="admin-sidebar" id="adminSidebar">
         <div class="sidebar-brand">
-            <i class="fas fa-building"></i> Quản lý rạp
+            <i class="fas fa-film"></i> CineHub Admin
         </div>
         <ul class="sidebar-menu">
-            <li><a href="<?php echo e(route('moderator.index')); ?>" class="<?php echo e(request()->routeIs('moderator.index') ? 'active' : ''); ?>">
+            <li><a href="<?php echo e(route('admin.index')); ?>" class="<?php echo e(request()->routeIs('admin.index') ? 'active' : ''); ?>">
                 <i class="fas fa-tachometer-alt"></i> Dashboard
             </a></li>
             
-            <li><a href="<?php echo e(route('moderator.theater')); ?>" class="<?php echo e(request()->routeIs('moderator.theater') ? 'active' : ''); ?>">
-                <i class="fas fa-building"></i> Thông tin rạp
+            <?php if(Auth::user()->isAdmin()): ?>
+            <li><a href="<?php echo e(route('admin.users.index')); ?>" class="<?php echo e(request()->routeIs('admin.users*') ? 'active' : ''); ?>">
+                <i class="fas fa-users"></i> Quản lý người dùng
+            </a></li>
+            <?php endif; ?>
+            
+            <li><a href="<?php echo e(route('admin.movies.index')); ?>" class="<?php echo e(request()->routeIs('admin.movies*') ? 'active' : ''); ?>">
+                <i class="fas fa-film"></i> Quản lý phim
             </a></li>
             
-            <li><a href="<?php echo e(route('moderator.screens.index')); ?>" class="<?php echo e(request()->routeIs('moderator.screens*') ? 'active' : ''); ?>">
-                <i class="fas fa-door-open"></i> Quản lý phòng
+            <?php if(Auth::user()->isAdmin()): ?>
+            <li><a href="<?php echo e(route('admin.categories.index')); ?>" class="<?php echo e(request()->routeIs('admin.categories*') ? 'active' : ''); ?>">
+                <i class="fas fa-tags"></i> Quản lý thể loại
+            </a></li>
+            <?php endif; ?>
+            
+            <li><a href="<?php echo e(route('admin.theaters.index')); ?>" class="<?php echo e(request()->routeIs('admin.theaters*') ? 'active' : ''); ?>">
+                <i class="fas fa-building"></i> Quản lý rạp
             </a></li>
             
-            <li><a href="<?php echo e(route('moderator.showtimes.index')); ?>" class="<?php echo e(request()->routeIs('moderator.showtimes*') ? 'active' : ''); ?>">
-                <i class="fas fa-calendar-alt"></i> Lịch chiếu
+            <li><a href="<?php echo e(route('admin.tickets.index')); ?>" class="<?php echo e(request()->routeIs('admin.tickets*') ? 'active' : ''); ?>">
+                <i class="fas fa-ticket-alt"></i> Hỗ trợ khách hàng
             </a></li>
             
-            <li><a href="<?php echo e(route('moderator.tickets')); ?>" class="<?php echo e(request()->routeIs('moderator.tickets') ? 'active' : ''); ?>">
-                <i class="fas fa-ticket-alt"></i> Quản lý vé
+            <li><a href="<?php echo e(route('admin.foodItems.index')); ?>" class="<?php echo e(request()->routeIs('admin.foodItems*') ? 'active' : ''); ?>">
+                <i class="fas fa-utensils"></i> Đồ ăn & Combo
             </a></li>
             
-            <li><a href="<?php echo e(route('moderator.foodItems')); ?>" class="<?php echo e(request()->routeIs('moderator.foodItems*') ? 'active' : ''); ?>">
-                <i class="fas fa-utensils"></i> Combo & Đồ ăn
+            <li><a href="<?php echo e(route('admin.analytics')); ?>" class="<?php echo e(request()->routeIs('admin.analytics') ? 'active' : ''); ?>">
+                <i class="fas fa-chart-line"></i> Analytics & Báo cáo
             </a></li>
             
-            <li><a href="<?php echo e(route('moderator.counterStaff')); ?>" class="<?php echo e(request()->routeIs('moderator.counterStaff*') ? 'active' : ''); ?>">
-                <i class="fas fa-users"></i> Quản lý nhân viên
-            </a></li>
-            
-            <li><a href="<?php echo e(route('moderator.statistics')); ?>" class="<?php echo e(request()->routeIs('moderator.statistics') ? 'active' : ''); ?>">
-                <i class="fas fa-chart-line"></i> Thống kê
-            </a></li>
-            
-            <li><a href="<?php echo e(route('moderator.permissionRequests')); ?>" class="<?php echo e(request()->routeIs('moderator.permissionRequests') ? 'active' : ''); ?>">
-                <i class="fas fa-user-shield"></i> Yêu cầu thay đổi quyền
+            <li><a href="<?php echo e(route('admin.logs')); ?>" class="<?php echo e(request()->routeIs('admin.logs') ? 'active' : ''); ?>">
+                <i class="fas fa-history"></i> Lịch sử hoạt động
             </a></li>
             
             <li><a href="<?php echo e(route('home')); ?>">
@@ -382,4 +386,4 @@
     <?php echo $__env->yieldPushContent('scripts'); ?>
 </body>
 </html>
-<?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/admin/moderator/layout.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/admin/layout.blade.php ENDPATH**/ ?>

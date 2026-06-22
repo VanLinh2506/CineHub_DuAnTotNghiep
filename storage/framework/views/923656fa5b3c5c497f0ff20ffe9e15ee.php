@@ -1,6 +1,4 @@
-@extends('admin.layout')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Quản lý vé</h2>
@@ -15,7 +13,7 @@
                 </div>
                 <div class="stat-info">
                     <div class="stat-label">Tổng số vé</div>
-                    <div class="stat-value">{{ number_format($overallStats['total_tickets'] ?? 0) }}</div>
+                    <div class="stat-value"><?php echo e(number_format($overallStats['total_tickets'] ?? 0)); ?></div>
                 </div>
             </div>
         </div>
@@ -26,7 +24,7 @@
                 </div>
                 <div class="stat-info">
                     <div class="stat-label">Vé đã bán</div>
-                    <div class="stat-value">{{ number_format($overallStats['tickets_sold'] ?? 0) }}</div>
+                    <div class="stat-value"><?php echo e(number_format($overallStats['tickets_sold'] ?? 0)); ?></div>
                 </div>
             </div>
         </div>
@@ -37,7 +35,7 @@
                 </div>
                 <div class="stat-info">
                     <div class="stat-label">Vé đã hủy</div>
-                    <div class="stat-value">{{ number_format($overallStats['tickets_cancelled'] ?? 0) }}</div>
+                    <div class="stat-value"><?php echo e(number_format($overallStats['tickets_cancelled'] ?? 0)); ?></div>
                 </div>
             </div>
         </div>
@@ -48,7 +46,7 @@
                 </div>
                 <div class="stat-info">
                     <div class="stat-label">Doanh thu</div>
-                    <div class="stat-value">{{ number_format($overallStats['total_revenue'] ?? 0) }}₫</div>
+                    <div class="stat-value"><?php echo e(number_format($overallStats['total_revenue'] ?? 0)); ?>₫</div>
                 </div>
             </div>
         </div>
@@ -63,19 +61,20 @@
                     <label class="form-label">Lọc theo phim</label>
                     <select name="movie_id" class="form-select">
                         <option value="">Tất cả phim</option>
-                        @foreach ($movies ?? [] as $movie)
-                            <option value="{{ $movie['id'] }}" {{ ($movie_id ?? '') == $movie['id'] ? 'selected' : '' }}>
-                                {{ $movie['title'] }}
+                        <?php $__currentLoopData = $movies ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $movie): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($movie['id']); ?>" <?php echo e(($movie_id ?? '') == $movie['id'] ? 'selected' : ''); ?>>
+                                <?php echo e($movie['title']); ?>
+
                             </option>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Lọc theo trạng thái</label>
                     <select name="status" class="form-select">
                         <option value="">Tất cả trạng thái</option>
-                        <option value="Đã đặt" {{ ($status ?? '') === 'Đã đặt' ? 'selected' : '' }}>Đã đặt</option>
-                        <option value="Đã hủy" {{ ($status ?? '') === 'Đã hủy' ? 'selected' : '' }}>Đã hủy</option>
+                        <option value="Đã đặt" <?php echo e(($status ?? '') === 'Đã đặt' ? 'selected' : ''); ?>>Đã đặt</option>
+                        <option value="Đã hủy" <?php echo e(($status ?? '') === 'Đã hủy' ? 'selected' : ''); ?>>Đã hủy</option>
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
@@ -84,7 +83,7 @@
                     </button>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
-                    <a href="{{ route('admin.tickets.index') }}" class="btn btn-outline-secondary w-100">
+                    <a href="<?php echo e(route('admin.tickets.index')); ?>" class="btn btn-outline-secondary w-100">
                         <i class="fas fa-redo"></i> Xóa bộ lọc
                     </a>
                 </div>
@@ -93,7 +92,7 @@
     </form>
 
     <!-- Phân loại vé theo phim - Thống kê tồn kho -->
-    @if (!empty($inventoryStats))
+    <?php if(!empty($inventoryStats)): ?>
         <div class="stat-card mb-4">
             <h6 class="mb-3">
                 <i class="fas fa-chart-bar me-2"></i>Phân loại vé theo phim - Thống kê tồn kho
@@ -113,36 +112,37 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($inventoryStats as $stat)
-                            @php
+                        <?php $__currentLoopData = $inventoryStats; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $stat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php
                                 $total_seats = $stat['total_showtimes'] * 132;
                                 $sold = $stat['tickets_sold'] ?? 0;
                                 $available = $stat['tickets_available'] ?? $total_seats;
                                 $revenue = $stat['total_revenue'] ?? 0;
                                 $max_tickets = $stat['max_tickets'] ?? null;
                                 $sell_rate = $total_seats > 0 ? round(($sold / $total_seats) * 100, 2) : 0;
-                            @endphp
+                            ?>
                             <tr>
                                 <td>
-                                    <strong>{{ $stat['movie_title'] }}</strong>
+                                    <strong><?php echo e($stat['movie_title']); ?></strong>
                                 </td>
-                                <td>{{ number_format($stat['total_showtimes']) }}</td>
+                                <td><?php echo e(number_format($stat['total_showtimes'])); ?></td>
                                 <td>
-                                    <span class="badge bg-success">{{ number_format($sold) }}</span>
+                                    <span class="badge bg-success"><?php echo e(number_format($sold)); ?></span>
                                 </td>
                                 <td>
-                                    <span class="badge {{ $available > 50 ? 'bg-info' : ($available > 20 ? 'bg-warning' : 'bg-danger') }}">
-                                        {{ number_format($available) }}
+                                    <span class="badge <?php echo e($available > 50 ? 'bg-info' : ($available > 20 ? 'bg-warning' : 'bg-danger')); ?>">
+                                        <?php echo e(number_format($available)); ?>
+
                                     </span>
                                 </td>
                                 <td>
-                                    <form method="POST" action="{{ route('admin.tickets.updateMovie') }}" class="d-inline-flex align-items-center gap-2">
-                                        @csrf
-                                        <input type="hidden" name="movie_id" value="{{ $stat['movie_id'] }}">
+                                    <form method="POST" action="<?php echo e(route('admin.tickets.updateMovie')); ?>" class="d-inline-flex align-items-center gap-2">
+                                        <?php echo csrf_field(); ?>
+                                        <input type="hidden" name="movie_id" value="<?php echo e($stat['movie_id']); ?>">
                                         <input type="number" 
                                                name="max_tickets" 
                                                class="form-control form-control-sm" 
-                                               value="{{ $max_tickets !== null ? $max_tickets : '' }}" 
+                                               value="<?php echo e($max_tickets !== null ? $max_tickets : ''); ?>" 
                                                placeholder="Không giới hạn"
                                                min="0"
                                                style="max-width: 120px;">
@@ -150,35 +150,35 @@
                                             <i class="fas fa-save"></i>
                                         </button>
                                     </form>
-                                    @if ($max_tickets !== null)
+                                    <?php if($max_tickets !== null): ?>
                                         <small class="text-muted d-block mt-1">
-                                            <i class="fas fa-info-circle"></i> Giới hạn: {{ number_format($max_tickets) }} vé
+                                            <i class="fas fa-info-circle"></i> Giới hạn: <?php echo e(number_format($max_tickets)); ?> vé
                                         </small>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
-                                <td>{{ number_format($revenue) }}₫</td>
+                                <td><?php echo e(number_format($revenue)); ?>₫</td>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="progress" style="width: 100px; height: 20px;">
-                                            <div class="progress-bar" role="progressbar" style="width: {{ $sell_rate }}%;" 
-                                                 aria-valuenow="{{ $sell_rate }}" aria-valuemin="0" aria-valuemax="100">
-                                                {{ $sell_rate }}%
+                                            <div class="progress-bar" role="progressbar" style="width: <?php echo e($sell_rate); ?>%;" 
+                                                 aria-valuenow="<?php echo e($sell_rate); ?>" aria-valuemin="0" aria-valuemax="100">
+                                                <?php echo e($sell_rate); ?>%
                                             </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <a href="{{ route('admin.tickets.index', ['movie_id' => $stat['movie_id']]) }}" class="btn btn-sm btn-outline-primary">
+                                    <a href="<?php echo e(route('admin.tickets.index', ['movie_id' => $stat['movie_id']])); ?>" class="btn btn-sm btn-outline-primary">
                                         <i class="fas fa-list"></i> Chi tiết
                                     </a>
                                 </td>
                             </tr>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </tbody>
                 </table>
             </div>
         </div>
-    @endif
+    <?php endif; ?>
 
     <!-- Danh sách vé -->
     <div class="stat-card">
@@ -202,39 +202,42 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (empty($tickets))
+                    <?php if(empty($tickets)): ?>
                         <tr>
                             <td colspan="10" class="text-center text-muted">Không có vé nào</td>
                         </tr>
-                    @else
-                        @foreach ($tickets as $ticket)
+                    <?php else: ?>
+                        <?php $__currentLoopData = $tickets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ticket): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr>
-                                <td>{{ $ticket['id'] }}</td>
+                                <td><?php echo e($ticket['id']); ?></td>
                                 <td>
-                                    <code>{{ $ticket['ticket_code'] ?? 'N/A' }}</code>
+                                    <code><?php echo e($ticket['ticket_code'] ?? 'N/A'); ?></code>
                                 </td>
-                                <td>{{ $ticket['user_name'] ?? 'N/A' }}</td>
-                                <td>{{ $ticket['movie_title'] ?? 'N/A' }}</td>
-                                <td>{{ $ticket['screen_name'] ?? 'N/A' }}</td>
-                                <td>{{ $ticket['seat'] ?? 'N/A' }}</td>
-                                <td>{{ number_format($ticket['price'] ?? 0) }}₫</td>
+                                <td><?php echo e($ticket['user_name'] ?? 'N/A'); ?></td>
+                                <td><?php echo e($ticket['movie_title'] ?? 'N/A'); ?></td>
+                                <td><?php echo e($ticket['screen_name'] ?? 'N/A'); ?></td>
+                                <td><?php echo e($ticket['seat'] ?? 'N/A'); ?></td>
+                                <td><?php echo e(number_format($ticket['price'] ?? 0)); ?>₫</td>
                                 <td>
-                                    <span class="badge bg-{{ ($ticket['status'] ?? '') === 'Đã đặt' ? 'success' : 'danger' }}">
-                                        {{ $ticket['status'] ?? 'N/A' }}
+                                    <span class="badge bg-<?php echo e(($ticket['status'] ?? '') === 'Đã đặt' ? 'success' : 'danger'); ?>">
+                                        <?php echo e($ticket['status'] ?? 'N/A'); ?>
+
                                     </span>
                                 </td>
-                                <td>{{ \Carbon\Carbon::parse($ticket['created_at'])->format('d/m/Y H:i') }}</td>
+                                <td><?php echo e(\Carbon\Carbon::parse($ticket['created_at'])->format('d/m/Y H:i')); ?></td>
                                 <td>
-                                    <a href="{{ route('admin.tickets.show', $ticket['id']) }}" class="btn btn-sm btn-outline-info">
+                                    <a href="<?php echo e(route('admin.tickets.show', $ticket['id'])); ?>" class="btn btn-sm btn-outline-info">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </td>
                             </tr>
-                        @endforeach
-                    @endif
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('admin.layout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/admin/tickets.blade.php ENDPATH**/ ?>

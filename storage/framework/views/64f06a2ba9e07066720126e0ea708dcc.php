@@ -1,7 +1,5 @@
-@extends('admin.moderator.layout')
-
-@section('content')
-@push('styles')
+<?php $__env->startSection('content'); ?>
+<?php $__env->startPush('styles'); ?>
 <style>
 .chart-container { background:linear-gradient(135deg,#fff 0%,#f8f9fa 100%); border-radius:16px; padding:24px; margin-bottom:32px; box-shadow:0 4px 20px rgba(0,0,0,0.08); border:1px solid rgba(0,0,0,0.05); transition:transform 0.3s ease,box-shadow 0.3s ease; }
 .chart-container:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,0,0,0.12); }
@@ -68,7 +66,7 @@
     }
 }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
 <div class="stat-card">
     <div class="section-header">
@@ -96,21 +94,21 @@
                     <tr><th style="width:80px;">Hạng</th><th>Phim</th><th class="text-end">Doanh thu</th><th class="text-end">Số vé bán</th><th class="text-end">Giá vé TB</th></tr>
                 </thead>
                 <tbody>
-                    @if(empty($revenueByMovie))
+                    <?php if(empty($revenueByMovie)): ?>
                         <tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-inbox fa-2x mb-2 d-block"></i>Chưa có dữ liệu</td></tr>
-                    @else
-                        @foreach($revenueByMovie as $index => $movie)
+                    <?php else: ?>
+                        <?php $__currentLoopData = $revenueByMovie; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $movie): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <tr>
                             <td>
-                                <span class="rank-badge {{ $index === 0 ? 'gold' : ($index === 1 ? 'silver' : ($index === 2 ? 'bronze' : 'other')) }}">#{{ $index + 1 }}</span>
+                                <span class="rank-badge <?php echo e($index === 0 ? 'gold' : ($index === 1 ? 'silver' : ($index === 2 ? 'bronze' : 'other'))); ?>">#<?php echo e($index + 1); ?></span>
                             </td>
-                            <td><strong style="color:#2d1b3d;font-size:15px;">{{ $movie['title'] }}</strong></td>
-                            <td class="text-end"><span class="revenue-amount">{{ number_format($movie['revenue']) }}₫</span></td>
-                            <td class="text-end" style="color:#6c757d;font-weight:600;">{{ number_format($movie['ticket_count']) }}</td>
-                            <td class="text-end" style="color:#6c757d;">{{ $movie['ticket_count'] > 0 ? number_format($movie['revenue'] / $movie['ticket_count']) : 0 }}₫</td>
+                            <td><strong style="color:#2d1b3d;font-size:15px;"><?php echo e($movie['title']); ?></strong></td>
+                            <td class="text-end"><span class="revenue-amount"><?php echo e(number_format($movie['revenue'])); ?>₫</span></td>
+                            <td class="text-end" style="color:#6c757d;font-weight:600;"><?php echo e(number_format($movie['ticket_count'])); ?></td>
+                            <td class="text-end" style="color:#6c757d;"><?php echo e($movie['ticket_count'] > 0 ? number_format($movie['revenue'] / $movie['ticket_count']) : 0); ?>₫</td>
                         </tr>
-                        @endforeach
-                    @endif
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -123,12 +121,13 @@
             <div class="d-flex align-items-center gap-2">
                 <label class="form-label mb-0 small" style="font-weight:600;">Lọc theo ngày:</label>
                 <select id="fillRateDateFilter" class="form-select form-select-sm" style="width:200px;border-radius:8px;">
-                    <option value="all" {{ (!isset($_GET['fill_rate_date']) || $_GET['fill_rate_date'] === 'all') ? 'selected' : '' }}>Tất cả từ trước đến nay</option>
-                    @foreach($availableDates as $dateRow)
-                        <option value="{{ $dateRow['show_date'] }}" {{ (isset($_GET['fill_rate_date']) && $_GET['fill_rate_date'] === $dateRow['show_date']) ? 'selected' : '' }}>
-                            {{ date('d/m/Y', strtotime($dateRow['show_date'])) }}
+                    <option value="all" <?php echo e((!isset($_GET['fill_rate_date']) || $_GET['fill_rate_date'] === 'all') ? 'selected' : ''); ?>>Tất cả từ trước đến nay</option>
+                    <?php $__currentLoopData = $availableDates; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dateRow): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($dateRow['show_date']); ?>" <?php echo e((isset($_GET['fill_rate_date']) && $_GET['fill_rate_date'] === $dateRow['show_date']) ? 'selected' : ''); ?>>
+                            <?php echo e(date('d/m/Y', strtotime($dateRow['show_date']))); ?>
+
                         </option>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
             </div>
         </div>
@@ -144,41 +143,43 @@
             <div>
                 <label>Phim:</label>
                 <select class="form-select form-select-sm d-inline-block" id="fillRateMovieFilter" style="width:180px;" onchange="applyFillRateFilters()">
-                    <option value="all" {{ ($fillRateMovieFilter ?? 'all') === 'all' ? 'selected' : '' }}>Tất cả phim</option>
-                    @foreach($availableMovies ?? [] as $movie)
-                        <option value="{{ $movie['id'] }}" {{ ($fillRateMovieFilter ?? '') == $movie['id'] ? 'selected' : '' }}>{{ $movie['title'] }}</option>
-                    @endforeach
+                    <option value="all" <?php echo e(($fillRateMovieFilter ?? 'all') === 'all' ? 'selected' : ''); ?>>Tất cả phim</option>
+                    <?php $__currentLoopData = $availableMovies ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $movie): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($movie['id']); ?>" <?php echo e(($fillRateMovieFilter ?? '') == $movie['id'] ? 'selected' : ''); ?>><?php echo e($movie['title']); ?></option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
             </div>
             <div>
                 <label>Ngày:</label>
                 <select class="form-select form-select-sm d-inline-block" id="fillRateDateFilterTable" style="width:150px;" onchange="applyFillRateFilters()">
-                    <option value="all" {{ ($fillRateDateFilter ?? 'all') === 'all' ? 'selected' : '' }}>Tất cả ngày</option>
-                    @foreach($availableDates as $dateItem)
-                        <option value="{{ $dateItem['show_date'] }}" {{ ($fillRateDateFilter ?? '') == $dateItem['show_date'] ? 'selected' : '' }}>
-                            {{ date('d/m/Y', strtotime($dateItem['show_date'])) }}
+                    <option value="all" <?php echo e(($fillRateDateFilter ?? 'all') === 'all' ? 'selected' : ''); ?>>Tất cả ngày</option>
+                    <?php $__currentLoopData = $availableDates; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dateItem): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($dateItem['show_date']); ?>" <?php echo e(($fillRateDateFilter ?? '') == $dateItem['show_date'] ? 'selected' : ''); ?>>
+                            <?php echo e(date('d/m/Y', strtotime($dateItem['show_date']))); ?>
+
                         </option>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
             </div>
             <div>
                 <label>Phòng:</label>
                 <select class="form-select form-select-sm d-inline-block" id="fillRateScreenFilter" style="width:120px;" onchange="applyFillRateFilters()">
-                    <option value="all" {{ ($fillRateScreenFilter ?? 'all') === 'all' ? 'selected' : '' }}>Tất cả phòng</option>
-                    @foreach($availableScreens ?? [] as $screen)
-                        <option value="{{ $screen['id'] }}" {{ ($fillRateScreenFilter ?? '') == $screen['id'] ? 'selected' : '' }}>{{ $screen['screen_name'] }}</option>
-                    @endforeach
+                    <option value="all" <?php echo e(($fillRateScreenFilter ?? 'all') === 'all' ? 'selected' : ''); ?>>Tất cả phòng</option>
+                    <?php $__currentLoopData = $availableScreens ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $screen): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($screen['id']); ?>" <?php echo e(($fillRateScreenFilter ?? '') == $screen['id'] ? 'selected' : ''); ?>><?php echo e($screen['screen_name']); ?></option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
             </div>
             <div>
                 <label>Khung giờ:</label>
                 <select class="form-select form-select-sm d-inline-block" id="fillRateTimeFilter" style="width:120px;" onchange="applyFillRateFilters()">
-                    <option value="all" {{ ($fillRateTimeFilter ?? 'all') === 'all' ? 'selected' : '' }}>Tất cả giờ</option>
-                    @foreach($availableTimes ?? [] as $time)
-                        <option value="{{ $time['show_time'] }}" {{ ($fillRateTimeFilter ?? '') == $time['show_time'] ? 'selected' : '' }}>
-                            {{ date('H:i', strtotime($time['show_time'])) }}
+                    <option value="all" <?php echo e(($fillRateTimeFilter ?? 'all') === 'all' ? 'selected' : ''); ?>>Tất cả giờ</option>
+                    <?php $__currentLoopData = $availableTimes ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $time): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($time['show_time']); ?>" <?php echo e(($fillRateTimeFilter ?? '') == $time['show_time'] ? 'selected' : ''); ?>>
+                            <?php echo e(date('H:i', strtotime($time['show_time']))); ?>
+
                         </option>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
             </div>
         </div>
@@ -188,42 +189,42 @@
                     <tr><th>Ngày chiếu</th><th>Khung giờ</th><th>Phim</th><th>Phòng</th><th>Vé đã đặt</th><th>Vé đã lấy</th><th>Tỷ lệ lấp đầy</th></tr>
                 </thead>
                 <tbody>
-                    @if(empty($fillRateByDate))
+                    <?php if(empty($fillRateByDate)): ?>
                         <tr><td colspan="7" class="text-center text-muted py-5"><i class="fas fa-info-circle fa-2x mb-3 d-block"></i>Chưa có dữ liệu tỷ lệ lấp đầy.</td></tr>
-                    @else
-                        @foreach($fillRateByDate as $item)
-                            @foreach($item['screens'] as $screen)
+                    <?php else: ?>
+                        <?php $__currentLoopData = $fillRateByDate; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php $__currentLoopData = $item['screens']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $screen): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr class="fill-rate-row"
-                                data-date="{{ $item['show_date'] }}"
-                                data-movie-id="{{ $screen['movie_id'] ?? '' }}"
-                                data-screen-id="{{ $screen['screen_id'] ?? '' }}"
-                                data-time="{{ isset($screen['show_time']) ? date('H:i:s', strtotime($screen['show_time'])) : '' }}">
-                                <td style="font-weight:600;color:#495057;">{{ date('d/m/Y', strtotime($item['show_date'])) }}</td>
-                                <td style="color:#6c757d;">{{ isset($screen['show_time']) ? date('H:i', strtotime($screen['show_time'])) : '-' }}</td>
-                                <td style="font-weight:600;color:#2d1b3d;">{{ $screen['movie_title'] ?? '-' }}</td>
-                                <td style="color:#6c757d;">{{ $screen['screen_name'] }}</td>
-                                <td class="text-center" style="font-weight:600;color:#495057;">{{ $screen['booked_tickets'] }}</td>
-                                <td class="text-center" style="font-weight:600;color:#28a745;">{{ $screen['picked_up_tickets'] }}</td>
+                                data-date="<?php echo e($item['show_date']); ?>"
+                                data-movie-id="<?php echo e($screen['movie_id'] ?? ''); ?>"
+                                data-screen-id="<?php echo e($screen['screen_id'] ?? ''); ?>"
+                                data-time="<?php echo e(isset($screen['show_time']) ? date('H:i:s', strtotime($screen['show_time'])) : ''); ?>">
+                                <td style="font-weight:600;color:#495057;"><?php echo e(date('d/m/Y', strtotime($item['show_date']))); ?></td>
+                                <td style="color:#6c757d;"><?php echo e(isset($screen['show_time']) ? date('H:i', strtotime($screen['show_time'])) : '-'); ?></td>
+                                <td style="font-weight:600;color:#2d1b3d;"><?php echo e($screen['movie_title'] ?? '-'); ?></td>
+                                <td style="color:#6c757d;"><?php echo e($screen['screen_name']); ?></td>
+                                <td class="text-center" style="font-weight:600;color:#495057;"><?php echo e($screen['booked_tickets']); ?></td>
+                                <td class="text-center" style="font-weight:600;color:#28a745;"><?php echo e($screen['picked_up_tickets']); ?></td>
                                 <td>
                                     <div class="progress-modern">
-                                        <div class="progress-bar-modern {{ $screen['fill_rate'] >= 80 ? 'excellent' : ($screen['fill_rate'] >= 50 ? 'good' : 'poor') }}"
-                                             style="width: {{ min($screen['fill_rate'], 100) }}%">
-                                            {{ number_format($screen['fill_rate'], 1) }}%
+                                        <div class="progress-bar-modern <?php echo e($screen['fill_rate'] >= 80 ? 'excellent' : ($screen['fill_rate'] >= 50 ? 'good' : 'poor')); ?>"
+                                             style="width: <?php echo e(min($screen['fill_rate'], 100)); ?>%">
+                                            <?php echo e(number_format($screen['fill_rate'], 1)); ?>%
                                         </div>
                                     </div>
                                 </td>
                             </tr>
-                            @endforeach
-                        @endforeach
-                    @endif
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 const modernColors = [
     {border:'#6c5ce7',bg:'rgba(108,92,231,0.8)'},{border:'#00b894',bg:'rgba(0,184,148,0.8)'},
@@ -239,7 +240,7 @@ function initStatisticsCharts() {
     // Revenue by movie
     const revenueByMovieCtx = document.getElementById('revenueByMovieChart');
     if (revenueByMovieCtx) {
-        const data = @json($revenueByMovie ?? []);
+        const data = <?php echo json_encode($revenueByMovie ?? [], 15, 512) ?>;
         if (data && data.length > 0) {
             new Chart(revenueByMovieCtx.getContext('2d'), {
                 type: 'bar',
@@ -257,19 +258,19 @@ function initStatisticsCharts() {
     // Revenue by date
     const revenueByDateCtx = document.getElementById('revenueByDateChart');
     if (revenueByDateCtx) {
-        const revenueByDateData = @json($revenueByDate ?? []);
-        const datesData = @json($dates ?? []);
+        const revenueByDateData = <?php echo json_encode($revenueByDate ?? [], 15, 512) ?>;
+        const datesData = <?php echo json_encode($dates ?? [], 15, 512) ?>;
         if (revenueByDateData && Object.keys(revenueByDateData).length > 0 && datesData && datesData.length > 0) {
             const datasets = [];
-            @php $colorIndex = 0; foreach ($revenueByDate as $movieId => $movieData): @endphp
-            datasets.push({ label: @json($movieData['title']),
-                data: [@php echo implode(',', array_column($movieData['data'], 'revenue')); @endphp],
-                borderColor: modernColors[{{ $colorIndex }} % modernColors.length].border,
-                backgroundColor: modernColors[{{ $colorIndex }} % modernColors.length].bg.replace('0.8','0.06'),
+            <?php $colorIndex = 0; foreach ($revenueByDate as $movieId => $movieData): ?>
+            datasets.push({ label: <?php echo json_encode($movieData['title'], 15, 512) ?>,
+                data: [<?php echo implode(',', array_column($movieData['data'], 'revenue')); ?>],
+                borderColor: modernColors[<?php echo e($colorIndex); ?> % modernColors.length].border,
+                backgroundColor: modernColors[<?php echo e($colorIndex); ?> % modernColors.length].bg.replace('0.8','0.06'),
                 borderWidth:3, fill:true, tension:0.4, pointRadius:4, pointHoverRadius:6,
-                pointBackgroundColor: modernColors[{{ $colorIndex }} % modernColors.length].border,
+                pointBackgroundColor: modernColors[<?php echo e($colorIndex); ?> % modernColors.length].border,
                 pointBorderColor:'#fff', pointBorderWidth:2 });
-            @php $colorIndex++; endforeach; @endphp
+            <?php $colorIndex++; endforeach; ?>
             new Chart(revenueByDateCtx.getContext('2d'), {
                 type: 'line',
                 data: { labels: datesData.map(d => new Date(d).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'})), datasets },
@@ -290,7 +291,7 @@ function initStatisticsCharts() {
     // Fill rate comparison chart
     const fillRateComparisonCtx = document.getElementById('fillRateComparisonChart');
     if (fillRateComparisonCtx) {
-        const fillRateData = @json($fillRateByMovieAvg ?? []);
+        const fillRateData = <?php echo json_encode($fillRateByMovieAvg ?? [], 15, 512) ?>;
         if (fillRateData && fillRateData.length > 0) {
             new Chart(fillRateComparisonCtx.getContext('2d'), {
                 type: 'bar',
@@ -365,4 +366,6 @@ function formatDate(d) { if (!d) return ''; const dt = new Date(d); return `${St
 function formatTime(t) { if (!t) return '-'; return t.split(':').slice(0,2).join(':'); }
 function escapeHtml(text) { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('admin.moderator.layout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/admin/moderator/statistics.blade.php ENDPATH**/ ?>

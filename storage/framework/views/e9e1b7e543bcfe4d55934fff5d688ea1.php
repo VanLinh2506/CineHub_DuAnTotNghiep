@@ -1,6 +1,4 @@
-@extends('admin.layout')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Quản lý người dùng</h2>
@@ -12,7 +10,7 @@
         <div class="row">
             <div class="col-md-6">
                 <input type="text" name="search" class="form-control" placeholder="Tìm kiếm theo tên hoặc email..." 
-                       value="{{ old('search') ?? ($search ?? '') }}">
+                       value="<?php echo e(old('search') ?? ($search ?? '')); ?>">
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-secondary w-100">
@@ -40,84 +38,87 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (empty($users))
+                    <?php if(empty($users)): ?>
                         <tr>
                             <td colspan="9" class="text-center text-muted">Không có người dùng nào</td>
                         </tr>
-                    @else
-                        @foreach ($users as $u)
+                    <?php else: ?>
+                        <?php $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $u): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr>
-                                <td>{{ $u['id'] }}</td>
+                                <td><?php echo e($u['id']); ?></td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        @if ($u['avatar'] ?? null)
-                                            <img src="{{ $u['avatar'] }}" alt="" class="rounded-circle me-2" style="width: 40px; height: 40px;">
-                                        @else
+                                        <?php if($u['avatar'] ?? null): ?>
+                                            <img src="<?php echo e($u['avatar']); ?>" alt="" class="rounded-circle me-2" style="width: 40px; height: 40px;">
+                                        <?php else: ?>
                                             <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                                                 <i class="fas fa-user text-white"></i>
                                             </div>
-                                        @endif
-                                        {{ $u['name'] }}
+                                        <?php endif; ?>
+                                        <?php echo e($u['name']); ?>
+
                                     </div>
                                 </td>
-                                <td>{{ $u['email'] }}</td>
+                                <td><?php echo e($u['email']); ?></td>
                                 <td>
-                                    <span class="badge bg-{{ $u['role'] === 'admin' ? 'danger' : 'secondary' }}">
-                                        {{ $u['role'] ?? 'user' }}
+                                    <span class="badge bg-<?php echo e($u['role'] === 'admin' ? 'danger' : 'secondary'); ?>">
+                                        <?php echo e($u['role'] ?? 'user'); ?>
+
                                     </span>
                                 </td>
-                                <td>{{ $u['subscription_name'] ?? 'Chưa có' }}</td>
+                                <td><?php echo e($u['subscription_name'] ?? 'Chưa có'); ?></td>
                                 <td>
-                                    <span class="badge bg-info">{{ number_format($u['points'] ?? 0) }} điểm</span>
+                                    <span class="badge bg-info"><?php echo e(number_format($u['points'] ?? 0)); ?> điểm</span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-{{ ($u['is_active'] ?? true) ? 'success' : 'danger' }}">
-                                        {{ ($u['is_active'] ?? true) ? 'Hoạt động' : 'Bị chặn' }}
+                                    <span class="badge bg-<?php echo e(($u['is_active'] ?? true) ? 'success' : 'danger'); ?>">
+                                        <?php echo e(($u['is_active'] ?? true) ? 'Hoạt động' : 'Bị chặn'); ?>
+
                                     </span>
                                 </td>
-                                <td>{{ \Carbon\Carbon::parse($u['created_at'])->format('d/m/Y') }}</td>
+                                <td><?php echo e(\Carbon\Carbon::parse($u['created_at'])->format('d/m/Y')); ?></td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <button onclick="openPointsModal({{ $u['id'] }}, '{{ $u['name'] }}', {{ $u['points'] ?? 0 }})" class="btn btn-outline-success" title="Quản lý điểm">
+                                        <button onclick="openPointsModal(<?php echo e($u['id']); ?>, '<?php echo e($u['name']); ?>', <?php echo e($u['points'] ?? 0); ?>)" class="btn btn-outline-success" title="Quản lý điểm">
                                             <i class="fas fa-coins"></i>
                                         </button>
-                                        <button onclick="openRoleModal({{ $u['id'] }}, '{{ $u['name'] }}', '{{ $u['role'] ?? 'user' }}')" class="btn btn-outline-secondary" title="Nâng cấp vai trò">
+                                        <button onclick="openRoleModal(<?php echo e($u['id']); ?>, '<?php echo e($u['name']); ?>', '<?php echo e($u['role'] ?? 'user'); ?>')" class="btn btn-outline-secondary" title="Nâng cấp vai trò">
                                             <i class="fas fa-user-shield"></i>
                                         </button>
-                                        @if ($u['id'] != auth()->id())
-                                            <button onclick="toggleUserStatus({{ $u['id'] }}, {{ ($u['is_active'] ?? 1) ? 0 : 1 }})" 
-                                                    class="btn btn-outline-{{ ($u['is_active'] ?? 1) ? 'danger' : 'success' }}" 
-                                                    title="{{ ($u['is_active'] ?? 1) ? 'Khóa tài khoản' : 'Mở khóa tài khoản' }}">
-                                                <i class="fas fa-{{ ($u['is_active'] ?? 1) ? 'lock' : 'unlock' }}"></i>
+                                        <?php if($u['id'] != auth()->id()): ?>
+                                            <button onclick="toggleUserStatus(<?php echo e($u['id']); ?>, <?php echo e(($u['is_active'] ?? 1) ? 0 : 1); ?>)" 
+                                                    class="btn btn-outline-<?php echo e(($u['is_active'] ?? 1) ? 'danger' : 'success'); ?>" 
+                                                    title="<?php echo e(($u['is_active'] ?? 1) ? 'Khóa tài khoản' : 'Mở khóa tài khoản'); ?>">
+                                                <i class="fas fa-<?php echo e(($u['is_active'] ?? 1) ? 'lock' : 'unlock'); ?>"></i>
                                             </button>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
-                    @endif
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<form id="updatePointsForm" method="POST" action="{{ route('admin.users.updatePoints') }}" class="d-none">
-    @csrf
+<form id="updatePointsForm" method="POST" action="<?php echo e(route('admin.users.updatePoints')); ?>" class="d-none">
+    <?php echo csrf_field(); ?>
     <input type="hidden" name="user_id" id="points_user_id">
     <input type="hidden" name="action" id="points_action">
     <input type="hidden" name="points" id="points_value">
 </form>
 
-<form id="updateRoleForm" method="POST" action="{{ route('admin.users.updateRole') }}" class="d-none">
-    @csrf
+<form id="updateRoleForm" method="POST" action="<?php echo e(route('admin.users.updateRole')); ?>" class="d-none">
+    <?php echo csrf_field(); ?>
     <input type="hidden" name="user_id" id="role_user_id">
     <input type="hidden" name="role" id="role_value">
     <input type="hidden" name="theater_id" id="role_theater_id">
 </form>
 
-<form id="toggleStatusForm" method="POST" action="{{ route('admin.users.toggleStatus') }}" class="d-none">
-    @csrf
+<form id="toggleStatusForm" method="POST" action="<?php echo e(route('admin.users.toggleStatus')); ?>" class="d-none">
+    <?php echo csrf_field(); ?>
     <input type="hidden" name="user_id" id="status_user_id">
     <input type="hidden" name="is_active" id="status_value">
 </form>
@@ -152,4 +153,6 @@
         document.getElementById('toggleStatusForm').submit();
     }
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('admin.layout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\CineHub_DuAnTotNghiep\resources\views/admin/users.blade.php ENDPATH**/ ?>

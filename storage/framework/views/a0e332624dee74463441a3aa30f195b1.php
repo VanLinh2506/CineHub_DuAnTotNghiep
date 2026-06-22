@@ -1,35 +1,43 @@
-<div class="movie-card">
-    <div class="movie-card-image">
-        <?php if($movie->thumbnail): ?>
-        <img src="<?php echo e($movie->thumbnail); ?>" alt="<?php echo e($movie->title); ?>" class="movie-poster">
-        <?php else: ?>
-        <div class="movie-poster-placeholder">
-            <i class="fas fa-image"></i>
-        </div>
-        <?php endif; ?>
-        <div class="movie-card-overlay">
-            <a href="<?php echo e(route('movies.watch', $movie->id)); ?>" class="play-button">
-                <i class="fas fa-play"></i>
-            </a>
-        </div>
-        <div class="movie-card-badge">
-            <?php if($movie->rating): ?>
-            <span class="rating-badge"><?php echo e(number_format($movie->rating, 1)); ?></span>
+<a href="<?php echo e(route('movies.introduce', $movie->id)); ?>" class="movie-card-link">
+    <div class="movie-card">
+        <div class="movie-card-image">
+            <?php if($movie->thumbnail): ?>
+            <img src="<?php echo e($movie->thumbnail); ?>" alt="<?php echo e($movie->title); ?>" class="movie-poster">
+            <?php else: ?>
+            <div class="movie-poster-placeholder">
+                <i class="fas fa-image"></i>
+            </div>
             <?php endif; ?>
+            <div class="movie-card-overlay">
+                <span class="play-button">
+                    <i class="fas fa-play"></i>
+                </span>
+            </div>
+            <div class="movie-card-badge">
+                <?php if($movie->rating): ?>
+                <span class="rating-badge"><?php echo e(number_format($movie->rating, 1)); ?></span>
+                <?php endif; ?>
+            </div>
         </div>
-    </div>
-    <div class="movie-card-info">
-        <h3 class="movie-title"><?php echo e($movie->title); ?></h3>
-        <p class="movie-meta">
-            <?php if($movie->category): ?>
-            <?php echo e($movie->category->name); ?>
+        <div class="movie-card-info">
+            <h3 class="movie-title"><?php echo e($movie->title); ?></h3>
+            <p class="movie-meta">
+                <?php if($movie->category): ?>
+                <?php echo e($movie->category->name); ?>
 
-            <?php endif; ?>
-        </p>
+                <?php endif; ?>
+            </p>
+        </div>
     </div>
-</div>
+</a>
 
 <style>
+    .movie-card-link {
+        display: block;
+        color: inherit;
+        text-decoration: none;
+    }
+
     .movie-card {
         background: #1a1a1a;
         border-radius: 8px;
@@ -96,6 +104,7 @@
         font-size: 20px;
         transition: background 0.3s;
         text-decoration: none;
+        pointer-events: none;
     }
 
     .play-button:hover {

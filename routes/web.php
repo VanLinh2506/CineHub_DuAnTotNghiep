@@ -107,7 +107,10 @@ Route::middleware('auth')->prefix('profile')->name('profile.')->group(function (
 // ==================== NOTIFICATIONS ====================
 Route::middleware('auth')->prefix('notifications')->name('notifications.')->group(function () {
     Route::get('/', [NotificationController::class, 'index'])->name('index');
-    Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('markAsRead');
+    Route::get('/get-notifications', [NotificationController::class, 'getNotifications'])->name('getNotifications');
+    Route::get('/get-unread-count', [NotificationController::class, 'getUnreadCount'])->name('getUnreadCount');
+    Route::match(['GET', 'POST'], '/mark-as-read', [NotificationController::class, 'markAsRead'])->name('markAsRead');
+    Route::get('/delete/{id}', [NotificationController::class, 'delete'])->name('delete');
     Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('markAllAsRead');
 });
 
@@ -151,6 +154,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [AdminController::class, 'theaters'])->name('index');
         Route::get('/create', [AdminController::class, 'theatersCreate'])->name('create');
         Route::post('/', [AdminController::class, 'theatersStore'])->name('store');
+        Route::get('/{id}', [AdminController::class, 'theatersView'])->name('show');
         Route::get('/{id}/edit', [AdminController::class, 'theatersEdit'])->name('edit');
         Route::put('/{id}', [AdminController::class, 'theatersUpdate'])->name('update');
         Route::delete('/{id}', [AdminController::class, 'theatersDelete'])->name('destroy');
@@ -168,12 +172,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::prefix('tickets')->name('tickets.')->group(function () {
         Route::get('/', [AdminController::class, 'tickets'])->name('index');
         Route::post('/update-movie', [AdminController::class, 'ticketsUpdateMovie'])->name('updateMovie');
+        Route::get('/{id}', [AdminController::class, 'ticketsView'])->name('show');
     });
 
     // Food Items Management
     Route::prefix('food-items')->name('foodItems.')->group(function () {
         Route::get('/', [AdminController::class, 'foodItems'])->name('index');
         Route::get('/create', [AdminController::class, 'foodItemsCreate'])->name('create');
+        Route::get('/{id}/edit', [AdminController::class, 'foodItemsEdit'])->name('edit');
         Route::post('/', [AdminController::class, 'foodItemsStore'])->name('store');
         Route::put('/{id}', [AdminController::class, 'foodItemsUpdate'])->name('update');
         Route::delete('/{id}', [AdminController::class, 'foodItemsDelete'])->name('destroy');
