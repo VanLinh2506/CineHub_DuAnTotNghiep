@@ -287,3 +287,42 @@ Route::prefix('news')->name('news.')->group(function () {
 Route::get('/old', function () {
     return view('welcome');
 });
+
+// Test booking creation route
+Route::get('/test/create-booking', function () {
+    $user = \App\Models\User::where('email', 'user@test.com')->first();
+    if (!$user) {
+        return 'User not found';
+    }
+    
+    // Get first valid showtime
+    $showtime = \App\Models\Showtime::first();
+    if (!$showtime) {
+        return 'No showtimes available';
+    }
+    
+    // Create future booking
+    $futureBooking = \App\Models\Booking::create([
+        'user_id' => $user->id,
+        'showtime_id' => $showtime->id,
+        'seats' => json_encode(['A1']),
+        'total_amount' => 100000,
+        'status' => 'completed',
+        'qr_code' => 'BOOKING_TEST_' . time(),
+        'customer_email' => $user->email,
+    ]);
+
+    // Create future ticket
+    \App\Models\Ticket::create([
+        'user_id' => $user->id,
+        'showtime_id' => $showtime->id,
+        'booking_pending_id' => $futureBooking->id,
+        'seat' => 'A1',
+        'seat_type' => 'normal',
+        'price' => 100000,
+        'qr_code' => 'TICKET_TEST_' . time(),
+        'status' => 'Đã đặt',
+    ]);
+
+    return 'Created booking: ' . $futureBooking->id . ' - Go to <a href="/booking/history">/booking/history</a> to see it';
+});

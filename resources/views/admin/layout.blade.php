@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { min-height: 100%; overflow-x: hidden; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f6fa; }
         
         /* Sidebar */
@@ -88,10 +89,13 @@
         
         /* Main Content */
         .admin-main { 
-            margin-left: 240px; 
+            margin-left: 300px; 
+            width: calc(100% - 300px);
+            max-width: calc(100vw - 300px);
             padding: 25px; 
             background: #f5f6fa; 
             min-height: 100vh; 
+            overflow-x: hidden;
         }
         
         /* Stats Cards */
@@ -103,6 +107,7 @@
             margin-bottom: 20px; 
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             border: 1px solid #e9ecef;
+            max-width: 100%;
         }
         .stat-card:hover {
             transform: translateY(-3px);
@@ -195,6 +200,90 @@
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25); 
         }
         .form-label { font-weight: 500; margin-bottom: 8px; }
+
+        .admin-main .page-header {
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .admin-main .movie-form-container,
+        .admin-main .admin-form-card {
+            overflow: hidden;
+        }
+        .admin-main .movie-form-container .row,
+        .admin-main .admin-form-card .row {
+            min-width: 0;
+        }
+        .admin-main .movie-form-container [class*="col-"],
+        .admin-main .admin-form-card [class*="col-"] {
+            min-width: 0;
+        }
+        .admin-main .form-control,
+        .admin-main .form-select,
+        .admin-main textarea {
+            max-width: 100%;
+        }
+        .admin-main select[multiple],
+        .admin-main select[size] {
+            overflow: auto;
+        }
+        .admin-main .upload-box {
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(145deg, #f7fafc 0%, #edf2f7 100%);
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            max-width: 100%;
+        }
+        .admin-main .upload-box:hover,
+        .admin-main .upload-box.dragover {
+            border-color: #667eea;
+            background: linear-gradient(145deg, #f0f4ff 0%, #e8ecff 100%);
+        }
+        .admin-main .upload-box.has-file {
+            border-style: solid;
+            border-color: #48bb78;
+            background: linear-gradient(145deg, #f0fff4 0%, #e6ffed 100%);
+        }
+        .admin-main .upload-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 0;
+        }
+        .admin-main .upload-placeholder p,
+        .admin-main .upload-placeholder small,
+        .admin-main .video-name,
+        .admin-main .trailer-name {
+            max-width: 100%;
+            overflow-wrap: anywhere;
+        }
+        .admin-main .upload-preview {
+            max-width: 100%;
+            max-height: 120px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+        .admin-main .video-upload {
+            min-height: 120px;
+        }
+        .admin-main #seriesSection {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        .admin-main .episode-item {
+            margin-left: 0;
+            margin-right: 0;
+        }
+        .admin-main .table-responsive {
+            overflow-x: auto;
+        }
         
         /* Alerts */
         .alert { 
@@ -218,6 +307,8 @@
             .admin-sidebar.active { left: 0; }
             .admin-main { 
                 margin-left: 0; 
+                width: 100%;
+                max-width: 100vw;
                 padding: 15px; 
             }
             .stat-card { padding: 15px; }

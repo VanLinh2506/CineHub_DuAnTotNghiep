@@ -4,7 +4,7 @@ namespace App\Services;
 
 use Endroid\QrCode\Color\Color;
 use Endroid\QrCode\Encoding\Encoding;
-use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 
@@ -19,7 +19,7 @@ class QrCodeService
 
         $qrCode = QrCode::create($data)
             ->setEncoding(new Encoding('UTF-8'))
-            ->setErrorCorrectionLevel(ErrorCorrectionLevel::High)
+            ->setErrorCorrectionLevel(new ErrorCorrectionLevelHigh())
             ->setSize($size)
             ->setMargin(10)
             ->setForegroundColor(new Color(0, 0, 0))
@@ -39,7 +39,7 @@ class QrCodeService
 
         $qrCode = QrCode::create($data)
             ->setEncoding(new Encoding('UTF-8'))
-            ->setErrorCorrectionLevel(ErrorCorrectionLevel::High)
+            ->setErrorCorrectionLevel(new ErrorCorrectionLevelHigh())
             ->setSize($size)
             ->setMargin(10)
             ->setForegroundColor(new Color(0, 0, 0))

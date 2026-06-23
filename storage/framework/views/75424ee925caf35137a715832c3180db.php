@@ -91,7 +91,7 @@ if (!empty($episodes)) {
                     }
                 }
 
-                if ($videoUrl):
+                if ($videoUrl) {
                     // Sử dụng storage_url() helper để xử lý đúng đường dẫn
                     // Helper sẽ tự động thêm /storage/ prefix cho files trong storage
                     if (strpos($videoUrl, 'http') === 0) {
@@ -104,7 +104,17 @@ if (!empty($episodes)) {
                         $fullVideoUrl = storage_url($videoUrl);
                         $finalVideoSrc = $fullVideoUrl;
                     }
+                }
+
+                $fullTrailerUrl = null;
+                if (!empty($movie['trailer_url'])) {
+                    $fullTrailerUrl = $movie['trailer_url'];
+                    if (strpos($movie['trailer_url'], 'http') !== 0) {
+                        $fullTrailerUrl = $baseUrl . '/' . ltrim($movie['trailer_url'], '/');
+                    }
+                }
                 ?>
+                <?php if($videoUrl): ?>
                     <video id="videoPlayer" controls>
                         <source src="<?php echo e($finalVideoSrc); ?>" type="video/mp4">
                         Trình duyệt của bạn không hỗ trợ video.
@@ -119,12 +129,7 @@ if (!empty($episodes)) {
                             </p>
                         <?php endif; ?>
                     </div>
-                <?php elseif($movie['trailer_url']): ?>:
-                    $fullTrailerUrl = $movie['trailer_url'];
-                    if (strpos($movie['trailer_url'], 'http') !== 0) {
-                        $fullTrailerUrl = $baseUrl . '/' . ltrim($movie['trailer_url'], '/');
-                    }
-                ?>
+                <?php elseif($fullTrailerUrl): ?>
                     <video id="videoPlayer" controls>
                         <source src="/storage/<?php echo e($fullTrailerUrl); ?>" type="video/mp4">
                         Trình duyệt của bạn không hỗ trợ video.
@@ -147,9 +152,9 @@ if (!empty($episodes)) {
             if (isset($episodes) && !empty($episodes)) {
                 error_log("Watch page - First episode: " . print_r($episodes[0], true));
             }
-
-            if ($isPhimBo):
             ?>
+
+            <?php if($isPhimBo): ?>
             <div class="episodes-section">
                 <h3><i class="fas fa-list"></i> Danh sách tập
                     <?php if(isset($episodes) && !empty($episodes)): ?>
@@ -162,7 +167,7 @@ if (!empty($episodes)) {
                 <?php if(isset($episodes) && !empty($episodes)): ?>
                     <div class="episodes-list">
                         <?php $__currentLoopData = $episodes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $episode): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <a href="?route=movie/watch&id=<?php echo e($movie['id']); ?>&episode_id=<?php echo e($episode['id']); ?>"
+                            <a href="<?php echo e(route('movies.watch', ['id' => $movie['id'], 'episode_id' => $episode['id']])); ?>"
                                class="episode-item <?php echo e((isset($currentEpisode) && $currentEpisode && $currentEpisode['id'] == $episode['id']) ? 'active' : ''); ?> <?php echo e(empty($episode['video_url']) ? 'episode-no-video' : ''); ?>"
                                title="<?php echo e($episode['title'] ?? 'Tập ' . $episode['episode_number']); ?>">
                                 <div class="episode-number"><?php echo e($episode['episode_number']); ?></div>
@@ -175,7 +180,7 @@ if (!empty($episodes)) {
                         <strong>Chưa có tập nào được thêm vào phim này.</strong>
                         <p class="mb-0 mt-2">Để hiển thị danh sách tập, vui lòng thêm các tập cho phim bộ này trong phần quản trị.</p>
                         <?php if(isset($isAdmin) && $isAdmin): ?>
-                            <a href="?route=admin/movies/edit&id=<?php echo e($movie['id']); ?>" class="btn btn-primary btn-sm mt-2">
+                            <a href="<?php echo e(route('admin.movies.edit', $movie['id'])); ?>" class="btn btn-primary btn-sm mt-2">
                                 <i class="fas fa-plus"></i> Thêm tập ngay
                             </a>
                         <?php endif; ?>
@@ -199,7 +204,7 @@ if (!empty($episodes)) {
 
                 <?php if(isset($movie['status']) && $movie['status'] === 'Chiếu rạp'): ?>
                     <div class="mt-3 mb-3">
-                        <a href="?route=booking/index&movie=<?php echo e($movie['id']); ?>"
+                        <a href="<?php echo e(route('booking.index', ['movie' => $movie['id']])); ?>"
                            class="btn btn-primary btn-lg"
                            style="background: #e50914; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block; color: white; font-weight: 600; font-size: 1.1rem;">
                             <i class="fas fa-ticket-alt"></i> Đặt vé xem phim
@@ -374,9 +379,13 @@ if (!empty($episodes)) {
                                                 </button>
                                             <?php endif; ?>
                                             <?php if(isset($isAdmin) && $isAdmin): ?>
-                                                <a href="<?php echo e($baseUrl); ?>/?route=review/deleteComment&id=<?php echo e($comment['id']); ?>&movie_id=<?php echo e($movie['id']); ?>" onclick="return confirm('Bạn có chắc muốn xóa bình luận này?')" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#888'">
-                                                    <i class="fas fa-trash"></i> Xóa
-                                                </a>
+                                                <form method="POST" action="<?php echo e(route('comments.destroy', $comment['id'])); ?>" onsubmit="return confirm('Bạn có chắc muốn xóa bình luận này?')" style="margin: 0;">
+                                                    <?php echo csrf_field(); ?>
+                                                    <?php echo method_field('DELETE'); ?>
+                                                    <button type="submit" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; transition: all 0.3s;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#888'">
+                                                        <i class="fas fa-trash"></i> Xóa
+                                                    </button>
+                                                </form>
                                             <?php endif; ?>
                                         </div>
 
@@ -439,9 +448,13 @@ if (!empty($episodes)) {
                                                             <i class="far fa-thumbs-down"></i> <span id="dislikes-<?php echo e($reply['id'] ?? 0); ?>"><?php echo e($reply['dislikes'] ?? 0); ?></span>
                                                         </button>
                                                         <?php if(isset($isAdmin) && $isAdmin): ?>
-                                                            <a href="<?php echo e($baseUrl); ?>/?route/review/deleteComment&id=<?php echo e($reply['id'] ?? 0); ?>&movie_id=<?php echo e($movie['id'] ?? 0); ?>" onclick="return confirm('Bạn có chắc muốn xóa trả lời này?')" style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; padding: 3px 8px; border-radius: 15px; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#666'">
-                                                                <i class="fas fa-trash"></i> Xóa
-                                                            </a>
+                                                            <form method="POST" action="<?php echo e(route('comments.destroy', $reply['id'])); ?>" onsubmit="return confirm('Bạn có chắc muốn xóa trả lời này?')" style="margin: 0;">
+                                                                <?php echo csrf_field(); ?>
+                                                                <?php echo method_field('DELETE'); ?>
+                                                                <button type="submit" style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; padding: 3px 8px; border-radius: 15px; transition: all 0.3s;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#666'">
+                                                                    <i class="fas fa-trash"></i> Xóa
+                                                                </button>
+                                                            </form>
                                                         <?php endif; ?>
                                                     </div>
                                                 </div>

@@ -47,10 +47,13 @@
         }
         
         .admin-main {
-            margin-left: 250px;
+            margin-left: 310px;
+            width: calc(100% - 310px);
+            max-width: calc(100vw - 310px);
             padding: 20px;
             background: linear-gradient(135deg, #2d1b3d 0%, #1a0d2e 100%);
             min-height: 100vh;
+            overflow-x: hidden;
         }
         
         .admin-header {
@@ -583,6 +586,8 @@
             
             .admin-main {
                 margin-left: 0;
+                width: 100%;
+                max-width: 100vw;
                 padding: 15px;
                 padding-top: 70px;
             }
@@ -758,4 +763,3 @@
     </script>
 </body>
 </html>
-

@@ -4,7 +4,6 @@
     <div class="container">
         <div class="filter-bar">
             <form method="GET" class="search-form" action="<?php echo e(route('movies.index')); ?>">
-                <input type="hidden" name="route" value="movie/index">
                 <?php if(isset($search) && $search): ?>
                 <input type="hidden" name="search" value="<?php echo e($search); ?>">
                 <?php endif; ?>
@@ -16,7 +15,7 @@
                             <select name="category" class="form-select form-select-sm">
                                 <option value="">Tất cả thể loại</option>
                                 <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <option value="<?php echo e($cat['id']); ?>" <?php echo e((isset($category_id) && $category_id == $cat['id']) ? 'selected' : ''); ?>>
+                                <option value="<?php echo e($cat['id']); ?>" <?php echo e((isset($categoryId) && $categoryId == $cat['id']) ? 'selected' : ''); ?>>
                                     <?php echo e($cat['name']); ?>
 
                                 </option>
@@ -59,7 +58,7 @@
                             <select name="min_rating" class="form-select form-select-sm">
                                 <option value="">Tất cả</option>
                                 <?php $__currentLoopData = [9 => '9.0+', 8 => '8.0+', 7 => '7.0+', 6 => '6.0+', 5 => '5.0+']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $val => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <option value="<?php echo e($val); ?>" <?php echo e((isset($min_rating) && $min_rating == $val) ? 'selected' : ''); ?>><?php echo e($label); ?> ⭐</option>
+                                <option value="<?php echo e($val); ?>" <?php echo e((isset($minRating) && $minRating == $val) ? 'selected' : ''); ?>><?php echo e($label); ?> ⭐</option>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
@@ -78,12 +77,12 @@
             <div class="category-filter mt-3">
                 <div class="category-tags">
                     <a href="<?php echo e(route('movies.index')); ?>"
-                        class="category-tag <?php echo e((!isset($category_id) || !$category_id) ? 'active' : ''); ?>">
+                        class="category-tag <?php echo e((!isset($categoryId) || !$categoryId) ? 'active' : ''); ?>">
                         <i class="fas fa-th"></i> Tất cả
                     </a>
                     <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <a href="<?php echo e(route('movies.category', $cat['id'])); ?>"
-                        class="category-tag <?php echo e((isset($category_id) && $category_id == $cat['id']) ? 'active' : ''); ?>">
+                        class="category-tag <?php echo e((isset($categoryId) && $categoryId == $cat['id']) ? 'active' : ''); ?>">
                         <?php echo e($cat['name']); ?>
 
                     </a>
@@ -100,34 +99,34 @@
             <i class="fas fa-video"></i>
             <?php if($search): ?>
             Kết quả tìm kiếm: "<?php echo e($search); ?>"
-            <?php if(!empty($movies)): ?>
+            <?php if(!$movies->isEmpty()): ?>
             <span class="badge bg-primary"><?php echo e(count($movies)); ?> phim</span>
             <?php endif; ?>
-            <?php elseif(isset($category_id) && $category_id): ?>
-            <?php $cat = collect($categories)->firstWhere('id', $category_id); ?>
+            <?php elseif(isset($categoryId) && $categoryId): ?>
+            <?php $cat = collect($categories)->firstWhere('id', $categoryId); ?>
             Phim <?php echo e($cat['name'] ?? ''); ?>
 
-            <?php if(!empty($movies)): ?>
+            <?php if(!$movies->isEmpty()): ?>
             <span class="badge bg-primary"><?php echo e(count($movies)); ?> phim</span>
             <?php endif; ?>
             <?php else: ?>
             Tất cả phim
-            <?php if(!empty($movies)): ?>
+            <?php if(!$movies->isEmpty()): ?>
             <span class="badge bg-primary"><?php echo e(count($movies)); ?> phim</span>
             <?php endif; ?>
             <?php endif; ?>
         </h2>
 
-        <?php if($search && empty($movies)): ?>
+        <?php if($search && $movies->isEmpty()): ?>
         <div class="empty-state text-center py-5">
             <i class="fas fa-search fa-3x text-muted mb-3"></i>
             <h4>Không tìm thấy phim nào</h4>
             <p class="text-muted">Không có kết quả phù hợp với từ khóa: "<strong><?php echo e($search); ?></strong>"</p>
-            <a href="<?php echo e(route('home')); ?>?route=movie/index" class="btn btn-primary mt-3">
+            <a href="<?php echo e(route('movies.index')); ?>" class="btn btn-primary mt-3">
                 <i class="fas fa-redo"></i> Xem tất cả phim
             </a>
         </div>
-        <?php elseif(empty($movies)): ?>
+        <?php elseif($movies->isEmpty()): ?>
         <div class="empty-state text-center py-5">
             <i class="fas fa-film fa-3x text-muted mb-3"></i>
             <h4>Chưa có phim nào</h4>
@@ -212,53 +211,16 @@
         </div>
 
         
-        <?php if(isset($totalPages) && $totalPages > 1): ?>
-        <?php
-        $queryParams = request()->except('page');
-        $paginationUrl = route('home') . '?route=movie/index' . (!empty($queryParams) ? '&' . http_build_query($queryParams) : '');
-        $startPage = max(1, $page - 2);
-        $endPage = min($totalPages, $page + 2);
-        ?>
+        <?php if($movies->hasPages()): ?>
         <nav aria-label="Phân trang danh sách phim" class="mt-4">
-            <ul class="pagination justify-content-center">
-                <li class="page-item <?php echo e($page <= 1 ? 'disabled' : ''); ?>">
-                    <a class="page-link" href="<?php echo e($page > 1 ? $paginationUrl . '&page=' . ($page - 1) : '#'); ?>">
-                        <i class="fas fa-chevron-left"></i> Trước
-                    </a>
-                </li>
+            <?php echo e($movies->withQueryString()->links()); ?>
 
-                <?php if($startPage > 1): ?>
-                <li class="page-item"><a class="page-link" href="<?php echo e($paginationUrl); ?>&page=1">1</a></li>
-                <?php if($startPage > 2): ?>
-                <li class="page-item disabled"><span class="page-link">...</span></li>
-                <?php endif; ?>
-                <?php endif; ?>
-
-                <?php for($i = $startPage; $i <= $endPage; $i++): ?>
-                    <li class="page-item <?php echo e($i == $page ? 'active' : ''); ?>">
-                    <a class="page-link" href="<?php echo e($paginationUrl); ?>&page=<?php echo e($i); ?>"><?php echo e($i); ?></a>
-                    </li>
-                    <?php endfor; ?>
-
-                    <?php if($endPage < $totalPages): ?>
-                        <?php if($endPage < $totalPages - 1): ?>
-                        <li class="page-item disabled"><span class="page-link">...</span></li>
-                        <?php endif; ?>
-                        <li class="page-item"><a class="page-link" href="<?php echo e($paginationUrl); ?>&page=<?php echo e($totalPages); ?>"><?php echo e($totalPages); ?></a></li>
-                        <?php endif; ?>
-
-                        <li class="page-item <?php echo e($page >= $totalPages ? 'disabled' : ''); ?>">
-                            <a class="page-link" href="<?php echo e($page < $totalPages ? $paginationUrl . '&page=' . ($page + 1) : '#'); ?>">
-                                Sau <i class="fas fa-chevron-right"></i>
-                            </a>
-                        </li>
-            </ul>
             <div class="text-center mt-3 text-muted">
                 <small>
-                    Hiển thị <?php echo e($offset + 1); ?> - <?php echo e(min($offset + $perPage, $total)); ?>
+                    Hiển thị <?php echo e($movies->firstItem()); ?> - <?php echo e($movies->lastItem()); ?>
 
-                    trong tổng số <?php echo e(number_format($total)); ?> phim
-                    (Trang <?php echo e($page); ?>/<?php echo e($totalPages); ?>)
+                    trong tổng số <?php echo e(number_format($movies->total())); ?> phim
+                    (Trang <?php echo e($movies->currentPage()); ?>/<?php echo e($movies->lastPage()); ?>)
                 </small>
             </div>
         </nav>
@@ -272,18 +234,20 @@
     function toggleFavorite(btn, movieId) {
         <?php if(!isset($user) || !$user): ?>
         if (confirm('Vui lòng đăng nhập để thêm vào yêu thích!')) {
-            window.location.href = '?route=auth/login';
+            window.location.href = '<?php echo e(route('login')); ?>';
         }
         return;
         <?php endif; ?>
 
         btn.disabled = true;
-        fetch('?route=movie/toggleFavorite', {
+        fetch('<?php echo e(route('movies.toggleFavorite')); ?>', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
+                    'Accept': 'application/json'
                 },
-                body: 'movie_id=' + movieId
+                body: new URLSearchParams({ movie_id: movieId })
             })
             .then(r => r.json())
             .then(data => {

@@ -201,6 +201,9 @@ class AdminController extends Controller
         ]);
 
         $data = $request->only(['title', 'category_id', 'level', 'duration', 'description', 'director', 'actors', 'status', 'type', 'country', 'language', 'age_rating']);
+        if ($request->type === 'phimbo' && $data['status'] === 'Chiếu rạp') {
+            $data['status'] = 'Chiếu online';
+        }
         $data['rating'] = 0;
         $data['status_admin'] = $request->status_admin ?? 'draft';
 
@@ -217,7 +220,9 @@ class AdminController extends Controller
             $data['banner'] = $request->banner;
         }
 
-        if ($request->hasFile('trailer_file')) {
+        if ($request->type === 'phimbo') {
+            $data['trailer_url'] = null;
+        } elseif ($request->hasFile('trailer_file')) {
             $data['trailer_url'] = $request->file('trailer_file')->store('trailers', 'public');
         } else {
             $data['trailer_url'] = $request->trailer_url;
@@ -230,14 +235,21 @@ class AdminController extends Controller
             $data['video_url'] = $request->video_url;
         }
 
-        $data['normal_price'] = $request->normal_price ?? 90000;
-        $data['vip_price'] = $request->vip_price ?? 120000;
-        $data['couple_price'] = $request->couple_price ?? 180000;
+        if (DB::getSchemaBuilder()->hasColumn('movies', 'normal_price')) {
+            $data['normal_price'] = $request->normal_price ?? 90000;
+        }
+        if (DB::getSchemaBuilder()->hasColumn('movies', 'vip_price')) {
+            $data['vip_price'] = $request->vip_price ?? 120000;
+        }
+        if (DB::getSchemaBuilder()->hasColumn('movies', 'couple_price')) {
+            $data['couple_price'] = $request->couple_price ?? 180000;
+        }
 
         $movie = Movie::create($data);
+        $this->syncMovieEpisodesFromRequest($movie, $request);
 
         // Create showtimes if cinema movie
-        if ($request->status === 'Chiếu rạp' && $request->filled(['from_date', 'to_date', 'schedule_theater_id'])) {
+        if ($request->type !== 'phimbo' && $data['status'] === 'Chiếu rạp' && $request->filled(['from_date', 'to_date', 'schedule_theater_id'])) {
             $this->createShowtimes($movie, $request);
         }
 
@@ -271,6 +283,9 @@ class AdminController extends Controller
         ]);
 
         $data = $request->only(['title', 'category_id', 'level', 'duration', 'description', 'director', 'actors', 'status', 'type', 'country', 'language', 'age_rating', 'status_admin']);
+        if ($request->type === 'phimbo' && $data['status'] === 'Chiếu rạp') {
+            $data['status'] = 'Chiếu online';
+        }
 
         // Handle file uploads
         if ($request->hasFile('thumbnail_file')) {
@@ -287,7 +302,13 @@ class AdminController extends Controller
             $data['banner'] = $request->banner;
         }
 
-        if ($request->hasFile('trailer_file')) {
+        if ($request->type === 'phimbo') {
+            if ($movie->getRawOriginal('trailer_url')) {
+                Storage::disk('public')->delete($movie->getRawOriginal('trailer_url'));
+            }
+
+            $data['trailer_url'] = null;
+        } elseif ($request->hasFile('trailer_file')) {
             if ($movie->trailer_url) Storage::disk('public')->delete($movie->trailer_url);
             $data['trailer_url'] = $request->file('trailer_file')->store('trailers', 'public');
         } elseif ($request->trailer_url) {
@@ -303,9 +324,10 @@ class AdminController extends Controller
         }
 
         $movie->update($data);
+        $this->syncMovieEpisodesFromRequest($movie, $request);
 
         // Update showtimes if provided
-        if ($request->status === 'Chiếu rạp' && $request->filled(['from_date', 'to_date'])) {
+        if ($request->type !== 'phimbo' && $data['status'] === 'Chiếu rạp' && $request->filled(['from_date', 'to_date'])) {
             $this->createShowtimes($movie, $request);
         }
 
@@ -343,6 +365,88 @@ class AdminController extends Controller
         }
 
         return redirect()->route('admin.movies.edit', $movieId)->with('success', 'Xóa tập phim thành công!');
+    }
+
+    protected function syncMovieEpisodesFromRequest(Movie $movie, Request $request): void
+    {
+        if ($request->type !== 'phimbo') {
+            return;
+        }
+
+        foreach ($movie->episodes as $episode) {
+            $fileKey = 'episode_video_' . $episode->id;
+
+            if (!$request->hasFile($fileKey)) {
+                continue;
+            }
+
+            if ($episode->getRawOriginal('video_url')) {
+                Storage::disk('public')->delete($episode->getRawOriginal('video_url'));
+            }
+
+            $episode->update([
+                'video_url' => $request->file($fileKey)->store('phimbo/' . $movie->id, 'public'),
+            ]);
+        }
+
+        foreach ($request->allFiles() as $key => $file) {
+            if (!preg_match('/^new_episode_video_(\d+)$/', $key, $matches)) {
+                continue;
+            }
+
+            $index = $matches[1];
+            $episodeNumber = (int) $request->input("new_episode_number_{$index}");
+
+            if ($episodeNumber < 1) {
+                continue;
+            }
+
+            $episode = Episode::firstOrNew([
+                'movie_id' => $movie->id,
+                'episode_number' => $episodeNumber,
+            ]);
+
+            $episode->title = $request->input("new_episode_title_{$index}") ?: ('Tập ' . $episodeNumber);
+
+            if ($file) {
+                if ($episode->exists && $episode->getRawOriginal('video_url')) {
+                    Storage::disk('public')->delete($episode->getRawOriginal('video_url'));
+                }
+
+                $episode->video_url = $file->store('phimbo/' . $movie->id, 'public');
+            }
+
+            $episode->save();
+        }
+
+        foreach ($request->all() as $key => $value) {
+            if (!preg_match('/^new_episode_number_(\d+)$/', $key, $matches)) {
+                continue;
+            }
+
+            $index = $matches[1];
+            $episodeNumber = (int) $value;
+
+            if ($episodeNumber < 1) {
+                continue;
+            }
+
+            Episode::firstOrCreate(
+                [
+                    'movie_id' => $movie->id,
+                    'episode_number' => $episodeNumber,
+                ],
+                [
+                    'title' => $request->input("new_episode_title_{$index}") ?: ('Tập ' . $episodeNumber),
+                ]
+            );
+        }
+
+        if (DB::getSchemaBuilder()->hasColumn('movies', 'total_episodes')) {
+            $movie->update([
+                'total_episodes' => max($movie->episodes()->count(), (int) $request->input('total_episodes', 0)),
+            ]);
+        }
     }
 
     public function moviesScanEpisodes()
