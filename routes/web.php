@@ -263,14 +263,14 @@ Route::middleware(['auth', 'counter_staff'])->prefix('counter')->name('counter.'
     Route::get('/', [CounterStaffController::class, 'index'])->name('index');
 
     // QR Code Scanning
-    Route::get('/scan-qr', [CounterStaffController::class, 'scanQR'])->name('scanQR');
+    Route::get('/scan', [CounterStaffController::class, 'scanQR'])->name('scan');
     Route::post('/verify-ticket', [CounterStaffController::class, 'verifyTicket'])->name('verifyTicket');
-    Route::get('/scanned-tickets', [CounterStaffController::class, 'scannedTickets'])->name('scannedTickets');
+    Route::get('/scanned', [CounterStaffController::class, 'scannedTickets'])->name('scanned');
 
     // Sell Tickets at Counter
-    Route::get('/sell-ticket', [CounterStaffController::class, 'sellTicket'])->name('sellTicket');
+    Route::get('/sell', [CounterStaffController::class, 'sellTicket'])->name('sell');
     Route::post('/process-sale', [CounterStaffController::class, 'processSale'])->name('processSale');
-    Route::get('/sales-history', [CounterStaffController::class, 'salesHistory'])->name('salesHistory');
+    Route::get('/sales', [CounterStaffController::class, 'salesHistory'])->name('sales');
 
     // Showtimes
     Route::get('/showtimes', [CounterStaffController::class, 'showtimes'])->name('showtimes');

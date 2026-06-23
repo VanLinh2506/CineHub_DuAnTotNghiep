@@ -24,8 +24,7 @@
 
     <!-- Bộ lọc -->
     <div class="filter-section">
-        <form method="GET" action="" class="filter-form">
-            <input type="hidden" name="route" value="counterStaff/salesHistory">
+        <form method="GET" action="{{ route('counter.sales') }}" class="filter-form">
             <div class="filter-group">
                 <label>Ngày:</label>
                 <input type="date" name="date" value="{{ $date }}" class="form-control">
@@ -38,14 +37,14 @@
                 <i class="fas fa-search"></i> Lọc
             </button>
             @if($date || $search)
-            <a href="?route=counterStaff/salesHistory" class="btn btn-secondary">
+            <a href="{{ route('counter.sales') }}" class="btn btn-secondary">
                 <i class="fas fa-times"></i> Xóa lọc
             </a>
             @endif
         </form>
     </div>
 
-    @if(empty($sales))
+    @if($sales->isEmpty())
         <div class="empty-state">
             <i class="fas fa-inbox"></i>
             <p>Chưa có vé nào được bán</p>
@@ -69,32 +68,32 @@
                     <tr>
                         <td>
                             <div class="datetime">
-                                <span class="date">{{ date('d/m/Y', strtotime($sale['created_at'])) }}</span>
-                                <span class="time">{{ date('H:i', strtotime($sale['created_at'])) }}</span>
+                                <span class="date">{{ $sale->created_at->format('d/m/Y') }}</span>
+                                <span class="time">{{ $sale->created_at->format('H:i') }}</span>
                             </div>
                         </td>
-                        <td><strong>{{ $sale['movie_title'] }}</strong></td>
+                        <td><strong>{{ $sale->showtime->movie->title }}</strong></td>
                         <td>
                             <div class="showtime-info">
-                                <span>{{ date('d/m', strtotime($sale['show_date'])) }}</span>
-                                <span>{{ date('H:i', strtotime($sale['show_time'])) }}</span>
-                                <small>{{ $sale['screen_name'] }}</small>
+                                <span>{{ date('d/m', strtotime($sale->showtime->show_date)) }}</span>
+                                <span>{{ date('H:i', strtotime($sale->showtime->show_time)) }}</span>
+                                <small>{{ $sale->showtime->screen->name }}</small>
                             </div>
                         </td>
                         <td>
-                            <span class="seat-badge {{ $sale['seat_type'] }}">{{ $sale['seat'] }}</span>
+                            <span class="seat-badge {{ $sale->seat_type }}">{{ $sale->seat }}</span>
                         </td>
                         <td>
                             <div class="customer-info">
-                                <span>{{ $sale['customer_name'] ?? 'Khách lẻ' }}</span>
-                                @if(!empty($sale['customer_phone']))
-                                <small>{{ $sale['customer_phone'] }}</small>
+                                <span>{{ $sale->bookingPending->customer_name ?? 'Khách lẻ' }}</span>
+                                @if($sale->bookingPending && $sale->bookingPending->customer_phone)
+                                <small>{{ $sale->bookingPending->customer_phone }}</small>
                                 @endif
                             </div>
                         </td>
-                        <td><span class="price">{{ number_format($sale['price']) }} đ</span></td>
+                        <td><span class="price">{{ number_format($sale->price) }} đ</span></td>
                         <td>
-                            <a href="?route=counterStaff/printTickets&booking_id={{ $sale['booking_id'] }}" target="_blank" class="btn btn-sm btn-print">
+                            <a href="{{ route('counter.index') }}/print?booking_id={{ $sale->booking_pending_id }}" target="_blank" class="btn btn-sm btn-print">
                                 <i class="fas fa-print"></i>
                             </a>
                         </td>
@@ -104,16 +103,9 @@
             </table>
         </div>
 
-        @if($total_pages > 1)
-        <div class="pagination">
-            @for($i = 1; $i <= $total_pages; $i++)
-                <a href="?route=counterStaff/salesHistory&page={{ $i }}&date={{ urlencode($date) }}&search={{ urlencode($search) }}"
-                   class="page-link {{ $i == $page ? 'active' : '' }}">{{ $i }}</a>
-            @endfor
-        </div>
-        @endif
+        {{ $sales->links() }}
 
-        <div class="total-info">Tổng: <strong>{{ number_format($total) }}</strong> vé</div>
+        <div class="total-info">Tổng: <strong>{{ number_format($sales->total()) }}</strong> vé</div>
     @endif
 </div>
 

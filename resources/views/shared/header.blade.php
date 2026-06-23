@@ -65,6 +65,7 @@
 
             $isAdmin = $isAdmin ?? false;
             $isModerator = $isModerator ?? false;
+            $isCounterStaff = $isCounterStaff ?? false;
         @endphp
         <!-- Desktop Header -->
         <header class="header-new header-desktop">
@@ -166,6 +167,13 @@
                             <a href="{{ route('moderator.index') }}" class="sign-in-btn">
                                 <i class="fas fa-building"></i>
                                 <span>Quản lý rạp</span>
+                            </a>
+
+                        @elseif($isCounterStaff)
+
+                            <a href="{{ route('counter.index') }}" class="sign-in-btn">
+                                <i class="fas fa-user-tie"></i>
+                                <span>Quản lý quầy</span>
                             </a>
 
                         @endif
@@ -439,6 +447,15 @@
 
                                 <i class="fas fa-building"></i>
                                 <span>Quản lý rạp</span>
+
+                            </a>
+
+                        @elseif($isCounterStaff)
+
+                            <a href="{{ route('counter.index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+
+                                <i class="fas fa-user-tie"></i>
+                                <span>Quản lý quầy</span>
 
                             </a>
 

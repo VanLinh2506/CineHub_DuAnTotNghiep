@@ -54,13 +54,13 @@
             position: relative;
             z-index: 1;
             width: 100%;
-            max-width: 480px;
+            max-width: 400px;
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(25px) saturate(180%);
             -webkit-backdrop-filter: blur(25px) saturate(180%);
-            border-radius: 100% 100% 40px 40px;
-            padding: 60px 45px 45px;
-            box-shadow: 
+            border-radius: 20px;
+            padding: 40px 35px 35px;
+            box-shadow:
                 0 8px 32px 0 rgba(0, 0, 0, 0.5),
                 inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
                 0 0 60px rgba(229, 9, 20, 0.15);
@@ -111,16 +111,16 @@
 
         .logo-section {
             text-align: center;
-            margin-bottom: 35px;
+            margin-bottom: 25px;
         }
 
         .logo-icon {
-            font-size: 55px;
+            font-size: 40px;
             background: linear-gradient(135deg, #e50914 0%, #ff6b6b 50%, #ff1f2f 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             display: inline-block;
             animation: logoFloat 3s ease-in-out infinite;
             filter: drop-shadow(0 0 20px rgba(229, 9, 20, 0.5));
@@ -139,13 +139,13 @@
         }
 
         .logo-text {
-            font-size: 36px;
+            font-size: 28px;
             font-weight: 800;
             background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            letter-spacing: 3px;
+            letter-spacing: 2px;
             text-transform: uppercase;
             filter: drop-shadow(0 2px 10px rgba(255, 255, 255, 0.2));
         }
@@ -153,8 +153,8 @@
         .welcome-text {
             text-align: center;
             color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 30px;
-            font-size: 15px;
+            margin-bottom: 20px;
+            font-size: 13px;
             font-weight: 300;
             letter-spacing: 0.5px;
         }
@@ -198,15 +198,15 @@
         }
 
         .form-group {
-            margin-bottom: 22px;
+            margin-bottom: 15px;
             position: relative;
         }
 
         .form-label {
             display: block;
             color: rgba(255, 255, 255, 0.85);
-            margin-bottom: 10px;
-            font-size: 13px;
+            margin-bottom: 6px;
+            font-size: 12px;
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -218,26 +218,27 @@
 
         .input-icon {
             position: absolute;
-            left: 22px;
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
             color: rgba(255, 255, 255, 0.3);
-            font-size: 16px;
+            font-size: 14px;
             transition: all 0.3s ease;
             pointer-events: none;
         }
 
         .form-control {
             width: 100%;
-            padding: 18px 24px 18px 56px;
+            padding: 12px 20px 12px 45px;
             background: rgba(255, 255, 255, 0.04);
             border: 1.5px solid rgba(255, 255, 255, 0.08);
-            border-radius: 50px;
+            border-radius: 10px;
             color: #fff;
-            font-size: 15px;
+            font-size: 14px;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             outline: none;
             backdrop-filter: blur(10px);
+            height: auto;
         }
 
         .form-control:focus {
@@ -263,9 +264,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 28px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
         }
 
         .checkbox-wrapper {
@@ -323,18 +324,18 @@
 
         .btn-login {
             width: 100%;
-            padding: 18px;
+            padding: 12px;
             background: linear-gradient(135deg, #e50914 0%, #b20710 100%);
             border: none;
-            border-radius: 50px;
+            border-radius: 10px;
             color: white;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             text-transform: uppercase;
-            letter-spacing: 2px;
-            box-shadow: 
+            letter-spacing: 1px;
+            box-shadow:
                 0 4px 20px rgba(229, 9, 20, 0.4),
                 0 0 40px rgba(229, 9, 20, 0.2),
                 inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -377,9 +378,9 @@
             display: flex;
             align-items: center;
             text-align: center;
-            margin: 28px 0;
+            margin: 20px 0;
             color: rgba(255, 255, 255, 0.4);
-            font-size: 13px;
+            font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -431,25 +432,25 @@
 
         .btn-google {
             width: 100%;
-            padding: 17px;
+            padding: 12px;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50px;
+            border-radius: 10px;
             color: #333;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             text-decoration: none;
-            box-shadow: 
+            box-shadow:
                 0 4px 20px rgba(0, 0, 0, 0.15),
                 inset 0 1px 0 rgba(255, 255, 255, 0.5);
-            margin-bottom: 22px;
+            margin-bottom: 18px;
         }
 
         .btn-google:hover {
@@ -497,24 +498,24 @@
 
         @media (max-width: 576px) {
             .login-container {
-                padding: 50px 35px 40px;
-                border-radius: 100% 100% 35px 35px;
+                padding: 30px 25px 25px;
+                border-radius: 15px;
             }
 
             .logo-text {
-                font-size: 30px;
-                letter-spacing: 2px;
+                font-size: 24px;
+                letter-spacing: 1px;
             }
 
             .logo-icon {
-                font-size: 48px;
+                font-size: 36px;
             }
 
             .back-home {
-                top: 20px;
-                left: 20px;
-                font-size: 14px;
-                padding: 10px 18px;
+                top: 15px;
+                left: 15px;
+                font-size: 13px;
+                padding: 8px 15px;
             }
 
             .form-options {
@@ -523,13 +524,14 @@
             }
 
             .form-control {
-                padding: 16px 22px 16px 52px;
+                padding: 10px 15px 10px 40px;
+                font-size: 13px;
             }
 
             .btn-login,
             .btn-google {
-                padding: 16px;
-                font-size: 15px;
+                padding: 11px;
+                font-size: 13px;
             }
         }
     </style>

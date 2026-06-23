@@ -2,10 +2,12 @@
     $user = auth()->user();
     $isAdmin = false;
     $isModerator = false;
+    $isCounterStaff = false;
     
     if ($user) {
         $isAdmin = $user->isAdmin();
         $isModerator = $user->isModerator();
+        $isCounterStaff = $user->isCounterStaff();
     }
     
     // Fetch menu categories and countries
@@ -91,6 +93,11 @@
                     <a href="<?php echo e(route('moderator.index')); ?>" class="sign-in-btn">
                         <i class="fas fa-building"></i>
                         <span>Quản lý rạp</span>
+                    </a>
+                <?php elseif($isCounterStaff): ?>
+                    <a href="<?php echo e(route('counter.index')); ?>" class="sign-in-btn">
+                        <i class="fas fa-user-tie"></i>
+                        <span>Quản lý quầy</span>
                     </a>
                 <?php endif; ?>
                 <a href="<?php echo e(route('profile.index')); ?>" class="sign-in-btn">
@@ -258,6 +265,11 @@
                         <i class="fas fa-building"></i>
                         <span>Quản lý rạp</span>
                     </a>
+                <?php elseif($isCounterStaff): ?>
+                    <a href="<?php echo e(route('counter.index')); ?>" class="mobile-menu-link" onclick="closeMobileMenu()">
+                        <i class="fas fa-user-tie"></i>
+                        <span>Quản lý quầy</span>
+                    </a>
                 <?php endif; ?>
                 <a href="#" class="mobile-menu-link mobile-menu-logout" 
                    onclick="event.preventDefault(); document.getElementById('logout-form-mobile').submit();">
@@ -360,46 +372,43 @@
     </script>
 <?php endif; ?>
 
-<!-- Auth Modal (Login/Register) -->
+<!-- Auth Modal (Login/Register) - Glassmorphism Design -->
 <div id="authModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content-login">
-        <span class="modal-close" onclick="closeAuthModal()">&times;</span>
+    <div class="modal-content-glass">
+        <span class="modal-close-glass" onclick="closeAuthModal()">×</span>
         
         <!-- Tab Navigation -->
-        <div class="auth-tabs">
-            <button class="auth-tab active" onclick="switchAuthTab('login')">Đăng nhập</button>
-            <button class="auth-tab" onclick="switchAuthTab('register')">Đăng ký</button>
+        <div class="auth-tabs-glass">
+            <button class="auth-tab-glass active" onclick="switchAuthTab('login')">Đăng nhập</button>
+            <button class="auth-tab-glass" onclick="switchAuthTab('register')">Đăng ký</button>
         </div>
         
         <!-- Login Form -->
         <div id="loginTab" class="auth-tab-content active">
-            <h2 class="modal-title">Đăng nhập</h2>
+            <h2 class="modal-title-glass">Đăng nhập</h2>
             <div id="loginError" class="alert alert-error" style="display: none;"></div>
+            
             <form id="loginForm" method="POST" action="<?php echo e(route('login')); ?>" onsubmit="handleLogin(event)">
                 <?php echo csrf_field(); ?>
-                <div class="form-group-new">
-                    <input type="email" name="email" required placeholder="Email" class="input-field">
+                <div class="form-group-glass">
+                    <input type="email" name="email" required placeholder="Email" class="input-glass">
                 </div>
-                <div class="form-group-new">
-                    <input type="password" name="password" required placeholder="Mật khẩu" class="input-field">
+                <div class="form-group-glass">
+                    <input type="password" name="password" required placeholder="Mật khẩu" class="input-glass">
                 </div>
-                <div class="form-options">
-                    <label class="checkbox-label">
+                <div class="form-options-glass">
+                    <label class="checkbox-glass">
                         <input type="checkbox" name="remember_me">
                         <span>Ghi nhớ đăng nhập</span>
                     </label>
-                    <a href="javascript:void(0);" onclick="closeAuthModal(); openForgotPasswordModal();" class="forgot-password">Quên mật khẩu?</a>
+                    <a href="javascript:void(0);" onclick="closeAuthModal(); alert('Chức năng đang phát triển');" class="forgot-link-glass">Quên mật khẩu?</a>
                 </div>
-                <button type="submit" class="btn-login">Đăng nhập</button>
+                <button type="submit" class="btn-glass btn-primary-glass">Đăng nhập</button>
             </form>
 
-            <!-- Divider -->
-            <div class="auth-divider">
-                <span>hoặc</span>
-            </div>
+            <div class="divider-glass"><span>hoặc</span></div>
 
-            <!-- Google Login -->
-            <a href="<?php echo e(route('auth.google')); ?>" class="btn-google-auth">
+            <a href="<?php echo e(route('auth.google')); ?>" class="btn-glass btn-google-glass">
                 <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M19.8 10.2273C19.8 9.51819 19.7364 8.83637 19.6182 8.18182H10.2V12.05H15.5818C15.3273 13.3 14.5727 14.3591 13.4455 15.0682V17.5773H16.7364C18.6091 15.8364 19.8 13.2727 19.8 10.2273Z" fill="#4285F4"/>
                     <path d="M10.2 20C12.9 20 15.1727 19.1045 16.7364 17.5773L13.4455 15.0682C12.4909 15.6682 11.2636 16.0227 10.2 16.0227C7.59091 16.0227 5.37273 14.2636 4.52727 11.9H1.11364V14.4909C2.66818 17.5909 6.19091 20 10.2 20Z" fill="#34A853"/>
@@ -409,39 +418,36 @@
                 Đăng nhập bằng Google
             </a>
 
-            <div class="modal-footer">
+            <div class="modal-footer-glass">
                 <p>Chưa có tài khoản? <a href="javascript:void(0);" onclick="switchAuthTab('register');">Đăng ký ngay</a></p>
             </div>
         </div>
         
         <!-- Register Form -->
         <div id="registerTab" class="auth-tab-content" style="display: none;">
-            <h2 class="modal-title">Đăng ký</h2>
+            <h2 class="modal-title-glass">Đăng ký</h2>
             <div id="registerError" class="alert alert-error" style="display: none;"></div>
+            
             <form id="registerForm" method="POST" action="<?php echo e(route('register')); ?>" onsubmit="handleRegister(event)">
                 <?php echo csrf_field(); ?>
-                <div class="form-group-new">
-                    <input type="text" name="name" required placeholder="Họ và tên" class="input-field">
+                <div class="form-group-glass">
+                    <input type="text" name="name" required placeholder="Họ và tên" class="input-glass">
                 </div>
-                <div class="form-group-new">
-                    <input type="email" name="email" required placeholder="Email" class="input-field">
+                <div class="form-group-glass">
+                    <input type="email" name="email" required placeholder="Email" class="input-glass">
                 </div>
-                <div class="form-group-new">
-                    <input type="password" name="password" required placeholder="Mật khẩu" class="input-field">
+                <div class="form-group-glass">
+                    <input type="password" name="password" required placeholder="Mật khẩu" class="input-glass">
                 </div>
-                <div class="form-group-new">
-                    <input type="password" name="confirm_password" required placeholder="Xác nhận mật khẩu" class="input-field">
+                <div class="form-group-glass">
+                    <input type="password" name="confirm_password" required placeholder="Xác nhận mật khẩu" class="input-glass">
                 </div>
-                <button type="submit" class="btn-register-form">Đăng ký</button>
+                <button type="submit" class="btn-glass btn-primary-glass">Đăng ký</button>
             </form>
 
-            <!-- Divider -->
-            <div class="auth-divider">
-                <span>hoặc</span>
-            </div>
+            <div class="divider-glass"><span>hoặc</span></div>
 
-            <!-- Google Register -->
-            <a href="<?php echo e(route('auth.google')); ?>" class="btn-google-auth">
+            <a href="<?php echo e(route('auth.google')); ?>" class="btn-glass btn-google-glass">
                 <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M19.8 10.2273C19.8 9.51819 19.7364 8.83637 19.6182 8.18182H10.2V12.05H15.5818C15.3273 13.3 14.5727 14.3591 13.4455 15.0682V17.5773H16.7364C18.6091 15.8364 19.8 13.2727 19.8 10.2273Z" fill="#4285F4"/>
                     <path d="M10.2 20C12.9 20 15.1727 19.1045 16.7364 17.5773L13.4455 15.0682C12.4909 15.6682 11.2636 16.0227 10.2 16.0227C7.59091 16.0227 5.37273 14.2636 4.52727 11.9H1.11364V14.4909C2.66818 17.5909 6.19091 20 10.2 20Z" fill="#34A853"/>
@@ -451,7 +457,7 @@
                 Đăng ký bằng Google
             </a>
 
-            <div class="modal-footer">
+            <div class="modal-footer-glass">
                 <p>Đã có tài khoản? <a href="javascript:void(0);" onclick="switchAuthTab('login');">Đăng nhập ngay</a></p>
             </div>
         </div>
@@ -459,6 +465,7 @@
 </div>
 
 <style>
+    /* Base Modal Overlay - used by both old and new styles */
     .modal-overlay {
         position: fixed;
         top: 0;
@@ -479,58 +486,8 @@
         opacity: 1;
         visibility: visible;
     }
-    
-    .modal-content-login {
-        background: #1a1a1a;
-        padding: 40px;
-        border-radius: 10px;
-        width: 90%;
-        max-width: 450px;
-        position: relative;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        transform: scale(0.7) translateY(-50px);
-        opacity: 0;
-        transition: transform 0.3s ease, opacity 0.3s ease;
-    }
-    
-    .modal-overlay.show .modal-content-login {
-        transform: scale(1) translateY(0);
-        opacity: 1;
-    }
-    
-    .modal-close {
-        position: absolute;
-        top: 15px;
-        right: 20px;
-        font-size: 28px;
-        font-weight: bold;
-        color: #fff;
-        cursor: pointer;
-        transition: color 0.3s;
-    }
-    
-    .modal-close:hover {
-        color: #e50914;
-    }
-    
-    .modal-title {
-        color: #fff;
-        margin-bottom: 30px;
-        text-align: center;
-        font-size: 28px;
-    }
-    
-    .modal-footer {
-        text-align: center;
-        margin-top: 20px;
-        color: #999;
-    }
-    
-    .modal-footer a {
-        color: #e50914;
-        text-decoration: none;
-    }
-    
+
+    /* Alert Styles */
     .alert {
         padding: 12px;
         border-radius: 6px;
@@ -538,166 +495,15 @@
     }
     
     .alert-error {
-        background: #dc3545;
+        background: rgba(220, 53, 69, 0.24);
+        border: 1px solid rgba(255, 111, 124, 0.35);
+        border-radius: 100px;
         color: white;
-    }
-    
-    .form-group-new {
-        margin-bottom: 15px;
-    }
-    
-    .input-field {
-        width: 100%;
-        padding: 12px;
-        background: #2a2a2a;
-        border: 1px solid #444;
-        border-radius: 6px;
-        color: #fff;
-        font-size: 16px;
-    }
-    
-    .input-field:focus {
-        outline: none;
-        border-color: #e50914;
-    }
-    
-    .form-options {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        font-size: 14px;
-    }
-    
-    .checkbox-label {
-        color: #999;
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-    }
-    
-    .checkbox-label input {
-        margin-right: 8px;
-    }
-    
-    .forgot-password {
-        color: #e50914;
-        text-decoration: none;
-    }
-    
-    .btn-login,
-    .btn-register-form {
-        width: 100%;
-        padding: 12px;
-        background: #e50914;
-        border: none;
-        border-radius: 6px;
-        color: white;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.3s;
-        margin-bottom: 0;
-    }
-
-    .btn-login:hover,
-    .btn-register-form:hover {
-        background: #c00812;
-    }
-
-    .auth-divider {
-        display: flex;
-        align-items: center;
-        text-align: center;
-        margin: 18px 0;
-        color: #555;
-        font-size: 13px;
-    }
-
-    .auth-divider::before,
-    .auth-divider::after {
-        content: '';
-        flex: 1;
-        border-bottom: 1px solid #333;
-    }
-
-    .auth-divider span {
-        padding: 0 12px;
-    }
-
-    .btn-google-auth {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        width: 100%;
-        padding: 11px;
-        background: #fff;
-        border: none;
-        border-radius: 6px;
-        color: #333;
-        font-size: 15px;
-        font-weight: 600;
-        cursor: pointer;
-        text-decoration: none;
-        transition: background 0.2s, box-shadow 0.2s;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-        margin-bottom: 4px;
-    }
-
-    .btn-google-auth:hover {
-        background: #f1f1f1;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-        color: #111;
-        text-decoration: none;
-    }
-        transition: background 0.3s;
-    }
-    
-    .btn-login:hover,
-    .btn-register-form:hover {
-        background: #d00913;
-    }
-    
-    .btn-login:disabled,
-    .btn-register-form:disabled {
-        background: #666;
-        cursor: not-allowed;
-    }
-    
-    .auth-tabs {
-        display: flex;
-        margin-bottom: 30px;
-        border-bottom: 2px solid #333;
-    }
-    
-    .auth-tab {
-        flex: 1;
-        padding: 12px;
-        background: transparent;
-        border: none;
-        color: #999;
-        font-size: 16px;
-        cursor: pointer;
-        transition: color 0.3s;
-    }
-    
-    .auth-tab.active {
-        color: #e50914;
-        border-bottom: 2px solid #e50914;
-        margin-bottom: -2px;
-    }
-    
-    .auth-tab-content {
-        display: none;
-    }
-    
-    .auth-tab-content.active {
-        display: block;
     }
 </style>
 
 <style>
+    /* Glassmorphism Auth Modal Styles */
     #authModal.modal-overlay {
         background:
             radial-gradient(circle at 18% 18%, rgba(229, 9, 20, 0.24), transparent 28%),
@@ -708,9 +514,10 @@
         padding: 18px;
     }
 
-    #authModal .modal-content-login {
+    .modal-content-glass {
         max-width: 460px;
-        padding: 34px;
+        width: 90%;
+        padding: 40px;
         border-radius: 100px;
         overflow: hidden;
         background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(18, 18, 24, 0.72));
@@ -719,10 +526,12 @@
         backdrop-filter: blur(26px) saturate(145%);
         -webkit-backdrop-filter: blur(26px) saturate(145%);
         transform: scale(0.94) translateY(22px);
+        opacity: 0;
         transition: transform 0.32s ease, opacity 0.32s ease;
+        position: relative;
     }
 
-    #authModal .modal-content-login::before {
+    .modal-content-glass::before {
         content: '';
         position: absolute;
         inset: 0;
@@ -732,40 +541,50 @@
             radial-gradient(circle at 50% 0%, rgba(255,255,255,0.2), transparent 34%);
     }
 
-    #authModal .modal-content-login > * {
+    .modal-content-glass > * {
         position: relative;
         z-index: 1;
     }
 
-    #authModal.modal-overlay.show .modal-content-login {
+    #authModal.modal-overlay.show .modal-content-glass {
         transform: scale(1) translateY(0);
+        opacity: 1;
     }
 
-    #authModal .modal-close {
+    .modal-close-glass {
+        position: absolute;
+        top: 15px;
+        right: 20px;
         width: 34px;
         height: 34px;
         border-radius: 100px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        font-size: 24px;
         color: rgba(255, 255, 255, 0.86);
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.14);
+        cursor: pointer;
         transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
     }
 
-    #authModal .modal-close:hover {
+    .modal-close-glass:hover {
         color: #fff;
         background: rgba(229, 9, 20, 0.72);
         transform: rotate(90deg);
     }
 
-    #authModal .modal-title {
+    .modal-title-glass {
+        color: #fff;
         margin-bottom: 24px;
+        text-align: center;
+        font-size: 28px;
         font-weight: 800;
     }
 
-    #authModal .auth-tabs {
+    .auth-tabs-glass {
+        display: flex;
         gap: 8px;
         margin-bottom: 28px;
         padding: 5px;
@@ -774,92 +593,174 @@
         background: rgba(0, 0, 0, 0.18);
     }
 
-    #authModal .auth-tab {
+    .auth-tab-glass {
+        flex: 1;
+        padding: 12px;
         border-radius: 100px;
+        background: transparent;
+        border: none;
         color: rgba(255, 255, 255, 0.66);
+        font-size: 16px;
+        cursor: pointer;
         transition: color 0.2s ease, background 0.2s ease;
     }
 
-    #authModal .auth-tab.active {
+    .auth-tab-glass.active {
         color: #fff;
         background: rgba(229, 9, 20, 0.78);
-        border-bottom: 0;
-        margin-bottom: 0;
         box-shadow: 0 10px 22px rgba(229, 9, 20, 0.22);
     }
 
-    #authModal .input-field {
-        padding: 13px 14px;
+    .form-group-glass {
+        margin-bottom: 15px;
+    }
+
+    .input-glass {
+        width: 100%;
+        padding: 13px 18px;
         background: rgba(255, 255, 255, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.16);
         border-radius: 100px;
+        color: #fff;
+        font-size: 16px;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
         transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     }
 
-    #authModal .input-field:focus {
+    .input-glass::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .input-glass:focus {
+        outline: none;
         border-color: rgba(255, 85, 98, 0.9);
         background: rgba(255, 255, 255, 0.14);
         box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.12);
     }
 
-    #authModal .checkbox-label,
-    #authModal .modal-footer {
+    .form-options-glass {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
+    .checkbox-glass {
         color: rgba(255, 255, 255, 0.72);
+        display: flex;
+        align-items: center;
+        cursor: pointer;
     }
 
-    #authModal .forgot-password,
-    #authModal .modal-footer a {
+    .checkbox-glass input {
+        margin-right: 8px;
+        cursor: pointer;
+    }
+
+    .forgot-link-glass {
         color: #ff6b75;
+        text-decoration: none;
         font-weight: 700;
+        transition: color 0.2s ease;
     }
 
-    #authModal .btn-login,
-    #authModal .btn-register-form {
+    .forgot-link-glass:hover {
+        color: #ff8a92;
+    }
+
+    .btn-glass {
+        width: 100%;
         padding: 13px;
         border-radius: 100px;
-        background: linear-gradient(135deg, #ff3340, #b7030c);
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        font-size: 16px;
         font-weight: 800;
-        box-shadow: 0 12px 26px rgba(229, 9, 20, 0.3);
+        cursor: pointer;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
         transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
     }
 
-    #authModal .btn-login:hover,
-    #authModal .btn-register-form:hover {
+    .btn-primary-glass {
+        background: linear-gradient(135deg, #ff3340, #b7030c);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: white;
+        box-shadow: 0 12px 26px rgba(229, 9, 20, 0.3);
+    }
+
+    .btn-primary-glass:hover {
         filter: brightness(1.08);
         transform: translateY(-1px);
         box-shadow: 0 16px 34px rgba(229, 9, 20, 0.38);
     }
 
-    #authModal .btn-login:disabled,
-    #authModal .btn-register-form:disabled {
+    .btn-primary-glass:disabled {
         background: rgba(120, 120, 130, 0.5);
         box-shadow: none;
         transform: none;
+        cursor: not-allowed;
     }
 
-    #authModal .btn-google-auth {
-        padding: 12px;
-        border-radius: 100px;
+    .btn-google-glass {
         background: rgba(255, 255, 255, 0.92);
         border: 1px solid rgba(255, 255, 255, 0.45);
+        color: #333;
         box-shadow: 0 10px 24px rgba(0,0,0,0.18);
-        transition: background 0.2s, box-shadow 0.2s, transform 0.2s ease;
     }
 
-    #authModal .btn-google-auth:hover {
+    .btn-google-glass:hover {
         transform: translateY(-1px);
         box-shadow: 0 14px 28px rgba(0,0,0,0.24);
+        color: #111;
     }
 
-    #authModal .alert-error {
-        background: rgba(220, 53, 69, 0.24);
-        border: 1px solid rgba(255, 111, 124, 0.35);
-        border-radius: 100px;
+    .divider-glass {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 20px 0;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 13px;
     }
 
-    #authModal .auth-tab-content.active {
+    .divider-glass::before,
+    .divider-glass::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .divider-glass span {
+        padding: 0 12px;
+    }
+
+    .modal-footer-glass {
+        text-align: center;
+        margin-top: 20px;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 14px;
+    }
+
+    .modal-footer-glass a {
+        color: #ff6b75;
+        text-decoration: none;
+        font-weight: 700;
+        transition: color 0.2s ease;
+    }
+
+    .modal-footer-glass a:hover {
+        color: #ff8a92;
+    }
+
+    .auth-tab-content {
+        display: none;
+    }
+
+    .auth-tab-content.active {
+        display: block;
         animation: authFadeIn 0.22s ease;
     }
 
@@ -875,12 +776,12 @@
     }
 
     @media (max-width: 520px) {
-        #authModal .modal-content-login {
-            padding: 28px 20px;
+        .modal-content-glass {
+            padding: 30px 20px;
             border-radius: 44px;
         }
 
-        #authModal .form-options {
+        .form-options-glass {
             align-items: flex-start;
             flex-direction: column;
             gap: 10px;
@@ -917,7 +818,7 @@ function closeAuthModal() {
 function switchAuthTab(tab) {
     const loginTab = document.getElementById('loginTab');
     const registerTab = document.getElementById('registerTab');
-    const tabs = document.querySelectorAll('.auth-tab');
+    const tabs = document.querySelectorAll('.auth-tab-glass');
     
     if (tab === 'login') {
         loginTab.style.display = 'block';
