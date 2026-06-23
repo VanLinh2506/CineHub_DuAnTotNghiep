@@ -51,7 +51,7 @@ Route::prefix('movies')->name('movies.')->group(function () {
     Route::get('/phim-le', [MovieController::class, 'phimLe'])->name('phimle');
     Route::get('/phim-bo', [MovieController::class, 'phimBo'])->name('phimbo');
     Route::get('/category/{id}', [MovieController::class, 'category'])->name('category');
-    Route::get('/{id}', [MovieController::class, 'show'])->name('show');
+    Route::get('/{id}', [MovieController::class, 'introduce'])->name('show');
     Route::get('/{id}/introduce', [MovieController::class, 'introduce'])->name('introduce');
 
     // Routes require authentication
@@ -294,13 +294,13 @@ Route::get('/test/create-booking', function () {
     if (!$user) {
         return 'User not found';
     }
-    
+
     // Get first valid showtime
     $showtime = \App\Models\Showtime::first();
     if (!$showtime) {
         return 'No showtimes available';
     }
-    
+
     // Create future booking
     $futureBooking = \App\Models\Booking::create([
         'user_id' => $user->id,
