@@ -4,7 +4,7 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Quản lý Combo & Đồ ăn</h2>
-        <a href="{{ url('?route=admin/foodItemsCreate') }}" class="btn btn-primary">
+        <a href="{{ route('admin.foodItems.create') }}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Thêm mới
         </a>
     </div>
@@ -31,7 +31,7 @@
                 </button>
             </div>
             <div class="col-md-2">
-                <a href="{{ url('?route=admin/foodItems') }}" class="btn btn-outline-secondary w-100">
+                <a href="{{ route('admin.foodItems.index') }}" class="btn btn-outline-secondary w-100">
                     <i class="fas fa-redo"></i> Xóa lọc
                 </a>
             </div>
@@ -92,7 +92,7 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{{ url('?route=admin/foodItemsEdit&id=' . $item['id']) }}" class="btn btn-outline-primary" title="Sửa">
+                                        <a href="{{ route('admin.foodItems.edit', $item['id']) }}" class="btn btn-outline-primary" title="Sửa">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <button onclick="deleteFoodItem({{ $item['id'] }}, '{{ $item['name'] }}')" class="btn btn-outline-danger" title="Xóa">
@@ -112,7 +112,12 @@
 <script>
     function deleteFoodItem(id, name) {
         if (confirm('Bạn chắc chắn muốn xóa "' + name + '"?')) {
-            window.location.href = '{{ url("?route=admin/foodItemsDelete&id=") }}' + id;
+            let form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/admin/food-items/' + id;
+            form.innerHTML = '@csrf @method("DELETE")';
+            document.body.appendChild(form);
+            form.submit();
         }
     }
 </script>

@@ -86,7 +86,7 @@
 <div class="modal fade" id="addCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ url('?route=admin/categories/store') }}" method="POST">
+            <form action="{{ route('admin.categories.store') }}" method="POST">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Thêm thể loại mới</h5>
@@ -120,8 +120,9 @@
 <div class="modal fade" id="editCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ url('?route=admin/categories/update') }}" method="POST">
+            <form action="" method="POST" id="editCategoryForm">
                 @csrf
+                @method('PUT')
                 <input type="hidden" name="id" id="edit_id">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Sửa thể loại</h5>
@@ -155,8 +156,9 @@
 <div class="modal fade" id="deleteCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ url('?route=admin/categories/delete') }}" method="POST">
+            <form action="" method="POST" id="deleteCategoryForm">
                 @csrf
+                @method('DELETE')
                 <input type="hidden" name="id" id="delete_id">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Xóa thể loại</h5>
@@ -180,12 +182,14 @@
         document.getElementById('edit_id').value = category.id;
         document.getElementById('edit_name').value = category.name;
         document.getElementById('edit_parent_id').value = category.parent_id || '';
+        document.getElementById('editCategoryForm').action = '/admin/categories/' + category.id;
         new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
     }
 
     function deleteCategory(id, name) {
         document.getElementById('delete_id').value = id;
         document.getElementById('delete_name').textContent = name;
+        document.getElementById('deleteCategoryForm').action = '/admin/categories/' + id;
         new bootstrap.Modal(document.getElementById('deleteCategoryModal')).show();
     }
 </script>

@@ -168,9 +168,10 @@
 </div>
 
 <div class="stat-card">
-    <form method="POST" action="{{ route('admin.movies.update') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('admin.movies.update', $movie['id']) }}" enctype="multipart/form-data">
 
         @csrf
+        @method('PUT')
 
         <input type="hidden" name="id" value="{{ $movie['id'] }}">
 
@@ -1109,10 +1110,21 @@
             if (
                 confirm('Bạn có chắc chắn muốn xóa tập này?')
             ) {
-                window.location.href =
-                    "{{ route('admin.movies.delete-episode') }}" +
-                    '?id=' + episodeId +
-                    '&movie_id={{ $movie["id"] }}';
+                fetch('/admin/movies/{{ $movie["id"] }}/episodes/' + episodeId, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok || response.status === 302) {
+                        window.location.reload();
+                    } else {
+                        alert('Có lỗi xảy ra khi xóa tập phim!');
+                    }
+                }).catch(() => {
+                    alert('Có lỗi xảy ra khi xóa tập phim!');
+                });
             }
         }
 

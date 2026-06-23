@@ -5,7 +5,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Thêm phim mới</h2>
 
-        <a href="{{ route('admin.movies') }}" class="btn btn-secondary">
+        <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Quay lại
         </a>
     </div>
@@ -287,7 +287,7 @@
             </div>
 
             <div class="d-flex justify-content-end gap-2 mt-4">
-                <a href="?route=admin/movies" class="btn btn-secondary">Hủy</a>
+                <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">Hủy</a>
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Lưu
                 </button>

@@ -93,7 +93,7 @@ if (!empty($episodes)) {
                     }
                 }
 
-                if ($videoUrl):
+                if ($videoUrl) {
                     // Sử dụng storage_url() helper để xử lý đúng đường dẫn
                     // Helper sẽ tự động thêm /storage/ prefix cho files trong storage
                     if (strpos($videoUrl, 'http') === 0) {
@@ -106,7 +106,17 @@ if (!empty($episodes)) {
                         $fullVideoUrl = storage_url($videoUrl);
                         $finalVideoSrc = $fullVideoUrl;
                     }
+                }
+
+                $fullTrailerUrl = null;
+                if (!empty($movie['trailer_url'])) {
+                    $fullTrailerUrl = $movie['trailer_url'];
+                    if (strpos($movie['trailer_url'], 'http') !== 0) {
+                        $fullTrailerUrl = $baseUrl . '/' . ltrim($movie['trailer_url'], '/');
+                    }
+                }
                 ?>
+                @if($videoUrl)
                     <video id="videoPlayer" controls>
                         <source src="{{ $finalVideoSrc }}" type="video/mp4">
                         Trình duyệt của bạn không hỗ trợ video.
@@ -121,12 +131,7 @@ if (!empty($episodes)) {
                             </p>
                         @endif
                     </div>
-                @elseif($movie['trailer_url']):
-                    $fullTrailerUrl = $movie['trailer_url'];
-                    if (strpos($movie['trailer_url'], 'http') !== 0) {
-                        $fullTrailerUrl = $baseUrl . '/' . ltrim($movie['trailer_url'], '/');
-                    }
-                ?>
+                @elseif($fullTrailerUrl)
                     <video id="videoPlayer" controls>
                         <source src="/storage/{{ $fullTrailerUrl }}" type="video/mp4">
                         Trình duyệt của bạn không hỗ trợ video.
@@ -139,7 +144,7 @@ if (!empty($episodes)) {
                 @endif
             </div>
 
-            <?php
+            @php
             // Luôn hiển thị phần episodes nếu phim có type là 'phimbo'
             $isPhimBo = ($movie['type'] ?? 'phimle') === 'phimbo';
 
@@ -149,9 +154,9 @@ if (!empty($episodes)) {
             if (isset($episodes) && !empty($episodes)) {
                 error_log("Watch page - First episode: " . print_r($episodes[0], true));
             }
+            @endphp
 
-            if ($isPhimBo):
-            ?>
+            @if($isPhimBo)
             <div class="episodes-section">
                 <h3><i class="fas fa-list"></i> Danh sách tập
                     @if(isset($episodes) && !empty($episodes))
@@ -164,7 +169,7 @@ if (!empty($episodes)) {
                 @if(isset($episodes) && !empty($episodes))
                     <div class="episodes-list">
                         @foreach($episodes as $episode)
-                            <a href="?route=movie/watch&id={{ $movie['id'] }}&episode_id={{ $episode['id'] }}"
+                            <a href="{{ route('movies.watch', ['id' => $movie['id'], 'episode_id' => $episode['id']]) }}"
                                class="episode-item {{ (isset($currentEpisode) && $currentEpisode && $currentEpisode['id'] == $episode['id']) ? 'active' : '' }} {{ empty($episode['video_url']) ? 'episode-no-video' : '' }}"
                                title="{{ $episode['title'] ?? 'Tập ' . $episode['episode_number'] }}">
                                 <div class="episode-number">{{ $episode['episode_number'] }}</div>
@@ -177,7 +182,7 @@ if (!empty($episodes)) {
                         <strong>Chưa có tập nào được thêm vào phim này.</strong>
                         <p class="mb-0 mt-2">Để hiển thị danh sách tập, vui lòng thêm các tập cho phim bộ này trong phần quản trị.</p>
                         @if(isset($isAdmin) && $isAdmin)
-                            <a href="?route=admin/movies/edit&id={{ $movie['id'] }}" class="btn btn-primary btn-sm mt-2">
+                            <a href="{{ route('admin.movies.edit', $movie['id']) }}" class="btn btn-primary btn-sm mt-2">
                                 <i class="fas fa-plus"></i> Thêm tập ngay
                             </a>
                         @endif
@@ -201,7 +206,7 @@ if (!empty($episodes)) {
 
                 @if(isset($movie['status']) && $movie['status'] === 'Chiếu rạp')
                     <div class="mt-3 mb-3">
-                        <a href="?route=booking/index&movie={{ $movie['id'] }}"
+                        <a href="{{ route('booking.index', ['movie' => $movie['id']]) }}"
                            class="btn btn-primary btn-lg"
                            style="background: #e50914; border: none; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block; color: white; font-weight: 600; font-size: 1.1rem;">
                             <i class="fas fa-ticket-alt"></i> Đặt vé xem phim
@@ -376,9 +381,13 @@ if (!empty($episodes)) {
                                                 </button>
                                             @endif
                                             @if(isset($isAdmin) && $isAdmin)
-                                                <a href="{{ $baseUrl }}/?route=review/deleteComment&id={{ $comment['id'] }}&movie_id={{ $movie['id'] }}" onclick="return confirm('Bạn có chắc muốn xóa bình luận này?')" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#888'">
-                                                    <i class="fas fa-trash"></i> Xóa
-                                                </a>
+                                                <form method="POST" action="{{ route('comments.destroy', $comment['id']) }}" onsubmit="return confirm('Bạn có chắc muốn xóa bình luận này?')" style="margin: 0;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; transition: all 0.3s;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#888'">
+                                                        <i class="fas fa-trash"></i> Xóa
+                                                    </button>
+                                                </form>
                                             @endif
                                         </div>
 
@@ -441,9 +450,13 @@ if (!empty($episodes)) {
                                                             <i class="far fa-thumbs-down"></i> <span id="dislikes-{{ $reply['id'] ?? 0 }}">{{ $reply['dislikes'] ?? 0 }}</span>
                                                         </button>
                                                         @if(isset($isAdmin) && $isAdmin)
-                                                            <a href="{{ $baseUrl }}/?route/review/deleteComment&id={{ $reply['id'] ?? 0 }}&movie_id={{ $movie['id'] ?? 0 }}" onclick="return confirm('Bạn có chắc muốn xóa trả lời này?')" style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; padding: 3px 8px; border-radius: 15px; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#666'">
-                                                                <i class="fas fa-trash"></i> Xóa
-                                                            </a>
+                                                            <form method="POST" action="{{ route('comments.destroy', $reply['id']) }}" onsubmit="return confirm('Bạn có chắc muốn xóa trả lời này?')" style="margin: 0;">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; padding: 3px 8px; border-radius: 15px; transition: all 0.3s;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#666'">
+                                                                    <i class="fas fa-trash"></i> Xóa
+                                                                </button>
+                                                            </form>
                                                         @endif
                                                     </div>
                                                 </div>

@@ -16,8 +16,8 @@
                 <!-- Avatar Section -->
                 <div class="profile-avatar-wrapper" onclick="document.getElementById('avatarInput').click()">
                     <div class="profile-avatar-container">
-                        @if ($user && $user->avatar)
-                            <img src="{{ $user->avatar }}" alt="Avatar">
+                        @if ($user && $user->avatar_url)
+                            <img src="{{ $user->avatar_url }}" alt="Avatar">
                         @else
                             <div class="avatar-placeholder-luxury">
                                 <i class="fas fa-user"></i>
@@ -150,18 +150,19 @@
                     <h2>Tùy chỉnh</h2>
                 </div>
                 
-                <form method="POST" action="{{ url('/?route=profile/updatePreferences') }}" class="profile-form">
+                <form method="POST" action="{{ route('profile.updatePreferences') }}" class="profile-form">
                     @csrf
+                    @method('PUT')
                     <div class="form-group">
                         <label class="checkbox-label">
-                            <input type="checkbox" name="newsletter" value="1" @if($user && $user->preferences && $user->preferences->newsletter) checked @endif>
+                            <input type="checkbox" name="newsletter" value="1" @if($user && (($user->newsletter ?? false) || ($user->preferences->newsletter ?? false))) checked @endif>
                             <span>Đăng ký nhận tin tức</span>
                         </label>
                     </div>
                     
                     <div class="form-group">
                         <label class="checkbox-label">
-                            <input type="checkbox" name="notifications" value="1" @if($user && $user->preferences && $user->preferences->notifications) checked @endif>
+                            <input type="checkbox" name="notifications" value="1" @if($user && (($user->notifications_enabled ?? false) || ($user->preferences->notifications ?? false))) checked @endif>
                             <span>Nhận thông báo</span>
                         </label>
                     </div>
@@ -180,10 +181,10 @@
                     @if ($user && $user->subscription)
                         <p><strong>Gói hiện tại:</strong> {{ $user->subscription->name }}</p>
                         <p><strong>Ngày hết hạn:</strong> {{ $user->subscription->expires_at ? date('d/m/Y', strtotime($user->subscription->expires_at)) : 'Không xác định' }}</p>
-                        <a href="{{ url('/?route=subscription/upgrade') }}" class="btn-primary">Nâng cấp</a>
+                        <a href="{{ route('profile.subscriptions') }}" class="btn-primary">Nâng cấp</a>
                     @else
                         <p>Bạn chưa có gói dịch vụ nào. Hãy chọn một gói để tận hưởng các lợi ích.</p>
-                        <a href="{{ url('/?route=subscription/plans') }}" class="btn-primary">Xem các gói</a>
+                        <a href="{{ route('profile.subscriptions') }}" class="btn-primary">Xem các gói</a>
                     @endif
                 </div>
             </div>

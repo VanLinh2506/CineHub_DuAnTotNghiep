@@ -56,6 +56,7 @@ Route::prefix('movies')->name('movies.')->group(function () {
 
     // Routes require authentication
     Route::middleware('auth')->group(function () {
+        Route::post('/toggle-favorite', [MovieController::class, 'toggleFavorite'])->name('toggleFavorite');
         Route::get('/{id}/watch', [MovieController::class, 'watch'])->name('watch');
         Route::get('/{movieId}/episode/{episodeNumber}', [MovieController::class, 'watchEpisode'])->name('watchEpisode');
     });
@@ -149,13 +150,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::prefix('movies')->name('movies.')->group(function () {
         Route::get('/', [AdminController::class, 'movies'])->name('index');
         Route::get('/create', [AdminController::class, 'moviesCreate'])->name('create');
+        Route::get('/scan-episodes', [AdminController::class, 'moviesScanEpisodes'])->name('scanEpisodes');
+        Route::post('/import-episodes', [AdminController::class, 'moviesImportEpisodes'])->name('importEpisodes');
         Route::post('/', [AdminController::class, 'moviesStore'])->name('store');
         Route::get('/{id}/edit', [AdminController::class, 'moviesEdit'])->name('edit');
         Route::put('/{id}', [AdminController::class, 'moviesUpdate'])->name('update');
         Route::delete('/{id}', [AdminController::class, 'moviesDelete'])->name('destroy');
         Route::delete('/{movieId}/episodes/{id}', [AdminController::class, 'moviesDeleteEpisode'])->name('deleteEpisode');
-        Route::get('/scan-episodes', [AdminController::class, 'moviesScanEpisodes'])->name('scanEpisodes');
-        Route::post('/import-episodes', [AdminController::class, 'moviesImportEpisodes'])->name('importEpisodes');
     });
 
     // Theaters Management
@@ -163,6 +164,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [AdminController::class, 'theaters'])->name('index');
         Route::get('/create', [AdminController::class, 'theatersCreate'])->name('create');
         Route::post('/', [AdminController::class, 'theatersStore'])->name('store');
+        Route::get('/{id}', [AdminController::class, 'theatersShow'])->name('show');
         Route::get('/{id}/edit', [AdminController::class, 'theatersEdit'])->name('edit');
         Route::put('/{id}', [AdminController::class, 'theatersUpdate'])->name('update');
         Route::delete('/{id}', [AdminController::class, 'theatersDelete'])->name('destroy');
@@ -187,6 +189,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [AdminController::class, 'foodItems'])->name('index');
         Route::get('/create', [AdminController::class, 'foodItemsCreate'])->name('create');
         Route::post('/', [AdminController::class, 'foodItemsStore'])->name('store');
+        Route::get('/{id}/edit', [AdminController::class, 'foodItemsEdit'])->name('edit');
         Route::put('/{id}', [AdminController::class, 'foodItemsUpdate'])->name('update');
         Route::delete('/{id}', [AdminController::class, 'foodItemsDelete'])->name('destroy');
     });

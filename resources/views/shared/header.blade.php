@@ -82,8 +82,6 @@
                     <div class="search-bar">
                         <form method="GET" action="{{ route('movies.index') }}" class="search-form-inline">
 
-                            <input type="hidden" name="route" value="movie/index">
-
                             <label class="labeo" for="search-input-header"></label>
 
                             <input type="text" name="search" id="search-input-header" class="search-input"
@@ -282,8 +280,8 @@
 
                     <div class="mobile-user-avatar">
 
-                        @if(!empty($user['avatar']))
-                            <img src="{{ $user['avatar'] }}" alt="Avatar">
+                        @if(!empty($user['avatar_url']))
+                            <img src="{{ $user['avatar_url'] }}" alt="Avatar">
                         @else
                             <i class="fas fa-user"></i>
                         @endif
@@ -308,8 +306,6 @@
             <div class="mobile-menu-search">
 
                 <form method="GET" action="{{ route('movies.index') }}">
-
-                    <input type="hidden" name="route" value="movie/index">
 
                     <input type="text" name="search" class="mobile-search-input" placeholder="Tìm kiếm phim...">
 
@@ -448,13 +444,13 @@
 
                         @endif
 
-                        <a href="{{ route('logout') }}" class="mobile-menu-link mobile-menu-logout"
-                            onclick="closeMobileMenu()">
-
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Đăng xuất</span>
-
-                        </a>
+                        <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                            @csrf
+                            <button type="submit" class="mobile-menu-link mobile-menu-logout" onclick="closeMobileMenu()" style="width: 100%; background: none; border: none; text-align: left;">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Đăng xuất</span>
+                            </button>
+                        </form>
 
                     </div>
 
@@ -537,8 +533,8 @@
                     <h6>Thông báo</h6>
 
                     <a href="{{ isset($isModerator) && $isModerator
-            ? '?route=moderator/permissionRequests'
-            : '?route=notifications/index' }}" class="view-all-link">
+            ? route('moderator.permissionRequests')
+            : route('notifications.index') }}" class="view-all-link">
 
                         Xem tất cả
 
