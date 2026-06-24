@@ -53,10 +53,48 @@
                         </div>
                     </div>
                     
-                    <div class="ticket-qr">
-                        <img src="{{ qr_code_data_uri($ticket->qr_code ?: ('TICKET-' . $ticket->id), 180) }}" alt="QR ve {{ $ticket->seat }}">
-                        <span>Đưa mã này cho nhân viên để check vé.</span>
-                    </div>
+                    @php
+                        $showDateTime = null;
+                        $isExpired = false;
+                        $qrShowing = false;
+                        
+                        if ($ticket->showtime && $ticket->showtime->show_date && $ticket->showtime->show_time) {
+                            $dateStr = trim($ticket->showtime->show_date);
+                            $timeStr = trim($ticket->showtime->show_time);
+                            
+                            try {
+                                // show_date might be "2025-12-10" or "2025-12-10 00:00:00"
+                                // show_time is "09:00:00"
+                                
+                                // Extract date part only (first 10 chars)
+                                if (strlen($dateStr) >= 10) {
+                                    $dateStr = substr($dateStr, 0, 10);
+                                }
+                                
+                                // Combine date + time
+                                $datetimeStr = $dateStr . ' ' . $timeStr;
+                                
+                                // Parse with format that handles HH:MM:SS
+                                $showDateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $datetimeStr);
+                                $isExpired = $showDateTime->isPast();
+                                $qrShowing = true;
+                            } catch (\Exception $e) {
+                                // If parsing fails, hide QR
+                                $qrShowing = false;
+                            }
+                        }
+                    @endphp
+
+                    @if ($qrShowing && !$isExpired)
+                        <div class="ticket-qr">
+                            <img src="{{ qr_code_data_uri($ticket->qr_code ?: ('TICKET-' . $ticket->id), 180) }}" alt="QR ve {{ $ticket->seat }}">
+                            <span>Đưa mã này cho nhân viên để check vé.</span>
+                        </div>
+                    @elseif ($qrShowing && $isExpired)
+                        <div class="ticket-qr expired">
+                            <span class="expired-message">Vé đã hết hạn</span>
+                        </div>
+                    @endif
 
                     <div class="ticket-footer">
                         @if ($ticket->status === 'active')
@@ -249,6 +287,17 @@
         color: #ddd;
         font-size: 0.9rem;
         line-height: 1.4;
+    }
+
+    .ticket-qr.expired {
+        justify-content: center;
+        background: rgba(108, 117, 125, 0.15);
+    }
+
+    .ticket-qr.expired .expired-message {
+        color: #adb5bd;
+        font-size: 0.95rem;
+        font-weight: 500;
     }
     
     .btn {

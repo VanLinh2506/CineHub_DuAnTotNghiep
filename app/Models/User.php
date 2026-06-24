@@ -144,13 +144,16 @@ class User extends Authenticatable
 
     public function isModerator(): bool
     {
-        return $this->role === 'moderator' || 
-               !empty($this->theater_id);
+        return $this->role === 'moderator' && !empty($this->theater_id);
     }
 
     public function isCounterStaff(): bool
     {
-        return $this->role === 'counter_staff';
+        // Counter staff: role = 'user' VÀ có theater_id hợp lệ (không empty và là số)
+        return $this->role === 'user' && 
+               !empty($this->theater_id) && 
+               $this->theater_id != '' &&
+               is_numeric($this->theater_id);
     }
 
     public function hasRole($roleName): bool

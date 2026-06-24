@@ -65,6 +65,7 @@
 
             $isAdmin = $isAdmin ?? false;
             $isModerator = $isModerator ?? false;
+            $isCounterStaff = $isCounterStaff ?? false;
         @endphp
         <!-- Desktop Header -->
         <header class="header-new header-desktop">
@@ -81,8 +82,6 @@
 
                     <div class="search-bar">
                         <form method="GET" action="{{ route('movies.index') }}" class="search-form-inline">
-
-                            <input type="hidden" name="route" value="movie/index">
 
                             <label class="labeo" for="search-input-header"></label>
 
@@ -168,6 +167,13 @@
                             <a href="{{ route('moderator.index') }}" class="sign-in-btn">
                                 <i class="fas fa-building"></i>
                                 <span>Quản lý rạp</span>
+                            </a>
+
+                        @elseif($isCounterStaff)
+
+                            <a href="{{ route('counter.index') }}" class="sign-in-btn">
+                                <i class="fas fa-user-tie"></i>
+                                <span>Quản lý quầy</span>
                             </a>
 
                         @endif
@@ -282,8 +288,8 @@
 
                     <div class="mobile-user-avatar">
 
-                        @if(!empty($user['avatar']))
-                            <img src="{{ $user['avatar'] }}" alt="Avatar">
+                        @if(!empty($user['avatar_url']))
+                            <img src="{{ $user['avatar_url'] }}" alt="Avatar">
                         @else
                             <i class="fas fa-user"></i>
                         @endif
@@ -308,8 +314,6 @@
             <div class="mobile-menu-search">
 
                 <form method="GET" action="{{ route('movies.index') }}">
-
-                    <input type="hidden" name="route" value="movie/index">
 
                     <input type="text" name="search" class="mobile-search-input" placeholder="Tìm kiếm phim...">
 
@@ -446,15 +450,24 @@
 
                             </a>
 
+                        @elseif($isCounterStaff)
+
+                            <a href="{{ route('counter.index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+
+                                <i class="fas fa-user-tie"></i>
+                                <span>Quản lý quầy</span>
+
+                            </a>
+
                         @endif
 
-                        <a href="{{ route('logout') }}" class="mobile-menu-link mobile-menu-logout"
-                            onclick="closeMobileMenu()">
-
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Đăng xuất</span>
-
-                        </a>
+                        <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                            @csrf
+                            <button type="submit" class="mobile-menu-link mobile-menu-logout" onclick="closeMobileMenu()" style="width: 100%; background: none; border: none; text-align: left;">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Đăng xuất</span>
+                            </button>
+                        </form>
 
                     </div>
 
@@ -537,8 +550,8 @@
                     <h6>Thông báo</h6>
 
                     <a href="{{ isset($isModerator) && $isModerator
-            ? '?route=moderator/permissionRequests'
-            : '?route=notifications/index' }}" class="view-all-link">
+            ? route('moderator.permissionRequests')
+            : route('notifications.index') }}" class="view-all-link">
 
                         Xem tất cả
 

@@ -3,6 +3,19 @@
 @section('content')
 
 <style>
+    body .admin-main {
+        margin-left: 300px !important;
+        width: calc(100% - 300px) !important;
+        max-width: calc(100vw - 300px) !important;
+    }
+
+    .movie-edit-page {
+        margin-left: 300px !important;
+        width: calc(100vw - 360px) !important;
+        max-width: calc(100vw - 360px) !important;
+        overflow: hidden;
+    }
+
     /* Upload Box Styling */
     .upload-box {
         border: 2px dashed #cbd5e0;
@@ -157,9 +170,24 @@
         background: #fff;
         border-color: #e0e0e0 !important;
     }
+
+    @media screen and (max-width: 768px) {
+        body .admin-main {
+            margin-left: 0 !important;
+            width: 100% !important;
+            max-width: 100vw !important;
+        }
+
+        .movie-edit-page {
+            margin-left: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+    }
 </style>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="movie-edit-page">
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
     <h5>Sửa phim</h5>
 
     <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">
@@ -167,10 +195,11 @@
     </a>
 </div>
 
-<div class="stat-card">
-    <form method="POST" action="{{ route('admin.movies.update') }}" enctype="multipart/form-data">
+<div class="stat-card movie-form-container">
+    <form method="POST" action="{{ route('admin.movies.update', $movie['id']) }}" enctype="multipart/form-data">
 
         @csrf
+        @method('PUT')
 
         <input type="hidden" name="id" value="{{ $movie['id'] }}">
 
@@ -367,8 +396,10 @@
                     Quốc gia
                 </label>
 
-                <input type="text" class="form-control" id="country" name="country"
-                    value="{{ old('country', $movie['country'] ?? '') }}" placeholder="VD: Việt Nam, Mỹ">
+                <select class="form-select js-country-select" id="country" name="country"
+                    data-current="{{ old('country', $movie['country'] ?? '') }}">
+                    <option value="">Đang tải danh sách quốc gia...</option>
+                </select>
             </div>
 
             <div class="col-md-6 mb-3">
@@ -376,8 +407,10 @@
                     Ngôn ngữ
                 </label>
 
-                <input type="text" class="form-control" id="language" name="language"
-                    value="{{ old('language', $movie['language'] ?? '') }}" placeholder="VD: Tiếng Việt, Tiếng Anh">
+                <select class="form-select js-language-select" id="language" name="language"
+                    data-current="{{ old('language', $movie['language'] ?? '') }}">
+                    <option value="">Đang tải danh sách ngôn ngữ...</option>
+                </select>
             </div>
 
             <div class="col-md-12 mb-3">
@@ -632,7 +665,7 @@
             </div>
 
             {{-- Upload Trailer --}}
-            <div class="col-md-6 mb-3">
+            <div class="col-md-6 mb-3" id="trailerSection">
 
                 <label for="trailer_file" class="form-label">
                     Trailer
@@ -834,13 +867,97 @@
                 </div>
 
             @endif
+
+            <!-- Phần thêm tập mới -->
+            <div class="mb-4" id="newEpisodesSection" style="display: {{ (($movie['type'] ?? 'phimle') == 'phimbo') ? 'block' : 'none' }};">
+
+                <h6 class="mb-3">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Thêm tập mới
+                </h6>
+
+                <button type="button" class="btn btn-success mb-3" onclick="addEpisodeInput()">
+                    <i class="fas fa-plus"></i> Thêm tập
+                </button>
+
+                <div id="episodesContainer"></div>
+
+            </div>
+
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-12 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Lưu
+                </button>
+
+                <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">
+                    Hủy
+                </a>
+            </div>
         </div>
     </form>
+</div>
 </div>
 
 @push('scripts')
     <script>
         let episodeCount = 0;
+        const COUNTRIES_DATA_URL = 'https://cdn.jsdelivr.net/npm/world-countries@5.1.0/countries.json';
+        const FALLBACK_COUNTRIES = ['Việt Nam', 'Trung Quốc', 'Hàn Quốc', 'Nhật Bản', 'Thái Lan', 'Mỹ', 'Anh', 'Pháp', 'Ấn Độ'];
+        const FALLBACK_LANGUAGES = ['Tiếng Việt', 'Tiếng Trung', 'Tiếng Hàn', 'Tiếng Nhật', 'Tiếng Thái', 'Tiếng Anh', 'Tiếng Pháp', 'Tiếng Hindi'];
+
+        function fillSelect(select, items, currentValue, placeholder) {
+            if (!select) return;
+
+            const normalizedItems = [...new Set(items.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi'));
+            if (currentValue && !normalizedItems.includes(currentValue)) {
+                normalizedItems.unshift(currentValue);
+            }
+
+            select.innerHTML = '';
+            select.appendChild(new Option(placeholder, ''));
+
+            normalizedItems.forEach(item => {
+                const option = new Option(item, item);
+                option.selected = item === currentValue;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadCountryLanguageSelects() {
+            const countrySelect = document.getElementById('country');
+            const languageSelect = document.getElementById('language');
+            const currentCountry = countrySelect?.dataset.current || '';
+            const currentLanguage = languageSelect?.dataset.current || '';
+
+            try {
+                const response = await fetch(COUNTRIES_DATA_URL);
+                if (!response.ok) throw new Error('Cannot load country data');
+
+                const countries = await response.json();
+                const countryNames = countries.map(country => country?.name?.common).filter(Boolean);
+                const languageNames = countries.flatMap(country => Object.values(country?.languages || {}));
+
+                fillSelect(countrySelect, countryNames, currentCountry, 'Chọn quốc gia');
+                fillSelect(languageSelect, languageNames, currentLanguage, 'Chọn ngôn ngữ');
+            } catch (error) {
+                fillSelect(countrySelect, FALLBACK_COUNTRIES, currentCountry, 'Chọn quốc gia');
+                fillSelect(languageSelect, FALLBACK_LANGUAGES, currentLanguage, 'Chọn ngôn ngữ');
+            }
+        }
+
+        function syncEpisodeCounters() {
+            const totalEpisodes = document.getElementById('total_episodes');
+            const currentEpisode = document.getElementById('current_episode');
+            const existingEpisodeRows = document.querySelectorAll('#seriesSection tbody tr').length;
+            const newEpisodeInputs = document.querySelectorAll('#episodesContainer .episode-number').length;
+            const episodeTotal = existingEpisodeRows + newEpisodeInputs;
+
+            if (totalEpisodes) totalEpisodes.value = Math.max(episodeTotal, 1);
+            if (currentEpisode) currentEpisode.value = Math.max(episodeTotal, 1);
+        }
 
         // Preview Image
         function previewImage(input, previewId, boxId) {
@@ -964,13 +1081,30 @@
         // Hiện/ẩn khu vực phim bộ
         function toggleSeriesSection() {
             const type = document.getElementById('type').value;
+            const statusSelect = document.getElementById('status');
+            const theaterOption = statusSelect?.querySelector('option[value="Chiếu rạp"]');
 
             const section = document.getElementById('seriesSection');
+            const newEpisodesSection = document.getElementById('newEpisodesSection');
             const videoSection = document.getElementById('videoSection');
             const videoSeriesNotice = document.getElementById('videoSeriesNotice');
+            const trailerSection = document.getElementById('trailerSection');
+            const trailerFile = document.getElementById('trailer_file');
+            const trailerUrl = document.getElementById('trailer_url');
 
             if (type === 'phimbo') {
+                if (theaterOption) {
+                    theaterOption.disabled = true;
+                }
+
+                if (statusSelect?.value === 'Chiếu rạp') {
+                    statusSelect.value = 'Chiếu online';
+                }
+
                 section.style.display = 'block';
+                if (newEpisodesSection) {
+                    newEpisodesSection.style.display = 'block';
+                }
 
                 if (videoSection) {
                     videoSection.style.display = 'none';
@@ -979,8 +1113,29 @@
                 if (videoSeriesNotice) {
                     videoSeriesNotice.style.display = 'block';
                 }
+
+                if (trailerSection) {
+                    trailerSection.style.display = 'none';
+                }
+
+                if (trailerFile) {
+                    trailerFile.value = '';
+                    trailerFile.disabled = true;
+                }
+
+                if (trailerUrl) {
+                    trailerUrl.value = '';
+                    trailerUrl.disabled = true;
+                }
             } else {
+                if (theaterOption) {
+                    theaterOption.disabled = false;
+                }
+
                 section.style.display = 'none';
+                if (newEpisodesSection) {
+                    newEpisodesSection.style.display = 'none';
+                }
 
                 if (videoSection) {
                     videoSection.style.display = 'block';
@@ -989,7 +1144,21 @@
                 if (videoSeriesNotice) {
                     videoSeriesNotice.style.display = 'none';
                 }
+
+                if (trailerSection) {
+                    trailerSection.style.display = 'block';
+                }
+
+                if (trailerFile) {
+                    trailerFile.disabled = false;
+                }
+
+                if (trailerUrl) {
+                    trailerUrl.disabled = false;
+                }
             }
+
+            syncEpisodeCounters();
         }
 
         // Thêm tập mới
@@ -1092,6 +1261,7 @@
                     `;
 
             container.appendChild(episodeDiv);
+            syncEpisodeCounters();
         }
 
         // Xóa tập mới thêm
@@ -1101,6 +1271,7 @@
 
             if (episode) {
                 episode.remove();
+                syncEpisodeCounters();
             }
         }
 
@@ -1109,10 +1280,21 @@
             if (
                 confirm('Bạn có chắc chắn muốn xóa tập này?')
             ) {
-                window.location.href =
-                    "{{ route('admin.movies.delete-episode') }}" +
-                    '?id=' + episodeId +
-                    '&movie_id={{ $movie["id"] }}';
+                fetch('/admin/movies/{{ $movie["id"] }}/episodes/' + episodeId, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok || response.status === 302) {
+                        window.location.reload();
+                    } else {
+                        alert('Có lỗi xảy ra khi xóa tập phim!');
+                    }
+                }).catch(() => {
+                    alert('Có lỗi xảy ra khi xóa tập phim!');
+                });
             }
         }
 
@@ -1123,9 +1305,11 @@
 
         // Init
         document.addEventListener('DOMContentLoaded', function () {
+            loadCountryLanguageSelects();
             toggleTheaterSection();
             toggleSeriesSection();
             toggleDurationField();
+            syncEpisodeCounters();
         });
     </script>
 @endpush

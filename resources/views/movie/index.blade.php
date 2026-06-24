@@ -6,7 +6,6 @@
     <div class="container">
         <div class="filter-bar">
             <form method="GET" class="search-form" action="{{ route('movies.index') }}">
-                <input type="hidden" name="route" value="movie/index">
                 @if(isset($search) && $search)
                 <input type="hidden" name="search" value="{{ $search }}">
                 @endif
@@ -18,7 +17,7 @@
                             <select name="category" class="form-select form-select-sm">
                                 <option value="">Tất cả thể loại</option>
                                 @foreach($categories as $cat)
-                                <option value="{{ $cat['id'] }}" {{ (isset($category_id) && $category_id == $cat['id']) ? 'selected' : '' }}>
+                                <option value="{{ $cat['id'] }}" {{ (isset($categoryId) && $categoryId == $cat['id']) ? 'selected' : '' }}>
                                     {{ $cat['name'] }}
                                 </option>
                                 @endforeach
@@ -59,7 +58,7 @@
                             <select name="min_rating" class="form-select form-select-sm">
                                 <option value="">Tất cả</option>
                                 @foreach([9 => '9.0+', 8 => '8.0+', 7 => '7.0+', 6 => '6.0+', 5 => '5.0+'] as $val => $label)
-                                <option value="{{ $val }}" {{ (isset($min_rating) && $min_rating == $val) ? 'selected' : '' }}>{{ $label }} ⭐</option>
+                                <option value="{{ $val }}" {{ (isset($minRating) && $minRating == $val) ? 'selected' : '' }}>{{ $label }} ⭐</option>
                                 @endforeach
                             </select>
                         </div>
@@ -78,12 +77,12 @@
             <div class="category-filter mt-3">
                 <div class="category-tags">
                     <a href="{{ route('movies.index') }}"
-                        class="category-tag {{ (!isset($category_id) || !$category_id) ? 'active' : '' }}">
+                        class="category-tag {{ (!isset($categoryId) || !$categoryId) ? 'active' : '' }}">
                         <i class="fas fa-th"></i> Tất cả
                     </a>
                     @foreach($categories as $cat)
                     <a href="{{ route('movies.category', $cat['id']) }}"
-                        class="category-tag {{ (isset($category_id) && $category_id == $cat['id']) ? 'active' : '' }}">
+                        class="category-tag {{ (isset($categoryId) && $categoryId == $cat['id']) ? 'active' : '' }}">
                         {{ $cat['name'] }}
                     </a>
                     @endforeach
@@ -99,33 +98,33 @@
             <i class="fas fa-video"></i>
             @if($search)
             Kết quả tìm kiếm: "{{ $search }}"
-            @if(!empty($movies))
+            @if(!$movies->isEmpty())
             <span class="badge bg-primary">{{ count($movies) }} phim</span>
             @endif
-            @elseif(isset($category_id) && $category_id)
-            @php $cat = collect($categories)->firstWhere('id', $category_id); @endphp
+            @elseif(isset($categoryId) && $categoryId)
+            @php $cat = collect($categories)->firstWhere('id', $categoryId); @endphp
             Phim {{ $cat['name'] ?? '' }}
-            @if(!empty($movies))
+            @if(!$movies->isEmpty())
             <span class="badge bg-primary">{{ count($movies) }} phim</span>
             @endif
             @else
             Tất cả phim
-            @if(!empty($movies))
+            @if(!$movies->isEmpty())
             <span class="badge bg-primary">{{ count($movies) }} phim</span>
             @endif
             @endif
         </h2>
 
-        @if($search && empty($movies))
+        @if($search && $movies->isEmpty())
         <div class="empty-state text-center py-5">
             <i class="fas fa-search fa-3x text-muted mb-3"></i>
             <h4>Không tìm thấy phim nào</h4>
             <p class="text-muted">Không có kết quả phù hợp với từ khóa: "<strong>{{ $search }}</strong>"</p>
-            <a href="{{ route('home') }}?route=movie/index" class="btn btn-primary mt-3">
+            <a href="{{ route('movies.index') }}" class="btn btn-primary mt-3">
                 <i class="fas fa-redo"></i> Xem tất cả phim
             </a>
         </div>
-        @elseif(empty($movies))
+        @elseif($movies->isEmpty())
         <div class="empty-state text-center py-5">
             <i class="fas fa-film fa-3x text-muted mb-3"></i>
             <h4>Chưa có phim nào</h4>
@@ -209,52 +208,14 @@
         </div>
 
         {{-- Pagination --}}
-        @if(isset($totalPages) && $totalPages > 1)
-        @php
-        $queryParams = request()->except('page');
-        $paginationUrl = route('home') . '?route=movie/index' . (!empty($queryParams) ? '&' . http_build_query($queryParams) : '');
-        $startPage = max(1, $page - 2);
-        $endPage = min($totalPages, $page + 2);
-        @endphp
+        @if($movies->hasPages())
         <nav aria-label="Phân trang danh sách phim" class="mt-4">
-            <ul class="pagination justify-content-center">
-                <li class="page-item {{ $page <= 1 ? 'disabled' : '' }}">
-                    <a class="page-link" href="{{ $page > 1 ? $paginationUrl . '&page=' . ($page - 1) : '#' }}">
-                        <i class="fas fa-chevron-left"></i> Trước
-                    </a>
-                </li>
-
-                @if($startPage > 1)
-                <li class="page-item"><a class="page-link" href="{{ $paginationUrl }}&page=1">1</a></li>
-                @if($startPage > 2)
-                <li class="page-item disabled"><span class="page-link">...</span></li>
-                @endif
-                @endif
-
-                @for($i = $startPage; $i <= $endPage; $i++)
-                    <li class="page-item {{ $i == $page ? 'active' : '' }}">
-                    <a class="page-link" href="{{ $paginationUrl }}&page={{ $i }}">{{ $i }}</a>
-                    </li>
-                    @endfor
-
-                    @if($endPage < $totalPages)
-                        @if($endPage < $totalPages - 1)
-                        <li class="page-item disabled"><span class="page-link">...</span></li>
-                        @endif
-                        <li class="page-item"><a class="page-link" href="{{ $paginationUrl }}&page={{ $totalPages }}">{{ $totalPages }}</a></li>
-                        @endif
-
-                        <li class="page-item {{ $page >= $totalPages ? 'disabled' : '' }}">
-                            <a class="page-link" href="{{ $page < $totalPages ? $paginationUrl . '&page=' . ($page + 1) : '#' }}">
-                                Sau <i class="fas fa-chevron-right"></i>
-                            </a>
-                        </li>
-            </ul>
+            {{ $movies->withQueryString()->links() }}
             <div class="text-center mt-3 text-muted">
                 <small>
-                    Hiển thị {{ $offset + 1 }} - {{ min($offset + $perPage, $total) }}
-                    trong tổng số {{ number_format($total) }} phim
-                    (Trang {{ $page }}/{{ $totalPages }})
+                    Hiển thị {{ $movies->firstItem() }} - {{ $movies->lastItem() }}
+                    trong tổng số {{ number_format($movies->total()) }} phim
+                    (Trang {{ $movies->currentPage() }}/{{ $movies->lastPage() }})
                 </small>
             </div>
         </nav>
@@ -268,18 +229,20 @@
     function toggleFavorite(btn, movieId) {
         @if(!isset($user) || !$user)
         if (confirm('Vui lòng đăng nhập để thêm vào yêu thích!')) {
-            window.location.href = '?route=auth/login';
+            window.location.href = '{{ route('login') }}';
         }
         return;
         @endif
 
         btn.disabled = true;
-        fetch('?route=movie/toggleFavorite', {
+        fetch('{{ route('movies.toggleFavorite') }}', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
                 },
-                body: 'movie_id=' + movieId
+                body: new URLSearchParams({ movie_id: movieId })
             })
             .then(r => r.json())
             .then(data => {

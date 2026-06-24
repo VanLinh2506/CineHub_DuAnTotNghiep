@@ -56,6 +56,7 @@ Route::prefix('movies')->name('movies.')->group(function () {
 
     // Routes require authentication
     Route::middleware('auth')->group(function () {
+        Route::post('/toggle-favorite', [MovieController::class, 'toggleFavorite'])->name('toggleFavorite');
         Route::get('/{id}/watch', [MovieController::class, 'watch'])->name('watch');
         Route::get('/{movieId}/episode/{episodeNumber}', [MovieController::class, 'watchEpisode'])->name('watchEpisode');
     });
@@ -149,13 +150,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::prefix('movies')->name('movies.')->group(function () {
         Route::get('/', [AdminController::class, 'movies'])->name('index');
         Route::get('/create', [AdminController::class, 'moviesCreate'])->name('create');
+        Route::get('/scan-episodes', [AdminController::class, 'moviesScanEpisodes'])->name('scanEpisodes');
+        Route::post('/import-episodes', [AdminController::class, 'moviesImportEpisodes'])->name('importEpisodes');
         Route::post('/', [AdminController::class, 'moviesStore'])->name('store');
         Route::get('/{id}/edit', [AdminController::class, 'moviesEdit'])->name('edit');
         Route::put('/{id}', [AdminController::class, 'moviesUpdate'])->name('update');
         Route::delete('/{id}', [AdminController::class, 'moviesDelete'])->name('destroy');
         Route::delete('/{movieId}/episodes/{id}', [AdminController::class, 'moviesDeleteEpisode'])->name('deleteEpisode');
-        Route::get('/scan-episodes', [AdminController::class, 'moviesScanEpisodes'])->name('scanEpisodes');
-        Route::post('/import-episodes', [AdminController::class, 'moviesImportEpisodes'])->name('importEpisodes');
     });
 
     // Theaters Management
@@ -163,6 +164,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [AdminController::class, 'theaters'])->name('index');
         Route::get('/create', [AdminController::class, 'theatersCreate'])->name('create');
         Route::post('/', [AdminController::class, 'theatersStore'])->name('store');
+        Route::get('/{id}', [AdminController::class, 'theatersShow'])->name('show');
         Route::get('/{id}/edit', [AdminController::class, 'theatersEdit'])->name('edit');
         Route::put('/{id}', [AdminController::class, 'theatersUpdate'])->name('update');
         Route::delete('/{id}', [AdminController::class, 'theatersDelete'])->name('destroy');
@@ -187,6 +189,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/', [AdminController::class, 'foodItems'])->name('index');
         Route::get('/create', [AdminController::class, 'foodItemsCreate'])->name('create');
         Route::post('/', [AdminController::class, 'foodItemsStore'])->name('store');
+        Route::get('/{id}/edit', [AdminController::class, 'foodItemsEdit'])->name('edit');
         Route::put('/{id}', [AdminController::class, 'foodItemsUpdate'])->name('update');
         Route::delete('/{id}', [AdminController::class, 'foodItemsDelete'])->name('destroy');
     });
@@ -260,14 +263,14 @@ Route::middleware(['auth', 'counter_staff'])->prefix('counter')->name('counter.'
     Route::get('/', [CounterStaffController::class, 'index'])->name('index');
 
     // QR Code Scanning
-    Route::get('/scan-qr', [CounterStaffController::class, 'scanQR'])->name('scanQR');
+    Route::get('/scan', [CounterStaffController::class, 'scanQR'])->name('scan');
     Route::post('/verify-ticket', [CounterStaffController::class, 'verifyTicket'])->name('verifyTicket');
-    Route::get('/scanned-tickets', [CounterStaffController::class, 'scannedTickets'])->name('scannedTickets');
+    Route::get('/scanned', [CounterStaffController::class, 'scannedTickets'])->name('scanned');
 
     // Sell Tickets at Counter
-    Route::get('/sell-ticket', [CounterStaffController::class, 'sellTicket'])->name('sellTicket');
+    Route::get('/sell', [CounterStaffController::class, 'sellTicket'])->name('sell');
     Route::post('/process-sale', [CounterStaffController::class, 'processSale'])->name('processSale');
-    Route::get('/sales-history', [CounterStaffController::class, 'salesHistory'])->name('salesHistory');
+    Route::get('/sales', [CounterStaffController::class, 'salesHistory'])->name('sales');
 
     // Showtimes
     Route::get('/showtimes', [CounterStaffController::class, 'showtimes'])->name('showtimes');
@@ -283,4 +286,43 @@ Route::prefix('news')->name('news.')->group(function () {
 // Test route
 Route::get('/old', function () {
     return view('welcome');
+});
+
+// Test booking creation route
+Route::get('/test/create-booking', function () {
+    $user = \App\Models\User::where('email', 'user@test.com')->first();
+    if (!$user) {
+        return 'User not found';
+    }
+    
+    // Get first valid showtime
+    $showtime = \App\Models\Showtime::first();
+    if (!$showtime) {
+        return 'No showtimes available';
+    }
+    
+    // Create future booking
+    $futureBooking = \App\Models\Booking::create([
+        'user_id' => $user->id,
+        'showtime_id' => $showtime->id,
+        'seats' => json_encode(['A1']),
+        'total_amount' => 100000,
+        'status' => 'completed',
+        'qr_code' => 'BOOKING_TEST_' . time(),
+        'customer_email' => $user->email,
+    ]);
+
+    // Create future ticket
+    \App\Models\Ticket::create([
+        'user_id' => $user->id,
+        'showtime_id' => $showtime->id,
+        'booking_pending_id' => $futureBooking->id,
+        'seat' => 'A1',
+        'seat_type' => 'normal',
+        'price' => 100000,
+        'qr_code' => 'TICKET_TEST_' . time(),
+        'status' => 'Đã đặt',
+    ]);
+
+    return 'Created booking: ' . $futureBooking->id . ' - Go to <a href="/booking/history">/booking/history</a> to see it';
 });

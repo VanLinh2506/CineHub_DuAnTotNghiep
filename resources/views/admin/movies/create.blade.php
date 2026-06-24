@@ -2,10 +2,10 @@
 
 @section('content')
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Thêm phim mới</h2>
 
-        <a href="{{ route('admin.movies') }}" class="btn btn-secondary">
+        <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Quay lại
         </a>
     </div>
@@ -141,13 +141,16 @@
 
                 <div class="col-md-6 mb-3">
                     <label for="country" class="form-label">Quốc gia</label>
-                    <input type="text" class="form-control" id="country" name="country" placeholder="VD: Việt Nam, Mỹ">
+                    <select class="form-select js-country-select" id="country" name="country" data-current="{{ old('country') }}">
+                        <option value="">Đang tải danh sách quốc gia...</option>
+                    </select>
                 </div>
 
                 <div class="col-md-6 mb-3">
                     <label for="language" class="form-label">Ngôn ngữ</label>
-                    <input type="text" class="form-control" id="language" name="language"
-                        placeholder="VD: Tiếng Việt, Tiếng Anh">
+                    <select class="form-select js-language-select" id="language" name="language" data-current="{{ old('language') }}">
+                        <option value="">Đang tải danh sách ngôn ngữ...</option>
+                    </select>
                 </div>
 
                 <div class="col-md-12 mb-3">
@@ -220,7 +223,7 @@
                 </div>
 
                 <!-- Upload Trailer -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3" id="trailerSection">
                     <label for="trailer_file" class="form-label">Trailer</label>
                     <div class="upload-box video-upload" id="trailerUploadBox"
                         onclick="document.getElementById('trailer_file').click()">
@@ -287,7 +290,7 @@
             </div>
 
             <div class="d-flex justify-content-end gap-2 mt-4">
-                <a href="?route=admin/movies" class="btn btn-secondary">Hủy</a>
+                <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">Hủy</a>
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Lưu
                 </button>
@@ -298,6 +301,60 @@
 
 @push('scripts')
     <script>
+        let episodeCount = 0;
+        const COUNTRIES_DATA_URL = 'https://cdn.jsdelivr.net/npm/world-countries@5.1.0/countries.json';
+        const FALLBACK_COUNTRIES = ['Việt Nam', 'Trung Quốc', 'Hàn Quốc', 'Nhật Bản', 'Thái Lan', 'Mỹ', 'Anh', 'Pháp', 'Ấn Độ'];
+        const FALLBACK_LANGUAGES = ['Tiếng Việt', 'Tiếng Trung', 'Tiếng Hàn', 'Tiếng Nhật', 'Tiếng Thái', 'Tiếng Anh', 'Tiếng Pháp', 'Tiếng Hindi'];
+
+        function fillSelect(select, items, currentValue, placeholder) {
+            if (!select) return;
+
+            const normalizedItems = [...new Set(items.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi'));
+            if (currentValue && !normalizedItems.includes(currentValue)) {
+                normalizedItems.unshift(currentValue);
+            }
+
+            select.innerHTML = '';
+            select.appendChild(new Option(placeholder, ''));
+
+            normalizedItems.forEach(item => {
+                const option = new Option(item, item);
+                option.selected = item === currentValue;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadCountryLanguageSelects() {
+            const countrySelect = document.getElementById('country');
+            const languageSelect = document.getElementById('language');
+            const currentCountry = countrySelect?.dataset.current || '';
+            const currentLanguage = languageSelect?.dataset.current || '';
+
+            try {
+                const response = await fetch(COUNTRIES_DATA_URL);
+                if (!response.ok) throw new Error('Cannot load country data');
+
+                const countries = await response.json();
+                const countryNames = countries.map(country => country?.name?.common).filter(Boolean);
+                const languageNames = countries.flatMap(country => Object.values(country?.languages || {}));
+
+                fillSelect(countrySelect, countryNames, currentCountry, 'Chọn quốc gia');
+                fillSelect(languageSelect, languageNames, currentLanguage, 'Chọn ngôn ngữ');
+            } catch (error) {
+                fillSelect(countrySelect, FALLBACK_COUNTRIES, currentCountry, 'Chọn quốc gia');
+                fillSelect(languageSelect, FALLBACK_LANGUAGES, currentLanguage, 'Chọn ngôn ngữ');
+            }
+        }
+
+        function syncEpisodeCounters() {
+            const totalEpisodes = document.getElementById('total_episodes');
+            const currentEpisode = document.getElementById('current_episode');
+            const episodeTotal = document.querySelectorAll('#episodesContainer .episode-number').length;
+
+            if (totalEpisodes) totalEpisodes.value = Math.max(episodeTotal, 1);
+            if (currentEpisode) currentEpisode.value = Math.max(episodeTotal, 1);
+        }
+
         // Preview Image
         function previewImage(input, previewId, boxId) {
             const preview = document.getElementById(previewId);
@@ -426,27 +483,49 @@
 
         function toggleSeriesSection() {
             const type = document.getElementById('type').value;
+            const statusSelect = document.getElementById('status');
+            const theaterOption = statusSelect?.querySelector('option[value="Chiếu rạp"]');
             const section = document.getElementById('seriesSection');
             const totalEpisodes = document.getElementById('total_episodes');
             const currentEpisode = document.getElementById('current_episode');
             const videoSection = document.getElementById('videoSection');
             const videoSeriesNotice = document.getElementById('videoSeriesNotice');
+            const trailerSection = document.getElementById('trailerSection');
+            const trailerFile = document.getElementById('trailer_file');
+            const trailerUrl = document.getElementById('trailer_url');
 
             if (type === 'phimbo') {
+                if (theaterOption) theaterOption.disabled = true;
+                if (statusSelect?.value === 'Chiếu rạp') statusSelect.value = 'Chiếu online';
                 section.style.display = 'block';
                 if (totalEpisodes) totalEpisodes.setAttribute('required', 'required');
                 if (currentEpisode) currentEpisode.setAttribute('required', 'required');
                 // Ẩn phần video phim, hiện thông báo
                 if (videoSection) videoSection.style.display = 'none';
                 if (videoSeriesNotice) videoSeriesNotice.style.display = 'block';
+                if (trailerSection) trailerSection.style.display = 'none';
+                if (trailerFile) {
+                    trailerFile.value = '';
+                    trailerFile.disabled = true;
+                }
+                if (trailerUrl) {
+                    trailerUrl.value = '';
+                    trailerUrl.disabled = true;
+                }
             } else {
+                if (theaterOption) theaterOption.disabled = false;
                 section.style.display = 'none';
                 if (totalEpisodes) totalEpisodes.removeAttribute('required');
                 if (currentEpisode) currentEpisode.removeAttribute('required');
                 // Hiện phần video phim, ẩn thông báo
                 if (videoSection) videoSection.style.display = 'block';
                 if (videoSeriesNotice) videoSeriesNotice.style.display = 'none';
+                if (trailerSection) trailerSection.style.display = 'block';
+                if (trailerFile) trailerFile.disabled = false;
+                if (trailerUrl) trailerUrl.disabled = false;
             }
+
+            syncEpisodeCounters();
         }
 
         function addEpisodeInput() {
@@ -494,12 +573,14 @@
         `;
 
             container.appendChild(episodeDiv);
+            syncEpisodeCounters();
         }
 
         function removeEpisode(id) {
             const episode = document.getElementById('episode-' + id);
             if (episode) {
                 episode.remove();
+                syncEpisodeCounters();
             }
         }
 
@@ -509,9 +590,11 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            loadCountryLanguageSelects();
             toggleTheaterSection();
             toggleSeriesSection();
             toggleDurationField();
+            syncEpisodeCounters();
         });
     </script>
 @endpush

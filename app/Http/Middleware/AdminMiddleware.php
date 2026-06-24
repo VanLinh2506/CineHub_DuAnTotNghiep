@@ -20,7 +20,9 @@ class AdminMiddleware
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để tiếp tục!');
         }
 
-        if (!in_array(Auth::user()->role, ['admin', 'moderator'])) {
+        $user = Auth::user();
+
+        if (!$user->isAdmin() && $user->role !== 'moderator') {
             return redirect()->route('home')->with('error', 'Bạn không có quyền truy cập trang này!');
         }
 

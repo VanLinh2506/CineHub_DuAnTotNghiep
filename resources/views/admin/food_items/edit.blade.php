@@ -3,11 +3,13 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h5>Sửa Combo/Đồ ăn</h5>
-    <a href="?route=admin/foodItems" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    <a href="{{ route('admin.foodItems.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
 </div>
 
 <div class="stat-card">
-    <form method="POST" action="?route=admin/foodItemsUpdate" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('admin.foodItems.update', $foodItem['id']) }}" enctype="multipart/form-data">
+        @csrf
+        @method('PUT')
         <input type="hidden" name="id" value="{{ $foodItem['id'] }}">
         <div class="row">
             <div class="col-md-6 mb-3">
@@ -55,7 +57,7 @@
         </div>
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Cập nhật</button>
-            <a href="?route=admin/foodItems" class="btn btn-secondary"><i class="fas fa-times"></i> Hủy</a>
+            <a href="{{ route('admin.foodItems.index') }}" class="btn btn-secondary"><i class="fas fa-times"></i> Hủy</a>
         </div>
     </form>
 </div>

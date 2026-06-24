@@ -210,6 +210,13 @@
     </div>
 </div>
 
+@php
+    $movieTypeRevenue = [
+        ['Phim lẻ', (float) ($topMoviesByRevenue ?? collect())->where('type', 'phimle')->sum('revenue')],
+        ['Phim bộ', (float) ($topMoviesByRevenue ?? collect())->where('type', 'phimbo')->sum('revenue')],
+    ];
+@endphp
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -414,11 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Movie Type Pie Chart
     const movieTypeCtx = document.getElementById('movieTypeChart');
     if (movieTypeCtx) {
-        // Sample data - you'll need to pass real data from controller
-        const movieTypes = @json([
-            ['Phim lẻ', $topMoviesByRevenue->where('type', 'phimle')->sum('revenue') ?? 0],
-            ['Phim bộ', $topMoviesByRevenue->where('type', 'phimbo')->sum('revenue') ?? 0]
-        ]);
+        const movieTypes = @json($movieTypeRevenue);
         
         const typeLabels = movieTypes.map(item => item[0]);
         const typeData = movieTypes.map(item => parseFloat(item[1]) || 0);

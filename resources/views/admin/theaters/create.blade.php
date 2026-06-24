@@ -3,11 +3,12 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h5>Thêm rạp mới</h5>
-    <a href="?route=admin/theaters" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    <a href="{{ route('admin.theaters.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
 </div>
 
 <div class="stat-card">
-    <form method="POST" action="?route=admin/theaters/store">
+    <form method="POST" action="{{ route('admin.theaters.store') }}">
+        @csrf
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="name" class="form-label">Tên rạp <span class="text-danger">*</span></label>
@@ -31,7 +32,7 @@
             </div>
         </div>
         <div class="d-flex justify-content-end gap-2 mt-4">
-            <a href="?route=admin/theaters" class="btn btn-secondary">Hủy</a>
+            <a href="{{ route('admin.theaters.index') }}" class="btn btn-secondary">Hủy</a>
             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Lưu</button>
         </div>
     </form>

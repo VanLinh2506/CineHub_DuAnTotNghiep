@@ -17,31 +17,10 @@ use Illuminate\Support\Facades\Log;
 
 class CounterStaffController extends Controller
 {
-    private $theaterId;
-    
     public function __construct()
     {
-        $this->middleware(function ($request, $next) {
-            if (!Auth::check()) {
-                return redirect()->route('login')->with('error', 'Vui lòng đăng nhập');
-            }
-            
-            $user = Auth::user();
-            
-            // Kiểm tra quyền Counter Staff
-            if (!$this->isCounterStaff($user)) {
-                return redirect()->route('home')->with('error', 'Bạn không có quyền truy cập trang này!');
-            }
-            
-            // Lấy theater_id
-            $this->theaterId = $user->theater_id;
-            
-            if (!$this->theaterId) {
-                return redirect()->route('home')->with('error', 'Bạn chưa được gán quản lý rạp nào!');
-            }
-            
-            return $next($request);
-        });
+        // Middleware đã được apply ở routes, không cần thêm ở đây nữa
+        // Chỉ cần lấy theater_id trong mỗi method
     }
     
     /**
@@ -50,8 +29,12 @@ class CounterStaffController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $theaterId = $this->theaterId;
+        $theaterId = $user->theater_id;
         $theater = Theater::find($theaterId);
+        
+        if (!$theater) {
+            return redirect()->route('home')->with('error', 'Rạp không tồn tại!');
+        }
         
         // Thống kê hôm nay
         $todayStats = [
@@ -69,7 +52,7 @@ class CounterStaffController extends Controller
                     $q->where('theater_id', $theaterId);
                 })
                 ->where('is_picked_up', true)
-                ->whereDate('updated_at', today())
+                ->whereDate('picked_up_at', today())
                 ->count(),
         ];
         
@@ -91,8 +74,9 @@ class CounterStaffController extends Controller
      */
     public function scanQR()
     {
+        $user = Auth::user();
         return view('admin.counter_staff.scan_qr', [
-            'theaterId' => $this->theaterId,
+            'theaterId' => $user->theater_id,
             'title' => 'Quét QR Code vé',
         ]);
     }
@@ -133,7 +117,7 @@ class CounterStaffController extends Controller
         
         // Kiểm tra theater
         $firstTicket = $tickets->first();
-        if ($firstTicket->showtime->screen->theater_id != $this->theaterId) {
+        if ($firstTicket->showtime->screen->theater_id != Auth::user()->theater_id) {
             return response()->json(['success' => false, 'message' => 'Vé không thuộc rạp của bạn']);
         }
         
@@ -169,7 +153,7 @@ class CounterStaffController extends Controller
         
         $tickets = Ticket::with(['showtime.movie', 'showtime.screen', 'user', 'bookingPending'])
             ->whereHas('showtime.screen', function($query) {
-                $query->where('theater_id', $this->theaterId);
+                $query->where('theater_id', Auth::user()->theater_id);
             })
             ->where('picked_up_by', Auth::id())
             ->whereDate('picked_up_at', $date)
@@ -186,11 +170,13 @@ class CounterStaffController extends Controller
     {
         $date = $request->input('date', date('Y-m-d'));
         
+        $theaterId = Auth::user()->theater_id;
+        
         $showtimes = Showtime::with(['movie', 'screen', 'tickets' => function($query) {
                 $query->where('status', 'Đã đặt');
             }])
-            ->whereHas('screen', function($query) {
-                $query->where('theater_id', $this->theaterId);
+            ->whereHas('screen', function($query) use ($theaterId) {
+                $query->where('theater_id', $theaterId);
             })
             ->where('show_date', $date)
             ->orderBy('show_time')
@@ -201,7 +187,7 @@ class CounterStaffController extends Controller
                 return $showtime;
             });
         
-        $theater = Theater::find($this->theaterId);
+        $theater = Theater::find($theaterId);
         
         return view('admin.counter_staff.showtimes', compact('showtimes', 'theater', 'date'));
     }
@@ -213,12 +199,13 @@ class CounterStaffController extends Controller
     {
         $date = $request->input('date', date('Y-m-d'));
         $showtimeId = $request->input('showtime_id');
+        $theaterId = Auth::user()->theater_id;
         
         $showtimes = Showtime::with(['movie', 'screen', 'tickets' => function($query) {
                 $query->where('status', 'Đã đặt');
             }])
-            ->whereHas('screen', function($query) {
-                $query->where('theater_id', $this->theaterId);
+            ->whereHas('screen', function($query) use ($theaterId) {
+                $query->where('theater_id', $theaterId);
             })
             ->where('show_date', $date)
             ->orderBy('show_time')
@@ -235,8 +222,8 @@ class CounterStaffController extends Controller
         
         if ($showtimeId) {
             $selectedShowtime = Showtime::with(['movie', 'screen'])
-                ->whereHas('screen', function($query) {
-                    $query->where('theater_id', $this->theaterId);
+                ->whereHas('screen', function($query) use ($theaterId) {
+                    $query->where('theater_id', $theaterId);
                 })
                 ->find($showtimeId);
             
@@ -291,9 +278,11 @@ class CounterStaffController extends Controller
         $customerName = $request->input('customer_name', 'Khách lẻ');
         $customerPhone = $request->input('customer_phone', '');
         
+        $theaterId = Auth::user()->theater_id;
+        
         $showtime = Showtime::with(['movie', 'screen'])
-            ->whereHas('screen', function($query) {
-                $query->where('theater_id', $this->theaterId);
+            ->whereHas('screen', function($query) use ($theaterId) {
+                $query->where('theater_id', $theaterId);
             })
             ->findOrFail($showtimeId);
         

@@ -49,7 +49,6 @@ class LegacyRouteMiddleware
         'booking/success' => '/booking/{bookingId}/confirmation',
         'booking/confirmation' => '/booking/{bookingId}/confirmation',
         'booking/history' => '/booking/history',
-        'booking/myTickets' => '/booking/history',
         'booking/ticketDetail' => '/booking/history',
         'booking/api/showtimes' => '/api/booking/showtimes',
         
@@ -69,12 +68,10 @@ class LegacyRouteMiddleware
         // ==================== NOTIFICATIONS ====================
         'notification/index' => '/notifications',
         'notification/markAsRead' => '/notifications',
-        'notifications/index' => '/notifications',
-        'notifications/markAsRead' => '/notifications',
-        'notifications/getUnreadCount' => '/notifications/unread-count',
         
         // ==================== ADMIN ====================
         'admin/dashboard' => '/admin',
+        'admin/index' => '/admin',
         'admin/analytics' => '/admin/analytics',
         'admin/users' => '/admin/users',
         'admin/movies' => '/admin/movies',
@@ -84,6 +81,10 @@ class LegacyRouteMiddleware
         'admin/seats' => '/admin/theaters',
         'admin/showtimes' => '/moderator/showtimes',
         'admin/foodItems' => '/admin/food-items',
+        'admin/foodItemsCreate' => '/admin/food-items/create',
+        'admin/foodItemsEdit' => '/admin/food-items/{id}/edit',
+        'admin/foodItemsUpdate' => '/admin/food-items/{id}',
+        'admin/foodItemsDelete' => '/admin/food-items/{id}',
         'admin/bookings' => '/admin/tickets',
         'admin/transactions' => '/admin/tickets',
         'admin/reviews' => '/admin/movies',
@@ -92,6 +93,15 @@ class LegacyRouteMiddleware
         // Admin CRUD
         'admin/createMovie' => '/admin/movies/create',
         'admin/editMovie' => '/admin/movies/{id}/edit',
+        'admin/movies/create' => '/admin/movies/create',
+        'admin/movies/scanEpisodes' => '/admin/movies/scan-episodes',
+        'admin/movies/importEpisodes' => '/admin/movies/import-episodes',
+        'admin/movies/edit' => '/admin/movies/{id}/edit',
+        'admin/movies/view' => '/movies/{id}',
+        'admin/movies/delete' => '/admin/movies/{id}',
+        'admin/movies/delete-episode' => '/admin/movies/{movie_id}/episodes/{id}',
+        'admin/movies/store' => '/admin/movies',
+        'admin/movies/update' => '/admin/movies/{id}',
         'admin/createTheater' => '/admin/theaters/create',
         'admin/editTheater' => '/admin/theaters/{id}/edit',
         'admin/createFoodItem' => '/admin/food-items/create',
@@ -159,7 +169,14 @@ class LegacyRouteMiddleware
                 return redirect($newRoute, 301);
             }
             
-            // Nếu không tìm thấy mapping, redirect về home
+            // Legacy route không map: bỏ param `route` và tiếp tục URL hiện tại
+            // (tránh văng về trang chủ khi form/admin còn hidden input cũ)
+            if ($request->path() !== '/' && $request->path() !== 'index.php') {
+                $query = $request->except('route');
+
+                return redirect($request->url() . (empty($query) ? '' : '?' . http_build_query($query)));
+            }
+
             return redirect('/', 301);
         }
         
