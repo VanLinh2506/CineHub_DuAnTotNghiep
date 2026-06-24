@@ -11,10 +11,10 @@
 
     <!-- Filters -->
     <div class="stat-card mb-3">
-        <form method="GET" class="row g-2">
+        <form method="GET" action="{{ route('admin.foodItems.index') }}" class="row g-2">
             <input type="hidden" name="route" value="admin/foodItems">
             <div class="col-md-4">
-                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm tên, mô tả..." 
+                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm tên, mô tả..."
                        value="{{ htmlspecialchars($search ?? '') }}">
             </div>
             <div class="col-md-3">
@@ -65,8 +65,8 @@
                                 <td>{{ $item['id'] }}</td>
                                 <td>
                                     @if ($item['image'] ?? null)
-                                        <img src="{{ $item['image'] }}" 
-                                             alt="{{ $item['name'] }}" 
+                                        <img src="{{ $item['image'] }}"
+                                             alt="{{ $item['name'] }}"
                                              style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
                                     @else
                                         <div style="width: 60px; height: 60px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
@@ -77,9 +77,9 @@
                                 <td>{{ $item['name'] }}</td>
                                 <td>{{ $item['description'] ?? '' }}</td>
                                 <td>
-                                    <span class="badge bg-{{ 
-                                        $item['type'] === 'combo' ? 'primary' : 
-                                        ($item['type'] === 'snack' ? 'warning' : 'info') 
+                                    <span class="badge bg-{{
+                                        $item['type'] === 'combo' ? 'primary' :
+                                        ($item['type'] === 'snack' ? 'warning' : 'info')
                                     }}">
                                         {{ $item['type'] === 'combo' ? 'Combo' : ($item['type'] === 'snack' ? 'Snack' : 'Đồ uống') }}
                                     </span>
@@ -95,9 +95,11 @@
                                         <a href="{{ route('admin.foodItems.edit', $item['id']) }}" class="btn btn-outline-primary" title="Sửa">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button onclick="deleteFoodItem({{ $item['id'] }}, '{{ $item['name'] }}')" class="btn btn-outline-danger" title="Xóa">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        <form action="{{ route('admin.foodItems.destroy', $item['id']) }}" method="POST" onsubmit="return confirm('Bạn chắc chắn muốn xóa &quot;{{ $item['name'] }}&quot;?');" style="display:inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger" title="Xóa"><i class="fas fa-trash"></i></button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -108,17 +110,4 @@
         </div>
     </div>
 </div>
-
-<script>
-    function deleteFoodItem(id, name) {
-        if (confirm('Bạn chắc chắn muốn xóa "' + name + '"?')) {
-            let form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/admin/food-items/' + id;
-            form.innerHTML = '@csrf @method("DELETE")';
-            document.body.appendChild(form);
-            form.submit();
-        }
-    }
-</script>
 @endsection

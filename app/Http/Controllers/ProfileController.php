@@ -138,38 +138,38 @@ class ProfileController extends Controller
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập');
         }
-        
+
         $user = Auth::user();
-        
+
         // Lấy lịch sử xem
         $history = WatchHistory::with(['movie', 'episode'])
             ->where('user_id', $user->id)
             ->orderByDesc('created_at')
             ->limit(10)
             ->get();
-        
+
         // Lấy vé đã đặt
         $tickets = Ticket::with(['showtime.movie', 'showtime.theater', 'showtime.screen'])
             ->where('user_id', $user->id)
             ->where('status', 'Đã đặt')
             ->orderByDesc('created_at')
             ->get();
-        
+
         // Lấy thông tin subscription
         $subscription = $user->subscription;
-        
+
         // Xác định role
         $userRole = $this->getUserRole($user);
-        
+
         // Số dư = điểm
         $balance = $user->points ?? 0;
-        
+
         // Lấy tất cả subscription packages
         $allSubscriptions = Subscription::orderBy('price')->get();
-        
+
         // Kiểm tra moderator
         $isModerator = $this->checkIsModerator($user);
-        
+
         // Lấy phim yêu thích
         $favoriteMovies = Movie::with('category')
             ->whereHas('watchHistory', function($query) use ($user) {
@@ -178,7 +178,7 @@ class ProfileController extends Controller
             })
             ->orderByDesc('created_at')
             ->get();
-        
+
         return view('profile.index', compact(
             'user',
             'history',
@@ -191,7 +191,7 @@ class ProfileController extends Controller
             'favoriteMovies'
         ));
     }
-    
+
     /**
      * Nâng cấp gói subscription bằng điểm
      */
@@ -200,16 +200,16 @@ class ProfileController extends Controller
         if (!Auth::check()) {
             return redirect()->route('login');
         }
-        
+
         $request->validate([
             'subscription_id' => 'required|exists:subscriptions,id',
         ]);
-        
+
         $user = Auth::user();
         $subscriptionId = $request->input('subscription_id');
-        
+
         $subscription = Subscription::findOrFail($subscriptionId);
-        
+
         // Kiểm tra nếu đã có gói này hoặc gói cao hơn
         if ($user->subscription_id) {
             $currentSubscription = $user->subscription;
@@ -218,32 +218,32 @@ class ProfileController extends Controller
                     ->with('error', 'Bạn đã có gói tương đương hoặc cao hơn!');
             }
         }
-        
+
         // Kiểm tra điểm
         $requiredPoints = (int)$subscription->price;
         if ($user->points < $requiredPoints) {
             return redirect()->route('profile.index')
                 ->with('error', "Bạn không đủ điểm! Cần {$requiredPoints} điểm, hiện có {$user->points} điểm.");
         }
-        
+
         // Trừ điểm và cập nhật gói
         $user->deductPoints($requiredPoints);
         $user->update(['subscription_id' => $subscriptionId]);
-        
+
         // Tạo transaction
         Transaction::create([
             'user_id' => $user->id,
             'type' => 'subscription',
             'related_id' => $subscriptionId,
             'amount' => $requiredPoints,
-            'method' => 'Points',
+            'method' => 'Bank',
             'status' => 'Thành công',
         ]);
-        
+
         return redirect()->route('profile.index')
             ->with('success', "Nâng cấp gói {$subscription->name} thành công! Đã trừ {$requiredPoints} điểm.");
     }
-    
+
     /**
      * Cập nhật thông tin profile
      */
@@ -252,9 +252,9 @@ class ProfileController extends Controller
         if (!Auth::check()) {
             return redirect()->route('login');
         }
-        
+
         $user = Auth::user();
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
@@ -264,7 +264,7 @@ class ProfileController extends Controller
             'address' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
         ]);
-        
+
         $data = [
             'name' => $request->input('name'),
             'email' => $request->input('email'),
@@ -272,27 +272,27 @@ class ProfileController extends Controller
             'birthdate' => $request->input('birthdate', $request->input('birth_date')),
             'address' => $request->input('address'),
         ];
-        
+
         // Xử lý avatar
         if ($request->hasFile('avatar')) {
             $avatar = $request->file('avatar');
             $fileName = 'avatar_' . $user->id . '_' . time() . '.' . $avatar->getClientOriginalExtension();
-            
+
             // Xóa avatar cũ
             if ($user->avatar && storage_path_exists($user->avatar)) {
                 delete_storage_file($user->avatar);
             }
-            
+
             // Lưu avatar mới
             $path = $avatar->storeAs('avatars', $fileName, 'public');
             $data['avatar'] = $path;
         }
-        
+
         $user->update($data);
-        
+
         return redirect()->route('profile.index')->with('success', 'Cập nhật thông tin thành công!');
     }
-    
+
     public function updatePreferences(Request $request)
     {
         if (!Auth::check()) {
@@ -315,28 +315,28 @@ class ProfileController extends Controller
         if (!Auth::check()) {
             return redirect()->route('login');
         }
-        
+
         $user = Auth::user();
-        
+
         $request->validate([
             'current_password' => 'required',
             'new_password' => 'required|min:6',
             'confirm_password' => 'required|same:new_password',
         ]);
-        
+
         // Kiểm tra mật khẩu hiện tại
         if (!Hash::check($request->input('current_password'), $user->password)) {
             return back()->withErrors(['current_password' => 'Mật khẩu hiện tại không đúng!']);
         }
-        
+
         // Cập nhật mật khẩu mới
         $user->update([
             'password' => Hash::make($request->input('new_password'))
         ]);
-        
+
         return redirect()->route('profile.index')->with('success', 'Cập nhật mật khẩu thành công!');
     }
-    
+
     /**
      * Upload avatar riêng (AJAX)
      */
@@ -345,32 +345,32 @@ class ProfileController extends Controller
         if (!Auth::check()) {
             return response()->json(['success' => false, 'message' => 'Chưa đăng nhập']);
         }
-        
+
         $request->validate([
             'avatar' => 'required|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
         ]);
-        
+
         $user = Auth::user();
         $avatar = $request->file('avatar');
         $fileName = 'avatar_' . $user->id . '_' . time() . '.' . $avatar->getClientOriginalExtension();
-        
+
         // Xóa avatar cũ
         if ($user->avatar && storage_path_exists($user->avatar)) {
             delete_storage_file($user->avatar);
         }
-        
+
         // Lưu avatar mới
         $path = $avatar->storeAs('avatars', $fileName, 'public');
-        
+
         $user->update(['avatar' => $path]);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Cập nhật ảnh đại diện thành công!',
             'avatar_url' => storage_url($path),
         ]);
     }
-    
+
 
     /**
      * Hiển thị danh sách vé đã đặt
@@ -380,17 +380,17 @@ class ProfileController extends Controller
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập');
         }
-        
+
         $user = Auth::user();
-        
+
         $tickets = Ticket::with(['showtime.movie', 'showtime.theater', 'showtime.screen'])
             ->where('user_id', $user->id)
             ->orderByDesc('created_at')
             ->paginate(20);
-        
+
         return view('profile.bookings', compact('tickets'));
     }
-    
+
     /**
      * Hiển thị lịch sử xem phim
      */
@@ -399,17 +399,17 @@ class ProfileController extends Controller
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập');
         }
-        
+
         $user = Auth::user();
-        
+
         $history = WatchHistory::with(['movie', 'episode'])
             ->where('user_id', $user->id)
             ->orderByDesc('updated_at')
             ->paginate(20);
-        
+
         return view('profile.watch-history', compact('history'));
     }
-    
+
     /**
      * Hiển thị thông tin subscription
      */
@@ -418,14 +418,14 @@ class ProfileController extends Controller
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập');
         }
-        
+
         $user = Auth::user();
         $currentSubscription = $user->subscription;
         $allSubscriptions = Subscription::orderBy('price')->get();
-        
+
         return view('profile.subscriptions', compact('user', 'currentSubscription', 'allSubscriptions'));
     }
-    
+
     /**
      * Helper: Get user role name
      */
@@ -442,10 +442,10 @@ class ProfileController extends Controller
                 'Support Staff' => 'Nhân viên hỗ trợ',
                 'Theater Manager' => 'Quản lý rạp',
             ];
-            
+
             return $roleMap[$role->name] ?? $role->name;
         }
-        
+
         // Fallback: cột role cũ
         $roleMap = [
             'user' => 'Thành viên',
@@ -453,10 +453,10 @@ class ProfileController extends Controller
             'moderator' => 'Quản lý rạp',
             'manager' => 'Quản lý',
         ];
-        
+
         return $roleMap[$user->role] ?? ucfirst($user->role);
     }
-    
+
     /**
      * Helper: Check if user is moderator
      */
@@ -466,7 +466,7 @@ class ProfileController extends Controller
         if (isset($user->role) && $user->role === 'moderator') {
             return true;
         }
-        
+
         // Kiểm tra role mới
         if ($user->roles && $user->roles->isNotEmpty()) {
             foreach ($user->roles as $role) {
@@ -475,7 +475,7 @@ class ProfileController extends Controller
                 }
             }
         }
-        
+
         return false;
     }
 }

@@ -5,20 +5,21 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Quản lý phim</h2>
         <div>
-            <a href="{{ route('admin.movies.scanEpisodes') }}" class="btn btn-info me-2">
+            <a href="{{ url('?route=admin/movies/scanEpisodes') }}" class="btn btn-info me-2">
                 <i class="fas fa-folder-open"></i> Import tập từ folder
             </a>
-            <a href="{{ route('admin.movies.create') }}" class="btn btn-primary">
+            <a href="{{ url('?route=admin/movies/create') }}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Thêm phim mới
             </a>
         </div>
     </div>
 
     <!-- Filters -->
-    <form method="GET" action="{{ route('admin.movies.index') }}" class="mb-3">
+    <form method="GET" class="mb-3">
+        <input type="hidden" name="route" value="admin/movies">
         <div class="row g-2">
             <div class="col-md-4">
-                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm phim..." 
+                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm phim..."
                        value="{{ old('search') ?? ($search ?? '') }}">
             </div>
             <div class="col-md-3">
@@ -88,7 +89,7 @@
                                         <span class="badge bg-secondary">Phim lẻ</span>
                                     @endif
                                 </td>
-                                <td>{{ $m['category_name'] ?? 'N/A' }}</td>
+                                <td>{{ $m->category->name ?? 'N/A' }}</td>
                                 <td>
                                     @php
                                         $movieStatus = $m['status'] ?? 'Sắp chiếu';
@@ -110,10 +111,10 @@
                                 <td>{{ \Carbon\Carbon::parse($m['created_at'])->format('d/m/Y') }}</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{{ route('admin.movies.edit', $m['id']) }}" class="btn btn-outline-primary" title="Sửa">
+                                        <a href="{{ url('?route=admin/movies/edit&id=' . $m['id']) }}" class="btn btn-outline-primary" title="Sửa">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{{ route('movies.show', $m['id']) }}" class="btn btn-outline-info" title="Xem chi tiết">
+                                        <a href="{{ url('?route=admin/movies/view&id=' . $m['id']) }}" class="btn btn-outline-info" title="Xem chi tiết">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         <button onclick="deleteMovie({{ $m['id'] }}, '{{ $m['title'] }}')" class="btn btn-outline-danger" title="Xóa">

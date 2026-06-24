@@ -7,50 +7,50 @@
 </div>
 
 <div class="stat-card">
-    <form method="POST" action="{{ route('admin.foodItems.update', $foodItem['id']) }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('admin.foodItems.update', $foodItem->id) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
-        <input type="hidden" name="id" value="{{ $foodItem['id'] }}">
+        <input type="hidden" name="id" value="{{ $foodItem->id }}">
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="name" class="form-label">Tên combo/đồ ăn <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="name" name="name" value="{{ $foodItem['name'] }}" required>
+                <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $foodItem->name) }}" required>
             </div>
             <div class="col-md-6 mb-3">
                 <label for="type" class="form-label">Loại <span class="text-danger">*</span></label>
                 <select class="form-select" id="type" name="type" required>
-                    <option value="combo" {{ $foodItem['type'] === 'combo' ? 'selected' : '' }}>Combo</option>
-                    <option value="snack" {{ $foodItem['type'] === 'snack' ? 'selected' : '' }}>Snack</option>
-                    <option value="drink" {{ $foodItem['type'] === 'drink' ? 'selected' : '' }}>Đồ uống</option>
+                    <option value="combo" @selected(old('type', $foodItem->type) === 'combo')>Combo</option>
+                    <option value="snack" @selected(old('type', $foodItem->type) === 'snack')>Snack</option>
+                    <option value="drink" @selected(old('type', $foodItem->type) === 'drink')>Đồ uống</option>
                 </select>
             </div>
             <div class="col-md-6 mb-3">
                 <label for="price" class="form-label">Giá (VNĐ) <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" id="price" name="price" value="{{ $foodItem['price'] }}" min="0" step="1000" required>
+                <input type="number" class="form-control" id="price" name="price" value="{{ old('price', $foodItem->price) }}" min="0" step="1000" required>
             </div>
             <div class="col-md-6 mb-3">
                 <label for="image" class="form-label">Ảnh</label>
-                @if($foodItem['image'])
+                @if($foodItem->image)
                     <div class="mb-2">
-                        <img src="{{ $foodItem['image'] }}" alt="Ảnh hiện tại"
+                        <img src="{{ asset('storage/' . $foodItem->image) }}" alt="Ảnh hiện tại"
                              style="max-width:200px;max-height:200px;border-radius:8px;border:1px solid #ddd;">
                     </div>
                 @endif
                 <input type="file" class="form-control" id="image" name="image" accept="image/*">
                 <small class="text-muted">Chấp nhận: JPEG, PNG, GIF, WebP (tối đa 5MB). Để trống nếu không muốn thay đổi ảnh.</small>
                 <div id="image-preview" class="mt-2" style="display:none;">
-                    <img id="preview-img" src="" alt="Preview" style="max-width:200px;max-height:200px;border-radius:8px;">
+                    <img id="preview-img" src="#" alt="Preview" style="max-width:200px;max-height:200px;border-radius:8px;">
                 </div>
             </div>
             <div class="col-12 mb-3">
                 <label for="description" class="form-label">Mô tả</label>
                 <textarea class="form-control" id="description" name="description" rows="3"
-                          placeholder="Mô tả chi tiết về combo/đồ ăn...">{{ $foodItem['description'] ?? '' }}</textarea>
+                          placeholder="Mô tả chi tiết về combo/đồ ăn...">{{ old('description', $foodItem->description) }}</textarea>
             </div>
             <div class="col-12 mb-3">
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1"
-                           {{ $foodItem['is_active'] ? 'checked' : '' }}>
+                           @checked(old('is_active', $foodItem->is_active))>
                     <label class="form-check-label" for="is_active">Hoạt động (hiển thị cho khách hàng)</label>
                 </div>
             </div>
