@@ -88,7 +88,20 @@
                                         <span class="badge bg-secondary">Phim lẻ</span>
                                     @endif
                                 </td>
-                                <td>{{ $m['category_name'] ?? 'N/A' }}</td>
+                                <td>
+                                    @php
+                                        $categoryNames = $m->categories->pluck('name');
+                                        if ($categoryNames->isEmpty() && $m->category) {
+                                            $categoryNames = collect([$m->category->name]);
+                                        }
+                                    @endphp
+
+                                    @forelse($categoryNames as $categoryName)
+                                        <span class="badge bg-dark me-1 mb-1">{{ $categoryName }}</span>
+                                    @empty
+                                        N/A
+                                    @endforelse
+                                </td>
                                 <td>
                                     @php
                                         $movieStatus = $m['status'] ?? 'Sắp chiếu';

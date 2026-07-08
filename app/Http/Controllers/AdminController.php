@@ -159,14 +159,19 @@ class AdminController extends Controller
     // Movies Management
     public function movies(Request $request)
     {
-        $query = Movie::with('category');
+        $query = Movie::with(['category', 'categories']);
 
         if ($search = $request->search) {
             $query->where('title', 'like', "%$search%");
         }
 
         if ($category_id = $request->category) {
-            $query->where('category_id', $category_id);
+            $query->where(function ($q) use ($category_id) {
+                $q->where('category_id', $category_id)
+                    ->orWhereHas('categories', function ($categoryQuery) use ($category_id) {
+                        $categoryQuery->where('categories.id', $category_id);
+                    });
+            });
         }
 
         if ($request->has('status') && $request->status !== '') {
@@ -190,7 +195,8 @@ class AdminController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'category_id' => 'nullable|exists:categories,id',
+            'category_ids' => 'nullable|array',
+            'category_ids.*' => 'exists:categories,id',
             'level' => 'nullable|in:Free,Basic,Silver,Gold,Premium',
             'duration' => 'nullable|integer',
             'type' => 'required|in:phimle,phimbo',
@@ -200,7 +206,10 @@ class AdminController extends Controller
             'trailer_file' => 'nullable|mimes:mp4,avi,mov,mkv,webm|max:102400',
         ]);
 
-        $data = $request->only(['title', 'category_id', 'level', 'duration', 'description', 'director', 'actors', 'status', 'type', 'country', 'language', 'age_rating']);
+        $data = $request->only(['title', 'level', 'duration', 'description', 'director', 'actors', 'status', 'type', 'country', 'language', 'age_rating']);
+        $categoryIds = $this->normalizedCategoryIds($request);
+        $data['category_id'] = $categoryIds[0] ?? null;
+
         if ($request->type === 'phimbo' && $data['status'] === 'Chiếu rạp') {
             $data['status'] = 'Chiếu online';
         }
@@ -246,6 +255,7 @@ class AdminController extends Controller
         }
 
         $movie = Movie::create($data);
+        $this->syncMovieCategories($movie, $categoryIds);
         $this->syncMovieEpisodesFromRequest($movie, $request);
 
         // Create showtimes if cinema movie
@@ -258,17 +268,12 @@ class AdminController extends Controller
 
     public function moviesEdit($id)
     {
-        $movie = Movie::with('episodes')->findOrFail($id);
+        $movie = Movie::with(['episodes', 'categories'])->findOrFail($id);
         $categories = Category::all();
         $theaters = Theater::where('is_active', 1)->orderBy('name')->get();
         $showtimes = Showtime::where('movie_id', $id)->with('theater', 'screen')->get();
         $episodes = $movie->episodes->sortBy('episode_number')->values();
-
-        // Multi-category support: try movie_category pivot table
-        $movieCategories = [];
-        if (DB::getSchemaBuilder()->hasTable('movie_category')) {
-            $movieCategories = DB::table('movie_category')->where('movie_id', $id)->get();
-        }
+        $movieCategories = $movie->categories;
 
         return view('admin.movies.edit', compact('movie', 'categories', 'theaters', 'showtimes', 'episodes', 'movieCategories'));
     }
@@ -279,10 +284,14 @@ class AdminController extends Controller
 
         $request->validate([
             'title' => 'required|string|max:255',
-            'category_id' => 'nullable|exists:categories,id',
+            'category_ids' => 'nullable|array',
+            'category_ids.*' => 'exists:categories,id',
         ]);
 
-        $data = $request->only(['title', 'category_id', 'level', 'duration', 'description', 'director', 'actors', 'status', 'type', 'country', 'language', 'age_rating', 'status_admin']);
+        $data = $request->only(['title', 'level', 'duration', 'description', 'director', 'actors', 'status', 'type', 'country', 'language', 'age_rating', 'status_admin']);
+        $categoryIds = $this->normalizedCategoryIds($request);
+        $data['category_id'] = $categoryIds[0] ?? null;
+
         if ($request->type === 'phimbo' && $data['status'] === 'Chiếu rạp') {
             $data['status'] = 'Chiếu online';
         }
@@ -324,6 +333,7 @@ class AdminController extends Controller
         }
 
         $movie->update($data);
+        $this->syncMovieCategories($movie, $categoryIds);
         $this->syncMovieEpisodesFromRequest($movie, $request);
 
         // Update showtimes if provided
@@ -365,6 +375,25 @@ class AdminController extends Controller
         }
 
         return redirect()->route('admin.movies.edit', $movieId)->with('success', 'Xóa tập phim thành công!');
+    }
+
+    protected function normalizedCategoryIds(Request $request): array
+    {
+        return collect($request->input('category_ids', []))
+            ->filter()
+            ->map(fn ($categoryId) => (int) $categoryId)
+            ->unique()
+            ->values()
+            ->toArray();
+    }
+
+    protected function syncMovieCategories(Movie $movie, array $categoryIds): void
+    {
+        if (!DB::getSchemaBuilder()->hasTable('movie_category')) {
+            return;
+        }
+
+        $movie->categories()->sync($categoryIds);
     }
 
     protected function syncMovieEpisodesFromRequest(Movie $movie, Request $request): void

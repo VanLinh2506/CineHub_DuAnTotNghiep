@@ -220,7 +220,7 @@
 
                 if (!empty($movieCategories)) {
                     $selectedCategoryIds = collect($movieCategories)
-                        ->pluck('category_id')
+                        ->pluck('id')
                         ->toArray();
                 } elseif (!empty($movie['category_id'])) {
                     $selectedCategoryIds = [$movie['category_id']];
