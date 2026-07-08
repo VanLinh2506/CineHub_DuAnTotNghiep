@@ -63,44 +63,44 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (empty($logs))
+                    @if ($logs->isEmpty())
                         <tr>
                             <td colspan="7" class="text-center text-muted">Không có log nào</td>
                         </tr>
                     @else
                         @foreach ($logs as $log)
                             <tr>
-                                <td>{{ $log['id'] }}</td>
+                                <td>{{ $log->id }}</td>
                                 <td>
-                                    <strong>{{ $log['user_name'] ?? 'N/A' }}</strong>
-                                    <br><small class="text-muted">{{ $log['user_email'] ?? 'N/A' }}</small>
+                                    <strong>{{ $log->user_name ?? 'N/A' }}</strong>
+                                    <br><small class="text-muted">{{ $log->user_email ?? 'N/A' }}</small>
                                 </td>
                                 <td>
-                                    <span class="badge bg-{{ 
-                                        $log['module'] === 'Movie' ? 'primary' : 
-                                        ($log['module'] === 'Theater' ? 'success' : 
-                                        ($log['module'] === 'User' ? 'info' : 'warning'))
+                                    <span class="badge bg-{{
+                                        $log->module === 'Movie' ? 'primary' :
+                                        ($log->module === 'Theater' ? 'success' :
+                                        ($log->module === 'User' ? 'info' : 'warning'))
                                     }}">
-                                        {{ $log['module'] ?? 'N/A' }}
+                                        {{ $log->module ?? 'N/A' }}
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-{{ 
-                                        strpos($log['action'], 'Thêm') !== false ? 'success' : 
-                                        (strpos($log['action'], 'Xóa') !== false ? 'danger' : 
-                                        (strpos($log['action'], 'Cập nhật') !== false ? 'warning' : 'secondary'))
+                                    <span class="badge bg-{{
+                                        strpos($log->action ?? '', 'Thêm') !== false ? 'success' :
+                                        (strpos($log->action ?? '', 'Xóa') !== false ? 'danger' :
+                                        (strpos($log->action ?? '', 'Cập nhật') !== false ? 'warning' : 'secondary'))
                                     }}">
-                                        {{ $log['action'] ?? 'N/A' }}
+                                        {{ $log->action ?? 'N/A' }}
                                     </span>
                                 </td>
                                 <td>
-                                    <small>{{ Str::limit($log['details'] ?? '', 50) }}</small>
+                                    <small>{{ Str::limit($log->details ?? '', 50) }}</small>
                                 </td>
                                 <td>
-                                    <code>{{ $log['ip_address'] ?? 'N/A' }}</code>
+                                    <code>{{ $log->ip_address ?? 'N/A' }}</code>
                                 </td>
                                 <td>
-                                    <small>{{ \Carbon\Carbon::parse($log['created_at'])->format('d/m/Y H:i') }}</small>
+                                    <small>{{ \Carbon\Carbon::parse($log->created_at)->format('d/m/Y H:i') }}</small>
                                 </td>
                             </tr>
                         @endforeach

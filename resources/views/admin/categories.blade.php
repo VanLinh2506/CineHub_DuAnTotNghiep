@@ -9,7 +9,7 @@
                 <i class="fas fa-plus me-1"></i> Thêm thể loại
             </button>
         </div>
-        
+
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -22,7 +22,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (empty($categories))
+                    @if ($categories->isEmpty())
                         <tr>
                             <td colspan="5" class="text-center py-4">
                                 <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
@@ -32,20 +32,14 @@
                     @else
                         @foreach ($categories as $category)
                             <tr>
-                                <td>{{ $category['id'] }}</td>
+                                <td>{{ $category->id }}</td>
                                 <td>
-                                    <strong>{{ $category['name'] }}</strong>
+                                    <strong>{{ $category->name }}</strong>
                                 </td>
                                 <td>
-                                    @if ($category['parent_id'])
+                                    @if ($category->parent_id)
                                         @php
-                                            $parentName = '';
-                                            foreach ($categories as $parent) {
-                                                if ($parent['id'] == $category['parent_id']) {
-                                                    $parentName = $parent['name'];
-                                                    break;
-                                                }
-                                            }
+                                            $parentName = $categories->firstWhere('id', $category->parent_id)->name ?? '';
                                         @endphp
                                         {{ $parentName }}
                                     @else
@@ -53,17 +47,17 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="badge bg-info">{{ $category['movie_count'] ?? 0 }} phim</span>
+                                    <span class="badge bg-info">{{ $category->movies_count ?? 0 }} phim</span>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary me-1" 
+                                    <button class="btn btn-sm btn-outline-primary me-1"
                                             onclick="editCategory(@json($category))"
                                             title="Sửa">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    @if (($category['movie_count'] ?? 0) == 0)
-                                        <button class="btn btn-sm btn-outline-danger" 
-                                                onclick="deleteCategory({{ $category['id'] }}, '{{ $category['name'] }}')"
+                                    @if (($category->movies_count ?? 0) == 0)
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                onclick="deleteCategory({{ $category->id }}, '{{ $category->name }}')"
                                                 title="Xóa">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -86,7 +80,7 @@
 <div class="modal fade" id="addCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ route('admin.categories.store') }}" method="POST">
+            <form action="{{ url('?route=admin/categories/store') }}" method="POST">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Thêm thể loại mới</h5>
@@ -102,7 +96,7 @@
                         <select name="parent_id" class="form-select">
                             <option value="">-- Không có --</option>
                             @foreach ($categories as $cat)
-                                <option value="{{ $cat['id'] }}">{{ $cat['name'] }}</option>
+                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -120,9 +114,8 @@
 <div class="modal fade" id="editCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="" method="POST" id="editCategoryForm">
+            <form action="{{ url('?route=admin/categories/update') }}" method="POST">
                 @csrf
-                @method('PUT')
                 <input type="hidden" name="id" id="edit_id">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Sửa thể loại</h5>
@@ -138,7 +131,7 @@
                         <select name="parent_id" id="edit_parent_id" class="form-select">
                             <option value="">-- Không có --</option>
                             @foreach ($categories as $cat)
-                                <option value="{{ $cat['id'] }}">{{ $cat['name'] }}</option>
+                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -156,9 +149,8 @@
 <div class="modal fade" id="deleteCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="" method="POST" id="deleteCategoryForm">
+            <form action="{{ url('?route=admin/categories/delete') }}" method="POST">
                 @csrf
-                @method('DELETE')
                 <input type="hidden" name="id" id="delete_id">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Xóa thể loại</h5>
@@ -182,14 +174,12 @@
         document.getElementById('edit_id').value = category.id;
         document.getElementById('edit_name').value = category.name;
         document.getElementById('edit_parent_id').value = category.parent_id || '';
-        document.getElementById('editCategoryForm').action = '/admin/categories/' + category.id;
         new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
     }
 
     function deleteCategory(id, name) {
         document.getElementById('delete_id').value = id;
         document.getElementById('delete_name').textContent = name;
-        document.getElementById('deleteCategoryForm').action = '/admin/categories/' + id;
         new bootstrap.Modal(document.getElementById('deleteCategoryModal')).show();
     }
 </script>
