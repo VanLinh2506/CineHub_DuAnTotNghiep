@@ -12,7 +12,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Change role column from ENUM to VARCHAR to support more roles
+        if (!Schema::hasTable('users')) {
+            return;
+        }
+
+        // Older databases created from migrations may not have `role` yet.
+        if (!Schema::hasColumn('users', 'role')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('role', 50)->default('user')->after('updated_at');
+            });
+            return;
+        }
+
+        // Change role column from ENUM to VARCHAR to support more roles.
         DB::statement("ALTER TABLE users MODIFY COLUMN role VARCHAR(50) DEFAULT 'user'");
     }
 
@@ -21,7 +33,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert back to ENUM (optional, for rollback)
-        DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('user','admin','moderator','manager','counter_staff') DEFAULT 'user'");
+        // No-op rollback: this project mixes SQL-imported schemas with migrations,
+        // so we avoid converting shared columns back and forth on rollback.
     }
 };

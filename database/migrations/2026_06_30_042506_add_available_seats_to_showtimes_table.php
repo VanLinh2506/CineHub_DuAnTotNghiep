@@ -9,11 +9,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('showtimes', function (Blueprint $table) {
-            $table->integer('available_seats')->nullable()->after('price');
-        });
-        
-        // Update existing showtimes to set available_seats from screen total_seats
+        if (!Schema::hasTable('showtimes')) {
+            return;
+        }
+
+        if (!Schema::hasColumn('showtimes', 'available_seats')) {
+            Schema::table('showtimes', function (Blueprint $table) {
+                $table->integer('available_seats')->nullable()->after('price');
+            });
+        }
+
+        if (!Schema::hasTable('theater_screens') || !Schema::hasColumn('showtimes', 'screen_id')) {
+            return;
+        }
+
+        // Backfill any null values; this is safe on both old and new schemas.
         DB::statement('
             UPDATE showtimes 
             JOIN theater_screens ON showtimes.screen_id = theater_screens.id 
@@ -24,8 +34,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('showtimes', function (Blueprint $table) {
-            $table->dropColumn('available_seats');
-        });
+        // No-op rollback: this project mixes SQL-imported schema with migrations,
+        // so we avoid dropping shared columns during rollback.
     }
 };

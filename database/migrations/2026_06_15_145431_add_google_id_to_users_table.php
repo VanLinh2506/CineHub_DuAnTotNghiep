@@ -11,9 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('users')) {
+            return;
+        }
+
         Schema::table('users', function (Blueprint $table) {
-            $table->string('google_id')->nullable()->unique()->after('email');
-            $table->timestamp('email_verified_at')->nullable()->change();
+            if (!Schema::hasColumn('users', 'google_id')) {
+                $table->string('google_id')->nullable()->unique()->after('email');
+            }
         });
     }
 
@@ -22,8 +27,14 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('users')) {
+            return;
+        }
+
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('google_id');
+            if (Schema::hasColumn('users', 'google_id')) {
+                $table->dropColumn('google_id');
+            }
         });
     }
 };

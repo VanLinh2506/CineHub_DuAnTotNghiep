@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('booking_pending')) {
+            return;
+        }
+
         Schema::table('booking_pending', function (Blueprint $table) {
             if (!Schema::hasColumn('booking_pending', 'customer_email')) {
                 $table->string('customer_email')->nullable()->after('user_id');
@@ -23,6 +27,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('booking_pending')) {
+            return;
+        }
+
         Schema::table('booking_pending', function (Blueprint $table) {
             if (Schema::hasColumn('booking_pending', 'customer_email')) {
                 $table->dropColumn('customer_email');

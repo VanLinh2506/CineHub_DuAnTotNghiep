@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('tickets')) {
+            return;
+        }
+
         Schema::table('tickets', function (Blueprint $table) {
             // Chỉ thêm 2 cột thiếu (is_picked_up và picked_up_* đã có rồi)
             if (!Schema::hasColumn('tickets', 'is_counter_sale')) {
@@ -27,6 +31,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('tickets')) {
+            return;
+        }
+
         Schema::table('tickets', function (Blueprint $table) {
             if (Schema::hasColumn('tickets', 'is_counter_sale')) {
                 $table->dropColumn('is_counter_sale');
