@@ -8,7 +8,7 @@
 <div class="container my-tickets-container">
     <h1 class="page-title">Vé Của Tôi</h1>
     
-    @if ($tickets->isEmpty())
+    @if ($bookings->isEmpty())
         <div class="empty-state">
             <i class="fas fa-ticket-alt empty-icon"></i>
             <h2>Bạn chưa có vé nào</h2>
@@ -17,102 +17,95 @@
         </div>
     @else
         <div class="tickets-grid">
-            @foreach ($tickets as $ticket)
+            @foreach ($bookings as $booking)
+                @php
+                    $showtime = $booking->showtime;
+                    $movie = $showtime->movie ?? null;
+                    $theater = $showtime->theater ?? null;
+                    $screen = $showtime->screen ?? null;
+                    $tickets = $booking->tickets;
+                    $seats = $tickets->pluck('seat')->toArray();
+                    $totalPrice = $tickets->sum('price');
+                    
+                    $showDateTime = null;
+                    $isExpired = false;
+                    $qrShowing = false;
+                    
+                    if ($showtime && $showtime->show_date && $showtime->show_time) {
+                        $dateStr = trim($showtime->show_date);
+                        $timeStr = trim($showtime->show_time);
+                        
+                        try {
+                            if (strlen($dateStr) >= 10) {
+                                $dateStr = substr($dateStr, 0, 10);
+                            }
+                            
+                            $datetimeStr = $dateStr . ' ' . $timeStr;
+                            $showDateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $datetimeStr);
+                            $isExpired = $showDateTime->isPast();
+                            $qrShowing = true;
+                        } catch (\Exception $e) {
+                            $qrShowing = false;
+                        }
+                    }
+                @endphp
+                
                 <div class="ticket-card">
                     <div class="ticket-header">
-                        <h3 class="ticket-movie-title">{{ $ticket->showtime->movie->title ?? 'N/A' }}</h3>
-                        <span class="ticket-status {{ strtolower($ticket->status) }}">
-                            {{ $ticket->status }}
-                        </span>
+                        <h3 class="ticket-movie-title">{{ $movie->title ?? 'N/A' }}</h3>
+                        <span class="ticket-status completed">Đã đặt</span>
                     </div>
                     
                     <div class="ticket-body">
                         <div class="ticket-info-row">
+                            <span class="label">Mã booking:</span>
+                            <span class="value code">{{ $booking->qr_code }}</span>
+                        </div>
+                        <div class="ticket-info-row">
                             <span class="label">Rạp:</span>
-                            <span class="value">{{ $ticket->showtime->theater->name ?? 'N/A' }}</span>
+                            <span class="value">{{ $theater->name ?? 'N/A' }}</span>
                         </div>
                         <div class="ticket-info-row">
                             <span class="label">Màn hình:</span>
-                            <span class="value">{{ $ticket->showtime->screen->screen_name ?? 'N/A' }}</span>
+                            <span class="value">{{ $screen->screen_name ?? 'N/A' }}</span>
                         </div>
                         <div class="ticket-info-row">
                             <span class="label">Ngày chiếu:</span>
-                            <span class="value">{{ $ticket->showtime->show_date ? date('d/m/Y', strtotime($ticket->showtime->show_date)) : 'N/A' }}</span>
+                            <span class="value">{{ $showtime->show_date ? date('d/m/Y', strtotime($showtime->show_date)) : 'N/A' }}</span>
                         </div>
                         <div class="ticket-info-row">
                             <span class="label">Giờ chiếu:</span>
-                            <span class="value">{{ $ticket->showtime->show_time ?? 'N/A' }}</span>
+                            <span class="value">{{ $showtime->show_time ?? 'N/A' }}</span>
                         </div>
                         <div class="ticket-info-row">
                             <span class="label">Ghế:</span>
-                            <span class="value seat-info">{{ $ticket->seat ?? 'N/A' }}</span>
+                            <span class="value seat-info">{{ implode(', ', $seats) }}</span>
                         </div>
                         <div class="ticket-info-row">
-                            <span class="label">Giá vé:</span>
-                            <span class="value price">{{ number_format($ticket->price, 0, ',', '.') }} ₫</span>
+                            <span class="label">Tổng tiền:</span>
+                            <span class="value price">{{ number_format($totalPrice, 0, ',', '.') }} ₫</span>
                         </div>
                     </div>
                     
-                    @php
-                        $showDateTime = null;
-                        $isExpired = false;
-                        $qrShowing = false;
-                        
-                        if ($ticket->showtime && $ticket->showtime->show_date && $ticket->showtime->show_time) {
-                            $dateStr = trim($ticket->showtime->show_date);
-                            $timeStr = trim($ticket->showtime->show_time);
-                            
-                            try {
-                                // show_date might be "2025-12-10" or "2025-12-10 00:00:00"
-                                // show_time is "09:00:00"
-                                
-                                // Extract date part only (first 10 chars)
-                                if (strlen($dateStr) >= 10) {
-                                    $dateStr = substr($dateStr, 0, 10);
-                                }
-                                
-                                // Combine date + time
-                                $datetimeStr = $dateStr . ' ' . $timeStr;
-                                
-                                // Parse with format that handles HH:MM:SS
-                                $showDateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $datetimeStr);
-                                $isExpired = $showDateTime->isPast();
-                                $qrShowing = true;
-                            } catch (\Exception $e) {
-                                // If parsing fails, hide QR
-                                $qrShowing = false;
-                            }
-                        }
-                    @endphp
-
                     @if ($qrShowing && !$isExpired)
                         <div class="ticket-qr">
-                            <img src="{{ qr_code_data_uri($ticket->qr_code ?: ('TICKET-' . $ticket->id), 180) }}" alt="QR ve {{ $ticket->seat }}">
-                            <span>Đưa mã này cho nhân viên để check vé.</span>
+                            <img src="{{ qr_code_data_uri($booking->qr_code ?: ('BOOKING-' . $booking->id), 200) }}" alt="QR Booking">
+                            <div class="qr-info">
+                                <strong>Mã QR check vé</strong>
+                                <span>Đưa mã này cho nhân viên để check tất cả {{ count($seats) }} ghế</span>
+                            </div>
                         </div>
                     @elseif ($qrShowing && $isExpired)
                         <div class="ticket-qr expired">
                             <span class="expired-message">Vé đã hết hạn</span>
                         </div>
                     @endif
-
-                    <div class="ticket-footer">
-                        @if ($ticket->status === 'active')
-                            <a href="{{ url('/?route=ticket/qrcode&id=' . $ticket->id) }}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-qrcode"></i> Mã QR
-                            </a>
-                        @endif
-                        @if ($ticket->status === 'pending')
-                            <a href="{{ url('/?route=booking/verify&id=' . $ticket->id) }}" class="btn btn-sm btn-warning">
-                                <i class="fas fa-check"></i> Xác nhận
-                            </a>
-                        @endif
-                        <a href="{{ url('/?route=ticket/download&id=' . $ticket->id) }}" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-download"></i> Tải xuống
-                        </a>
-                    </div>
                 </div>
             @endforeach
+        </div>
+        
+        <div class="pagination-wrapper">
+            {{ $bookings->links() }}
         </div>
     @endif
 </div>
@@ -266,25 +259,37 @@
     }
 
     .ticket-qr {
-        padding: 1rem;
+        padding: 1.5rem;
         background: rgba(255, 255, 255, 0.03);
         border-top: 1px solid rgba(255, 255, 255, 0.06);
         display: flex;
+        flex-direction: column;
         align-items: center;
         gap: 1rem;
+        text-align: center;
     }
 
     .ticket-qr img {
-        width: 112px;
-        height: 112px;
+        width: 200px;
+        height: 200px;
         background: #fff;
-        border-radius: 8px;
-        padding: 6px;
-        flex: 0 0 auto;
+        border-radius: 12px;
+        padding: 10px;
     }
 
-    .ticket-qr span {
-        color: #ddd;
+    .ticket-qr .qr-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .ticket-qr .qr-info strong {
+        color: #fff;
+        font-size: 1rem;
+    }
+
+    .ticket-qr .qr-info span {
+        color: #ffc107;
         font-size: 0.9rem;
         line-height: 1.4;
     }
@@ -298,6 +303,20 @@
         color: #adb5bd;
         font-size: 0.95rem;
         font-weight: 500;
+    }
+    
+    .code {
+        font-family: 'Courier New', monospace;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+    
+    .pagination-wrapper {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: center;
     }
     
     .btn {

@@ -596,11 +596,11 @@
             <span class="modal-close" onclick="closeAuthModal()">&times;</span>
 
             <div class="auth-tabs">
-                <button class="auth-tab active" onclick="switchAuthTab('login')">
+                <button id="loginTabBtn" class="auth-tab active" onclick="switchAuthTab('login')">
                     Đăng nhập
                 </button>
 
-                <button class="auth-tab" onclick="switchAuthTab('register')">
+                <button id="registerTabBtn" class="auth-tab" onclick="switchAuthTab('register')">
                     Đăng ký
                 </button>
             </div>
@@ -945,28 +945,33 @@
         }
 
         function switchAuthTab(tab) {
-            document.querySelectorAll('.auth-tab-content').forEach(el => {
-                el.classList.remove('active');
-                el.style.display = 'none';
-            });
-
-            document.querySelectorAll('.auth-tab').forEach(el => {
-                el.classList.remove('active');
-            });
-
+            console.log('switchAuthTab called with:', tab);
+            
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
+            const loginTabBtn = document.getElementById('loginTabBtn');
+            const registerTabBtn = document.getElementById('registerTabBtn');
+            
             if (tab === 'login') {
-                document.getElementById('loginTab').style.display = 'block';
-                document.getElementById('loginTab').classList.add('active');
-
-                document.querySelectorAll('.auth-tab')[0]
-                    .classList.add('active');
-            }
-            else {
-                document.getElementById('registerTab').style.display = 'block';
-                document.getElementById('registerTab').classList.add('active');
-
-                document.querySelectorAll('.auth-tab')[1]
-                    .classList.add('active');
+                // Show/hide content
+                loginTab.style.display = 'block';
+                registerTab.style.display = 'none';
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+                
+                // Update tab buttons
+                loginTabBtn.classList.add('active');
+                registerTabBtn.classList.remove('active');
+            } else if (tab === 'register') {
+                // Show/hide content
+                loginTab.style.display = 'none';
+                registerTab.style.display = 'block';
+                loginTab.classList.remove('active');
+                registerTab.classList.add('active');
+                
+                // Update tab buttons
+                loginTabBtn.classList.remove('active');
+                registerTabBtn.classList.add('active');
             }
         }
 

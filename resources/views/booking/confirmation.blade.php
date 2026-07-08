@@ -27,23 +27,17 @@
 
         <div class="qr-section">
             <h2><i class="fas fa-qrcode"></i> Mã QR check vé</h2>
-            <p>Đưa mã QR cho nhân viên rạp để xác nhận vé của bạn.</p>
+            <p>Đưa mã QR này cho nhân viên rạp để xác nhận tất cả vé của bạn.</p>
 
-            <div class="qr-grid">
-                @foreach ($booking->tickets as $ticket)
-                    <div class="qr-item">
-                        <img src="{{ qr_code_data_uri($ticket->qr_code ?: ('TICKET-' . $ticket->id), 180) }}" alt="QR ghế {{ $ticket->seat }}">
-                        <span>Ghế {{ $ticket->seat }}</span>
+            <div class="qr-single">
+                <div class="qr-item-large">
+                    <img src="{{ qr_code_data_uri($booking->qr_code ?: ('BOOKING-' . $booking->id), 250) }}" alt="QR Booking">
+                    <div class="qr-info">
+                        <strong>Mã booking: {{ $booking->qr_code }}</strong>
+                        <span>{{ count($booking->seats ?? []) }} ghế: {{ implode(', ', $booking->seats ?? []) }}</span>
                     </div>
-                @endforeach
-            </div>
-
-            @if ($booking->tickets->isEmpty())
-                <div class="qr-item">
-                    <img src="{{ qr_code_data_uri($booking->qr_code ?: ('BOOKING-' . $booking->id), 200) }}" alt="QR booking">
-                    <span>Mã đặt vé</span>
                 </div>
-            @endif
+            </div>
         </div>
 
         <div class="confirmation-actions">
@@ -122,6 +116,46 @@
     .qr-section p {
         color: #aaa;
         margin-bottom: 1.25rem;
+    }
+
+    .qr-single {
+        display: flex;
+        justify-content: center;
+        padding: 1rem 0;
+    }
+
+    .qr-item-large {
+        background: rgba(255, 255, 255, 0.06);
+        border: 2px solid rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        max-width: 400px;
+    }
+
+    .qr-item-large img {
+        width: 250px;
+        height: 250px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .qr-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .qr-info strong {
+        color: #fff;
+        font-size: 1.1rem;
+    }
+
+    .qr-info span {
+        color: #ffc107;
+        font-size: 0.95rem;
     }
 
     .qr-grid {

@@ -66,13 +66,17 @@
                         </td>
                         <td>
                             <div class="btn-group" role="group">
-                                <a href="?route=moderator/screenEdit&id={{ $screen['id'] }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-cog"></i> Layout
+                                <button type="button" class="btn btn-sm btn-outline-info" 
+                                        onclick="viewScreenLayout({{ $screen['id'] }})" title="Xem sơ đồ ghế">
+                                    <i class="fas fa-eye"></i> Xem
+                                </button>
+                                <a href="?route=moderator/screenEdit&id={{ $screen['id'] }}" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa layout">
+                                    <i class="fas fa-cog"></i> Sửa
                                 </a>
-                                <button type="button" class="btn btn-sm btn-outline-info"
+                                <button type="button" class="btn btn-sm btn-outline-secondary"
                                         data-bs-toggle="modal" data-bs-target="#manageMoviesModal"
-                                        onclick="loadScreenMovies({{ $screen['id'] }}, '{{ addslashes($screen['screen_name']) }}')">
-                                    <i class="fas fa-film"></i> Quản lý phim
+                                        onclick="loadScreenMovies({{ $screen['id'] }}, '{{ addslashes($screen['screen_name']) }}')" title="Quản lý phim">
+                                    <i class="fas fa-film"></i>
                                 </button>
                             </div>
                         </td>
@@ -215,10 +219,158 @@
         </div>
     </div>
 </div>
+<!-- View Screen Layout Modal -->
+<div class="modal fade" id="viewScreenModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sơ đồ phòng chiếu - <span id="view_screen_name"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <strong>Loại phòng:</strong> <span id="view_screen_type" class="badge bg-info"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Tổng số ghế:</strong> <span id="view_total_seats"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Hàng VIP:</strong> <span id="view_vip_rows"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Trạng thái:</strong> <span id="view_status"></span>
+                    </div>
+                </div>
+                <hr>
+                <div id="seatLayoutView" class="border rounded p-3" style="background: #f8f9fa; max-height: calc(100vh - 260px); overflow: auto;">
+                    <p class="text-muted text-center">Đang tải sơ đồ ghế...</p>
+                </div>
+                <div class="mt-3">
+                    <div class="d-flex gap-3 justify-content-center">
+                        <div><span style="display:inline-block;width:20px;height:20px;background:#6c757d;border-radius:4px;"></span> <small>Ghế thường</small></div>
+                        <div><span style="display:inline-block;width:20px;height:20px;background:#ffc107;border-radius:4px;"></span> <small>Ghế VIP</small></div>
+                        <div><span style="display:inline-block;width:20px;height:20px;background:#e91e63;border-radius:4px;"></span> <small>Ghế đôi</small></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
+console.log('Screens data loaded:', @json($screens ?? []));
+const screensData = @json($screens ?? []);
+
+function viewScreenLayout(screenId) {
+    console.log('viewScreenLayout called with screenId:', screenId);
+    console.log('Available screens:', screensData);
+    
+    const screen = screensData.find(s => s.id == screenId);
+    console.log('Found screen:', screen);
+    
+    if (!screen) {
+        alert('Không tìm thấy thông tin phòng chiếu!');
+        return;
+    }
+    
+    let layout = {};
+    try {
+        layout = screen.seat_layout_config ? JSON.parse(screen.seat_layout_config) : {};
+        console.log('Parsed layout:', layout);
+    } catch (e) {
+        console.error('Error parsing layout:', e);
+        layout = screen.seat_layout_config || {};
+    }
+    
+    document.getElementById('view_screen_name').textContent = screen.screen_name || '';
+    document.getElementById('view_screen_type').textContent = screen.screen_type || '2D';
+    document.getElementById('view_total_seats').textContent = (screen.total_seats || 0) + ' ghế';
+    document.getElementById('view_status').innerHTML = screen.is_active == 1 
+        ? '<span class="badge bg-success">Hoạt động</span>' 
+        : '<span class="badge bg-secondary">Tắt</span>';
+    
+    const vipRows = layout.vip_rows || [];
+    const coupleRows = layout.couple_rows || [];
+    
+    document.getElementById('view_vip_rows').textContent = vipRows.length > 0 ? vipRows.join(', ') : 'Không có';
+    
+    const rows = layout.rows || [];
+    const seatGroups = layout.seat_groups || null;
+    const numGroups = seatGroups ? seatGroups.length : 1;
+    const seatsPerGroupRow = seatGroups ? seatGroups[0].cols.length : (layout.cols ? layout.cols.length : 12);
+    
+    console.log('Rendering with:', { rows, vipRows, coupleRows, numGroups, seatsPerGroupRow });
+    
+    renderSeatLayoutView(rows, vipRows, coupleRows, numGroups, seatsPerGroupRow);
+    
+    const modal = new bootstrap.Modal(document.getElementById('viewScreenModal'));
+    modal.show();
+}
+
+function renderSeatLayoutView(rows, vipRows, coupleRows, numGroups, seatsPerGroupRow) {
+    const container = document.getElementById('seatLayoutView');
+    if (!container) {
+        console.error('Container not found!');
+        return;
+    }
+    
+    if (!rows || rows.length === 0) {
+        container.innerHTML = '<p class="text-danger text-center">Chưa có cấu hình sơ đồ ghế cho phòng này</p>';
+        return;
+    }
+    
+    let html = '<div style="text-align:center;margin-bottom:20px;"><div style="background:#1a1a1a;color:white;padding:15px;border-radius:8px;font-weight:bold;font-size:16px;">MÀN HÌNH</div></div>';
+    html += '<div style="display:flex;flex-direction:column;gap:6px;align-items:center;">';
+    
+    rows.forEach(row => {
+        const isVip = vipRows.includes(row);
+        const isCouple = coupleRows.includes(row);
+        
+        html += `<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">`;
+        html += `<span style="width:30px;text-align:center;font-weight:bold;color:${isVip?'#ffc107':isCouple?'#e91e63':'#333'};font-size:14px;">${row}</span>`;
+        
+        let seatNum = 1;
+        for (let g = 0; g < numGroups; g++) {
+            const seatsInThisGroup = isCouple ? Math.floor(seatsPerGroupRow / 2) : seatsPerGroupRow;
+            
+            for (let s = 0; s < seatsInThisGroup; s++) {
+                const bg = isVip ? '#ffc107' : isCouple ? '#e91e63' : '#6c757d';
+                const seatLabel = isCouple ? `${seatNum}-${seatNum+1}` : seatNum;
+                const width = isCouple ? '50px' : '30px';
+                
+                html += `<span style="display:inline-block;width:${width};height:30px;background:${bg};color:white;border-radius:5px;text-align:center;line-height:30px;font-size:11px;margin:2px;font-weight:500;">${seatLabel}</span>`;
+                
+                seatNum += isCouple ? 2 : 1;
+                
+                // Add aisle space
+                if (!isCouple && s === 5) {
+                    html += '<span style="display:inline-block;width:20px;height:30px;"></span>';
+                } else if (isCouple && s === 2) {
+                    html += '<span style="display:inline-block;width:20px;height:30px;"></span>';
+                }
+            }
+            
+            // Add space between groups
+            if (g < numGroups - 1) {
+                html += '<span style="display:inline-block;width:60px;height:30px;"></span>';
+            }
+        }
+        
+        html += `<span style="width:30px;text-align:center;font-weight:bold;color:${isVip?'#ffc107':isCouple?'#e91e63':'#333'};font-size:14px;">${row}</span>`;
+        html += '</div>';
+    });
+    
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
 let timeSlotCount = 0;
 const defaultTimeSlots = ['10:00', '14:00', '18:00', '20:30'];
 

@@ -313,6 +313,7 @@ class ModeratorController extends Controller
             'show_date' => $request->show_date,
             'show_time' => $request->show_time,
             'price' => $request->price,
+            'available_seats' => $screen->total_seats, // Set available seats based on screen capacity
         ]);
         
         return redirect()->route('moderator.showtimes.index')
@@ -370,10 +371,32 @@ class ModeratorController extends Controller
             ->orderBy('screen_name')
             ->get();
         
+        // Add current movies for each screen
+        $screens = $screens->map(function($screen) {
+            $screenArray = $screen->toArray();
+            
+            // Get distinct movies currently showing in this screen (from today onwards)
+            $currentMovies = Movie::join('showtimes', 'movies.id', '=', 'showtimes.movie_id')
+                ->where('showtimes.screen_id', $screen->id)
+                ->where('showtimes.show_date', '>=', today())
+                ->select('movies.id', 'movies.title')
+                ->distinct()
+                ->orderBy('movies.title')
+                ->get()
+                ->map(function($item) {
+                    return ['id' => $item->id, 'title' => $item->title];
+                })
+                ->toArray();
+            
+            $screenArray['current_movies'] = $currentMovies;
+            return $screenArray;
+        });
+        
         // Get movies for filter dropdown
         $movies = Movie::join('showtimes', 'movies.id', '=', 'showtimes.movie_id')
             ->join('theater_screens', 'showtimes.screen_id', '=', 'theater_screens.id')
             ->where('theater_screens.theater_id', $this->theaterId)
+            ->where('showtimes.show_date', '>=', today()) // Only future showtimes
             ->select('movies.id', 'movies.title')
             ->distinct()
             ->orderBy('movies.title')
@@ -383,7 +406,11 @@ class ModeratorController extends Controller
             })
             ->toArray();
         
-        return view('admin.moderator.screens', compact('theater', 'screens', 'movies'));
+        return view('admin.moderator.screens', [
+            'theater' => $theater->toArray(),
+            'screens' => $screens->toArray(),
+            'movies' => $movies
+        ]);
     }
     
     public function screensStore(Request $request)
@@ -393,7 +420,10 @@ class ModeratorController extends Controller
         $request->validate([
             'screen_name' => 'required|string|max:255',
             'screen_type' => 'required|string',
-            'total_seats' => 'required|integer|min:1',
+            'num_groups' => 'required|integer|min:1',
+            'seats_per_group_row' => 'required|integer|min:1',
+            'num_rows' => 'required|integer|min:1',
+            'num_vip_rows' => 'required|integer|min:0',
         ]);
         
         // Kiểm tra trùng tên
@@ -405,16 +435,65 @@ class ModeratorController extends Controller
             return redirect()->back()->with('error', 'Tên phòng đã tồn tại!');
         }
         
+        $totalSeats = (int) $request->num_groups * (int) $request->seats_per_group_row * (int) $request->num_rows;
+
         Screen::create([
             'theater_id' => $this->theaterId,
             'screen_name' => $request->screen_name,
             'screen_type' => $request->screen_type,
-            'total_seats' => $request->total_seats,
+            'total_seats' => $totalSeats,
             'seat_layout_config' => $this->generateSeatLayout($request),
         ]);
         
         return redirect()->route('moderator.screens')
             ->with('success', 'Thêm phòng chiếu thành công!');
+    }
+    
+    public function screensEdit($id)
+    {
+        if ($error = $this->checkPermission()) return $error;
+        
+        $screen = Screen::where('id', $id)
+            ->where('theater_id', $this->theaterId)
+            ->firstOrFail();
+        
+        // seat_layout_config already cast to array in model
+        $layout = $screen->seat_layout_config ?: [];
+        
+        return view('admin.moderator.screen_edit', [
+            'screen' => $screen->toArray(),
+            'layout' => $layout
+        ]);
+    }
+    
+    public function screensUpdate(Request $request, $id)
+    {
+        if ($error = $this->checkPermission()) return $error;
+        
+        $screen = Screen::where('id', $id)
+            ->where('theater_id', $this->theaterId)
+            ->firstOrFail();
+        
+        $request->validate([
+            'screen_name' => 'required|string|max:255',
+            'screen_type' => 'required|string',
+            'num_groups' => 'required|integer|min:1',
+            'seats_per_group_row' => 'required|integer|min:1',
+            'num_rows' => 'required|integer|min:1',
+            'num_vip_rows' => 'required|integer|min:0',
+        ]);
+
+        $totalSeats = (int) $request->num_groups * (int) $request->seats_per_group_row * (int) $request->num_rows;
+        
+        $screen->update([
+            'screen_name' => $request->screen_name,
+            'screen_type' => $request->screen_type,
+            'seat_layout_config' => $this->generateSeatLayout($request),
+            'total_seats' => $totalSeats,
+        ]);
+        
+        return redirect()->route('moderator.screens.index')
+            ->with('success', 'Cập nhật cấu hình phòng chiếu thành công!');
     }
     
     /**
@@ -473,6 +552,24 @@ class ModeratorController extends Controller
         }
         
         $tickets = $query->orderByDesc('created_at')->paginate(20);
+        $tickets->getCollection()->transform(function (Ticket $ticket) {
+            $showtime = $ticket->showtime;
+            $user = $ticket->user;
+
+            return [
+                'id' => $ticket->id,
+                'user_name' => $user?->name ?? 'N/A',
+                'user_email' => $user?->email ?? '',
+                'movie_title' => $showtime?->movie?->title ?? 'N/A',
+                'screen_name' => $showtime?->screen?->screen_name ?? 'N/A',
+                'show_date' => $showtime?->show_date,
+                'show_time' => $showtime?->show_time,
+                'seat' => $ticket->seat,
+                'price' => $ticket->price,
+                'status' => $ticket->status,
+                'created_at' => $ticket->created_at,
+            ];
+        });
         
         $stats = [
             'total' => Ticket::whereHas('showtime.screen', function($q) {
@@ -827,14 +924,37 @@ class ModeratorController extends Controller
     
     private function generateSeatLayout($request)
     {
-        $rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
-        $cols = range(1, 12);
+        $rowLetters = range('A', 'Z');
+        $numRows = max((int) $request->input('num_rows', 12), 1);
+        $numGroups = max((int) $request->input('num_groups', 1), 1);
+        $seatsPerGroupRow = max((int) $request->input('seats_per_group_row', 12), 1);
+        $numVipRows = max((int) $request->input('num_vip_rows', 3), 0);
+        $hasCoupleRow = $request->input('has_couple_row', '1') !== '0';
+
+        $rows = array_slice($rowLetters, 0, $numRows);
+        $totalCols = $numGroups * $seatsPerGroupRow;
+        $cols = range(1, $totalCols);
+
+        $vipRowsStart = max((int) floor(($numRows - min($numVipRows, $numRows)) / 2), 0);
+        $vipRows = array_slice($rows, $vipRowsStart, min($numVipRows, $numRows));
+        $coupleRows = $hasCoupleRow && !empty($rows) ? [end($rows)] : [];
+
+        $seatGroups = [];
+        for ($group = 0; $group < $numGroups; $group++) {
+            $start = ($group * $seatsPerGroupRow) + 1;
+            $seatGroups[] = [
+                'rows' => $rows,
+                'cols' => range($start, $start + $seatsPerGroupRow - 1),
+            ];
+        }
         
         return json_encode([
             'rows' => $rows,
             'cols' => $cols,
-            'vip_rows' => ['D', 'E', 'F'],
-            'couple_rows' => ['L'],
+            'seat_groups' => $seatGroups,
+            'vip_rows' => $vipRows,
+            'couple_rows' => $coupleRows,
+            'layout_type' => 'grouped',
         ]);
     }
     

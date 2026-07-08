@@ -118,6 +118,9 @@ class LegacyRouteMiddleware
         'moderator/screens' => '/moderator/screens',
         'moderator/createScreen' => '/moderator/screens/create',
         'moderator/editScreen' => '/moderator/screens/{id}/edit',
+        'moderator/screenEdit' => '/moderator/screens/{id}/edit',
+        'moderator/screenLayoutUpdate' => '/moderator/screens/{id}',
+        'moderator/screensStore' => '/moderator/screens',
         
         // ==================== COUNTER STAFF ====================
         'counterStaff/dashboard' => '/counter',

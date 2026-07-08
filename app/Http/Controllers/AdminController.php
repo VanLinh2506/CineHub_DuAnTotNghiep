@@ -384,8 +384,15 @@ class AdminController extends Controller
                 Storage::disk('public')->delete($episode->getRawOriginal('video_url'));
             }
 
+            // Get file extension
+            $file = $request->file($fileKey);
+            $extension = $file->getClientOriginalExtension();
+            
+            // Create custom filename: tap_1.mp4, tap_2.mp4, etc.
+            $customFilename = 'tap_' . $episode->episode_number . '.' . $extension;
+
             $episode->update([
-                'video_url' => $request->file($fileKey)->store('phimbo/' . $movie->id, 'public'),
+                'video_url' => $file->storeAs('phimbo/' . $movie->id, $customFilename, 'public'),
             ]);
         }
 
@@ -413,7 +420,13 @@ class AdminController extends Controller
                     Storage::disk('public')->delete($episode->getRawOriginal('video_url'));
                 }
 
-                $episode->video_url = $file->store('phimbo/' . $movie->id, 'public');
+                // Get file extension
+                $extension = $file->getClientOriginalExtension();
+                
+                // Create custom filename: tap_1.mp4, tap_2.mp4, etc.
+                $customFilename = 'tap_' . $episodeNumber . '.' . $extension;
+
+                $episode->video_url = $file->storeAs('phimbo/' . $movie->id, $customFilename, 'public');
             }
 
             $episode->save();

@@ -44,12 +44,14 @@ class VNPayService
     ): string {
         $this->ensureConfigured();
 
+        $paymentTime = now('Asia/Ho_Chi_Minh');
+
         $params = [
             'vnp_Version' => '2.1.0',
             'vnp_TmnCode' => $this->tmnCode,
             'vnp_Amount' => (int) round($amount * 100),
             'vnp_Command' => 'pay',
-            'vnp_CreateDate' => now()->format('YmdHis'),
+            'vnp_CreateDate' => $paymentTime->format('YmdHis'),
             'vnp_CurrCode' => 'VND',
             'vnp_IpAddr' => $clientIp,
             'vnp_Locale' => 'vn',
@@ -57,7 +59,7 @@ class VNPayService
             'vnp_OrderType' => 'other',
             'vnp_ReturnUrl' => $returnUrl,
             'vnp_TxnRef' => $txnRef,
-            'vnp_ExpireDate' => now()->addMinutes(15)->format('YmdHis'),
+            'vnp_ExpireDate' => $paymentTime->copy()->addMinutes(15)->format('YmdHis'),
         ];
 
         $params = array_filter(

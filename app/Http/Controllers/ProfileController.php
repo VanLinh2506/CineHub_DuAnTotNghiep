@@ -205,41 +205,53 @@ class ProfileController extends Controller
             'subscription_id' => 'required|exists:subscriptions,id',
         ]);
         
-        $user = Auth::user();
+        $user = Auth::user()->load('subscription');
         $subscriptionId = $request->input('subscription_id');
         
         $subscription = Subscription::findOrFail($subscriptionId);
+        $currentSubscription = $user->subscription;
+        $currentPrice = (int) ($currentSubscription?->price ?? 0);
+        $newPrice = (int) $subscription->price;
         
         // Kiểm tra nếu đã có gói này hoặc gói cao hơn
-        if ($user->subscription_id) {
-            $currentSubscription = $user->subscription;
-            if ($currentSubscription && $subscription->price <= $currentSubscription->price) {
+        if ($currentSubscription) {
+            if ($newPrice <= $currentPrice) {
                 return redirect()->route('profile.index')
                     ->with('error', 'Bạn đã có gói tương đương hoặc cao hơn!');
             }
         }
         
         // Kiểm tra điểm
-        $requiredPoints = (int)$subscription->price;
+        $requiredPoints = max($newPrice - $currentPrice, 0);
+
         if ($user->points < $requiredPoints) {
             return redirect()->route('profile.index')
                 ->with('error', "Bạn không đủ điểm! Cần {$requiredPoints} điểm, hiện có {$user->points} điểm.");
         }
-        
-        // Trừ điểm và cập nhật gói
-        $user->deductPoints($requiredPoints);
-        $user->update(['subscription_id' => $subscriptionId]);
-        
-        // Tạo transaction
-        Transaction::create([
-            'user_id' => $user->id,
-            'type' => 'subscription',
-            'related_id' => $subscriptionId,
-            'amount' => $requiredPoints,
-            'method' => 'Points',
-            'status' => 'Thành công',
-        ]);
-        
+
+        DB::transaction(function () use ($user, $subscriptionId, $requiredPoints) {
+            $lockedUser = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+
+            if ($lockedUser->points < $requiredPoints) {
+                throw new \RuntimeException('Khong du diem de nang cap goi.');
+            }
+
+            if ($requiredPoints > 0) {
+                $lockedUser->deductPoints($requiredPoints);
+            }
+
+            $lockedUser->update(['subscription_id' => $subscriptionId]);
+
+            Transaction::create([
+                'user_id' => $lockedUser->id,
+                'type' => 'subscription',
+                'related_id' => $subscriptionId,
+                'amount' => $requiredPoints,
+                'method' => 'Points',
+                'status' => 'Thành công',
+            ]);
+        });
+
         return redirect()->route('profile.index')
             ->with('success', "Nâng cấp gói {$subscription->name} thành công! Đã trừ {$requiredPoints} điểm.");
     }

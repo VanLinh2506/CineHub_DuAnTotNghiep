@@ -131,6 +131,7 @@ class ImportShowtimes extends Command
                                     'show_date' => $currentDate->toDateString(),
                                     'show_time' => $timeSlot,
                                     'price' => $this->getPriceForTime($timeSlot),
+                                    'available_seats' => $screen->total_seats, // Set available seats based on screen capacity
                                 ]);
 
                                 $totalShowtimes++;
