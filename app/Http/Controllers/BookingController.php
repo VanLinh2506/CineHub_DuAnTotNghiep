@@ -751,7 +751,7 @@ class BookingController extends Controller
                 $paymentUrl = $this->vnpay->createBookingPaymentUrl(
                     $booking,
                     $orderInfo,
-                    route('payment.vnpay.callback'),
+                    config('services.vnpay.return_url') ?: route('payment.vnpay.callback'),
                     $request->ip()
                 );
             } catch (\Throwable $vnpayError) {
@@ -1367,12 +1367,14 @@ class BookingController extends Controller
             return redirect()->route('login');
         }
         
-        $tickets = Ticket::with(['showtime.movie', 'showtime.theater', 'showtime.screen', 'bookingPending'])
+        // Get all bookings for this user (completed bookings only)
+        $bookings = Booking::with(['showtime.movie', 'showtime.theater', 'showtime.screen', 'tickets'])
             ->where('user_id', Auth::id())
+            ->where('status', 'completed')
             ->orderByDesc('created_at')
             ->paginate(20);
         
-        return view('booking.my-tickets', compact('tickets'));
+        return view('booking.my-tickets', compact('bookings'));
     }
     
     /**

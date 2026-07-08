@@ -72,6 +72,36 @@
         
         <!-- Main Content -->
         <div class="col-lg-9">
+            <!-- Alert Messages -->
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            
+            @if ($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Có lỗi xảy ra:</strong>
+                    <ul class="mb-0 mt-2">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            
             <!-- Personal Info Section -->
             <div id="personal-info" class="profile-section active">
                 <div class="section-header">
@@ -227,30 +257,47 @@
                     @else
                         <p>Bạn chưa có gói dịch vụ nào. Hãy chọn một gói để tận hưởng các lợi ích.</p>
                     @endif
+                    <p><strong>Số điểm hiện có:</strong> <span class="points-balance">{{ number_format($user->points ?? 0, 0, ',', '.') }} điểm</span></p>
                 </div>
 
                 <div class="subscription-plans">
                     @forelse($allSubscriptions as $package)
                         @php
-                            $currentPrice = optional($user->subscription)->price;
+                            $currentPrice = (float) optional($user->subscription)->price;
+                            $hasCurrentSubscription = $user->subscription !== null;
                             $isCurrent = $user->subscription_id === $package->id;
-                            $isDowngrade = $currentPrice !== null && $package->price <= $currentPrice && !$isCurrent;
+                            $isDowngrade = $hasCurrentSubscription && $package->price <= $currentPrice && !$isCurrent;
+                            $userPoints = $user->points ?? 0;
+                            $upgradeCost = max((float) $package->price - $currentPrice, 0);
+                            $notEnoughPoints = $userPoints < $upgradeCost;
                         @endphp
                         <div class="subscription-plan">
                             <h3>{{ $package->name }}</h3>
+                            @if(!$isCurrent && !$isDowngrade)
+                                <p class="plan-upgrade-cost-clean">Phí nâng cấp: {{ number_format($upgradeCost, 0, ',', '.') }} điểm</p>
+                            @endif
                             <p class="plan-price">{{ number_format((float) $package->price, 0, ',', '.') }} điểm</p>
                             @if($package->description)
                                 <p>{{ $package->description }}</p>
+                            @endif
+                            @if($package->benefits)
+                                <p class="plan-benefits">{{ $package->benefits }}</p>
                             @endif
                             @if($isCurrent)
                                 <button class="btn-secondary" type="button" disabled>Gói hiện tại</button>
                             @elseif($isDowngrade)
                                 <button class="btn-secondary" type="button" disabled>Gói thấp hơn</button>
                             @else
-                                <form method="POST" action="{{ route('profile.upgradeSubscription') }}">
+                                <form method="POST" action="{{ route('profile.upgradeSubscription') }}" onsubmit="return confirmUpgrade(event, {{ $upgradeCost }}, {{ $userPoints }}, '{{ $package->name }}')">
                                     @csrf
                                     <input type="hidden" name="subscription_id" value="{{ $package->id }}">
-                                    <button type="submit" class="btn-primary">Nâng cấp</button>
+                                    <button type="submit" class="btn-primary" @if($notEnoughPoints) disabled title="Không đủ điểm" @endif>
+                                        @if($notEnoughPoints)
+                                            <i class="fas fa-lock"></i> Không đủ điểm
+                                        @else
+                                            Nâng cấp
+                                        @endif
+                                    </button>
                                 </form>
                             @endif
                         </div>
@@ -267,6 +314,84 @@
 <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="uploadAvatar(this.files[0])">
 
 <style>
+    /* Alert Messages */
+    .alert {
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        border-radius: 12px;
+        border: none;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        position: relative;
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .alert-success {
+        background: rgba(40, 167, 69, 0.15);
+        border-left: 4px solid #28a745;
+        color: #85ff9f;
+    }
+    
+    .alert-danger {
+        background: rgba(220, 53, 69, 0.15);
+        border-left: 4px solid #dc3545;
+        color: #ff6b6b;
+    }
+    
+    .alert i {
+        font-size: 1.25rem;
+        margin-top: 0.125rem;
+    }
+    
+    .alert ul {
+        list-style: none;
+        padding-left: 0;
+    }
+    
+    .alert ul li:before {
+        content: "• ";
+        margin-right: 0.5rem;
+    }
+    
+    .alert .btn-close {
+        background: transparent;
+        border: none;
+        color: inherit;
+        opacity: 0.5;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: auto;
+        font-size: 1.25rem;
+        transition: opacity 0.2s;
+    }
+    
+    .alert .btn-close:hover {
+        opacity: 1;
+    }
+    
+    .alert .btn-close:before {
+        content: "×";
+        font-size: 1.5rem;
+        line-height: 1;
+    }
+
     .profile-luxury-container {
         max-width: 1400px;
         margin: 0 auto;
@@ -554,6 +679,12 @@
         color: #fff;
         margin: 0.5rem 0;
     }
+    
+    .points-balance {
+        color: #ffc107;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
 
     .subscription-plans {
         display: grid;
@@ -578,11 +709,30 @@
     .subscription-plan p {
         color: #bbb;
         margin: 0 0 1rem;
+        font-size: 0.9rem;
     }
 
     .subscription-plan .plan-price {
         color: #e50914;
         font-weight: 700;
+        font-size: 1.2rem;
+    }
+
+    .subscription-plan .plan-upgrade-cost-clean {
+        color: #f5c542;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+    
+    .subscription-plan .plan-benefits {
+        color: #aaa;
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+    
+    .subscription-plan button[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
     
     .wallet-balance {
@@ -666,6 +816,29 @@
 </style>
 
 <script>
+    // Auto-dismiss alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-10px)';
+                setTimeout(() => alert.remove(), 300);
+            }, 5000);
+        });
+        
+        // Close button functionality
+        const closeButtons = document.querySelectorAll('.alert .btn-close');
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const alert = this.closest('.alert');
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-10px)';
+                setTimeout(() => alert.remove(), 300);
+            });
+        });
+    });
+
     function switchProfileTab(tabId, event) {
         if (event) event.preventDefault();
         
@@ -707,6 +880,18 @@
         toggleEditMode(section);
         // Reload page or reset form
         location.reload();
+    }
+    
+    function confirmUpgrade(event, upgradeCost, userPoints, packageName) {
+        const packagePrice = upgradeCost;
+        if (userPoints < packagePrice) {
+            event.preventDefault();
+            const shortage = packagePrice - userPoints;
+            alert(`❌ Không đủ điểm!\n\nPhí nâng cấp gói "${packageName}": ${packagePrice.toLocaleString('vi-VN')} điểm\nBạn có: ${userPoints.toLocaleString('vi-VN')} điểm\nThiếu: ${shortage.toLocaleString('vi-VN')} điểm\n\nVui lòng nạp thêm điểm để nâng cấp!`);
+            return false;
+        }
+        
+        return confirm(`Xác nhận nâng cấp lên gói "${packageName}"?\n\nPhí nâng cấp: ${packagePrice.toLocaleString('vi-VN')} điểm\nSố dư sau khi nâng cấp: ${(userPoints - packagePrice).toLocaleString('vi-VN')} điểm`);
     }
     
     function uploadAvatar(file) {

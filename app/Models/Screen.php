@@ -10,6 +10,7 @@ class Screen extends Model
     use HasFactory;
 
     protected $table = 'theater_screens';
+    public $timestamps = false;
 
     protected $fillable = [
         'theater_id',

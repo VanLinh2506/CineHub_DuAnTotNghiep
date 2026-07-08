@@ -372,15 +372,15 @@
     </script>
 <?php endif; ?>
 
-<!-- Auth Modal (Login/Register) - Glassmorphism Design -->
+<!-- Auth Modal (Login/Register) - Glassmorphism Design v2.1 -->
 <div id="authModal" class="modal-overlay" style="display: none;">
     <div class="modal-content-glass">
         <span class="modal-close-glass" onclick="closeAuthModal()">×</span>
         
         <!-- Tab Navigation -->
         <div class="auth-tabs-glass">
-            <button class="auth-tab-glass active" onclick="switchAuthTab('login')">Đăng nhập</button>
-            <button class="auth-tab-glass" onclick="switchAuthTab('register')">Đăng ký</button>
+            <button id="loginTabBtn" class="auth-tab-glass active" onclick="switchAuthTab('login')">Đăng nhập</button>
+            <button id="registerTabBtn" class="auth-tab-glass" onclick="switchAuthTab('register')">Đăng ký</button>
         </div>
         
         <!-- Login Form -->
@@ -515,10 +515,10 @@
     }
 
     .modal-content-glass {
-        max-width: 460px;
+        max-width: 420px;
         width: 90%;
-        padding: 40px;
-        border-radius: 100px;
+        padding: 32px 28px;
+        border-radius: 32px;
         overflow: hidden;
         background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(18, 18, 24, 0.72));
         border: 1px solid rgba(255, 255, 255, 0.22);
@@ -553,15 +553,15 @@
 
     .modal-close-glass {
         position: absolute;
-        top: 15px;
-        right: 20px;
-        width: 34px;
-        height: 34px;
-        border-radius: 100px;
+        top: 12px;
+        right: 16px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
+        font-size: 22px;
         color: rgba(255, 255, 255, 0.86);
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.14);
@@ -577,52 +577,52 @@
 
     .modal-title-glass {
         color: #fff;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
         text-align: center;
-        font-size: 28px;
+        font-size: 26px;
         font-weight: 800;
     }
 
     .auth-tabs-glass {
         display: flex;
-        gap: 8px;
-        margin-bottom: 28px;
-        padding: 5px;
+        gap: 6px;
+        margin-bottom: 24px;
+        padding: 4px;
         border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 100px;
+        border-radius: 50px;
         background: rgba(0, 0, 0, 0.18);
     }
 
     .auth-tab-glass {
         flex: 1;
-        padding: 12px;
-        border-radius: 100px;
+        padding: 10px;
+        border-radius: 50px;
         background: transparent;
         border: none;
         color: rgba(255, 255, 255, 0.66);
-        font-size: 16px;
+        font-size: 15px;
         cursor: pointer;
         transition: color 0.2s ease, background 0.2s ease;
     }
 
     .auth-tab-glass.active {
-        color: #fff;
-        background: rgba(229, 9, 20, 0.78);
-        box-shadow: 0 10px 22px rgba(229, 9, 20, 0.22);
+        color: #fff !important;
+        background: rgba(229, 9, 20, 0.78) !important;
+        box-shadow: 0 10px 22px rgba(229, 9, 20, 0.22) !important;
     }
 
     .form-group-glass {
-        margin-bottom: 15px;
+        margin-bottom: 12px;
     }
 
     .input-glass {
         width: 100%;
-        padding: 13px 18px;
+        padding: 12px 16px;
         background: rgba(255, 255, 255, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.16);
-        border-radius: 100px;
+        border-radius: 50px;
         color: #fff;
-        font-size: 16px;
+        font-size: 15px;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
         transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     }
@@ -642,8 +642,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
-        font-size: 14px;
+        margin-bottom: 16px;
+        font-size: 13px;
     }
 
     .checkbox-glass {
@@ -671,10 +671,10 @@
 
     .btn-glass {
         width: 100%;
-        padding: 13px;
-        border-radius: 100px;
-        font-size: 16px;
-        font-weight: 800;
+        padding: 12px;
+        border-radius: 50px;
+        font-size: 15px;
+        font-weight: 700;
         cursor: pointer;
         text-decoration: none;
         display: flex;
@@ -721,9 +721,9 @@
         display: flex;
         align-items: center;
         text-align: center;
-        margin: 20px 0;
+        margin: 16px 0;
         color: rgba(255, 255, 255, 0.4);
-        font-size: 13px;
+        font-size: 12px;
     }
 
     .divider-glass::before,
@@ -739,9 +739,9 @@
 
     .modal-footer-glass {
         text-align: center;
-        margin-top: 20px;
+        margin-top: 16px;
         color: rgba(255, 255, 255, 0.72);
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .modal-footer-glass a {
@@ -777,14 +777,14 @@
 
     @media (max-width: 520px) {
         .modal-content-glass {
-            padding: 30px 20px;
-            border-radius: 44px;
+            padding: 24px 18px;
+            border-radius: 28px;
         }
 
         .form-options-glass {
             align-items: flex-start;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
     }
 </style>
@@ -816,24 +816,43 @@ function closeAuthModal() {
 }
 
 function switchAuthTab(tab) {
+    console.log('switchAuthTab called with:', tab);
+    
     const loginTab = document.getElementById('loginTab');
     const registerTab = document.getElementById('registerTab');
-    const tabs = document.querySelectorAll('.auth-tab-glass');
+    const loginTabBtn = document.getElementById('loginTabBtn');
+    const registerTabBtn = document.getElementById('registerTabBtn');
+    
+    console.log('Elements found:', {
+        loginTab: !!loginTab,
+        registerTab: !!registerTab,
+        loginTabBtn: !!loginTabBtn,
+        registerTabBtn: !!registerTabBtn
+    });
     
     if (tab === 'login') {
+        // Show/hide content
         loginTab.style.display = 'block';
         registerTab.style.display = 'none';
         loginTab.classList.add('active');
         registerTab.classList.remove('active');
-        tabs[0].classList.add('active');
-        tabs[1].classList.remove('active');
+        
+        // Update tab buttons
+        loginTabBtn.classList.add('active');
+        registerTabBtn.classList.remove('active');
+        console.log('Login tab activated');
     } else if (tab === 'register') {
+        // Show/hide content
         loginTab.style.display = 'none';
         registerTab.style.display = 'block';
         loginTab.classList.remove('active');
         registerTab.classList.add('active');
-        tabs[0].classList.remove('active');
-        tabs[1].classList.add('active');
+        
+        // Update tab buttons
+        loginTabBtn.classList.remove('active');
+        registerTabBtn.classList.add('active');
+        console.log('Register tab activated');
+        console.log('Register button classes:', registerTabBtn.classList);
     }
 }
 
