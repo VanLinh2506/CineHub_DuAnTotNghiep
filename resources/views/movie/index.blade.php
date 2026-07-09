@@ -101,6 +101,11 @@
             @if(!$movies->isEmpty())
             <span class="badge bg-primary">{{ count($movies) }} phim</span>
             @endif
+            @elseif(isset($audienceTitle) && $audienceTitle)
+            Kho phim của tôi: {{ $audienceTitle }}
+            @if(!$movies->isEmpty())
+            <span class="badge bg-primary">{{ count($movies) }} phim</span>
+            @endif
             @elseif(isset($categoryId) && $categoryId)
             @php $cat = collect($categories)->firstWhere('id', $categoryId); @endphp
             Phim {{ $cat['name'] ?? '' }}
@@ -186,8 +191,14 @@
                     </p>
                     <p class="movie-category">
                         <span class="movie-type-badge">{{ ($movie['type'] ?? 'phimle') === 'phimbo' ? 'Phim bộ' : 'Phim lẻ' }}</span>
-                        @if($movie['category_name'])
-                        <span> • {{ $movie['category_name'] ?? 'Chưa phân loại' }}</span>
+                        @php
+                            $movieCategoryNames = $movie->categories->pluck('name');
+                            if ($movieCategoryNames->isEmpty() && $movie->category) {
+                                $movieCategoryNames = collect([$movie->category->name]);
+                            }
+                        @endphp
+                        @if($movieCategoryNames->isNotEmpty())
+                        <span> • {{ $movieCategoryNames->join(', ') }}</span>
                         @endif
                     </p>
                     @if($movie['description'])
@@ -209,8 +220,8 @@
 
         {{-- Pagination --}}
         @if($movies->hasPages())
-        <nav aria-label="Phân trang danh sách phim" class="mt-4">
-            {{ $movies->withQueryString()->links() }}
+        <nav aria-label="Phân trang danh sách phim" class="movie-pagination mt-4">
+            {{ $movies->withQueryString()->links('pagination::bootstrap-4') }}
             <div class="text-center mt-3 text-muted">
                 <small>
                     Hiển thị {{ $movies->firstItem() }} - {{ $movies->lastItem() }}
@@ -223,6 +234,64 @@
         @endif
     </div>
 </section>
+
+<style>
+    .movie-pagination {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        margin-top: 24px !important;
+    }
+
+    .movie-pagination .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .movie-pagination .page-link {
+        min-width: 34px;
+        height: 34px;
+        padding: 0 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.06);
+        color: #f5f5f5;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        line-height: 1;
+        text-decoration: none;
+    }
+
+    .movie-pagination .page-link:hover {
+        background: rgba(229, 9, 20, 0.24);
+        border-color: rgba(229, 9, 20, 0.5);
+        color: #fff;
+    }
+
+    .movie-pagination .page-item.active .page-link {
+        background: #e50914;
+        border-color: #e50914;
+        color: #fff;
+    }
+
+    .movie-pagination .page-item.disabled .page-link {
+        opacity: 0.45;
+        cursor: default;
+    }
+
+    .movie-pagination svg {
+        width: 14px !important;
+        height: 14px !important;
+    }
+</style>
 
 @push('scripts')
 <script>

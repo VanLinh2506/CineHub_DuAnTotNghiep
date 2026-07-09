@@ -22,6 +22,11 @@ class Category extends Model
         return $this->hasMany(Movie::class);
     }
 
+    public function categorizedMovies()
+    {
+        return $this->belongsToMany(Movie::class, 'movie_category')->withTimestamps();
+    }
+
     public function parent()
     {
         return $this->belongsTo(Category::class, 'parent_id');

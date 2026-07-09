@@ -50,6 +50,7 @@ Route::prefix('movies')->name('movies.')->group(function () {
     Route::get('/online', [MovieController::class, 'online'])->middleware('auth')->name('online');
     Route::get('/phim-le', [MovieController::class, 'phimLe'])->name('phimle');
     Route::get('/phim-bo', [MovieController::class, 'phimBo'])->name('phimbo');
+    Route::get('/kho-phim/{audience}', [MovieController::class, 'library'])->name('library');
     Route::get('/category/{id}', [MovieController::class, 'category'])->name('category');
     Route::get('/{id}', [MovieController::class, 'show'])->name('show');
     Route::get('/{id}/introduce', [MovieController::class, 'introduce'])->name('introduce');

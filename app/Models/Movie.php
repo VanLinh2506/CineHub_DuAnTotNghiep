@@ -47,6 +47,11 @@ class Movie extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'movie_category')->withTimestamps();
+    }
+
     public function episodes()
     {
         return $this->hasMany(Episode::class)->orderBy('episode_number');
