@@ -3,13 +3,14 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h5>Thêm Combo/Đồ ăn mới</h5>
-    <a href="?route=moderator/foodItems" class="btn btn-secondary">
+    <a href="{{ route('moderator.foodItems') }}" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Quay lại
     </a>
 </div>
 
 <div class="stat-card">
-    <form method="POST" action="?route=moderator/foodItemsStore" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('moderator.foodItems.store') }}" enctype="multipart/form-data">
+        @csrf
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="name" class="form-label">Tên combo/đồ ăn <span class="text-danger">*</span></label>
@@ -48,7 +49,7 @@
         </div>
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Lưu</button>
-            <a href="?route=moderator/foodItems" class="btn btn-secondary"><i class="fas fa-times"></i> Hủy</a>
+            <a href="{{ route('moderator.foodItems') }}" class="btn btn-secondary"><i class="fas fa-times"></i> Hủy</a>
         </div>
     </form>
 </div>

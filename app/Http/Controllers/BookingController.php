@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\SeatMapChanged;
 use App\Models\Movie;
 use App\Models\Theater;
 use App\Models\Showtime;
@@ -9,10 +10,12 @@ use App\Models\Screen;
 use App\Models\Ticket;
 use App\Models\Booking;
 use App\Models\FoodItem;
+use App\Models\SeatReservation;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\VNPayService;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +25,11 @@ use Carbon\Carbon;
 
 class BookingController extends Controller
 {
+    private const SEAT_RESERVATION_MINUTES = 10;
+    private const BOOKED_TICKET_STATUS = 'Đã đặt';
+    private const RESERVATION_CONFLICT_MESSAGE = 'Ghế này vừa được người khác chọn. Vui lòng chọn ghế khác.';
+    private const RESERVATION_SYSTEM_ERROR_MESSAGE = 'Không thể giữ ghế do lỗi hệ thống. Vui lòng thử lại.';
+
     public function __construct(protected VNPayService $vnpay) {}
 
     public function createVnpayPayment(Request $request)
@@ -66,6 +74,18 @@ class BookingController extends Controller
         if (!$this->vnpay->isPaymentSuccess($request)) {
             if ($booking->status === 'pending') {
                 $booking->update(['status' => 'cancelled']);
+                $releasedSeats = $this->releaseSeatReservations($booking->showtime_id, $booking->seats ?? []);
+                if ($releasedSeats > 0) {
+                    $seatStatus = $this->getSeatStatusData($booking->showtime_id, $booking->user_id);
+                    $this->dispatchSeatMapChanged(
+                        $booking->showtime_id,
+                        'released',
+                        $seatStatus['bookedSeats'],
+                        $seatStatus['reservedSeats'],
+                        $booking->seats ?? [],
+                        $booking->user_id
+                    );
+                }
             }
 
             return redirect()->route('booking.index', ['showtime_id' => $booking->showtime_id])
@@ -80,6 +100,22 @@ class BookingController extends Controller
                 'booking_amount' => $booking->total_amount,
                 'callback_amount' => $callbackAmount,
             ]);
+
+            if ($booking->status === 'pending') {
+                $booking->update(['status' => 'cancelled']);
+                $releasedSeats = $this->releaseSeatReservations($booking->showtime_id, $booking->seats ?? []);
+                if ($releasedSeats > 0) {
+                    $seatStatus = $this->getSeatStatusData($booking->showtime_id, $booking->user_id);
+                    $this->dispatchSeatMapChanged(
+                        $booking->showtime_id,
+                        'released',
+                        $seatStatus['bookedSeats'],
+                        $seatStatus['reservedSeats'],
+                        $booking->seats ?? [],
+                        $booking->user_id
+                    );
+                }
+            }
 
             return redirect()->route('booking.index', ['showtime_id' => $booking->showtime_id])
                 ->with('error', 'So tien thanh toan khong khop voi booking.');
@@ -101,6 +137,18 @@ class BookingController extends Controller
 
             if ($booking->fresh()?->status === 'pending') {
                 $booking->update(['status' => 'cancelled']);
+                $releasedSeats = $this->releaseSeatReservations($booking->showtime_id, $booking->seats ?? []);
+                if ($releasedSeats > 0) {
+                    $seatStatus = $this->getSeatStatusData($booking->showtime_id, $booking->user_id);
+                    $this->dispatchSeatMapChanged(
+                        $booking->showtime_id,
+                        'released',
+                        $seatStatus['bookedSeats'],
+                        $seatStatus['reservedSeats'],
+                        $booking->seats ?? [],
+                        $booking->user_id
+                    );
+                }
             }
 
             return redirect()->route('booking.index', ['showtime_id' => $booking->showtime_id])
@@ -355,6 +403,7 @@ class BookingController extends Controller
         $movie = null;
         $bookedSeats = [];
         $reservedSeats = [];
+        $myReservedSeats = [];
         $seatLayout = null;
         $screenInfo = null;
         $theaterInfo = null;
@@ -372,23 +421,11 @@ class BookingController extends Controller
                 $movie = $showtime->movie;
                 $theaterInfo = $showtime->theater;
                 $screenInfo = $showtime->screen;
-                
-                // Get booked seats
-                $bookedSeats = Ticket::where('showtime_id', $selectedShowtimeId)
-                    ->where('status', 'Đã đặt')
-                    ->pluck('seat')
-                    ->toArray();
-                
-                // Get reserved seats (if table exists)
-                try {
-                    $reservedSeats = DB::table('seat_reservations')
-                        ->where('showtime_id', $selectedShowtimeId)
-                        ->where('expires_at', '>', now())
-                        ->pluck('seat')
-                        ->toArray();
-                } catch (\Exception $e) {
-                    $reservedSeats = [];
-                }
+
+                $seatStatus = $this->getSeatStatusData($selectedShowtimeId, Auth::id());
+                $bookedSeats = $seatStatus['bookedSeats'];
+                $reservedSeats = $seatStatus['reservedSeats'];
+                $myReservedSeats = $seatStatus['myReservedSeats'];
                 
                 // Get seat layout
                 if ($screenInfo && $screenInfo->seat_layout_config) {
@@ -468,7 +505,7 @@ class BookingController extends Controller
             'selectedTheater', 'selectedDate', 'selectedShowtimeId', 'dates',
             'bookedSeats', 'reservedSeats', 'seatLayout', 'normalPrice', 'vipPrice',
             'couplePrice', 'foodItems', 'screenInfo', 'theaterInfo', 'screenType',
-            'basePrice', 'screenSurcharge', 'vnpayConfigured'
+            'basePrice', 'screenSurcharge', 'vnpayConfigured', 'myReservedSeats'
         ));
     }
 
@@ -476,6 +513,314 @@ class BookingController extends Controller
     {
         return (string) config('services.vnpay.tmn_code') !== ''
             && (string) config('services.vnpay.hash_secret') !== '';
+    }
+
+    private function normalizeSeatList(array $seats): array
+    {
+        $normalized = [];
+
+        foreach ($seats as $seat) {
+            if (!is_string($seat) && !is_numeric($seat)) {
+                continue;
+            }
+
+            $seat = Str::upper(trim((string) $seat));
+
+            if (!preg_match('/^[A-Z]\d+$/', $seat)) {
+                continue;
+            }
+
+            $normalized[$seat] = $seat;
+        }
+
+        return array_values($normalized);
+    }
+
+    private function cleanupExpiredSeatReservations(?int $showtimeId = null, bool $broadcast = false): array
+    {
+        $expiredReservations = SeatReservation::query()
+            ->when($showtimeId, fn ($query) => $query->where('showtime_id', $showtimeId))
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<=', now())
+            ->get(['id', 'showtime_id', 'seat', 'user_id']);
+
+        if ($expiredReservations->isEmpty()) {
+            return [];
+        }
+
+        SeatReservation::query()
+            ->whereIn('id', $expiredReservations->pluck('id')->filter()->all())
+            ->delete();
+
+        if ($broadcast) {
+            foreach ($expiredReservations->groupBy('showtime_id') as $expiredShowtimeId => $reservations) {
+                $seatStatus = $this->getSeatStatusData((int) $expiredShowtimeId, null, false);
+
+                $this->dispatchSeatMapChanged(
+                    (int) $expiredShowtimeId,
+                    'expired',
+                    $seatStatus['bookedSeats'],
+                    $seatStatus['reservedSeats'],
+                    $reservations->pluck('seat')->filter()->unique()->values()->all(),
+                    null,
+                    false
+                );
+            }
+        }
+
+        return $expiredReservations->pluck('seat')->filter()->unique()->values()->all();
+    }
+
+    private function getSeatStatusData(int $showtimeId, ?int $currentUserId = null, bool $cleanupExpired = true): array
+    {
+        if ($cleanupExpired) {
+            $this->cleanupExpiredSeatReservations($showtimeId, true);
+        }
+
+        $bookedSeats = Ticket::where('showtime_id', $showtimeId)
+            ->where('status', self::BOOKED_TICKET_STATUS)
+            ->pluck('seat')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $reservationRows = SeatReservation::query()
+            ->where('showtime_id', $showtimeId)
+            ->active()
+            ->get(['seat', 'user_id', 'session_id', 'expires_at']);
+
+        $reservedSeats = $reservationRows->pluck('seat')->filter()->unique()->values()->all();
+        $myReservedSeats = [];
+
+        if ($currentUserId) {
+            $myReservedSeats = $reservationRows
+                ->where('user_id', $currentUserId)
+                ->pluck('seat')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        $otherReservedSeats = $currentUserId
+            ? array_values(array_diff($reservedSeats, $myReservedSeats))
+            : $reservedSeats;
+
+        return [
+            'bookedSeats' => $bookedSeats,
+            'reservedSeats' => $reservedSeats,
+            'myReservedSeats' => $myReservedSeats,
+            'otherReservedSeats' => $otherReservedSeats,
+        ];
+    }
+
+    private function getReservationTimerData(int $showtimeId, ?int $currentUserId = null, ?array $seats = null): array
+    {
+        $serverNow = now();
+
+        if (!$currentUserId) {
+            return [
+                'serverNow' => $serverNow->toIso8601String(),
+                'reservationExpiresAt' => null,
+                'remainingSeconds' => 0,
+            ];
+        }
+
+        $query = SeatReservation::query()
+            ->where('showtime_id', $showtimeId)
+            ->where('user_id', $currentUserId)
+            ->active();
+
+        if ($seats !== null) {
+            $normalizedSeats = $this->normalizeSeatList($seats);
+            if (empty($normalizedSeats)) {
+                return [
+                    'serverNow' => $serverNow->toIso8601String(),
+                    'reservationExpiresAt' => null,
+                    'remainingSeconds' => 0,
+                ];
+            }
+
+            $query->whereIn('seat', $normalizedSeats);
+        }
+
+        $expiresAt = $query->orderBy('expires_at')->value('expires_at');
+        $expiresAt = $expiresAt ? Carbon::parse($expiresAt) : null;
+
+        return [
+            'serverNow' => $serverNow->toIso8601String(),
+            'reservationExpiresAt' => $expiresAt?->toIso8601String(),
+            'remainingSeconds' => $expiresAt ? max(0, $serverNow->diffInSeconds($expiresAt, false)) : 0,
+        ];
+    }
+
+    private function dispatchSeatMapChanged(
+        int $showtimeId,
+        string $action,
+        array $bookedSeats,
+        array $reservedSeats,
+        array $seats = [],
+        ?int $userId = null,
+        bool $toOthers = true,
+        array $timer = []
+    ): void {
+        $event = new SeatMapChanged(
+            showtimeId: $showtimeId,
+            action: $action,
+            seats: $this->normalizeSeatList($seats),
+            bookedSeats: $this->normalizeSeatList($bookedSeats),
+            reservedSeats: $this->normalizeSeatList($reservedSeats),
+            userId: $userId,
+            timer: $timer,
+        );
+
+        $broadcastEvent = function () use ($event, $toOthers): void {
+            $broadcast = broadcast($event);
+
+            if ($toOthers) {
+                $broadcast->toOthers();
+            }
+        };
+
+        if (DB::transactionLevel() > 0) {
+            DB::afterCommit($broadcastEvent);
+        } else {
+            $broadcastEvent();
+        }
+    }
+
+    private function reserveSeatsForUser(
+        int $showtimeId,
+        array $seats,
+        User $user,
+        ?string $sessionId = null,
+        int $ttlMinutes = self::SEAT_RESERVATION_MINUTES
+    ): array {
+        $normalizedSeats = $this->normalizeSeatList($seats);
+
+        if (empty($normalizedSeats)) {
+            return [];
+        }
+
+        $sessionId = $sessionId ?: session()->getId();
+        $expiresAt = now()->addMinutes($ttlMinutes);
+
+        try {
+            return DB::transaction(function () use ($showtimeId, $normalizedSeats, $user, $sessionId, $expiresAt) {
+                $this->cleanupExpiredSeatReservations($showtimeId);
+
+                $bookedSeats = Ticket::where('showtime_id', $showtimeId)
+                    ->where('status', self::BOOKED_TICKET_STATUS)
+                    ->whereIn('seat', $normalizedSeats)
+                    ->pluck('seat')
+                    ->toArray();
+
+                if (!empty($bookedSeats)) {
+                    throw new \RuntimeException(self::RESERVATION_CONFLICT_MESSAGE);
+                }
+
+                $existingReservations = SeatReservation::query()
+                    ->where('showtime_id', $showtimeId)
+                    ->whereIn('seat', $normalizedSeats)
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('seat');
+
+                foreach ($normalizedSeats as $seat) {
+                    $existing = $existingReservations->get($seat);
+
+                    if ($existing && (int) $existing->user_id !== (int) $user->id) {
+                        throw new \RuntimeException(self::RESERVATION_CONFLICT_MESSAGE);
+                    }
+
+                    $payload = [
+                        'user_id' => $user->id,
+                        'session_id' => $sessionId,
+                    ];
+
+                    if ($existing) {
+                        $existing->update($payload);
+                        continue;
+                    }
+
+                    SeatReservation::create($payload + [
+                        'showtime_id' => $showtimeId,
+                        'seat' => $seat,
+                        'reserved_at' => now(),
+                        'expires_at' => $expiresAt,
+                    ]);
+                }
+
+                return SeatReservation::query()
+                    ->where('showtime_id', $showtimeId)
+                    ->where('user_id', $user->id)
+                    ->whereIn('seat', $normalizedSeats)
+                    ->active()
+                    ->pluck('seat')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+            });
+        } catch (QueryException $e) {
+            Log::warning('Seat reservation query error', [
+                'showtime_id' => $showtimeId,
+                'user_id' => $user->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            throw new \RuntimeException(self::RESERVATION_SYSTEM_ERROR_MESSAGE);
+        }
+    }
+
+    private function releaseSeatReservations(
+        int $showtimeId,
+        array $seats,
+        ?int $userId = null
+    ): int {
+        $normalizedSeats = $this->normalizeSeatList($seats);
+
+        if (empty($normalizedSeats)) {
+            return 0;
+        }
+
+        $query = SeatReservation::query()
+            ->where('showtime_id', $showtimeId)
+            ->whereIn('seat', $normalizedSeats);
+
+        if ($userId !== null) {
+            $query->where('user_id', $userId);
+        }
+
+        return (int) $query->delete();
+    }
+
+    private function extendSeatReservations(
+        int $showtimeId,
+        array $seats,
+        int $userId,
+        ?string $sessionId = null,
+        int $ttlMinutes = self::SEAT_RESERVATION_MINUTES
+    ): int {
+        $normalizedSeats = $this->normalizeSeatList($seats);
+
+        if (empty($normalizedSeats)) {
+            return 0;
+        }
+
+        $payload = [
+            'session_id' => $sessionId ?: session()->getId(),
+            'reserved_at' => now(),
+            'expires_at' => now()->addMinutes($ttlMinutes),
+        ];
+
+        return SeatReservation::query()
+            ->where('showtime_id', $showtimeId)
+            ->where('user_id', $userId)
+            ->whereIn('seat', $normalizedSeats)
+            ->active()
+            ->update($payload);
     }
     
     /**
@@ -495,11 +840,11 @@ class BookingController extends Controller
             return response()->json(['error' => 'Showtime not found'], 404);
         }
         
-        // Get booked seats
-        $bookedSeats = Ticket::where('showtime_id', $showtimeId)
-            ->where('status', 'Đã đặt')
-            ->pluck('seat')
-            ->toArray();
+        $seatStatus = $this->getSeatStatusData($showtimeId, Auth::id());
+        $bookedSeats = $seatStatus['bookedSeats'];
+        $reservedSeats = $seatStatus['reservedSeats'];
+        $myReservedSeats = $seatStatus['myReservedSeats'];
+        $timer = $this->getReservationTimerData((int) $showtimeId, Auth::id());
         
         // Get seat layout
         $seatLayout = null;
@@ -529,6 +874,11 @@ class BookingController extends Controller
         return response()->json([
             'layout' => $seatLayout,
             'bookedSeats' => $bookedSeats,
+            'reservedSeats' => $reservedSeats,
+            'myReservedSeats' => $myReservedSeats,
+            'serverNow' => $timer['serverNow'],
+            'reservationExpiresAt' => $timer['reservationExpiresAt'],
+            'remainingSeconds' => $timer['remainingSeconds'],
             'prices' => [
                 'base' => $basePrice,
                 'normal' => $normalPrice,
@@ -539,6 +889,137 @@ class BookingController extends Controller
                 'name' => $showtime->screen->screen_name ?? '',
                 'type' => $screenType,
             ],
+        ]);
+    }
+
+    public function reserveSeats(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+        }
+
+        $data = $request->validate([
+            'showtime_id' => 'required|exists:showtimes,id',
+            'seats' => 'required|array|min:1|max:8',
+        ]);
+
+        try {
+            $reservedSeats = $this->reserveSeatsForUser(
+                (int) $data['showtime_id'],
+                $data['seats'],
+                Auth::user(),
+                session()->getId()
+            );
+
+            $seatStatus = $this->getSeatStatusData((int) $data['showtime_id'], Auth::id());
+            $timer = $this->getReservationTimerData((int) $data['showtime_id'], Auth::id(), $reservedSeats);
+            $this->dispatchSeatMapChanged(
+                (int) $data['showtime_id'],
+                'selected',
+                $seatStatus['bookedSeats'],
+                $seatStatus['reservedSeats'],
+                $reservedSeats,
+                Auth::id(),
+                true,
+                $timer
+            );
+            $this->dispatchSeatMapChanged(
+                (int) $data['showtime_id'],
+                'timer',
+                $seatStatus['bookedSeats'],
+                $seatStatus['reservedSeats'],
+                $reservedSeats,
+                Auth::id(),
+                false,
+                $timer
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Ghế đã được giữ chỗ.',
+                'reservedSeats' => $seatStatus['reservedSeats'],
+                'myReservedSeats' => $seatStatus['myReservedSeats'],
+                'bookedSeats' => $seatStatus['bookedSeats'],
+                'lockedSeats' => $reservedSeats,
+                'serverNow' => $timer['serverNow'],
+                'reservationExpiresAt' => $timer['reservationExpiresAt'],
+                'remainingSeconds' => $timer['remainingSeconds'],
+            ]);
+        } catch (\RuntimeException $e) {
+            $status = $e->getMessage() === self::RESERVATION_SYSTEM_ERROR_MESSAGE ? 500 : 409;
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() ?: self::RESERVATION_CONFLICT_MESSAGE,
+            ], $status);
+        }
+    }
+
+    public function releaseReservedSeats(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+        }
+
+        $data = $request->validate([
+            'showtime_id' => 'required|exists:showtimes,id',
+            'seats' => 'required|array|min:1',
+        ]);
+
+        $released = $this->releaseSeatReservations(
+            (int) $data['showtime_id'],
+            $data['seats'],
+            Auth::id()
+        );
+
+        $seatStatus = $this->getSeatStatusData((int) $data['showtime_id'], Auth::id());
+        if ($released > 0) {
+            $this->dispatchSeatMapChanged(
+                (int) $data['showtime_id'],
+                'released',
+                $seatStatus['bookedSeats'],
+                $seatStatus['reservedSeats'],
+                $data['seats'],
+                Auth::id()
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'released' => $released,
+            'reservedSeats' => $seatStatus['reservedSeats'],
+            'myReservedSeats' => $seatStatus['myReservedSeats'],
+            'serverNow' => now()->toIso8601String(),
+            'reservationExpiresAt' => null,
+            'remainingSeconds' => 0,
+        ]);
+    }
+
+    public function extendReservedSeats(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+        }
+
+        $data = $request->validate([
+            'showtime_id' => 'required|exists:showtimes,id',
+            'seats' => 'required|array|min:1',
+        ]);
+
+        $extended = $this->extendSeatReservations(
+            (int) $data['showtime_id'],
+            $data['seats'],
+            Auth::id(),
+            session()->getId()
+        );
+
+        $seatStatus = $this->getSeatStatusData((int) $data['showtime_id'], Auth::id());
+
+        return response()->json([
+            'success' => true,
+            'extended' => $extended,
+            'reservedSeats' => $seatStatus['reservedSeats'],
+            'myReservedSeats' => $seatStatus['myReservedSeats'],
         ]);
     }
     
@@ -618,7 +1099,7 @@ class BookingController extends Controller
         
         $user = Auth::user();
         $showtimeId = $request->input('showtime_id');
-        $seats = $request->input('seats');
+        $seats = $this->normalizeSeatList($request->input('seats', []));
         $customerEmail = $request->input('customer_email');
         $foodItems = $request->input('food_items', []);
         $paymentMethod = $request->input('payment_method', 'vnpay');
@@ -650,13 +1131,65 @@ class BookingController extends Controller
             // Continue even if date parsing fails - don't block booking
         }
         
+        if (empty($seats)) {
+            return redirect()->back()->withInput()->with('error', 'Vui lòng chọn ghế hợp lệ.');
+        }
+
+        $activeReservationSeats = SeatReservation::query()
+            ->where('showtime_id', $showtimeId)
+            ->where('user_id', $user->id)
+            ->whereIn('seat', $seats)
+            ->active()
+            ->pluck('seat')
+            ->toArray();
+
+        if (count($activeReservationSeats) !== count($seats)) {
+            $releasedSeats = $this->releaseSeatReservations($showtimeId, $seats, $user->id);
+            if ($releasedSeats > 0) {
+                $seatStatus = $this->getSeatStatusData($showtimeId, $user->id);
+                $this->dispatchSeatMapChanged(
+                    $showtimeId,
+                    'released',
+                    $seatStatus['bookedSeats'],
+                    $seatStatus['reservedSeats'],
+                    $seats,
+                    $user->id
+                );
+            }
+
+            return redirect()->back()->withInput()->with('error', 'Ghế của bạn đã hết hạn hoặc chưa được xác nhận. Vui lòng chọn lại ghế.');
+        }
+
+        $reservationExpiresAt = SeatReservation::query()
+            ->where('showtime_id', $showtimeId)
+            ->where('user_id', $user->id)
+            ->whereIn('seat', $seats)
+            ->active()
+            ->orderBy('expires_at')
+            ->value('expires_at');
+
+        $reservationExpiresAt = $reservationExpiresAt ? Carbon::parse($reservationExpiresAt) : now();
+
         // Check seats availability
         $bookedSeatsCount = Ticket::where('showtime_id', $showtimeId)
             ->whereIn('seat', $seats)
-            ->where('status', 'Đã đặt')
+            ->where('status', self::BOOKED_TICKET_STATUS)
             ->count();
         
         if ($bookedSeatsCount > 0) {
+            $releasedSeats = $this->releaseSeatReservations($showtimeId, $seats, $user->id);
+            if ($releasedSeats > 0) {
+                $seatStatus = $this->getSeatStatusData($showtimeId, $user->id);
+                $this->dispatchSeatMapChanged(
+                    $showtimeId,
+                    'released',
+                    $seatStatus['bookedSeats'],
+                    $seatStatus['reservedSeats'],
+                    $seats,
+                    $user->id
+                );
+            }
+
             return redirect()->back()->with('error', 'Một số ghế đã được đặt!');
         }
         
@@ -706,7 +1239,7 @@ class BookingController extends Controller
                 'total_amount' => $totalAmount,
                 'vnp_txn_ref' => $vnpTxnRef,
                 'status' => 'pending',
-                'expires_at' => now()->addMinutes(10),
+                'expires_at' => $reservationExpiresAt,
             ]);
             
             // Save to session for VNPay
@@ -714,6 +1247,15 @@ class BookingController extends Controller
                 'pending_booking_id' => $booking->id,
                 'showtime_id' => $showtimeId,
             ]);
+
+            SeatReservation::query()
+                ->where('showtime_id', $showtimeId)
+                ->where('user_id', $user->id)
+                ->whereIn('seat', $seats)
+                ->active()
+                ->update([
+                    'session_id' => session()->getId(),
+                ]);
 
             if ($paymentMethod === 'wallet') {
                 $lockedUser = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
@@ -793,6 +1335,62 @@ class BookingController extends Controller
         }
         
         $seatCount = count($seats);
+
+        $seatLayout = null;
+        $bookedSeats = [];
+
+        if ($showtime_id) {
+            try {
+                $seatStatus = $this->getSeatStatusData($showtime_id, Auth::id());
+                $bookedSeats = array_values(array_unique(array_merge(
+                    $seatStatus['bookedSeats'],
+                    $seatStatus['otherReservedSeats']
+                )));
+
+                $showtime = Showtime::find($showtime_id);
+                if ($showtime && $showtime->screen_id) {
+                    $screen = Screen::find($showtime->screen_id);
+                    if ($screen && $screen->seat_layout_config) {
+                        $seatLayout = is_string($screen->seat_layout_config)
+                            ? json_decode($screen->seat_layout_config, true)
+                            : $screen->seat_layout_config;
+                    }
+                }
+
+                if (!$seatLayout) {
+                    $seatLayout = [
+                        'rows' => ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
+                        'cols' => range(1, 12),
+                        'vip_rows' => ['D', 'E', 'F'],
+                        'couple_rows' => ['J'],
+                    ];
+                }
+            } catch (\Exception $e) {
+                Log::error('ERROR getting seat layout: ' . $e->getMessage());
+                $seatLayout = [
+                    'rows' => ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
+                    'cols' => range(1, 12),
+                    'vip_rows' => ['D', 'E', 'F'],
+                    'couple_rows' => ['J'],
+                ];
+            }
+        }
+
+        $coupleRows = $seatLayout['couple_rows'] ?? ['J'];
+        $seatsByRow = [];
+
+        foreach ($seats as $seat) {
+            $seat = Str::upper(trim((string) $seat));
+            if (!preg_match('/^[A-Z]\d+$/', $seat)) {
+                continue;
+            }
+
+            $row = substr($seat, 0, 1);
+            $col = (int) substr($seat, 1);
+            $seatsByRow[$row][] = $col;
+        }
+
+        return $this->validateSeatSelectionSimple($seatsByRow, $seatLayout, $bookedSeats, $coupleRows);
         
         // Lấy danh sách ghế đã được đặt
         $bookedSeats = [];
@@ -801,7 +1399,7 @@ class BookingController extends Controller
         if ($showtime_id) {
             try {
                 $bookedSeats = Ticket::where('showtime_id', $showtime_id)
-                    ->where('status', 'Đã đặt')
+                    ->where('status', self::BOOKED_TICKET_STATUS)
                     ->pluck('seat')
                     ->toArray();
                 
@@ -1404,6 +2002,23 @@ class BookingController extends Controller
                 return;
             }
 
+            if ($lockedBooking->expires_at && Carbon::parse($lockedBooking->expires_at)->lte(now())) {
+                $lockedBooking->update(['status' => 'cancelled']);
+                throw new \RuntimeException('Thời gian giữ ghế đã hết. Vui lòng chọn lại ghế.');
+            }
+
+            $activeReservationCount = SeatReservation::query()
+                ->where('showtime_id', $lockedBooking->showtime_id)
+                ->where('user_id', $lockedBooking->user_id)
+                ->whereIn('seat', $lockedBooking->seats ?? [])
+                ->active()
+                ->count();
+
+            if ($activeReservationCount !== count($lockedBooking->seats ?? [])) {
+                $lockedBooking->update(['status' => 'cancelled']);
+                throw new \RuntimeException('Thời gian giữ ghế đã hết. Vui lòng chọn lại ghế.');
+            }
+
             $showtime = Showtime::with('screen')->findOrFail($lockedBooking->showtime_id);
             $basePrice = $basePrice ?? $showtime->price;
             $screenSurcharge = $screenSurcharge ?? $this->getScreenTypeSurcharge($showtime->screen->screen_type ?? '2D');
@@ -1428,7 +2043,7 @@ class BookingController extends Controller
                     'seat_type' => $seatType,
                     'price' => $price,
                     'qr_code' => 'TICKET_' . Str::random(24),
-                    'status' => 'Đã đặt',
+                    'status' => self::BOOKED_TICKET_STATUS,
                 ]);
             }
 
@@ -1445,10 +2060,28 @@ class BookingController extends Controller
                 ]
             );
 
+            SeatReservation::query()
+                ->where('showtime_id', $lockedBooking->showtime_id)
+                ->whereIn('seat', $lockedBooking->seats ?? [])
+                ->delete();
+
             $lockedBooking->update([
                 'status' => 'completed',
                 'qr_code' => $lockedBooking->qr_code ?: ('BOOKING_' . Str::random(24)),
             ]);
+
+            DB::afterCommit(function () use ($lockedBooking): void {
+                $seatStatus = $this->getSeatStatusData($lockedBooking->showtime_id, $lockedBooking->user_id);
+
+                $this->dispatchSeatMapChanged(
+                    $lockedBooking->showtime_id,
+                    'paid',
+                    $seatStatus['bookedSeats'],
+                    $seatStatus['reservedSeats'],
+                    $lockedBooking->seats ?? [],
+                    $lockedBooking->user_id
+                );
+            });
 
             $this->createBookingNotification($lockedBooking->fresh(['showtime.movie']));
         };

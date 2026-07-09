@@ -7,6 +7,7 @@ use App\Models\Theater;
 use App\Models\Showtime;
 use App\Models\Ticket;
 use App\Models\Booking;
+use App\Models\SeatReservation;
 use App\Models\Screen;
 use App\Models\Movie;
 use App\Models\Transaction;
@@ -182,8 +183,14 @@ class CounterStaffController extends Controller
             ->orderBy('show_time')
             ->get()
             ->map(function($showtime) {
-                $showtime->booked_seats = $showtime->tickets->count();
-                $showtime->available_seats = $showtime->screen->total_seats - $showtime->booked_seats;
+                $bookedSeats = $showtime->tickets->count();
+                $reservedSeats = SeatReservation::where('showtime_id', $showtime->id)
+                    ->active()
+                    ->count();
+
+                $showtime->booked_seats = $bookedSeats;
+                $showtime->reserved_seats = $reservedSeats;
+                $showtime->available_seats = max(0, $showtime->screen->total_seats - $bookedSeats - $reservedSeats);
                 return $showtime;
             });
         
@@ -211,8 +218,14 @@ class CounterStaffController extends Controller
             ->orderBy('show_time')
             ->get()
             ->map(function($showtime) {
-                $showtime->booked_seats = $showtime->tickets->count();
-                $showtime->available_seats = $showtime->screen->total_seats - $showtime->booked_seats;
+                $bookedSeats = $showtime->tickets->count();
+                $reservedSeats = SeatReservation::where('showtime_id', $showtime->id)
+                    ->active()
+                    ->count();
+
+                $showtime->booked_seats = $bookedSeats;
+                $showtime->reserved_seats = $reservedSeats;
+                $showtime->available_seats = max(0, $showtime->screen->total_seats - $bookedSeats - $reservedSeats);
                 return $showtime;
             });
         
@@ -234,16 +247,13 @@ class CounterStaffController extends Controller
                     ->pluck('seat')
                     ->toArray();
                 
-                // Ghế đang pending
-                $pendingSeats = Booking::where('showtime_id', $showtimeId)
-                    ->where('status', 'pending')
-                    ->where('created_at', '>', now()->subMinutes(10))
-                    ->get()
-                    ->pluck('seats')
-                    ->flatten()
+                // Ghế đang giữ theo server timer.
+                $reservedSeats = SeatReservation::where('showtime_id', $showtimeId)
+                    ->active()
+                    ->pluck('seat')
                     ->toArray();
                 
-                $bookedSeats = array_unique(array_merge($bookedSeats, $pendingSeats));
+                $bookedSeats = array_unique(array_merge($bookedSeats, $reservedSeats));
                 
                 // Seat layout
                 $seatLayout = $selectedShowtime->screen->seat_layout_config 

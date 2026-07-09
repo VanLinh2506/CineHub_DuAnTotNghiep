@@ -8,7 +8,7 @@
             <small class="text-muted">Rạp: <strong>{{ $theater['name'] ?? '' }}</strong></small>
         @endif
     </div>
-    <a href="?route=moderator/foodItemsCreate" class="btn btn-primary">
+    <a href="{{ route('moderator.foodItems.create') }}" class="btn btn-primary">
         <i class="fas fa-plus"></i> Thêm mới
     </a>
 </div>
@@ -31,7 +31,7 @@
             <button type="submit" class="btn btn-secondary w-100"><i class="fas fa-search"></i> Tìm</button>
         </div>
         <div class="col-md-2">
-            <a href="?route=moderator/foodItems" class="btn btn-outline-secondary w-100"><i class="fas fa-redo"></i> Xóa lọc</a>
+            <a href="{{ route('moderator.foodItems') }}" class="btn btn-outline-secondary w-100"><i class="fas fa-redo"></i> Xóa lọc</a>
         </div>
     </form>
 </div>
@@ -47,7 +47,7 @@
                     <tr>
                         <td colspan="8" class="text-center text-muted py-4">
                             <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
-                            Chưa có combo/đồ ăn nào. <a href="?route=moderator/foodItemsCreate" class="text-primary">Thêm mới ngay</a>
+                            Chưa có combo/đồ ăn nào. <a href="{{ route('moderator.foodItems.create') }}" class="text-primary">Thêm mới ngay</a>
                         </td>
                     </tr>
                 @else
@@ -55,7 +55,7 @@
                     <tr>
                         <td>{{ $item['id'] }}</td>
                         <td>
-                            @if($item['image'])
+                            @if(!empty($item['image']))
                                 <img src="{{ $item['image'] }}" alt="{{ $item['name'] }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
                             @else
                                 <div style="width: 60px; height: 60px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
@@ -77,14 +77,16 @@
                             </span>
                         </td>
                         <td>
-                            <a href="?route=moderator/foodItemsEdit&id={{ $item['id'] }}" class="btn btn-sm btn-outline-primary me-1">
+                            <a href="{{ route('moderator.foodItems.edit', $item['id']) }}" class="btn btn-sm btn-outline-primary me-1">
                                 <i class="fas fa-edit"></i> Sửa
                             </a>
-                            <a href="?route=moderator/foodItemsDelete&id={{ $item['id'] }}"
-                               class="btn btn-sm btn-outline-danger"
-                               onclick="return confirm('Bạn chắc chắn muốn xóa combo/đồ ăn này?')">
-                                <i class="fas fa-trash"></i> Xóa
-                            </a>
+                            <form action="{{ route('moderator.foodItems.destroy', $item['id']) }}" method="POST" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn xóa combo/đồ ăn này?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i> Xóa
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     @endforeach
