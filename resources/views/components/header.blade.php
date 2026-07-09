@@ -72,22 +72,9 @@
                     @endforeach
                 </div>
             </div>
-            <div class="nav-dropdown">
-                <span class="nav-link-new dropdown-trigger">
-                    Kho phim của tôi <i class="fas fa-chevron-down"></i>
-                </span>
-                <div class="dropdown-menu">
-                    <a href="{{ route('movies.library', 'tre-em') }}" class="dropdown-item">
-                        Trẻ em
-                    </a>
-                    <a href="{{ route('movies.library', 'nguoi-lon') }}" class="dropdown-item">
-                        Người lớn
-                    </a>
-                    <a href="{{ route('movies.library', 'mot-phim') }}" class="dropdown-item">
-                        Mọt phim
-                    </a>
-                </div>
-            </div>
+            <a href="{{ route('movies.library.index') }}" class="nav-link-new">
+                Kho phim của tôi
+            </a>
             <a href="{{ route('movies.theater') }}" class="nav-link-new" id="booking-link">
                 Vé xem phim
             </a>
@@ -221,17 +208,9 @@
                 <i class="fas fa-tv"></i>
                 <span>Phim bộ</span>
             </a>
-            <a href="{{ route('movies.library', 'tre-em') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
-                <i class="fas fa-child"></i>
-                <span>Kho phim trẻ em</span>
-            </a>
-            <a href="{{ route('movies.library', 'nguoi-lon') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
-                <i class="fas fa-heart"></i>
-                <span>Kho phim người lớn</span>
-            </a>
-            <a href="{{ route('movies.library', 'mot-phim') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
-                <i class="fas fa-star"></i>
-                <span>Kho mọt phim</span>
+            <a href="{{ route('movies.library.index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+                <i class="fas fa-layer-group"></i>
+                <span>Kho phim của tôi</span>
             </a>
             <a href="{{ route('movies.theater') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
                 <i class="fas fa-ticket-alt"></i>

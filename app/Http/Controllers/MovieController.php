@@ -233,6 +233,35 @@ class MovieController extends Controller
     /**
      * Show curated movie library groups from the top menu.
      */
+    public function libraryChooser()
+    {
+        $libraryGroups = [
+            [
+                'key' => 'tre-em',
+                'title' => 'Trẻ em',
+                'description' => 'Phim nhẹ nhàng, vui tươi và phù hợp cho gia đình.',
+                'image' => asset('storage/data/img/treem.jpg'),
+            ],
+            [
+                'key' => 'nguoi-lon',
+                'title' => 'Người lớn',
+                'description' => 'Nội dung trưởng thành hơn, tình cảm và kịch tính.',
+                'image' => asset('storage/data/img/nguoilon.jpg'),
+            ],
+            [
+                'key' => 'mot-phim',
+                'title' => 'Mọt phim',
+                'description' => 'Danh sách dành cho người xem nghiền phim và thích phim hot.',
+                'image' => asset('storage/data/img/motphim.jpg'),
+            ],
+        ];
+
+        return view('movie.library', compact('libraryGroups'));
+    }
+
+    /**
+     * Show curated movie library groups from the top menu.
+     */
     public function library(Request $request, string $audience)
     {
         $audienceLabels = [
@@ -622,7 +651,7 @@ class MovieController extends Controller
 
     public function introduce($id)
     {
-        $movie = Movie::with(['category', 'episodes', 'reviews.user'])->findOrFail($id);
+        $movie = Movie::with(['category', 'categories', 'episodes', 'reviews.user'])->findOrFail($id);
 
         // Lấy danh sách phim liên quan cùng category
         $relatedMovies = Movie::where('category_id', $movie->category_id)

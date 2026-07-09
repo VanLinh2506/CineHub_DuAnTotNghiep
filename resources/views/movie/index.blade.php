@@ -1,96 +1,64 @@
 @extends('layouts.app')
 
 @section('content')
-<section class="section">
-    <br>
+@php
+    $featuredMovie = $movies->getCollection()->sortByDesc(fn($movie) => $movie->rating ?? 0)->first();
+    $contextTitle = 'Tất cả phim';
+
+    if (!empty($search)) {
+        $contextTitle = 'Kết quả tìm kiếm';
+    } elseif (!empty($audienceTitle)) {
+        $contextTitle = 'Kho phim ' . $audienceTitle;
+    } elseif (!empty($categoryId)) {
+        $contextCategory = collect($categories)->firstWhere('id', $categoryId);
+        $contextTitle = 'Phim ' . ($contextCategory['name'] ?? '');
+    } elseif (!empty($type) && $type === 'phimle') {
+        $contextTitle = 'Phim lẻ';
+    } elseif (!empty($type) && $type === 'phimbo') {
+        $contextTitle = 'Phim bộ';
+    }
+@endphp
+
+@if($featuredMovie)
+<section class="movie-topic-hero">
     <div class="container">
-        <div class="filter-bar">
-            <form method="GET" class="search-form" action="{{ route('movies.index') }}">
-                @if(isset($search) && $search)
-                <input type="hidden" name="search" value="{{ $search }}">
-                @endif
-
-                <div class="filter-options">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label small">Thể loại</label>
-                            <select name="category" class="form-select form-select-sm">
-                                <option value="">Tất cả thể loại</option>
-                                @foreach($categories as $cat)
-                                <option value="{{ $cat['id'] }}" {{ (isset($categoryId) && $categoryId == $cat['id']) ? 'selected' : '' }}>
-                                    {{ $cat['name'] }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small">Trạng thái</label>
-                            <select name="status" class="form-select form-select-sm">
-                                <option value="">Tất cả trạng thái</option>
-                                <option value="Chiếu online" {{ (isset($status) && $status === 'Chiếu online') ? 'selected' : '' }}>Chiếu online</option>
-                                <option value="Sắp chiếu" {{ (isset($status) && $status === 'Sắp chiếu') ? 'selected' : '' }}>Sắp chiếu</option>
-                                <option value="Chiếu rạp" {{ (isset($status) && $status === 'Chiếu rạp') ? 'selected' : '' }}>Chiếu rạp</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small">Loại phim</label>
-                            <select name="type" class="form-select form-select-sm">
-                                <option value="">Tất cả</option>
-                                <option value="phimle" {{ (isset($type) && $type === 'phimle') ? 'selected' : '' }}>Phim lẻ</option>
-                                <option value="phimbo" {{ (isset($type) && $type === 'phimbo') ? 'selected' : '' }}>Phim bộ</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small">Quốc gia</label>
-                            <select name="country" class="form-select form-select-sm">
-                                <option value="">Tất cả quốc gia</option>
-                                @if(isset($countries) && $countries->isNotEmpty())
-                                @foreach($countries as $c)
-                                <option value="{{ $c }}" {{ (isset($country) && $country === $c) ? 'selected' : '' }}>
-                                    {{ $c }}
-                                </option>
-                                @endforeach
-                                @endif
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small">Đánh giá tối thiểu</label>
-                            <select name="min_rating" class="form-select form-select-sm">
-                                <option value="">Tất cả</option>
-                                @foreach([9 => '9.0+', 8 => '8.0+', 7 => '7.0+', 6 => '6.0+', 5 => '5.0+'] as $val => $label)
-                                <option value="{{ $val }}" {{ (isset($minRating) && $minRating == $val) ? 'selected' : '' }}>{{ $label }} ⭐</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <button type="submit" class="btn btn-sm btn-primary">
-                            <i class="fas fa-filter"></i> Áp dụng bộ lọc
-                        </button>
-                        <a href="{{ route('movies.index') }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="fas fa-redo"></i> Xóa bộ lọc
-                        </a>
-                    </div>
+        <article class="movie-topic-banner">
+            <div class="movie-topic-backdrop" style="background-image: url('{{ $featuredMovie->thumbnail }}');"></div>
+            <div class="movie-topic-content">
+                <span class="movie-topic-eyebrow">
+                    <i class="fas fa-fire"></i> Nổi bật trong {{ $contextTitle }}
+                </span>
+                <h1>{{ $featuredMovie->title }}</h1>
+                <p>{{ \Illuminate\Support\Str::limit(strip_tags($featuredMovie->description ?? 'Bộ phim đang được quan tâm trong chủ đề này.'), 150) }}</p>
+                <div class="movie-topic-meta">
+                    @if($featuredMovie->rating)
+                    <span><i class="fas fa-star"></i> {{ number_format($featuredMovie->rating, 1) }}/10</span>
+                    @endif
+                    <span>{{ ($featuredMovie->type ?? 'phimle') === 'phimbo' ? 'Phim bộ' : 'Phim lẻ' }}</span>
+                    @if($featuredMovie->country)
+                    <span>{{ $featuredMovie->country }}</span>
+                    @endif
                 </div>
-            </form>
-
-            <div class="category-filter mt-3">
-                <div class="category-tags">
-                    <a href="{{ route('movies.index') }}"
-                        class="category-tag {{ (!isset($categoryId) || !$categoryId) ? 'active' : '' }}">
-                        <i class="fas fa-th"></i> Tất cả
+                <div class="movie-topic-actions">
+                    <a href="{{ route('movies.introduce', $featuredMovie->id) }}" class="btn-topic-primary">
+                        <i class="fas fa-play"></i> Xem chi tiết
                     </a>
-                    @foreach($categories as $cat)
-                    <a href="{{ route('movies.category', $cat['id']) }}"
-                        class="category-tag {{ (isset($categoryId) && $categoryId == $cat['id']) ? 'active' : '' }}">
-                        {{ $cat['name'] }}
+                    <a href="{{ route('movies.index') }}" class="btn-topic-secondary">
+                        Tất cả phim
                     </a>
-                    @endforeach
                 </div>
             </div>
-        </div>
+            <a href="{{ route('movies.introduce', $featuredMovie->id) }}" class="movie-topic-poster">
+                @if($featuredMovie->thumbnail)
+                <img src="{{ $featuredMovie->thumbnail }}" alt="{{ $featuredMovie->title }}">
+                @else
+                <div><i class="fas fa-film"></i></div>
+                @endif
+            </a>
+        </article>
     </div>
 </section>
+@endif
 
 <section class="section">
     <div class="container">
@@ -153,12 +121,19 @@
                         <div class="movie-placeholder"><i class="fas fa-film"></i></div>
                         @endif
                         <div class="movie-overlay">
-                            @if($movie['status'] === 'Chiếu rạp')
-                            <i class="fas fa-ticket-alt"></i>
-                            @else
-                            <i class="fas fa-play"></i>
-                            @endif
+                            <span class="movie-play-control">
+                                @if($movie['status'] === 'Chiếu rạp')
+                                <i class="fas fa-ticket-alt"></i>
+                                @else
+                                <i class="fas fa-play"></i>
+                                @endif
+                            </span>
                         </div>
+                        @if($movie['rating'])
+                        <span class="movie-rating-badge">
+                            <i class="fas fa-star"></i> {{ number_format($movie['rating'], 1) }}
+                        </span>
+                        @endif
                         @if(($movie['type'] ?? 'phimle') === 'phimbo')
                         <div class="movie-badge" title="Số tập">
                             {{ isset($movie['episode_count']) && $movie['episode_count'] > 0 ? $movie['episode_count'] . ' tập' : '? tập' }}
@@ -236,6 +211,383 @@
 </section>
 
 <style>
+    .movie-grid {
+        grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+        gap: 22px;
+        align-items: start;
+    }
+
+    .movie-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #151515;
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+        transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .movie-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(229, 9, 20, 0.42);
+        box-shadow: 0 22px 40px rgba(0, 0, 0, 0.34);
+    }
+
+    .movie-thumbnail {
+        aspect-ratio: 2 / 3;
+        padding-top: 0;
+        background: #202020;
+    }
+
+    .movie-thumbnail::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        height: 42%;
+        background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.72));
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .movie-thumbnail img {
+        position: static;
+        display: block;
+        transition: transform 0.34s ease, filter 0.34s ease;
+    }
+
+    .movie-card:hover .movie-thumbnail img {
+        transform: scale(1.035);
+        filter: saturate(1.06) contrast(1.03);
+    }
+
+    .movie-overlay {
+        background: rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(1px);
+        z-index: 3;
+    }
+
+    .movie-play-control {
+        width: 54px;
+        height: 54px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #e50914;
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(229, 9, 20, 0.34);
+        transform: scale(0.88);
+        transition: transform 0.22s ease, background 0.22s ease;
+    }
+
+    .movie-card:hover .movie-play-control {
+        transform: scale(1);
+    }
+
+    .movie-play-control i {
+        font-size: 20px;
+        margin-left: 2px;
+    }
+
+    .movie-rating-badge,
+    .movie-level,
+    .movie-badge {
+        position: absolute;
+        z-index: 4;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 28px;
+        padding: 0 9px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.26);
+    }
+
+    .movie-rating-badge {
+        right: 10px;
+        bottom: 10px;
+        background: rgba(229, 9, 20, 0.94);
+    }
+
+    .movie-rating-badge i {
+        color: #ffd166;
+        font-size: 11px;
+    }
+
+    .movie-level,
+    .movie-badge {
+        top: 10px;
+        left: 10px;
+        right: auto;
+        background: rgba(15, 15, 15, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        backdrop-filter: blur(8px);
+    }
+
+    .movie-info {
+        padding: 13px 14px 15px;
+    }
+
+    .movie-info h3 {
+        margin: 0;
+        color: #fff;
+        font-size: 15px;
+        line-height: 1.35;
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        min-height: 40px;
+    }
+
+    .movie-meta {
+        gap: 10px;
+        margin: 9px 0 0;
+        color: rgba(255, 255, 255, 0.68);
+        font-size: 13px;
+    }
+
+    .movie-meta span:first-child {
+        display: none;
+    }
+
+    .movie-category {
+        margin: 8px 0 0;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+    .movie-type-badge {
+        color: #ffdadc;
+        background: rgba(229, 9, 20, 0.15);
+        border: 1px solid rgba(229, 9, 20, 0.26);
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-weight: 700;
+    }
+
+    .movie-description {
+        display: none;
+    }
+
+    .favorite-btn-inline {
+        top: 12px;
+        right: 12px;
+        left: auto;
+        width: 34px;
+        height: 34px;
+        background: rgba(10, 10, 10, 0.62);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: rgba(255, 255, 255, 0.76);
+        backdrop-filter: blur(8px);
+    }
+
+    @media (max-width: 576px) {
+        .movie-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .movie-info {
+            padding: 11px;
+        }
+
+        .movie-info h3 {
+            font-size: 14px;
+        }
+    }
+
+    .movie-topic-hero {
+        padding: 96px 0 12px;
+        background:
+            radial-gradient(circle at 18% 0%, rgba(229, 9, 20, 0.22), transparent 34%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+    }
+
+    .movie-topic-banner {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 170px;
+        gap: 22px;
+        min-height: 260px;
+        overflow: hidden;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: #141414;
+        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+        isolation: isolate;
+    }
+
+    .movie-topic-backdrop {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        opacity: 0.36;
+        filter: saturate(1.1);
+        z-index: -2;
+    }
+
+    .movie-topic-banner::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(90deg, rgba(8, 8, 8, 0.96) 0%, rgba(15, 15, 15, 0.78) 48%, rgba(15, 15, 15, 0.32) 100%),
+            linear-gradient(0deg, rgba(0, 0, 0, 0.36), transparent 58%);
+        z-index: -1;
+    }
+
+    .movie-topic-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 12px;
+        padding: 28px 0 28px 32px;
+        color: #fff;
+    }
+
+    .movie-topic-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(229, 9, 20, 0.16);
+        color: #ffdbdf;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .movie-topic-content h1 {
+        max-width: 680px;
+        margin: 0;
+        color: #fff;
+        font-size: clamp(28px, 4vw, 46px);
+        line-height: 1.05;
+        font-weight: 800;
+    }
+
+    .movie-topic-content p {
+        max-width: 690px;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .movie-topic-meta,
+    .movie-topic-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .movie-topic-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .movie-topic-meta i {
+        color: #ffd166;
+    }
+
+    .btn-topic-primary,
+    .btn-topic-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: 0 18px;
+        border-radius: 999px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+    }
+
+    .btn-topic-primary {
+        background: #e50914;
+        color: #fff;
+        border: 1px solid #e50914;
+    }
+
+    .btn-topic-secondary {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .btn-topic-primary:hover,
+    .btn-topic-secondary:hover {
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .btn-topic-secondary:hover {
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.32);
+    }
+
+    .movie-topic-poster {
+        align-self: center;
+        justify-self: end;
+        width: 150px;
+        aspect-ratio: 2 / 3;
+        margin-right: 28px;
+        overflow: hidden;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 16px 28px rgba(0, 0, 0, 0.36);
+    }
+
+    .movie-topic-poster img,
+    .movie-topic-poster div {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.65);
+        font-size: 38px;
+    }
+
+    @media (max-width: 768px) {
+        .movie-topic-hero {
+            padding-top: 82px;
+        }
+
+        .movie-topic-banner {
+            grid-template-columns: 1fr;
+            min-height: auto;
+        }
+
+        .movie-topic-content {
+            padding: 24px;
+        }
+
+        .movie-topic-poster {
+            display: none;
+        }
+    }
+
     .movie-pagination {
         display: flex;
         flex-direction: column;
@@ -328,17 +680,6 @@
             });
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const filterSelects = document.querySelectorAll('.filter-options select');
-        const searchForm = document.querySelector('.search-form');
-        filterSelects.forEach(select => {
-            let isFirstLoad = true;
-            select.addEventListener('change', function() {
-                if (!isFirstLoad && searchForm) searchForm.submit();
-                isFirstLoad = false;
-            });
-        });
-    });
 </script>
 @endpush
 

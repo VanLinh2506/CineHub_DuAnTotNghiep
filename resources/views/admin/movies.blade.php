@@ -96,11 +96,7 @@
                                         }
                                     @endphp
 
-                                    @forelse($categoryNames as $categoryName)
-                                        <span class="badge bg-dark me-1 mb-1">{{ $categoryName }}</span>
-                                    @empty
-                                        N/A
-                                    @endforelse
+                                    {{ $categoryNames->isNotEmpty() ? $categoryNames->join(', ') : 'N/A' }}
                                 </td>
                                 <td>
                                     @php

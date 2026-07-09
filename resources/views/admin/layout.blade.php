@@ -226,6 +226,45 @@
         .admin-main select[size] {
             overflow: auto;
         }
+        .admin-main .category-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            max-height: 190px;
+            overflow: auto;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            background: #fff;
+        }
+        .admin-main .category-picker-input {
+            display: none;
+        }
+        .admin-main .category-picker-chip {
+            display: inline-flex;
+            align-items: center;
+            min-height: 38px;
+            margin: 0;
+            padding: 8px 13px;
+            border: 1px solid #d7dce5;
+            border-radius: 999px;
+            background: #f8fafc;
+            color: #2d3748;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.18s ease;
+        }
+        .admin-main .category-picker-chip:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .admin-main .category-picker-input:checked + .category-picker-chip {
+            border-color: #e50914;
+            background: #fff1f2;
+            color: #b00008;
+            box-shadow: 0 8px 18px rgba(229, 9, 20, 0.12);
+        }
         .admin-main .upload-box {
             border: 2px dashed #cbd5e0;
             border-radius: 12px;

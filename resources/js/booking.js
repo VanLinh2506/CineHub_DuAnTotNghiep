@@ -32,15 +32,51 @@ var reservationRequestInFlight = false;
 window.selectedSeats = window.selectedSeats || [];
 window.seatsConfirmed = window.seatsConfirmed || false;
 
+function updateBookingUrlState(showtimeId) {
+    if (!showtimeId || !window.history || !window.URL) {
+        return;
+    }
+
+    var url = new URL(window.location.href);
+    if (currentMovieId) {
+        url.searchParams.set('movie', currentMovieId);
+    }
+    if (window.selectedTheaterId) {
+        url.searchParams.set('theater', window.selectedTheaterId);
+    }
+    if (window.selectedDate) {
+        url.searchParams.set('date', window.selectedDate);
+    }
+    url.searchParams.set('showtime_id', showtimeId);
+    window.history.replaceState({}, '', url.toString());
+}
+
+function startServerReservationCountdown(payload) {
+    if (!payload || !payload.reservationExpiresAt || Number(payload.remainingSeconds || 0) <= 0) {
+        return;
+    }
+
+    startReservationCountdown({
+        serverNow: payload.serverNow,
+        reservationExpiresAt: payload.reservationExpiresAt,
+        remainingSeconds: payload.remainingSeconds,
+        localPurchaseCountdown: true
+    });
+}
+
 function setPostSeatSectionsVisible(visible) {
     var displayValue = visible ? 'block' : 'none';
-    var ids = ['foodSection', 'paymentSection', 'emailSection', 'priceInfoBox'];
+    var ids = ['foodModalLauncher', 'paymentSection', 'emailSection', 'priceInfoBox'];
 
     for (var i = 0; i < ids.length; i++) {
         var element = document.getElementById(ids[i]);
         if (element) {
             element.style.display = displayValue;
         }
+    }
+
+    if (!visible && typeof window.closeFoodModal === 'function') {
+        window.closeFoodModal();
     }
 }
 
@@ -132,6 +168,23 @@ window.requestUserLocation = function() {
     document.addEventListener('DOMContentLoaded', function() {
         if (document.querySelector('.theater-card')) {
             requestUserLocation();
+        }
+
+        var theaterContainer = document.getElementById('theatersContainer');
+        if (theaterContainer) {
+            theaterContainer.addEventListener('click', function(event) {
+                var theaterCard = event.target.closest('.theater-card');
+                if (!theaterCard || !theaterContainer.contains(theaterCard)) {
+                    return;
+                }
+
+                event.preventDefault();
+                event.bookingTheaterHandled = true;
+                var theaterId = theaterCard.getAttribute('data-theater-id');
+                if (theaterId) {
+                    window.selectTheaterDirect(theaterId);
+                }
+            });
         }
     });
 
@@ -249,6 +302,7 @@ window.requestUserLocation = function() {
 
         window.selectedShowtimeId = showtimeId;
         console.log('Set window.selectedShowtimeId =', showtimeId);
+        updateBookingUrlState(showtimeId);
 
         var showtimeInput = document.getElementById('showtimeIdInput');
         console.log('Found showtimeIdInput element:', !!showtimeInput);
@@ -753,6 +807,7 @@ window.requestUserLocation = function() {
         var totalEl = document.getElementById('totalPrice');
         if (totalEl) totalEl.textContent = new Intl.NumberFormat('vi-VN').format(totalPrice) + ' ₫';
 
+        updateFoodModalSummary();
         updatePayButtonState();
     }
 
@@ -1092,6 +1147,8 @@ window.requestUserLocation = function() {
 
         var foodSection = document.getElementById('foodSection');
         if (foodSection) foodSection.style.display = 'none';
+        var foodLauncher = document.getElementById('foodModalLauncher');
+        if (foodLauncher) foodLauncher.style.display = 'none';
 
         var paymentSection = document.getElementById('paymentSection');
         if (paymentSection) paymentSection.style.display = 'none';
@@ -1246,6 +1303,8 @@ window.requestUserLocation = function() {
 
                 var foodSection = document.getElementById('foodSection');
                 if (foodSection) foodSection.style.display = 'none';
+                var foodLauncher = document.getElementById('foodModalLauncher');
+                if (foodLauncher) foodLauncher.style.display = 'none';
 
                 var paymentSection = document.getElementById('paymentSection');
                 if (paymentSection) paymentSection.style.display = 'none';
@@ -1511,6 +1570,81 @@ window.requestUserLocation = function() {
     };
 
     // --- EARLY VERSION of updateFoodQuantity (used BEFORE IIFE runs) ---
+    function getFoodSelectionSummary() {
+        var foodInputs = document.querySelectorAll('input[name^="food_items["]');
+        var totalQty = 0;
+        var totalPrice = 0;
+
+        for (var i = 0; i < foodInputs.length; i++) {
+            var qty = parseInt(foodInputs[i].value) || 0;
+            if (qty <= 0) {
+                continue;
+            }
+
+            totalQty += qty;
+            var foodIdMatch = foodInputs[i].name.match(/\[(\d+)\]/);
+            var foodId = foodIdMatch ? foodIdMatch[1] : null;
+            var foodCard = foodId ? document.querySelector('.food-item-card-compact[data-food-id="' + foodId + '"]') : null;
+            var price = foodCard ? (parseInt(foodCard.getAttribute('data-food-price')) || 0) : 0;
+            totalPrice += price * qty;
+        }
+
+        return {
+            quantity: totalQty,
+            total: totalPrice,
+            text: totalQty > 0
+                ? totalQty + ' combo - ' + new Intl.NumberFormat('vi-VN').format(totalPrice) + ' d'
+                : 'Chua chon combo nao'
+        };
+    }
+
+    function updateFoodModalSummary() {
+        var summary = getFoodSelectionSummary();
+        var launcherSummary = document.getElementById('foodLauncherSummary');
+        if (launcherSummary) launcherSummary.textContent = summary.text;
+
+        var modalSummary = document.getElementById('foodModalSummary');
+        if (modalSummary) modalSummary.textContent = summary.text;
+    }
+
+    window.openFoodModal = function() {
+        var foodSection = document.getElementById('foodSection');
+        if (!foodSection) return;
+
+        foodSection.style.display = 'block';
+        document.body.classList.add('food-modal-open');
+        updateFoodModalSummary();
+    };
+
+    window.closeFoodModal = function() {
+        var foodSection = document.getElementById('foodSection');
+        if (foodSection) foodSection.style.display = 'none';
+        document.body.classList.remove('food-modal-open');
+        updateFoodModalSummary();
+    };
+
+    function ensureFoodModalControls() {
+        var header = document.querySelector('#foodSection .food-iframe-header');
+        if (header && !header.querySelector('.food-modal-close-btn')) {
+            var closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'food-modal-close-btn';
+            closeBtn.setAttribute('aria-label', 'Dong combo');
+            closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            closeBtn.addEventListener('click', window.closeFoodModal);
+            header.appendChild(closeBtn);
+        }
+
+        var shell = document.querySelector('#foodSection .food-iframe-shell');
+        if (shell && !shell.querySelector('.food-modal-actions')) {
+            var actions = document.createElement('div');
+            actions.className = 'food-modal-actions';
+            actions.innerHTML = '<div><span>Combo da chon</span><strong id="foodModalSummary">Chua chon combo nao</strong></div><button type="button" class="food-modal-done-btn">Xong</button>';
+            actions.querySelector('button').addEventListener('click', window.closeFoodModal);
+            shell.appendChild(actions);
+        }
+    }
+
     window.updateFoodQuantity = function(foodId, change) {
         console.log('updateFoodQuantity called:', {
             foodId,
@@ -1537,10 +1671,26 @@ window.requestUserLocation = function() {
 
         // Update total price immediately
         updateBookingSummaryFull();
+        updateFoodModalSummary();
     };
 
     // Also make it available without window prefix
     var updateFoodQuantity = window.updateFoodQuantity;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        ensureFoodModalControls();
+        updateFoodModalSummary();
+
+        var foodSection = document.getElementById('foodSection');
+        if (foodSection && !foodSection.dataset.overlayCloseBound) {
+            foodSection.dataset.overlayCloseBound = '1';
+            foodSection.addEventListener('click', function(event) {
+                if (event.target === foodSection) {
+                    window.closeFoodModal();
+                }
+            });
+        }
+    });
 
     // --- EARLY VERSION of confirmSeats - SYNC version (immediate UI update) ---
     // This is the version called from onclick="confirmSeats()" BEFORE IIFE runs.
@@ -1566,8 +1716,8 @@ window.requestUserLocation = function() {
         if (reselectBtn) reselectBtn.style.display = 'inline-block';
 
         // Show food/payment/email sections
-        var foodSection = document.getElementById('foodSection');
-        if (foodSection) foodSection.style.display = 'block';
+        var foodLauncher = document.getElementById('foodModalLauncher');
+        if (foodLauncher) foodLauncher.style.display = 'block';
 
         var paymentSection = document.getElementById('paymentSection');
         if (paymentSection) paymentSection.style.display = 'block';
@@ -1616,6 +1766,8 @@ window.requestUserLocation = function() {
         // Hide food/payment sections
         var foodSection = document.getElementById('foodSection');
         if (foodSection) foodSection.style.display = 'none';
+        var foodLauncher = document.getElementById('foodModalLauncher');
+        if (foodLauncher) foodLauncher.style.display = 'none';
 
         var paymentSection = document.getElementById('paymentSection');
         if (paymentSection) paymentSection.style.display = 'none';
@@ -1876,6 +2028,17 @@ function loadSeatMapNow(showtimeId, options) {
                 return response.json();
             })
             .then(function(data) {
+                if (!data || data.error) {
+                    var message = data && data.message ? data.message : 'Ban khong the vao phong nay.';
+                    if (seatMapContainer) {
+                        seatMapContainer.innerHTML = '<p class="text-center text-danger">' + message + '</p>';
+                    }
+                    showErrorMsg(message);
+                    clearSeatReservationTimers();
+                    setPostSeatSectionsVisible(false);
+                    return;
+                }
+
                 currentSeatLayout = data.layout || null;
                 currentSeatPrices = data.prices || null;
                 syncSeatState(data.bookedSeats || [], data.reservedSeats || []);
@@ -1884,6 +2047,7 @@ function loadSeatMapNow(showtimeId, options) {
                 if (currentMyReservedSeats.length > 0 && Number(data.remainingSeconds || 0) > 0) {
                     window.seatsConfirmed = true;
                     window.selectedSeats = currentMyReservedSeats.slice();
+                    startServerReservationCountdown(data);
 
                     var confirmButton = document.getElementById('confirmSeatsBtn');
                     if (confirmButton) {
@@ -1898,8 +2062,8 @@ function loadSeatMapNow(showtimeId, options) {
                     var reselectButton = document.getElementById('reselectSeatsBtn');
                     if (reselectButton) reselectButton.style.display = 'none';
 
-                    var foodSection = document.getElementById('foodSection');
-                    if (foodSection) foodSection.style.display = 'block';
+                    var foodLauncher = document.getElementById('foodModalLauncher');
+                    if (foodLauncher) foodLauncher.style.display = 'block';
 
                     var paymentSection = document.getElementById('paymentSection');
                     if (paymentSection) paymentSection.style.display = 'block';
@@ -2320,6 +2484,8 @@ function loadSeatMapNow(showtimeId, options) {
 
                 var foodSection = document.getElementById('foodSection');
                 if (foodSection) foodSection.style.display = 'none';
+                var foodLauncher = document.getElementById('foodModalLauncher');
+                if (foodLauncher) foodLauncher.style.display = 'none';
 
                 var paymentSection = document.getElementById('paymentSection');
                 if (paymentSection) paymentSection.style.display = 'none';
@@ -2554,10 +2720,14 @@ function loadSeatMapNow(showtimeId, options) {
 
     function setPostSeatSectionsVisible(visible) {
         var displayValue = visible ? 'block' : 'none';
-        setElementDisplay('foodSection', displayValue);
+        setElementDisplay('foodModalLauncher', displayValue);
         setElementDisplay('paymentSection', displayValue);
         setElementDisplay('emailSection', displayValue);
         setElementDisplay('priceInfoBox', displayValue);
+
+        if (!visible && typeof window.closeFoodModal === 'function') {
+            window.closeFoodModal();
+        }
     }
 
     function setAvailableSeatsInteractive(interactive) {
@@ -2583,7 +2753,7 @@ function loadSeatMapNow(showtimeId, options) {
         if (keepFoodVisible) {
             setElementDisplay('emailSection', 'block');
             setElementDisplay('priceInfoBox', 'block');
-            setElementDisplay('foodSection', 'block');
+            setElementDisplay('foodModalLauncher', 'block');
         }
         setAvailableSeatsInteractive(true);
         updateSeatSummaryNow();
@@ -2605,7 +2775,7 @@ function loadSeatMapNow(showtimeId, options) {
         updatePayButtonState();
 
         if (shouldScroll) {
-            var scrollTarget = document.getElementById('foodSection') || document.getElementById('emailSection');
+            var scrollTarget = document.getElementById('foodModalLauncher') || document.getElementById('emailSection');
             if (scrollTarget) {
                 setTimeout(function() {
                     scrollTarget.scrollIntoView({
@@ -2690,8 +2860,8 @@ function loadSeatMapNow(showtimeId, options) {
         }
 
         // Hiển thị các sections: Đồ ăn, Thanh toán, Email
-        var foodSection = document.getElementById('foodSection');
-        if (foodSection) foodSection.style.display = 'block';
+        var foodLauncher = document.getElementById('foodModalLauncher');
+        if (foodLauncher) foodLauncher.style.display = 'block';
 
         var paymentSection = document.getElementById('paymentSection');
         if (paymentSection) paymentSection.style.display = 'block';
@@ -2799,6 +2969,8 @@ function loadSeatMapNow(showtimeId, options) {
 
         var foodSection = document.getElementById('foodSection');
         if (foodSection) foodSection.style.display = 'none';
+        var foodLauncher = document.getElementById('foodModalLauncher');
+        if (foodLauncher) foodLauncher.style.display = 'none';
 
         var paymentSection = document.getElementById('paymentSection');
         if (paymentSection) paymentSection.style.display = 'none';
@@ -2853,6 +3025,7 @@ function loadSeatMapNow(showtimeId, options) {
                     result.data.reservedSeats = currentReservedSeats.slice();
 
                     renderSeatStateFromPayload(result.data, true);
+                    startServerReservationCountdown(result.data);
                     showConfirmedSeatUi(true);
                     showSeatRealtimeNotice('', 'success');
                     return true;
@@ -2954,6 +3127,7 @@ function loadSeatMapNow(showtimeId, options) {
                     result.data.reservedSeats = currentReservedSeats.slice();
 
                     renderSeatStateFromPayload(result.data, true);
+                    startServerReservationCountdown(result.data);
                     showConfirmedSeatUi(true);
                     showSeatRealtimeNotice('', 'success');
                     return true;
@@ -2987,6 +3161,111 @@ function loadSeatMapNow(showtimeId, options) {
 
         return false;
     };
+
+    function renderInitialDateTabs(selectedDate) {
+        var dateSection = document.getElementById('dateSelectionSection');
+        var datesContainer = document.getElementById('datesContainer');
+        if (dateSection) {
+            dateSection.style.display = 'block';
+        }
+        if (!datesContainer || datesContainer.children.length > 0) {
+            return;
+        }
+
+        var dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+        var html = '';
+        for (var i = 0; i < 7; i++) {
+            var date = new Date();
+            date.setDate(date.getDate() + i);
+            var dateValue = formatLocalDate(date);
+            var selectedClass = selectedDate === dateValue ? ' selected' : '';
+            html += '<div class="date-tab' + selectedClass + '" onclick="selectDate(\'' + dateValue + '\')" data-date="' + dateValue + '">';
+            html += '<div class="day-name">' + dayNames[date.getDay()] + (i === 0 ? ' (Hom nay)' : '') + '</div>';
+            html += '<div class="date-text">' + String(date.getDate()).padStart(2, '0') + '/' + String(date.getMonth() + 1).padStart(2, '0') + '</div>';
+            html += '</div>';
+        }
+
+        datesContainer.innerHTML = html;
+    }
+
+    function restoreBookingPageState() {
+        var initialShowtimeId = bookingPageConfig.selectedShowtimeId ||
+            (document.getElementById('showtimeIdInput') ? document.getElementById('showtimeIdInput').value : null);
+        var initialTheaterId = bookingPageConfig.selectedTheaterId || window.selectedTheaterId;
+        var initialDate = bookingPageConfig.selectedDate || window.selectedDate;
+
+        if (!initialShowtimeId || !initialTheaterId || !initialDate) {
+            return;
+        }
+
+        window.selectedTheaterId = String(initialTheaterId);
+        window.selectedDate = initialDate;
+        window.selectedShowtimeId = String(initialShowtimeId);
+        currentSeatMapShowtimeId = String(initialShowtimeId);
+
+        var theaterInput = document.getElementById('theaterIdInput');
+        if (theaterInput) {
+            theaterInput.value = window.selectedTheaterId;
+        }
+
+        var showtimeInput = document.getElementById('showtimeIdInput');
+        if (showtimeInput) {
+            showtimeInput.value = window.selectedShowtimeId;
+        }
+
+        document.querySelectorAll('.theater-card').forEach(function(card) {
+            card.classList.toggle('selected', card.getAttribute('data-theater-id') === window.selectedTheaterId);
+        });
+
+        renderInitialDateTabs(initialDate);
+
+        document.querySelectorAll('.date-tab').forEach(function(tab) {
+            tab.classList.toggle('selected', tab.getAttribute('data-date') === initialDate);
+        });
+
+        var showtimesSection = document.getElementById('showtimeSelectionSection');
+        var showtimesContainer = document.getElementById('showtimesContainer');
+        if (showtimesSection) {
+            showtimesSection.style.display = 'block';
+        }
+
+        if (showtimesContainer && bookingPageRoutes.bookingShowtimes && currentMovieId) {
+            showtimesContainer.innerHTML = '<p class="text-center text-muted">Dang tai...</p>';
+            var url = bookingPageRoutes.bookingShowtimes + '?movie_id=' + encodeURIComponent(currentMovieId) +
+                '&theater_id=' + encodeURIComponent(window.selectedTheaterId) +
+                '&date=' + encodeURIComponent(initialDate);
+
+            fetch(url)
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
+                    var showtimes = data.showtimes || [];
+                    if (!showtimes.length) {
+                        showtimesContainer.innerHTML = '<p class="text-center text-warning">Khong co suat chieu nao cho ngay nay</p>';
+                        return;
+                    }
+
+                    showtimesContainer.innerHTML = showtimes.map(function(showtime) {
+                        var selectedClass = String(showtime.id) === String(initialShowtimeId) ? ' selected' : '';
+                        return '<div class="showtime-btn' + selectedClass + '" onclick="selectShowtime(' + showtime.id + ')" data-showtime-id="' + showtime.id + '">' +
+                            '<div>' + showtime.show_time + '</div>' +
+                            '<div class="screen-info">' + (showtime.screen_name || 'N/A') + ' - ' + (showtime.screen_type || '2D') + '</div>' +
+                            '</div>';
+                    }).join('');
+                })
+                .catch(function() {
+                    showtimesContainer.innerHTML = '<p class="text-center text-danger">Loi khi tai lich chieu</p>';
+                });
+        }
+
+        updateBookingUrlState(window.selectedShowtimeId);
+        loadSeatMapNow(window.selectedShowtimeId, {
+            preservePurchaseCountdown: true
+        });
+    }
+
+    restoreBookingPageState();
 
     if (!window.__bookingSeatVisibilityHandlerBound) {
         window.__bookingSeatVisibilityHandlerBound = true;

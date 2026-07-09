@@ -40,18 +40,24 @@
                         <small class="text-muted">(có thể chọn nhiều)</small>
                     </label>
 
-                    <select class="form-select" id="category_ids" name="category_ids[]" multiple size="4">
-
+                    <div class="category-picker" role="group" aria-label="Chọn thể loại phim">
                         @foreach($categories as $cat)
-                            <option value="{{ $cat->id }}" @selected(in_array($cat->id, old('category_ids', [])))>
+                            <input
+                                type="checkbox"
+                                class="category-picker-input"
+                                id="category_{{ $cat->id }}"
+                                name="category_ids[]"
+                                value="{{ $cat->id }}"
+                                @checked(in_array($cat->id, old('category_ids', [])))
+                            >
+                            <label class="category-picker-chip" for="category_{{ $cat->id }}">
                                 {{ $cat->name }}
-                            </option>
+                            </label>
                         @endforeach
-
-                    </select>
+                    </div>
 
                     <small class="text-muted">
-                        Giữ Ctrl (Windows) hoặc Cmd (Mac) để chọn nhiều thể loại
+                        Bấm từng thể loại để chọn hoặc bỏ chọn, có thể chọn nhiều thể loại cùng lúc.
                     </small>
                 </div>
 

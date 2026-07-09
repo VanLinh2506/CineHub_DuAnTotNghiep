@@ -13,7 +13,7 @@ class HomeController extends Controller
         $user = auth()->user();
         
         // Slider phim nổi bật
-        $sliderMovies = Movie::with('category')
+        $sliderMovies = Movie::with(['category', 'categories'])
             ->where('status', 'Chiếu online')
             ->where('status_admin', 'published')
             ->where(function($query) {
@@ -33,7 +33,7 @@ class HomeController extends Controller
         // Nếu không đủ 5 phim, lấy thêm
         if ($sliderMovies->count() < 5) {
             $existingIds = $sliderMovies->pluck('id')->toArray();
-            $additionalMovies = Movie::with('category')
+            $additionalMovies = Movie::with(['category', 'categories'])
                 ->where('status', '!=', 'Chiếu rạp')
                 ->where('status_admin', 'published')
                 ->whereNotNull('thumbnail')
@@ -48,7 +48,7 @@ class HomeController extends Controller
         }
         
         // Phim lẻ
-        $phimLe = Movie::with('category')
+        $phimLe = Movie::with(['category', 'categories'])
             ->where(function($query) {
                 $query->where('type', 'phimle')
                       ->orWhereNull('type');
@@ -61,7 +61,7 @@ class HomeController extends Controller
             ->get();
         
         // Phim bộ với số tập
-        $phimBo = Movie::with('category')
+        $phimBo = Movie::with(['category', 'categories'])
             ->withCount('episodes')
             ->where('type', 'phimbo')
             ->where('status', '!=', 'Chiếu rạp')
@@ -72,7 +72,7 @@ class HomeController extends Controller
             ->get();
         
         // Phim mới nhất
-        $latestMovies = Movie::with('category')
+        $latestMovies = Movie::with(['category', 'categories'])
             ->withCount('episodes')
             ->where('status', '!=', 'Chiếu rạp')
             ->where('status_admin', 'published')
@@ -81,7 +81,7 @@ class HomeController extends Controller
             ->get();
         
         // Top phim xem nhiều trong tuần
-        $topMoviesWeek = Movie::with('category')
+        $topMoviesWeek = Movie::with(['category', 'categories'])
             ->withCount(['episodes', 'watchHistory' => function($query) {
                 $query->where('created_at', '>=', now()->subDays(7));
             }])

@@ -410,13 +410,13 @@ class BookingController extends Controller
         
         // If showtime selected, get all info
         if ($selectedShowtimeId) {
-            $showtime = Showtime::with(['movie', 'theater', 'screen'])->find($selectedShowtimeId);
+            $showtime = Showtime::with(['movie.category', 'movie.categories', 'theater', 'screen'])->find($selectedShowtimeId);
             
             if ($showtime) {
                 // Auto-populate from showtime
                 $selectedMovieId = $showtime->movie_id;
                 $selectedTheater = $showtime->theater_id;
-                $selectedDate = $showtime->show_date;
+                $selectedDate = Carbon::parse($showtime->show_date)->toDateString();
                 
                 $movie = $showtime->movie;
                 $theaterInfo = $showtime->theater;
@@ -441,7 +441,7 @@ class BookingController extends Controller
         
         // Get theaters for selected movie
         if ($selectedMovieId) {
-            $movie = $movie ?? Movie::find($selectedMovieId);
+            $movie = $movie ?? Movie::with(['category', 'categories'])->find($selectedMovieId);
             
             $theaters = Theater::whereHas('showtimes', function($q) use ($selectedMovieId) {
                     $q->where('movie_id', $selectedMovieId)
@@ -612,6 +612,133 @@ class BookingController extends Controller
             'reservedSeats' => $reservedSeats,
             'myReservedSeats' => $myReservedSeats,
             'otherReservedSeats' => $otherReservedSeats,
+        ];
+    }
+
+    private function getShowtimeStartAt(Showtime $showtime): Carbon
+    {
+        return Carbon::parse($showtime->show_date)->setTimeFromTimeString($showtime->show_time);
+    }
+
+    private function touchBookingRoomSession(Showtime $showtime, ?User $user): array
+    {
+        $now = now();
+        $limitSeconds = self::SEAT_RESERVATION_MINUTES * 60;
+
+        if (!$user || !$showtime->screen_id) {
+            return [
+                'allowed' => true,
+                'remainingSeconds' => $limitSeconds,
+                'message' => null,
+            ];
+        }
+
+        $screenId = (int) $showtime->screen_id;
+        $showtimeId = (int) $showtime->id;
+
+        $activeBan = DB::table('booking_session_tracking')
+            ->where('user_id', $user->id)
+            ->where('showtime_id', $showtimeId)
+            ->where('screen_id', $screenId)
+            ->where('is_banned', 1)
+            ->where(function ($query) use ($now) {
+                $query->whereNull('ban_until')
+                    ->orWhere('ban_until', '>', $now);
+            })
+            ->orderByDesc('id')
+            ->first();
+
+        if ($activeBan) {
+            return [
+                'allowed' => false,
+                'remainingSeconds' => 0,
+                'message' => 'Ban da het 10 phut dat ve cho phong nay. Vui long chon suat chieu/phong khac.',
+            ];
+        }
+
+        $tracking = DB::table('booking_session_tracking')
+            ->where('user_id', $user->id)
+            ->where('showtime_id', $showtimeId)
+            ->where('screen_id', $screenId)
+            ->whereNull('session_end')
+            ->orderByDesc('id')
+            ->first();
+
+        if (!$tracking) {
+            $trackingId = DB::table('booking_session_tracking')->insertGetId([
+                'user_id' => $user->id,
+                'showtime_id' => $showtimeId,
+                'screen_id' => $screenId,
+                'session_start' => $now,
+                'session_end' => null,
+                'total_duration_seconds' => 0,
+                'violation_count' => 0,
+                'is_banned' => 0,
+                'ban_until' => null,
+                'created_at' => $now,
+            ]);
+
+            $tracking = DB::table('booking_session_tracking')->where('id', $trackingId)->first();
+        }
+
+        $sessionStart = Carbon::parse($tracking->session_start);
+        $elapsedSeconds = max(0, $sessionStart->diffInSeconds($now, false));
+        $remainingSeconds = max(0, $limitSeconds - $elapsedSeconds);
+
+        if ($elapsedSeconds >= $limitSeconds) {
+            $banUntil = $this->getShowtimeStartAt($showtime);
+            if ($banUntil->lessThanOrEqualTo($now)) {
+                $banUntil = $now->copy()->addMinutes(self::SEAT_RESERVATION_MINUTES);
+            }
+
+            DB::table('booking_session_tracking')
+                ->where('id', $tracking->id)
+                ->update([
+                    'session_end' => $now,
+                    'total_duration_seconds' => $elapsedSeconds,
+                    'violation_count' => ((int) $tracking->violation_count) + 1,
+                    'is_banned' => 1,
+                    'ban_until' => $banUntil,
+                ]);
+
+            $heldSeats = SeatReservation::query()
+                ->where('showtime_id', $showtimeId)
+                ->where('user_id', $user->id)
+                ->pluck('seat')
+                ->filter()
+                ->values()
+                ->all();
+
+            $releasedSeats = $this->releaseSeatReservations($showtimeId, $heldSeats, $user->id);
+            if ($releasedSeats > 0) {
+                $seatStatus = $this->getSeatStatusData($showtimeId, $user->id);
+                $this->dispatchSeatMapChanged(
+                    $showtimeId,
+                    'expired',
+                    $seatStatus['bookedSeats'],
+                    $seatStatus['reservedSeats'],
+                    $heldSeats,
+                    $user->id
+                );
+            }
+
+            return [
+                'allowed' => false,
+                'remainingSeconds' => 0,
+                'message' => 'Ban da het 10 phut dat ve cho phong nay. Vui long chon suat chieu/phong khac.',
+            ];
+        }
+
+        DB::table('booking_session_tracking')
+            ->where('id', $tracking->id)
+            ->update([
+                'total_duration_seconds' => $elapsedSeconds,
+            ]);
+
+        return [
+            'allowed' => true,
+            'remainingSeconds' => $remainingSeconds,
+            'message' => null,
         ];
     }
 
@@ -839,6 +966,15 @@ class BookingController extends Controller
         if (!$showtime) {
             return response()->json(['error' => 'Showtime not found'], 404);
         }
+
+        $roomSession = $this->touchBookingRoomSession($showtime, Auth::user());
+        if (!$roomSession['allowed']) {
+            return response()->json([
+                'error' => 'booking_room_time_expired',
+                'message' => $roomSession['message'],
+                'roomRemainingSeconds' => 0,
+            ], 403);
+        }
         
         $seatStatus = $this->getSeatStatusData($showtimeId, Auth::id());
         $bookedSeats = $seatStatus['bookedSeats'];
@@ -879,6 +1015,7 @@ class BookingController extends Controller
             'serverNow' => $timer['serverNow'],
             'reservationExpiresAt' => $timer['reservationExpiresAt'],
             'remainingSeconds' => $timer['remainingSeconds'],
+            'roomRemainingSeconds' => $roomSession['remainingSeconds'],
             'prices' => [
                 'base' => $basePrice,
                 'normal' => $normalPrice,
@@ -904,6 +1041,16 @@ class BookingController extends Controller
         ]);
 
         try {
+            $showtime = Showtime::with('screen')->findOrFail((int) $data['showtime_id']);
+            $roomSession = $this->touchBookingRoomSession($showtime, Auth::user());
+            if (!$roomSession['allowed']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $roomSession['message'],
+                    'error' => 'booking_room_time_expired',
+                ], 403);
+            }
+
             $reservedSeats = $this->reserveSeatsForUser(
                 (int) $data['showtime_id'],
                 $data['seats'],
@@ -944,6 +1091,7 @@ class BookingController extends Controller
                 'serverNow' => $timer['serverNow'],
                 'reservationExpiresAt' => $timer['reservationExpiresAt'],
                 'remainingSeconds' => $timer['remainingSeconds'],
+                'roomRemainingSeconds' => $roomSession['remainingSeconds'],
             ]);
         } catch (\RuntimeException $e) {
             $status = $e->getMessage() === self::RESERVATION_SYSTEM_ERROR_MESSAGE ? 500 : 409;
@@ -1112,6 +1260,15 @@ class BookingController extends Controller
         
         // Get showtime
         $showtime = Showtime::with(['movie', 'screen'])->findOrFail($showtimeId);
+
+        $roomSession = $this->touchBookingRoomSession($showtime, $user);
+        if (!$roomSession['allowed']) {
+            return redirect()->route('booking.index', [
+                'movie' => $showtime->movie_id,
+                'theater' => $showtime->theater_id,
+                'date' => Carbon::parse($showtime->show_date)->toDateString(),
+            ])->with('error', $roomSession['message']);
+        }
         
         // Check if showtime has passed
         try {

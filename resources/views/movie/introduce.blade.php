@@ -623,10 +623,19 @@ $bgImage = !empty($movie->banner) ? $movie->banner : $movie->thumbnail;
                             @endif
                         </div>
 
-                        @if ($movie->category)
+                        @php
+                            $introCategories = $movie->categories ?? collect();
+                            if ($introCategories->isEmpty() && $movie->category) {
+                                $introCategories = collect([$movie->category]);
+                            }
+                        @endphp
+
+                        @if ($introCategories->isNotEmpty())
                         <div class="intro-category">
                             <i class="fas fa-tag"></i>
-                            <a href="{{ route('movies.category', $movie->category->id) }}">{{ $movie->category->name }}</a>
+                            @foreach($introCategories as $introCategory)
+                                <a href="{{ route('movies.category', $introCategory->id) }}">{{ $introCategory->name }}</a>@if(!$loop->last), @endif
+                            @endforeach
                         </div>
                         @endif
 
@@ -682,7 +691,7 @@ $bgImage = !empty($movie->banner) ? $movie->banner : $movie->thumbnail;
 
                 <div class="intro-detail-item">
                     <div class="intro-detail-label">Thể loại</div>
-                    <div class="intro-detail-value">{{ $movie->category->name ?? 'N/A' }}</div>
+                    <div class="intro-detail-value">{{ $introCategories->isNotEmpty() ? $introCategories->pluck('name')->join(', ') : 'N/A' }}</div>
                 </div>
 
                 <div class="intro-detail-item">
