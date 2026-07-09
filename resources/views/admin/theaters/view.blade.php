@@ -3,7 +3,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h5>Thông tin rạp chiếu</h5>
-    <a href="{{ route('admin.theaters.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    <a href="?route=admin/theaters" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
 </div>
 
 <div class="row">
@@ -75,11 +75,11 @@
                     </thead>
                     <tbody>
                         @foreach($screens as $screen)
-                            @php
-                                $layout = $screen['seat_layout_config'] ? json_decode($screen['seat_layout_config'], true) : null;
-                                $vipRows = $layout['vip_rows'] ?? [];
-                                $coupleRows = $layout['couple_rows'] ?? [];
-                            @endphp
+                        @php
+                            $layout = is_array($screen['seat_layout_config']) ? $screen['seat_layout_config'] : (json_decode($screen['seat_layout_config'] ?? '{}', true) ?: []);
+                            $vipRows = $layout['vip_rows'] ?? [];
+                            $coupleRows = $layout['couple_rows'] ?? [];
+                        @endphp
                             <tr>
                                 <td>{{ $screen['screen_name'] }}</td>
                                 <td><span class="badge bg-info">{{ $screen['screen_type'] ?? '2D' }}</span></td>
@@ -147,7 +147,7 @@ const screensData = @json($screens ?? []);
 function viewScreenLayout(screenId) {
     const screen = screensData.find(s => s.id == screenId);
     if (!screen) return;
-    const layout = screen.seat_layout_config ? JSON.parse(screen.seat_layout_config) : {};
+    const layout = screen.seat_layout_config || {};
     document.getElementById('view_screen_name').textContent = screen.screen_name;
     document.getElementById('view_screen_type').textContent = screen.screen_type || '2D';
     document.getElementById('view_total_seats').textContent = screen.total_seats + ' ghế';

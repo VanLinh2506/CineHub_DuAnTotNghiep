@@ -11,9 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('showtimes', function (Blueprint $table) {
-            $table->timestamps(); // Thêm created_at và updated_at
-        });
+        if (!Schema::hasTable('showtimes')) {
+            return;
+        }
+
+        // `showtimes` only uses `created_at` in this project.
+        if (!Schema::hasColumn('showtimes', 'created_at')) {
+            Schema::table('showtimes', function (Blueprint $table) {
+                $table->timestamp('created_at')->useCurrent()->after('price');
+            });
+        }
     }
 
     /**
@@ -21,8 +28,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('showtimes', function (Blueprint $table) {
-            $table->dropTimestamps();
-        });
+        // No-op rollback: this project mixes SQL-imported schema with migrations,
+        // so we avoid dropping shared columns during rollback.
     }
 };

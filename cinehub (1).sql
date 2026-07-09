@@ -1,12 +1,3 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1
--- Generation Time: Jul 09, 2026 at 04:33 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
-
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -264,24 +255,17 @@ INSERT INTO `booking_pending` (`id`, `user_id`, `customer_name`, `customer_phone
 (873, 32, NULL, NULL, 41826, '[\"I8\",\"I9\"]', NULL, 'ledinhtrung35@gmail.com', 218000.00, 'BOOKING_32_41826_1769520531_3424', NULL, 'cancelled', '2026-01-27 13:28:51', '2026-01-27 06:38:51', NULL),
 (874, 33, NULL, NULL, 41827, '[\"L7\",\"L8\"]', '{\"1\":1}', 'ledinhtrungkm35@gmail.com', 249000.00, 'BOOKING_33_41827_1769522294_3030', NULL, 'cancelled', '2026-01-27 13:58:14', '2026-01-27 07:08:14', NULL),
 (875, 33, NULL, NULL, 41828, '[\"H8\",\"H9\"]', '{\"1\":1}', 'ledinhtrungkm35@gmail.com', 318600.00, 'BOOKING_33_41828_1769534756_3145', NULL, 'cancelled', '2026-01-27 17:25:56', '2026-01-27 10:35:56', NULL),
-(878, 33, NULL, NULL, 41829, '[\"K8\",\"K9\"]', NULL, 'ledinhtrungkm35@gmail.com', 233600.00, 'BOOKING_33_41829_1770088306_4445', NULL, 'pending', '2026-02-03 03:11:46', '2026-02-02 20:21:46', NULL),
 (879, 9, NULL, NULL, 41830, '[\"E5\",\"F5\",\"F6\",\"F7\",\"F8\",\"F9\",\"N5\",\"N6\"]', '{\"1\":1}', 'nguyenvanlinh25062006@gmail.com', 1033800.00, 'BOOKING_9_41830_1770189171_5411', NULL, 'cancelled', '2026-02-04 07:12:51', '2026-02-04 00:22:51', NULL),
 (882, 9, NULL, NULL, 42048, '[\"E6\",\"E5\"]', '{\"1\":\"1\"}', 'nguyenvanlinh25062006@gmail.com', 397000.00, 'BKG9_1782073095', NULL, 'completed', '2026-06-21 13:18:15', '2026-06-21 13:28:15', 'BOOKING_30L7xqGopJw8hiy9T1yN3SIX'),
-(883, 3, NULL, NULL, 42048, '[\"C5\"]', '{\"1\":\"1\"}', 'admin2@cinehub.com', 205000.00, 'BKG3_1782121787', NULL, 'pending', '2026-06-22 02:49:47', '2026-06-22 02:59:47', NULL),
-(884, 3, NULL, NULL, 42048, '[\"C5\"]', '{\"1\":\"1\"}', 'admin2@cinehub.com', 205000.00, 'BKG3_1782121821', NULL, 'pending', '2026-06-22 02:50:21', '2026-06-22 03:00:21', NULL),
 (886, 37, NULL, NULL, 1000, '\"[\\\"A1\\\"]\"', NULL, 'user@test.com', 100000.00, NULL, NULL, 'completed', '2026-06-22 23:26:58', NULL, 'BOOKING_TEST_1782196018'),
 (887, 37, NULL, NULL, 1000, '\"[\\\"A1\\\"]\"', NULL, 'user@test.com', 100000.00, NULL, NULL, 'completed', '2026-06-22 23:30:23', NULL, 'BOOKING_TEST_1782196223'),
 (889, 9, NULL, NULL, 42444, '[\"C4\",\"C5\",\"C6\"]', '{\"1\":\"1\"}', 'nguyenvanlinh25062006@gmail.com', 292480.00, 'BKG9_1782204160', NULL, 'completed', '2026-06-23 01:42:40', '2026-06-23 01:52:40', 'BOOKING_JucwxGTdQgf7wQYixMZlX2gt'),
-(890, 3, NULL, NULL, 43440, '[\"E5\",\"E3\",\"E4\",\"E6\"]', '{\"1\":\"1\"}', 'admin2@cinehub.com', 545855.20, 'BKG3_1782296135', NULL, 'pending', '2026-06-24 03:15:35', '2026-06-24 03:25:35', NULL),
 (892, 9, NULL, NULL, 46544, '[\"G4\",\"G6\",\"G5\"]', '{\"1\":\"1\"}', 'nguyenvanlinh25062006@gmail.com', 337570.00, 'BKG9_1782793980', NULL, 'completed', '2026-06-29 21:33:00', '2026-06-29 21:43:00', 'BOOKING_9jComAO63DmFa0P4geUp1RFN'),
-(893, 9, NULL, NULL, 46534, '[\"E5\",\"E6\"]', '{\"1\":\"1\"}', 'nguyenvanlinh25062006@gmail.com', 341965.80, 'BKG9_1782803929', NULL, 'pending', '2026-06-30 00:18:49', '2026-06-30 00:28:49', NULL),
-(894, 9, NULL, NULL, 46213, '[\"E5\",\"E6\"]', '{\"1\":\"1\"}', 'nguyenvanlinh25062006@gmail.com', 329402.60, 'BKG9_1782804993', NULL, 'pending', '2026-06-30 00:36:33', '2026-06-30 00:46:33', NULL),
-(895, 9, NULL, NULL, 46678, '[\"H5\",\"H6\"]', '{\"1\":\"1\"}', 'nguyenvanlinh25062006@gmail.com', 222096.00, 'BKG9_1782805149', NULL, 'pending', '2026-06-30 00:39:09', '2026-06-30 00:49:09', NULL),
-(896, 9, NULL, NULL, 46566, '[\"F4\",\"F5\",\"F6\"]', '{\"1\":\"1\"}', 'nguyenvanlinh25062006@gmail.com', 420688.60, 'BKG9_1782805383', NULL, 'pending', '2026-06-30 00:43:03', '2026-06-30 00:53:03', NULL),
-(897, 9, NULL, NULL, 46544, '[\"H4\",\"H5\",\"H6\"]', '{\"1\":\"1\"}', 'nguyenvanlinh25062006@gmail.com', 337570.00, 'BKG9_1782805560', NULL, 'pending', '2026-06-30 00:46:00', '2026-06-30 00:56:00', NULL),
-(898, 9, NULL, NULL, 46544, '[\"D5\",\"D6\"]', '{\"1\":\"1\"}', 'nguyenvanlinh25062006@gmail.com', 303894.00, 'BKG9_1782806594', NULL, 'pending', '2026-06-30 08:03:14', '2026-06-30 08:13:14', NULL),
 (899, 9, NULL, NULL, 46544, '[\"D5\",\"D6\"]', '{\"1\":\"1\"}', 'nguyenvanlinh25062006@gmail.com', 303894.00, 'BKG9_1782806809', NULL, 'completed', '2026-06-30 08:06:49', '2026-06-30 08:16:49', 'BOOKING_oDS6hRIxGfs6DjjGkBrX5Pql'),
-(900, 19, NULL, NULL, 46544, '[\"H4\",\"H6\",\"H5\"]', '{\"1\":\"1\"}', 'plv@gmail.com', 337570.00, 'BKG19_1782809134', NULL, 'pending', '2026-06-30 08:45:34', '2026-06-30 08:55:34', NULL);
+(901, 9, NULL, NULL, 50255, '[\"C4\",\"C3\",\"C2\",\"C1\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 640000.00, 'BKG9_1783587645', NULL, 'pending', '2026-07-09 09:00:45', '2026-07-09 09:08:01', NULL),
+(902, 38, NULL, NULL, 50255, '[\"D9\",\"D8\",\"D7\"]', '{\"13\":\"1\",\"14\":\"1\"}', 'phucthien3156@gmail.com', 764000.00, 'BKG38_1783587907', NULL, 'pending', '2026-07-09 09:05:07', '2026-07-09 09:07:13', NULL),
+(903, 9, NULL, NULL, 50256, '[\"G9\",\"G8\",\"G7\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 90390.00, 'BKG9_1783612168', NULL, 'pending', '2026-07-09 15:49:28', '2026-07-09 15:58:28', NULL),
+(904, 9, NULL, NULL, 50256, '[\"G9\",\"G8\",\"G7\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 90390.00, 'BKG9_1783612176', NULL, 'completed', '2026-07-09 15:49:36', '2026-07-09 15:58:28', 'BOOKING_Jqt9Xs5nTUYpp1ss6TZucfWE');
 
 -- --------------------------------------------------------
 
@@ -424,6 +408,30 @@ INSERT INTO `booking_session_tracking` (`id`, `user_id`, `showtime_id`, `screen_
 (200, 9, 41830, 5, '2026-02-04 14:10:00', NULL, 0, 0, 0, NULL, '2026-02-04 07:10:00'),
 (202, 9, 41893, 3, '2026-06-09 15:40:44', NULL, 0, 0, 0, NULL, '2026-06-09 08:40:44'),
 (203, 3, 41893, 3, '2026-06-09 15:56:14', NULL, 0, 0, 0, NULL, '2026-06-09 08:56:14');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cache`
+--
+
+CREATE TABLE `cache` (
+  `key` varchar(255) NOT NULL,
+  `value` mediumtext NOT NULL,
+  `expiration` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cache_locks`
+--
+
+CREATE TABLE `cache_locks` (
+  `key` varchar(255) NOT NULL,
+  `owner` varchar(255) NOT NULL,
+  `expiration` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -611,6 +619,22 @@ INSERT INTO `episodes` (`id`, `movie_id`, `episode_number`, `title`, `video_url`
 (23, 53, 5, '', NULL, NULL, NULL, NULL, '2026-02-09 03:07:26', '2026-02-09 03:07:26'),
 (24, 53, 6, '', NULL, NULL, NULL, NULL, '2026-02-09 03:07:26', '2026-02-09 03:07:26'),
 (25, 54, 1, 'Tập 1', 'phimbo/54/AOdENAbYlwcHooSzgEWQdsivVs7Es00yn7pxnXt5.mp4', NULL, NULL, NULL, '2026-06-22 23:00:52', '2026-06-22 23:00:52');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `failed_jobs`
+--
+
+CREATE TABLE `failed_jobs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `uuid` varchar(255) NOT NULL,
+  `connection` text NOT NULL,
+  `queue` text NOT NULL,
+  `payload` longtext NOT NULL,
+  `exception` longtext NOT NULL,
+  `failed_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -977,6 +1001,41 @@ INSERT INTO `ip_spam_logs` (`id`, `ip_address`, `action_type`, `is_spam`, `detai
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `jobs`
+--
+
+CREATE TABLE `jobs` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `queue` varchar(255) NOT NULL,
+  `payload` longtext NOT NULL,
+  `attempts` tinyint(3) UNSIGNED NOT NULL,
+  `reserved_at` int(10) UNSIGNED DEFAULT NULL,
+  `available_at` int(10) UNSIGNED NOT NULL,
+  `created_at` int(10) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `job_batches`
+--
+
+CREATE TABLE `job_batches` (
+  `id` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `total_jobs` int(11) NOT NULL,
+  `pending_jobs` int(11) NOT NULL,
+  `failed_jobs` int(11) NOT NULL,
+  `failed_job_ids` longtext NOT NULL,
+  `options` mediumtext DEFAULT NULL,
+  `cancelled_at` int(11) DEFAULT NULL,
+  `created_at` int(11) NOT NULL,
+  `finished_at` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `migrations`
 --
 
@@ -1002,7 +1061,21 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (10, '2026_06_23_081224_modify_customer_email_nullable_in_booking_pending', 9),
 (11, '2026_06_30_035113_create_disabled_seats_table', 10),
 (12, '2026_06_30_042506_add_available_seats_to_showtimes_table', 11),
-(13, '2026_07_09_000001_create_movie_category_table', 12);
+(13, '0001_01_01_000000_create_users_table', 12),
+(14, '0001_01_01_000001_create_cache_table', 12),
+(15, '0001_01_01_000002_create_jobs_table', 12),
+(16, '2026_06_02_000001_create_news_table', 12),
+(17, '2026_06_08_000001_create_cinehub_core_tables', 12),
+(18, '2026_06_08_000002_create_booking_tables', 12),
+(19, '2026_06_08_000003_create_showtimes_table', 12),
+(20, '2026_06_08_203853_add_timestamps_to_showtimes_table', 12),
+(21, '2026_06_09_064626_create_watch_history_table', 12),
+(22, '2026_06_15_145431_add_google_id_to_users_table', 12),
+(23, '2026_06_15_155042_add_email_verified_at_to_users_table', 12),
+(24, '2026_06_24_063320_create_sessions_table', 12),
+(25, '2026_07_09_000001_create_missing_cinehub_core_tables', 12),
+(26, '2026_07_09_000002_create_missing_cinehub_booking_tables', 12),
+(27, '2026_07_09_000003_normalize_seat_reservations_for_realtime', 13);
 
 -- --------------------------------------------------------
 
@@ -1185,58 +1258,48 @@ INSERT INTO `movie_categories` (`id`, `movie_id`, `category_id`, `created_at`) V
 --
 
 CREATE TABLE `movie_category` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `movie_id` int(10) UNSIGNED NOT NULL,
+  `category_id` int(10) UNSIGNED NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `news`
+--
+
+CREATE TABLE `news` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `movie_id` int(11) NOT NULL,
-  `category_id` int(11) NOT NULL,
+  `news_category_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `thumbnail` varchar(255) DEFAULT NULL,
+  `excerpt` text DEFAULT NULL,
+  `content` longtext NOT NULL,
+  `status` enum('draft','published') NOT NULL DEFAULT 'draft',
+  `published_at` timestamp NULL DEFAULT NULL,
+  `wp_id` varchar(255) DEFAULT NULL COMMENT 'ID bai viet goc tu WordPress',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `movie_category`
+-- Table structure for table `news_categories`
 --
 
-INSERT INTO `movie_category` (`id`, `movie_id`, `category_id`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(2, 2, 2, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(3, 3, 3, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(4, 4, 4, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(5, 5, 5, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(6, 6, 6, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(7, 7, 7, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(8, 8, 7, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(9, 9, 1, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(10, 10, 4, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(11, 11, 6, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(12, 12, 2, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(13, 13, 2, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(14, 14, 1, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(15, 15, 3, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(16, 16, 3, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(17, 17, 7, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(18, 18, 1, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(19, 19, 2, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(20, 20, 3, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(21, 21, 3, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(22, 22, 4, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(23, 23, 3, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(24, 24, 2, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(25, 25, 3, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(26, 26, 7, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(27, 27, 5, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(28, 28, 2, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(29, 29, 2, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(30, 30, 1, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(31, 31, 2, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(32, 32, 2, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(33, 33, 5, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(34, 34, 1, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(35, 35, 2, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(36, 36, 7, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(37, 37, 7, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(38, 38, 1, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(39, 51, 1, '2026-07-08 19:46:36', '2026-07-08 19:46:36'),
-(40, 53, 1, '2026-07-08 19:46:36', '2026-07-08 19:46:36');
+CREATE TABLE `news_categories` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1308,7 +1371,20 @@ INSERT INTO `notifications` (`id`, `user_id`, `type`, `title`, `message`, `link`
 (46, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 2 vé xem phim \"Em Chưa 18\" tại ghế E6, E5. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 1, '2026-06-21 13:18:15'),
 (47, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 3 vé xem phim \"Avengers: Endgame\" tại ghế C4, C5, C6. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 1, '2026-06-23 01:42:40'),
 (48, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 3 vé xem phim \"Avengers: Endgame\" tại ghế G4, G6, G5. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 0, '2026-06-29 21:33:00'),
-(49, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 2 vé xem phim \"Avengers: Endgame\" tại ghế D5, D6. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 1, '2026-06-30 08:07:26');
+(49, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 2 vé xem phim \"Avengers: Endgame\" tại ghế D5, D6. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 1, '2026-06-30 08:07:26'),
+(50, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 3 vé xem phim \"Tấm Cám: Chuyện Chưa Kể\" tại ghế G9, G8, G7. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 0, '2026-07-09 15:49:36');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `password_reset_tokens`
+--
+
+CREATE TABLE `password_reset_tokens` (
+  `email` varchar(255) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1501,10 +1577,19 @@ CREATE TABLE `seat_reservations` (
   `showtime_id` int(11) NOT NULL,
   `seat` varchar(10) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `session_id` varchar(255) NOT NULL,
+  `session_id` varchar(255) DEFAULT NULL,
   `reserved_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `expires_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00'
+  `expires_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `seat_reservations`
+--
+
+INSERT INTO `seat_reservations` (`id`, `showtime_id`, `seat`, `user_id`, `session_id`, `reserved_at`, `expires_at`) VALUES
+(1112, 50256, 'E1', 3, 'kqyNO4P7kp3lnLBIPuNM97Hu6288ncUszmV8pVYQ', '2026-07-09 15:56:55', '2026-07-09 16:06:55'),
+(1113, 50256, 'E2', 3, 'kqyNO4P7kp3lnLBIPuNM97Hu6288ncUszmV8pVYQ', '2026-07-09 15:56:55', '2026-07-09 16:06:55'),
+(1114, 50256, 'E3', 3, 'kqyNO4P7kp3lnLBIPuNM97Hu6288ncUszmV8pVYQ', '2026-07-09 15:56:55', '2026-07-09 16:06:55');
 
 -- --------------------------------------------------------
 
@@ -1611,6 +1696,29 @@ INSERT INTO `seat_selection_logs` (`id`, `user_id`, `ip_address`, `showtime_id`,
 (199, 33, '42.119.72.51', 41829, 2, '[\"K8\",\"K9\"]', 0, '2026-02-03 02:08:45'),
 (200, 33, '42.119.72.51', 41829, 2, '[\"K8\",\"K9\"]', 0, '2026-02-03 03:11:46'),
 (201, 9, '27.78.7.126', 41830, 8, '[\"E5\",\"F5\",\"F6\",\"F7\",\"F8\",\"F9\",\"N5\",\"N6\"]', 0, '2026-02-04 07:12:51');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sessions`
+--
+
+CREATE TABLE `sessions` (
+  `id` varchar(255) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `payload` longtext NOT NULL,
+  `last_activity` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `sessions`
+--
+
+INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
+('kqyNO4P7kp3lnLBIPuNM97Hu6288ncUszmV8pVYQ', 3, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiYjNFQldPWEJ1SHBjTG5jV3R1d1dPVDFFMnBROHlLNGZIT2FUWjJpbiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJuZXciO2E6MDp7fXM6Mzoib2xkIjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6ODQ6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hcGkvYm9va2luZy9zaG93dGltZXM/ZGF0ZT0yMDI2LTA3LTEyJm1vdmllX2lkPTI3JnRoZWF0ZXJfaWQ9MyI7czo1OiJyb3V0ZSI7czoyMToiYXBpLmJvb2tpbmcuc2hvd3RpbWVzIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6Mzt9', 1783613004),
+('qZHhOEbWlfBrLuVqmiveSv20X7oLJTJkuFoUGTpr', 9, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'YToxMDp7czo2OiJfdG9rZW4iO3M6NDA6Imd5ZnM0dXpaU3VuQ1AxQ0NKZzJMRVRwTHdPZHV1dzlKSkI0Z2QxUFQiO3M6MzoidXJsIjthOjE6e3M6ODoiaW50ZW5kZWQiO3M6NDI6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9tb2RlcmF0b3IvZm9vZC1pdGVtcyI7fXM6OToiX3ByZXZpb3VzIjthOjI6e3M6MzoidXJsIjtzOjM4OiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYm9va2luZz9tb3ZpZT0yNyI7czo1OiJyb3V0ZSI7czoxMzoiYm9va2luZy5pbmRleCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjk7czoxMzoidXNlcl9sYXRpdHVkZSI7ZDoxOS44MDk3NDAzNzIxNTIxMzU7czoxNDoidXNlcl9sb25naXR1ZGUiO2Q6MTA1Ljc5NTM3NzUxODU1NzUzO3M6MTg6InBlbmRpbmdfYm9va2luZ19pZCI7aTo5MDQ7czoxMToic2hvd3RpbWVfaWQiO3M6NToiNTAyNTYiO3M6MTY6Imxhc3RfcGF5bWVudF91cmwiO3M6NTk3OiJodHRwczovL3NhbmRib3gudm5wYXltZW50LnZuL3BheW1lbnR2Mi92cGNwYXkuaHRtbD92bnBfQW1vdW50PTkwMzkwMDAmdm5wX0NvbW1hbmQ9cGF5JnZucF9DcmVhdGVEYXRlPTIwMjYwNzA5MjI0OTI4JnZucF9DdXJyQ29kZT1WTkQmdm5wX0V4cGlyZURhdGU9MjAyNjA3MDkyMzA0Mjgmdm5wX0lwQWRkcj0xMjcuMC4wLjEmdm5wX0xvY2FsZT12biZ2bnBfT3JkZXJJbmZvPVRoYW5oK3RvYW4rdmUreGVtK3BoaW0rVCVFMSVCQSVBNW0rQyVDMyVBMW0lM0ErQ2h1eSVFMSVCQiU4N24rQ2glQzYlQjBhK0slRTElQkIlODMmdm5wX09yZGVyVHlwZT1vdGhlciZ2bnBfUmV0dXJuVXJsPWh0dHAlM0ElMkYlMkYxMjcuMC4wLjElM0E4MDAwJTJGcGF5bWVudCUyRnZucGF5JTJGY2FsbGJhY2smdm5wX1RtbkNvZGU9QTAxMUpENkQmdm5wX1R4blJlZj1CS0c5XzE3ODM2MTIxNjgmdm5wX1ZlcnNpb249Mi4xLjAmdm5wX1NlY3VyZUhhc2g9MTRjZjI3Mjc2OGRhMGQ1NjFjNzU4MTk1OWZmNmI0ODhmNDFlMDU0Mjk0NzAzYjgxNTZjMWM1NWU5ZGI3MGRhMDU3NTZkOGIyZmVlZTYyYjA2NDZiZmUzMzE0YTczMzU1ZWRjYjM0MjYyYWI1NWM0YWVkYTZmOTNiNWFkYzY5OTEiO30=', 1783612183);
 
 -- --------------------------------------------------------
 
@@ -10327,7 +10435,9 @@ INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `show_date`, `show_time
 (50251, 52, 7, '2026-07-06', '09:00:00', 57314.00, 144, '2026-06-29 21:27:14', 38),
 (50252, 52, 7, '2026-07-06', '14:30:00', 86482.00, 144, '2026-06-29 21:27:14', 38),
 (50253, 25, 3, '2026-07-08', '08:00:00', 120000.00, 144, '2026-07-08 16:32:36', 6),
-(50254, 23, 3, '2026-07-09', '08:00:00', 120000.00, 144, '2026-07-08 16:33:10', 12);
+(50254, 23, 3, '2026-07-09', '08:00:00', 120000.00, 144, '2026-07-08 16:33:10', 12),
+(50255, 52, 3, '2026-07-10', '10:30:00', 130000.00, 144, '2026-07-09 01:18:45', 27),
+(50256, 27, 3, '2026-07-12', '09:30:00', 130.00, 144, '2026-07-09 06:55:44', 39);
 
 -- --------------------------------------------------------
 
@@ -10803,7 +10913,10 @@ INSERT INTO `tickets` (`id`, `user_id`, `showtime_id`, `booking_pending_id`, `se
 (6143, 9, 46544, 892, 'G6', 'normal', 'TICKET_JUBSVGt9P3gR2zii6aQiMm5J', 84190.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-06-29 21:33:00'),
 (6144, 9, 46544, 892, 'G5', 'normal', 'TICKET_usJNVnE520gvJvBcKx9HjTg7', 84190.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-06-29 21:33:00'),
 (6145, 9, 46544, 899, 'D5', 'vip', 'TICKET_VzDbqUtfuIVWTl4w5gUTt1zE', 109447.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-06-30 08:07:26'),
-(6146, 9, 46544, 899, 'D6', 'vip', 'TICKET_pf8IfbewgcTejlnRHcMe1pbr', 109447.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-06-30 08:07:26');
+(6146, 9, 46544, 899, 'D6', 'vip', 'TICKET_pf8IfbewgcTejlnRHcMe1pbr', 109447.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-06-30 08:07:26'),
+(6147, 9, 50256, 904, 'G9', 'normal', 'TICKET_UU58rRRQq2LRv1OpYxwxXv0U', 30130.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-07-09 15:49:36'),
+(6148, 9, 50256, 904, 'G8', 'normal', 'TICKET_lNz0aQw8gCwAjVen6yawY4Gp', 30130.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-07-09 15:49:36'),
+(6149, 9, 50256, 904, 'G7', 'normal', 'TICKET_Zomx68JyPefz8ebv6qir4nRx', 30130.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-07-09 15:49:36');
 
 -- --------------------------------------------------------
 
@@ -10983,7 +11096,8 @@ INSERT INTO `transactions` (`id`, `user_id`, `type`, `related_id`, `amount`, `me
 (154, 9, 'ticket', 882, 397000.00, 'Bank', 'Thành công', '2026-06-21 13:18:15'),
 (155, 9, 'ticket', 889, 292480.00, 'Bank', 'Thành công', '2026-06-23 01:42:40'),
 (156, 9, 'ticket', 892, 337570.00, 'Bank', 'Thành công', '2026-06-29 21:33:00'),
-(157, 9, 'ticket', 899, 303894.00, 'Momo', 'Thành công', '2026-06-30 08:07:26');
+(157, 9, 'ticket', 899, 303894.00, 'Momo', 'Thành công', '2026-06-30 08:07:26'),
+(158, 9, 'ticket', 904, 90390.00, 'Bank', 'Thành công', '2026-07-09 15:49:36');
 
 -- --------------------------------------------------------
 
@@ -10995,6 +11109,8 @@ CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `email` varchar(120) NOT NULL,
+  `email_verified_at` timestamp NULL DEFAULT NULL,
+  `google_id` varchar(255) DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
   `avatar` varchar(255) DEFAULT NULL,
@@ -11019,48 +11135,73 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `phone`, `password`, `avatar`, `birthdate`, `address`, `rank`, `points`, `subscription_id`, `status`, `email_verified`, `created_at`, `updated_at`, `role`, `theater_id`, `is_active`, `last_login`, `newsletter`, `notifications_enabled`) VALUES
-(1, 'Tuan Anh', 'noble.toad.nict@letterguard.net', NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-10 15:10:16', '2025-11-10 15:10:16', 'user', NULL, 1, NULL, 0, 1),
-(2, 'Super Admin', 'admin@cinehub.com', NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-11-10 16:41:17', '2025-11-10 16:45:54', 'admin', NULL, 1, NULL, 0, 1),
-(3, 'Admin Mới', 'admin2@cinehub.com', NULL, '$2y$12$/AeKoaDJ.CzbUovU0x9F1.U54BECa20QKSYuRc.O./WJZTt1b/bFG', 'avatars/avatar_3_1782296052.png', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-12 02:39:06', '2026-06-29 21:42:24', 'admin', NULL, 1, NULL, 0, 1),
-(4, 'Nguyễn Văn A', 'nguyenvana@example.com', NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Silver', 500, 2, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
-(5, 'Trần Thị B', 'tranthib@example.com', NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Gold', 1200, 3, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
-(6, 'Lê Văn C', 'levanc@example.com', NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Bronze', 100, 1, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
-(7, 'Phạm Thị D', 'phamthid@example.com', NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Platinum', 2500, 4, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
-(8, 'Hoàng Văn E', 'hoangvane@example.com', NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Silver', 800, 2, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
-(9, 'vanlinh', 'nguyenvanlinh25062006@gmail.com', NULL, '$2y$12$X9rtzLgIJYy3cWi4VLsth.GZaihA0lIw6ZXMQoK7CXyb6Xi3OrMQ2', 'avatars/avatar_9_1782064502.png', NULL, NULL, 'Bronze', 8874950, 5, 'active', 0, '2025-11-14 01:35:37', '2026-06-30 08:09:29', 'moderator', 3, 1, NULL, 0, 1),
-(10, 'Tuan_awh', 'tuanawh@gmail.com', NULL, '$2y$10$5NwNHefnp5jwjr1Vls5HG.dnt4SWC1newqSkuV8X4QTcwZ0Ok1JQ.', 'data/avatars/avatar_10_1765506885.jpg', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-14 01:45:51', '2025-12-12 02:34:45', 'moderator', 2, 1, NULL, 0, 1),
-(11, 'Hoang Son', 'hsson97805@gmail.com', NULL, '$2y$10$4OBk1HA71jEhbVPP7FA7VueQ8B30EgEy9eB9tAHRFmUvA8I7lwAPe', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-24 08:52:25', '2025-11-24 08:52:25', 'user', NULL, 1, NULL, 0, 1),
-(12, 'jack', 'jack@gmail.com', NULL, '$2y$10$4OPMx0NC7sXIg23/hWQt1u0t52jEDgc5grk/LZAOmmFw8a3DAy.BW', NULL, NULL, NULL, 'Bronze', 297000, 3, 'active', 0, '2025-11-25 02:20:46', '2025-11-25 02:27:04', 'user', NULL, 1, NULL, 0, 1),
-(13, 'huung', 'nguyenconghung954@gmail.com', NULL, '$2y$10$0aCzLlyOsSw4IZeDM8Vr8uC.1zWUY/F0SZTjwU8hrS9jxzvUvTgeG', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-25 12:43:00', '2025-11-25 12:43:00', 'user', NULL, 1, NULL, 0, 1),
-(14, 'bom', 'vlinh25062006@gmail.com', NULL, '$2y$10$SGQNRO1gcjuJy76tKCWx7e/9boVMyK2kkgK5D4PMepeswkveVa2qa', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-26 04:03:42', '2025-11-26 04:03:42', 'user', NULL, 1, NULL, 0, 1),
-(15, 'Hải Nam', 'natgao0001@gmail.com', NULL, '$2y$10$62PMj1vSUIjXo4.d8EJ8J.JJVrnO764zQvDZorn2BsfiT9ecJCzGe', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-04 18:01:00', '2025-12-04 18:01:00', 'user', NULL, 1, NULL, 0, 1),
-(16, 'Thanh', 'le3221981@gmail.com', NULL, '$2y$10$bomnjBXwqML823EJUbdDsOh22J4vmfXElcK0M.CMzk9X2NrcpIyGm', 'data/avatars/avatar_16_1764872833.jpeg', NULL, NULL, 'Bronze', 400000, 1, 'active', 0, '2025-12-04 18:22:20', '2025-12-04 18:30:11', 'user', NULL, 1, NULL, 0, 1),
-(17, 'Admin Rạp CGV Vincom', 'admin_rap1@cinehub.com', NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 14:43:27', '2025-12-06 14:43:27', 'moderator', 1, 1, NULL, 0, 1),
-(18, 'Nhân viên Quầy 1', 'nhanvien1@cinehub.com', NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 14:43:27', '2025-12-06 14:43:27', 'user', 1, 1, NULL, 0, 1),
-(19, 'Le Van Phat', 'plv@gmail.com', NULL, '$2y$12$sgkGlJx7H08Fi/uiIBtnGujFi5dbkr7Tdh1px6fPGJ7iAkS/G443u', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 15:08:04', '2026-06-15 20:00:42', 'user', 3, 1, NULL, 0, 1),
-(20, 'Tuan Anh', 'awhtuan@gmail.com', NULL, '$2y$10$Gs3zYtOxwS7L4M11Ad0dMOUADYr5Bg.oPl6TJHjqWKBD38FTGLK.u', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 17:27:56', '2025-12-06 17:27:56', 'user', 2, 1, NULL, 0, 1),
-(21, 'Nguyễn Hoàng Sơn', 'hson97805@gmail.com', NULL, '$2y$10$42gA6q4czX5DAA4JsKseSe0uFxBXkI4leaoL9Hbi.iQqdys9RF2q2', NULL, '2025-12-06', NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-08 04:08:50', '2025-12-08 04:10:34', 'user', NULL, 1, NULL, 0, 1),
-(22, 'Lotte', 'lotte@gmail.com', NULL, '$2y$12$GahLiz9nOpcP1wnKRNyeGu3TeUKBlcVT4Kcv3MWq9bg6sgASGNAum', 'avatars/avatar_22_1782808131.png', NULL, NULL, 'Bronze', 1000000, 1, 'active', 0, '2025-12-08 18:53:32', '2026-06-30 08:28:51', 'moderator', 6, 1, NULL, 0, 1),
-(23, 'betaTH', 'betath@gmail.com', NULL, '$2y$12$nvjw65xDMuV/0RC.jMM5H./9XPIB/Xm0lcH/MZGGfPYQdjk9XSF9u', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-08 18:54:08', '2026-06-15 20:05:19', 'moderator', 7, 1, NULL, 0, 1),
-(24, 'trang', 'thutrang1@gmail.com', NULL, '$2y$10$syT/.T7JUcAhEqFYLS9bfObvzSqkYvueKcalkYQBp5hZF1IA4Hwk.', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 02:30:58', '2025-12-09 02:30:58', 'user', NULL, 1, NULL, 0, 1),
-(25, 'Trùm thiên hạ', 'vanquan2006k@gmail.com', NULL, '$2y$10$Q1jFMT5RHDxdT7nijhzTMOlhOOkPWBrVj2nr2I/azcwg.Gmvt.8xC', 'data/avatars/avatar_25_1765294523.jpg', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 03:33:26', '2025-12-10 02:30:40', 'user', NULL, 1, NULL, 0, 1),
-(26, 'FAN ANH JACK', 'khoiphuc255@gmail.com', NULL, '$2y$10$mBkdgi4XcgLU6rLbADRfeOmowDvXpsBgRND2L6D5dL8Z2a6dFr8ai', 'data/avatars/avatar_26_1765251965.jpg', NULL, NULL, 'Bronze', 9801000, 4, 'active', 0, '2025-12-09 03:36:19', '2025-12-09 03:46:05', 'user', NULL, 1, NULL, 0, 1),
-(27, 'trang', 'thutrang12@gmail.com', NULL, '$2y$10$wKoi2tCHC4qWkYxWyP6VZuMu36aN.04xRNQhdO/CcU1wNYjmW.M76', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 11:33:45', '2025-12-09 11:33:45', 'user', NULL, 1, NULL, 0, 1),
-(28, 'trang', 'trang12@gmail.com', NULL, '$2y$10$M5m.jX22AFNgTpKObCbyPeOwsI9Yk.M/vTChWKCwBKJYPxLWsJ4SG', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 12:35:23', '2025-12-09 12:35:23', 'user', NULL, 1, NULL, 0, 1),
-(29, 'Vũ Đình Tư', 'vtu8531@gmail.com', NULL, '$2y$10$bTIw0qpazioAhDk31ZXQNeRqaVA/qzau6ji0Gff9ucbuhwaP8Ebd6', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-11 08:55:37', '2025-12-11 08:55:37', 'user', NULL, 1, NULL, 0, 1),
-(30, 'Linh', 'nguyenvanlinh250606@gmail.com', NULL, '$2y$10$qGBli/hydJYruPcWlQ3KweLQhLsFXysE8vNsBQsuOtvndfppC80EG', 'data/avatars/avatar_30_1765767345.jpeg', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-12 02:06:48', '2025-12-15 02:55:45', 'user', 6, 1, NULL, 0, 1),
-(31, 'Dương Hải Cường', 'sccuong5222@gmail.com', NULL, '$2y$10$UmMuWQ0pSc.PaoElXDS2m.h7h4oiPyCYzpoBXUzfLCmM7YQulr.KK', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-14 14:43:40', '2025-12-14 14:43:40', 'user', NULL, 1, NULL, 0, 1),
-(32, 'trung', 'ledinhtrung35@gmail.com', NULL, '$2y$10$/0rHIDMSPL6g3JJwW75CUOoU6H8Po9vLtQhUgCDzZavFUDW9T9RKu', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 12:36:40', '2026-01-27 12:36:40', 'user', NULL, 1, NULL, 0, 1),
-(33, 'coca', 'ledinhtrungkm35@gmail.com', NULL, '$2y$10$pzCzNTULdcpPXQaY5GlKlOGKPN/DwTLhGguEAtkBjM3rB5zfISGVy', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 13:34:52', '2026-01-27 13:34:52', 'user', NULL, 1, NULL, 0, 1),
-(34, 'Lê Đình Trung', 'ledinhtrung12a1@gmail.com', NULL, '$2y$10$3do8eryE78u/sJzquhBSaeTFsEmnUyC2tnfIR1CqibwCVEk4Bod76', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 13:45:23', '2026-01-27 13:45:23', 'user', NULL, 1, NULL, 0, 1),
-(36, 'Nhân viên Test', 'staff@test.com', NULL, '$2y$12$AdgTudGlcDVX9bZq8iy5mO86/U2FS99uOD4C3gfwpFheO7eyRSvze', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2026-06-15 20:25:51', '2026-06-15 20:25:51', 'user', 3, 1, NULL, 0, 1),
-(37, 'Test User', 'user@test.com', NULL, '$2y$12$g.mQB8igYCB0lret.NqjWuAeYu6/uBegOjPjFjcGNMeEGcIP0tD0C', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2026-06-22 23:21:50', '2026-06-22 23:21:50', 'user', NULL, 1, NULL, 0, 1);
+INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `google_id`, `phone`, `password`, `avatar`, `birthdate`, `address`, `rank`, `points`, `subscription_id`, `status`, `email_verified`, `created_at`, `updated_at`, `role`, `theater_id`, `is_active`, `last_login`, `newsletter`, `notifications_enabled`) VALUES
+(1, 'Tuan Anh', 'noble.toad.nict@letterguard.net', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-10 15:10:16', '2025-11-10 15:10:16', 'user', NULL, 1, NULL, 0, 1),
+(2, 'Super Admin', 'admin@cinehub.com', NULL, NULL, NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-11-10 16:41:17', '2025-11-10 16:45:54', 'admin', NULL, 1, NULL, 0, 1),
+(3, 'Admin Mới', 'admin2@cinehub.com', NULL, NULL, NULL, '$2y$12$/AeKoaDJ.CzbUovU0x9F1.U54BECa20QKSYuRc.O./WJZTt1b/bFG', 'avatars/avatar_3_1782296052.png', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-12 02:39:06', '2026-06-29 21:42:24', 'admin', NULL, 1, NULL, 0, 1),
+(4, 'Nguyễn Văn A', 'nguyenvana@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Silver', 500, 2, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
+(5, 'Trần Thị B', 'tranthib@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Gold', 1200, 3, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
+(6, 'Lê Văn C', 'levanc@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Bronze', 100, 1, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
+(7, 'Phạm Thị D', 'phamthid@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Platinum', 2500, 4, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
+(8, 'Hoàng Văn E', 'hoangvane@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Silver', 800, 2, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
+(9, 'vanlinh', 'nguyenvanlinh25062006@gmail.com', NULL, NULL, NULL, '$2y$12$X9rtzLgIJYy3cWi4VLsth.GZaihA0lIw6ZXMQoK7CXyb6Xi3OrMQ2', 'avatars/avatar_9_1782064502.png', NULL, NULL, 'Bronze', 8784560, 5, 'active', 0, '2025-11-14 01:35:37', '2026-07-09 15:49:36', 'moderator', 3, 1, NULL, 0, 1),
+(10, 'Tuan_awh', 'tuanawh@gmail.com', NULL, NULL, NULL, '$2y$10$5NwNHefnp5jwjr1Vls5HG.dnt4SWC1newqSkuV8X4QTcwZ0Ok1JQ.', 'data/avatars/avatar_10_1765506885.jpg', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-14 01:45:51', '2025-12-12 02:34:45', 'moderator', 2, 1, NULL, 0, 1),
+(11, 'Hoang Son', 'hsson97805@gmail.com', NULL, NULL, NULL, '$2y$10$4OBk1HA71jEhbVPP7FA7VueQ8B30EgEy9eB9tAHRFmUvA8I7lwAPe', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-24 08:52:25', '2025-11-24 08:52:25', 'user', NULL, 1, NULL, 0, 1),
+(12, 'jack', 'jack@gmail.com', NULL, NULL, NULL, '$2y$10$4OPMx0NC7sXIg23/hWQt1u0t52jEDgc5grk/LZAOmmFw8a3DAy.BW', NULL, NULL, NULL, 'Bronze', 297000, 3, 'active', 0, '2025-11-25 02:20:46', '2025-11-25 02:27:04', 'user', NULL, 1, NULL, 0, 1),
+(13, 'huung', 'nguyenconghung954@gmail.com', NULL, NULL, NULL, '$2y$10$0aCzLlyOsSw4IZeDM8Vr8uC.1zWUY/F0SZTjwU8hrS9jxzvUvTgeG', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-25 12:43:00', '2025-11-25 12:43:00', 'user', NULL, 1, NULL, 0, 1),
+(14, 'bom', 'vlinh25062006@gmail.com', NULL, NULL, NULL, '$2y$10$SGQNRO1gcjuJy76tKCWx7e/9boVMyK2kkgK5D4PMepeswkveVa2qa', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-26 04:03:42', '2025-11-26 04:03:42', 'user', NULL, 1, NULL, 0, 1),
+(15, 'Hải Nam', 'natgao0001@gmail.com', NULL, NULL, NULL, '$2y$10$62PMj1vSUIjXo4.d8EJ8J.JJVrnO764zQvDZorn2BsfiT9ecJCzGe', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-04 18:01:00', '2025-12-04 18:01:00', 'user', NULL, 1, NULL, 0, 1),
+(16, 'Thanh', 'le3221981@gmail.com', NULL, NULL, NULL, '$2y$10$bomnjBXwqML823EJUbdDsOh22J4vmfXElcK0M.CMzk9X2NrcpIyGm', 'data/avatars/avatar_16_1764872833.jpeg', NULL, NULL, 'Bronze', 400000, 1, 'active', 0, '2025-12-04 18:22:20', '2025-12-04 18:30:11', 'user', NULL, 1, NULL, 0, 1),
+(17, 'Admin Rạp CGV Vincom', 'admin_rap1@cinehub.com', NULL, NULL, NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 14:43:27', '2025-12-06 14:43:27', 'moderator', 1, 1, NULL, 0, 1),
+(18, 'Nhân viên Quầy 1', 'nhanvien1@cinehub.com', NULL, NULL, NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 14:43:27', '2025-12-06 14:43:27', 'user', 1, 1, NULL, 0, 1),
+(19, 'Le Van Phat', 'plv@gmail.com', NULL, NULL, NULL, '$2y$12$sgkGlJx7H08Fi/uiIBtnGujFi5dbkr7Tdh1px6fPGJ7iAkS/G443u', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 15:08:04', '2026-06-15 20:00:42', 'user', 3, 1, NULL, 0, 1),
+(20, 'Tuan Anh', 'awhtuan@gmail.com', NULL, NULL, NULL, '$2y$10$Gs3zYtOxwS7L4M11Ad0dMOUADYr5Bg.oPl6TJHjqWKBD38FTGLK.u', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 17:27:56', '2025-12-06 17:27:56', 'user', 2, 1, NULL, 0, 1),
+(21, 'Nguyễn Hoàng Sơn', 'hson97805@gmail.com', NULL, NULL, NULL, '$2y$10$42gA6q4czX5DAA4JsKseSe0uFxBXkI4leaoL9Hbi.iQqdys9RF2q2', NULL, '2025-12-06', NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-08 04:08:50', '2025-12-08 04:10:34', 'user', NULL, 1, NULL, 0, 1),
+(22, 'Lotte', 'lotte@gmail.com', NULL, NULL, NULL, '$2y$12$GahLiz9nOpcP1wnKRNyeGu3TeUKBlcVT4Kcv3MWq9bg6sgASGNAum', 'avatars/avatar_22_1782808131.png', NULL, NULL, 'Bronze', 1000000, 1, 'active', 0, '2025-12-08 18:53:32', '2026-06-30 08:28:51', 'moderator', 6, 1, NULL, 0, 1),
+(23, 'betaTH', 'betath@gmail.com', NULL, NULL, NULL, '$2y$12$nvjw65xDMuV/0RC.jMM5H./9XPIB/Xm0lcH/MZGGfPYQdjk9XSF9u', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-08 18:54:08', '2026-06-15 20:05:19', 'moderator', 7, 1, NULL, 0, 1),
+(24, 'trang', 'thutrang1@gmail.com', NULL, NULL, NULL, '$2y$10$syT/.T7JUcAhEqFYLS9bfObvzSqkYvueKcalkYQBp5hZF1IA4Hwk.', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 02:30:58', '2025-12-09 02:30:58', 'user', NULL, 1, NULL, 0, 1),
+(25, 'Trùm thiên hạ', 'vanquan2006k@gmail.com', NULL, NULL, NULL, '$2y$10$Q1jFMT5RHDxdT7nijhzTMOlhOOkPWBrVj2nr2I/azcwg.Gmvt.8xC', 'data/avatars/avatar_25_1765294523.jpg', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 03:33:26', '2025-12-10 02:30:40', 'user', NULL, 1, NULL, 0, 1),
+(26, 'FAN ANH JACK', 'khoiphuc255@gmail.com', NULL, NULL, NULL, '$2y$10$mBkdgi4XcgLU6rLbADRfeOmowDvXpsBgRND2L6D5dL8Z2a6dFr8ai', 'data/avatars/avatar_26_1765251965.jpg', NULL, NULL, 'Bronze', 9801000, 4, 'active', 0, '2025-12-09 03:36:19', '2025-12-09 03:46:05', 'user', NULL, 1, NULL, 0, 1),
+(27, 'trang', 'thutrang12@gmail.com', NULL, NULL, NULL, '$2y$10$wKoi2tCHC4qWkYxWyP6VZuMu36aN.04xRNQhdO/CcU1wNYjmW.M76', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 11:33:45', '2025-12-09 11:33:45', 'user', NULL, 1, NULL, 0, 1),
+(28, 'trang', 'trang12@gmail.com', NULL, NULL, NULL, '$2y$10$M5m.jX22AFNgTpKObCbyPeOwsI9Yk.M/vTChWKCwBKJYPxLWsJ4SG', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 12:35:23', '2025-12-09 12:35:23', 'user', NULL, 1, NULL, 0, 1),
+(29, 'Vũ Đình Tư', 'vtu8531@gmail.com', NULL, NULL, NULL, '$2y$10$bTIw0qpazioAhDk31ZXQNeRqaVA/qzau6ji0Gff9ucbuhwaP8Ebd6', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-11 08:55:37', '2025-12-11 08:55:37', 'user', NULL, 1, NULL, 0, 1),
+(30, 'Linh', 'nguyenvanlinh250606@gmail.com', NULL, NULL, NULL, '$2y$10$qGBli/hydJYruPcWlQ3KweLQhLsFXysE8vNsBQsuOtvndfppC80EG', 'data/avatars/avatar_30_1765767345.jpeg', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-12 02:06:48', '2025-12-15 02:55:45', 'user', 6, 1, NULL, 0, 1),
+(31, 'Dương Hải Cường', 'sccuong5222@gmail.com', NULL, NULL, NULL, '$2y$10$UmMuWQ0pSc.PaoElXDS2m.h7h4oiPyCYzpoBXUzfLCmM7YQulr.KK', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-14 14:43:40', '2025-12-14 14:43:40', 'user', NULL, 1, NULL, 0, 1),
+(32, 'trung', 'ledinhtrung35@gmail.com', NULL, NULL, NULL, '$2y$10$/0rHIDMSPL6g3JJwW75CUOoU6H8Po9vLtQhUgCDzZavFUDW9T9RKu', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 12:36:40', '2026-01-27 12:36:40', 'user', NULL, 1, NULL, 0, 1),
+(33, 'coca', 'ledinhtrungkm35@gmail.com', NULL, NULL, NULL, '$2y$10$pzCzNTULdcpPXQaY5GlKlOGKPN/DwTLhGguEAtkBjM3rB5zfISGVy', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 13:34:52', '2026-01-27 13:34:52', 'user', NULL, 1, NULL, 0, 1),
+(34, 'Lê Đình Trung', 'ledinhtrung12a1@gmail.com', NULL, NULL, NULL, '$2y$10$3do8eryE78u/sJzquhBSaeTFsEmnUyC2tnfIR1CqibwCVEk4Bod76', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 13:45:23', '2026-01-27 13:45:23', 'user', NULL, 1, NULL, 0, 1),
+(36, 'Nhân viên Test', 'staff@test.com', NULL, NULL, NULL, '$2y$12$AdgTudGlcDVX9bZq8iy5mO86/U2FS99uOD4C3gfwpFheO7eyRSvze', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2026-06-15 20:25:51', '2026-06-15 20:25:51', 'user', 3, 1, NULL, 0, 1),
+(37, 'Test User', 'user@test.com', NULL, NULL, NULL, '$2y$12$g.mQB8igYCB0lret.NqjWuAeYu6/uBegOjPjFjcGNMeEGcIP0tD0C', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2026-06-22 23:21:50', '2026-06-22 23:21:50', 'user', NULL, 1, NULL, 0, 1),
+(38, 'PThien', 'phucthien3156@gmail.com', NULL, NULL, NULL, '$2y$12$zQe1zgi0tqAvzYVEjXrRFe9nwrs8DhZ.twwrO27hBqx2M9kXFa5Qi', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-07-09 01:25:03', '2026-07-09 01:25:03', 'user', NULL, 1, NULL, 0, 1);
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `user_roles`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `sessions`
+--
+
+CREATE TABLE `sessions` (
+  `id` varchar(255) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `payload` longtext NOT NULL,
+  `last_activity` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sessions_user_id_index` (`user_id`),
+  KEY `sessions_last_activity_index` (`last_activity`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `user_roles`
 --
 
 CREATE TABLE `user_roles` (
@@ -11229,6 +11370,20 @@ ALTER TABLE `booking_session_tracking`
   ADD KEY `is_banned` (`is_banned`);
 
 --
+-- Indexes for table `cache`
+--
+ALTER TABLE `cache`
+  ADD PRIMARY KEY (`key`),
+  ADD KEY `cache_expiration_index` (`expiration`);
+
+--
+-- Indexes for table `cache_locks`
+--
+ALTER TABLE `cache_locks`
+  ADD PRIMARY KEY (`key`),
+  ADD KEY `cache_locks_expiration_index` (`expiration`);
+
+--
 -- Indexes for table `categories`
 --
 ALTER TABLE `categories`
@@ -11280,6 +11435,13 @@ ALTER TABLE `episodes`
   ADD KEY `idx_movie_id` (`movie_id`);
 
 --
+-- Indexes for table `failed_jobs`
+--
+ALTER TABLE `failed_jobs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`);
+
+--
 -- Indexes for table `food_items`
 --
 ALTER TABLE `food_items`
@@ -11315,6 +11477,19 @@ ALTER TABLE `ip_spam_logs`
   ADD KEY `idx_created_at` (`created_at`),
   ADD KEY `idx_ip_action_spam` (`ip_address`,`action_type`,`is_spam`),
   ADD KEY `idx_user_id` (`user_id`);
+
+--
+-- Indexes for table `jobs`
+--
+ALTER TABLE `jobs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `jobs_queue_index` (`queue`);
+
+--
+-- Indexes for table `job_batches`
+--
+ALTER TABLE `job_batches`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `migrations`
@@ -11353,8 +11528,26 @@ ALTER TABLE `movie_categories`
 --
 ALTER TABLE `movie_category`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `movie_category_movie_id_category_id_unique` (`movie_id`,`category_id`),
-  ADD KEY `movie_category_category_id_foreign` (`category_id`);
+  ADD UNIQUE KEY `movie_category_unique` (`movie_id`,`category_id`),
+  ADD KEY `movie_category_movie_id_index` (`movie_id`),
+  ADD KEY `movie_category_category_id_index` (`category_id`);
+
+--
+-- Indexes for table `news`
+--
+ALTER TABLE `news`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `news_slug_unique` (`slug`),
+  ADD KEY `news_news_category_id_index` (`news_category_id`),
+  ADD KEY `news_user_id_index` (`user_id`),
+  ADD KEY `news_status_published_at_index` (`status`,`published_at`);
+
+--
+-- Indexes for table `news_categories`
+--
+ALTER TABLE `news_categories`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `news_categories_slug_unique` (`slug`);
 
 --
 -- Indexes for table `notifications`
@@ -11363,6 +11556,12 @@ ALTER TABLE `notifications`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `is_read` (`is_read`);
+
+--
+-- Indexes for table `password_reset_tokens`
+--
+ALTER TABLE `password_reset_tokens`
+  ADD PRIMARY KEY (`email`);
 
 --
 -- Indexes for table `permissions`
@@ -11421,6 +11620,14 @@ ALTER TABLE `seat_selection_logs`
   ADD KEY `showtime_id` (`showtime_id`),
   ADD KEY `created_at` (`created_at`),
   ADD KEY `is_spam` (`is_spam`);
+
+--
+-- Indexes for table `sessions`
+--
+ALTER TABLE `sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `sessions_user_id_index` (`user_id`),
+  ADD KEY `sessions_last_activity_index` (`last_activity`);
 
 --
 -- Indexes for table `showtimes`
@@ -11504,6 +11711,7 @@ ALTER TABLE `transactions`
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`),
+  ADD UNIQUE KEY `users_google_id_unique` (`google_id`),
   ADD KEY `idx_email` (`email`),
   ADD KEY `idx_subscription` (`subscription_id`),
   ADD KEY `idx_theater_id` (`theater_id`);
@@ -11554,7 +11762,7 @@ ALTER TABLE `booking_food_items`
 -- AUTO_INCREMENT for table `booking_pending`
 --
 ALTER TABLE `booking_pending`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=901;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=905;
 
 --
 -- AUTO_INCREMENT for table `booking_session_tracking`
@@ -11599,6 +11807,12 @@ ALTER TABLE `episodes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
+-- AUTO_INCREMENT for table `failed_jobs`
+--
+ALTER TABLE `failed_jobs`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `food_items`
 --
 ALTER TABLE `food_items`
@@ -11623,10 +11837,16 @@ ALTER TABLE `ip_spam_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
+-- AUTO_INCREMENT for table `jobs`
+--
+ALTER TABLE `jobs`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `moderator_permission_requests`
@@ -11650,13 +11870,25 @@ ALTER TABLE `movie_categories`
 -- AUTO_INCREMENT for table `movie_category`
 --
 ALTER TABLE `movie_category`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `news`
+--
+ALTER TABLE `news`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `news_categories`
+--
+ALTER TABLE `news_categories`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT for table `permissions`
@@ -11692,7 +11924,7 @@ ALTER TABLE `role_permissions`
 -- AUTO_INCREMENT for table `seat_reservations`
 --
 ALTER TABLE `seat_reservations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1004;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1115;
 
 --
 -- AUTO_INCREMENT for table `seat_selection_logs`
@@ -11704,7 +11936,7 @@ ALTER TABLE `seat_selection_logs`
 -- AUTO_INCREMENT for table `showtimes`
 --
 ALTER TABLE `showtimes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50255;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50257;
 
 --
 -- AUTO_INCREMENT for table `subscriptions`
@@ -11746,19 +11978,19 @@ ALTER TABLE `theater_screens`
 -- AUTO_INCREMENT for table `tickets`
 --
 ALTER TABLE `tickets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6147;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6150;
 
 --
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=158;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=159;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `user_roles`
@@ -11845,13 +12077,6 @@ ALTER TABLE `movies`
 ALTER TABLE `movie_categories`
   ADD CONSTRAINT `fk_movie_categories_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_movie_categories_movie` FOREIGN KEY (`movie_id`) REFERENCES `movies` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `movie_category`
---
-ALTER TABLE `movie_category`
-  ADD CONSTRAINT `movie_category_category_id_foreign` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `movie_category_movie_id_foreign` FOREIGN KEY (`movie_id`) REFERENCES `movies` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `notifications`

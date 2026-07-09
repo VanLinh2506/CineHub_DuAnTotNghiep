@@ -1065,31 +1065,75 @@ class ModeratorController extends Controller
     /**
      * Food Items Management
      */
-    public function foodItems()
+    public function foodItems(Request $request)
     {
         if ($error = $this->checkPermission()) return $error;
         
         $theater = Theater::findOrFail($this->theaterId);
+        $search = trim((string) $request->get('search', ''));
+        $type = (string) $request->get('type', '');
         
-        // Get food items for this theater
-        $foodItems = FoodItem::where('theater_id', $this->theaterId)
-            ->orderBy('category')
+        $query = FoodItem::where('theater_id', $this->theaterId);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($type !== '') {
+            $query->where('type', $type);
+        }
+        
+        $foodItems = $query->orderBy('type')
             ->orderBy('name')
             ->get()
             ->map(function($item) {
                 return [
                     'id' => $item->id,
                     'name' => $item->name,
-                    'category' => $item->category,
+                    'type' => $item->type,
                     'price' => $item->price,
                     'description' => $item->description,
-                    'image' => $item->image,
-                    'is_available' => $item->is_available,
+                    'image' => $item->image_url,
+                    'image_path' => $item->image,
+                    'is_active' => (bool) $item->is_active,
+                    'is_available' => (bool) $item->is_active,
                 ];
             })
             ->toArray();
         
-        return view('admin.moderator.food_items', compact('theater', 'foodItems'));
+        return view('admin.moderator.food_items', compact('theater', 'foodItems', 'search', 'type'));
+    }
+
+    public function foodItemsCreate()
+    {
+        if ($error = $this->checkPermission()) return $error;
+
+        return view('admin.moderator.food_items.create');
+    }
+
+    public function foodItemsEdit($id)
+    {
+        if ($error = $this->checkPermission()) return $error;
+
+        $foodItem = FoodItem::where('id', $id)
+            ->where('theater_id', $this->theaterId)
+            ->firstOrFail();
+
+        return view('admin.moderator.food_items.edit', [
+            'foodItem' => [
+                'id' => $foodItem->id,
+                'name' => $foodItem->name,
+                'type' => $foodItem->type,
+                'price' => $foodItem->price,
+                'description' => $foodItem->description,
+                'image' => $foodItem->image_url,
+                'image_path' => $foodItem->image,
+                'is_active' => (bool) $foodItem->is_active,
+            ],
+        ]);
     }
     
     public function foodItemsStore(Request $request)
@@ -1098,15 +1142,15 @@ class ModeratorController extends Controller
         
         $request->validate([
             'name' => 'required|string|max:255',
-            'category' => 'required|in:combo,drink,snack,other',
+            'type' => 'required|in:combo,drink,snack',
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
         ]);
         
-        $data = $request->only(['name', 'category', 'price', 'description']);
+        $data = $request->only(['name', 'type', 'price', 'description']);
         $data['theater_id'] = $this->theaterId;
-        $data['is_available'] = $request->has('is_available');
+        $data['is_active'] = $request->has('is_active');
         
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('food_items', 'public');
@@ -1129,14 +1173,14 @@ class ModeratorController extends Controller
         
         $request->validate([
             'name' => 'required|string|max:255',
-            'category' => 'required|in:combo,drink,snack,other',
+            'type' => 'required|in:combo,drink,snack',
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
         ]);
         
-        $data = $request->only(['name', 'category', 'price', 'description']);
-        $data['is_available'] = $request->has('is_available');
+        $data = $request->only(['name', 'type', 'price', 'description']);
+        $data['is_active'] = $request->has('is_active');
         
         if ($request->hasFile('image')) {
             // Delete old image

@@ -10,6 +10,7 @@ class FoodItem extends Model
     use HasFactory;
 
     protected $fillable = [
+        'theater_id',
         'name',
         'type',
         'price',

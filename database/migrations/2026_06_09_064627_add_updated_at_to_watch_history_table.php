@@ -11,11 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('watch_history', function (Blueprint $table) {
-            if (!Schema::hasColumn('watch_history', 'updated_at')) {
+        if (!Schema::hasTable('watch_history')) {
+            return;
+        }
+
+        if (!Schema::hasColumn('watch_history', 'updated_at')) {
+            Schema::table('watch_history', function (Blueprint $table) {
                 $table->timestamp('updated_at')->nullable()->after('created_at');
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -23,10 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('watch_history', function (Blueprint $table) {
-            if (Schema::hasColumn('watch_history', 'updated_at')) {
-                $table->dropColumn('updated_at');
-            }
-        });
+        // No-op rollback to avoid removing shared columns from imported schemas.
     }
 };
