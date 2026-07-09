@@ -4249,15 +4249,15 @@ button.btn-location-detect span,
 }
 
 .seat-label.selected {
-  background-color: #007bff !important;
-  border-color: #007bff !important;
+  background-color: #28a745 !important;
+  border-color: #ffc107 !important;
   transform: scale(1.1);
   color: #fff !important;
 }
 
 .seat-label.selected.vip-seat {
-  background-color: #007bff !important;
-  border-color: #007bff !important;
+  background-color: #28a745 !important;
+  border-color: #ffc107 !important;
   color: #fff !important;
   transform: scale(1.1);
 }
@@ -4289,31 +4289,31 @@ button.btn-location-detect span,
 
 /* Reserved Seat (đang chọn bởi người khác) */
 .seat-label.reserved {
-  background-color: #87ceeb;
-  border-color: #87ceeb;
+  background-color: #ffc107;
+  border-color: #ffc107;
   cursor: not-allowed;
   opacity: 0.8;
   animation: pulseReserved 2s infinite;
 }
 
 .seat-label.reserved .seat-number {
-  color: #ffffff;
+  color: #000000;
 }
 
 .seat-label.reserved.vip-seat {
-  background-color: #87ceeb !important;
-  border-color: #87ceeb !important;
+  background-color: #ffc107 !important;
+  border-color: #ffc107 !important;
   cursor: not-allowed;
   opacity: 0.8;
   animation: pulseReserved 2s infinite;
 }
 
 .seat-label.reserved.vip-seat .seat-number {
-  color: #ffffff !important;
+  color: #000000 !important;
 }
 
 .seat-label.reserved.vip-seat .seat-icon.vip-icon {
-  color: #ffffff !important;
+  color: #000000 !important;
 }
 
 @keyframes pulseReserved {
@@ -4449,8 +4449,8 @@ button.btn-location-detect span,
 }
 
 .seat-label.vip-seat.selected {
-  background-color: #007bff !important;
-  border-color: #007bff !important;
+  background-color: #28a745 !important;
+  border-color: #ffc107 !important;
   color: #fff !important;
 }
 
@@ -4518,20 +4518,23 @@ button.btn-location-detect span,
 }
 
 .legend-seat.available {
-  background-color: #666;
+  background-color: #4a4a4a;
+  border: 2px solid #666;
 }
 
 .legend-seat.selected {
-  background-color: #007bff;
+  background-color: #28a745;
+  border: 3px solid #ffc107;
 }
 
 .legend-seat.reserved {
-  background-color: #87ceeb;
-  border-color: #87ceeb;
+  background-color: #ffc107;
+  border: 2px solid #ffc107;
 }
 
 .legend-seat.booked {
   background-color: #dc3545;
+  border: 2px solid #dc3545;
 }
 
 /* Total Price */

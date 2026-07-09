@@ -65,7 +65,7 @@ class AdminController extends Controller
         if ($user instanceof \Illuminate\Http\RedirectResponse) return $user;
 
         $query = User::with('subscription');
-
+        
         if ($search = $request->search) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%$search%")
@@ -96,7 +96,7 @@ class AdminController extends Controller
 
         $targetUser = User::findOrFail($request->user_id);
         $currentPoints = $targetUser->points ?? 0;
-
+        
         $newPoints = match($request->action) {
             'set' => $request->points,
             'add' => $currentPoints + $request->points,
@@ -105,7 +105,7 @@ class AdminController extends Controller
 
         $targetUser->update(['points' => $newPoints]);
 
-        return redirect()->route('admin.users')->with('success', "Đã cập nhật điểm thành công! Điểm hiện tại: " . number_format($newPoints));
+        return redirect()->route('admin.users.index')->with('success', "Đã cập nhật điểm thành công! Điểm hiện tại: " . number_format($newPoints));
     }
 
     public function usersUpdateRole(Request $request)
@@ -120,7 +120,7 @@ class AdminController extends Controller
         ]);
 
         if ($request->user_id == Auth::id()) {
-            return redirect()->route('admin.users')->with('error', 'Bạn không thể thay đổi vai trò của chính mình!');
+            return redirect()->route('admin.users.index')->with('error', 'Bạn không thể thay đổi vai trò của chính mình!');
         }
 
         $targetUser = User::findOrFail($request->user_id);
@@ -129,7 +129,7 @@ class AdminController extends Controller
             'theater_id' => $request->role === 'moderator' ? $request->theater_id : null
         ]);
 
-        return redirect()->route('admin.users')->with('success', 'Cập nhật vai trò thành công!');
+        return redirect()->route('admin.users.index')->with('success', 'Cập nhật vai trò thành công!');
     }
 
     public function usersToggleStatus(Request $request)
@@ -143,7 +143,7 @@ class AdminController extends Controller
         ]);
 
         if ($request->user_id == Auth::id()) {
-            return redirect()->route('admin.users')->with('error', 'Bạn không thể khóa tài khoản của chính mình!');
+            return redirect()->route('admin.users.index')->with('error', 'Bạn không thể khóa tài khoản của chính mình!');
         }
 
         $targetUser = User::findOrFail($request->user_id);
@@ -153,20 +153,25 @@ class AdminController extends Controller
         ]);
 
         $statusText = $request->is_active ? 'mở khóa' : 'khóa';
-        return redirect()->route('admin.users')->with('success', ucfirst($statusText) . ' tài khoản thành công!');
+        return redirect()->route('admin.users.index')->with('success', ucfirst($statusText) . ' tài khoản thành công!');
     }
 
     // Movies Management
     public function movies(Request $request)
     {
-        $query = Movie::with('category');
+        $query = Movie::with(['category', 'categories']);
 
         if ($search = $request->search) {
             $query->where('title', 'like', "%$search%");
         }
 
         if ($category_id = $request->category) {
-            $query->where('category_id', $category_id);
+            $query->where(function ($q) use ($category_id) {
+                $q->where('category_id', $category_id)
+                    ->orWhereHas('categories', function ($categoryQuery) use ($category_id) {
+                        $categoryQuery->where('categories.id', $category_id);
+                    });
+            });
         }
 
         if ($request->has('status') && $request->status !== '') {
@@ -190,7 +195,8 @@ class AdminController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'category_id' => 'nullable|exists:categories,id',
+            'category_ids' => 'nullable|array',
+            'category_ids.*' => 'exists:categories,id',
             'level' => 'nullable|in:Free,Basic,Silver,Gold,Premium',
             'duration' => 'nullable|integer',
             'type' => 'required|in:phimle,phimbo',
@@ -200,7 +206,13 @@ class AdminController extends Controller
             'trailer_file' => 'nullable|mimes:mp4,avi,mov,mkv,webm|max:102400',
         ]);
 
-        $data = $request->only(['title', 'category_id', 'level', 'duration', 'description', 'director', 'actors', 'status', 'type', 'country', 'language', 'age_rating']);
+        $data = $request->only(['title', 'level', 'duration', 'description', 'director', 'actors', 'status', 'type', 'country', 'language', 'age_rating']);
+        $categoryIds = $this->normalizedCategoryIds($request);
+        $data['category_id'] = $categoryIds[0] ?? null;
+
+        if ($request->type === 'phimbo' && $data['status'] === 'Chiếu rạp') {
+            $data['status'] = 'Chiếu online';
+        }
         $data['rating'] = 0;
         $data['status_admin'] = $request->status_admin ?? 'draft';
 
@@ -217,7 +229,9 @@ class AdminController extends Controller
             $data['banner'] = $request->banner;
         }
 
-        if ($request->hasFile('trailer_file')) {
+        if ($request->type === 'phimbo') {
+            $data['trailer_url'] = null;
+        } elseif ($request->hasFile('trailer_file')) {
             $data['trailer_url'] = $request->file('trailer_file')->store('trailers', 'public');
         } else {
             $data['trailer_url'] = $request->trailer_url;
@@ -230,48 +244,38 @@ class AdminController extends Controller
             $data['video_url'] = $request->video_url;
         }
 
-        $data['normal_price'] = $request->normal_price ?? 90000;
-        $data['vip_price'] = $request->vip_price ?? 120000;
-        $data['couple_price'] = $request->couple_price ?? 180000;
-
-        // Handle category_ids (multi-category via pivot table)
-        if ($request->has('category_ids')) {
-            $categoryIds = $request->input('category_ids', []);
-            $data['category_id'] = !empty($categoryIds) ? $categoryIds[0] : null;
+        if (DB::getSchemaBuilder()->hasColumn('movies', 'normal_price')) {
+            $data['normal_price'] = $request->normal_price ?? 90000;
+        }
+        if (DB::getSchemaBuilder()->hasColumn('movies', 'vip_price')) {
+            $data['vip_price'] = $request->vip_price ?? 120000;
+        }
+        if (DB::getSchemaBuilder()->hasColumn('movies', 'couple_price')) {
+            $data['couple_price'] = $request->couple_price ?? 180000;
         }
 
         $movie = Movie::create($data);
-
-        // Save pivot table entries for multi-category support
-        if ($request->has('category_ids')) {
-            $categoryIds = $request->input('category_ids', []);
-            if (DB::getSchemaBuilder()->hasTable('movie_category')) {
-                foreach ($categoryIds as $catId) {
-                    DB::table('movie_category')->updateOrInsert([
-                        'movie_id' => $movie->id,
-                        'category_id' => $catId,
-                    ]);
-                }
-            }
-        }
+        $this->syncMovieCategories($movie, $categoryIds);
         $this->syncMovieEpisodesFromRequest($movie, $request);
 
         // Create showtimes if cinema movie
-        if ($request->status === 'Chiếu rạp' && $request->filled(['from_date', 'to_date', 'schedule_theater_id'])) {
+        if ($request->type !== 'phimbo' && $data['status'] === 'Chiếu rạp' && $request->filled(['from_date', 'to_date', 'schedule_theater_id'])) {
             $this->createShowtimes($movie, $request);
         }
 
-        return redirect()->route('admin.movies')->with('success', 'Thêm phim thành công!');
+        return redirect()->route('admin.movies.index')->with('success', 'Thêm phim thành công!');
     }
 
     public function moviesEdit($id)
     {
-        $movie = Movie::with('episodes')->findOrFail($id);
+        $movie = Movie::with(['episodes', 'categories'])->findOrFail($id);
         $categories = Category::all();
         $theaters = Theater::where('is_active', 1)->orderBy('name')->get();
         $showtimes = Showtime::where('movie_id', $id)->with('theater', 'screen')->get();
+        $episodes = $movie->episodes->sortBy('episode_number')->values();
+        $movieCategories = $movie->categories;
 
-        return view('admin.movies.edit', compact('movie', 'categories', 'theaters', 'showtimes'));
+        return view('admin.movies.edit', compact('movie', 'categories', 'theaters', 'showtimes', 'episodes', 'movieCategories'));
     }
 
     public function moviesUpdate(Request $request, $id)
@@ -280,10 +284,17 @@ class AdminController extends Controller
 
         $request->validate([
             'title' => 'required|string|max:255',
-            'category_id' => 'nullable|exists:categories,id',
+            'category_ids' => 'nullable|array',
+            'category_ids.*' => 'exists:categories,id',
         ]);
 
-        $data = $request->only(['title', 'category_id', 'level', 'duration', 'description', 'director', 'actors', 'status', 'type', 'country', 'language', 'age_rating', 'status_admin']);
+        $data = $request->only(['title', 'level', 'duration', 'description', 'director', 'actors', 'status', 'type', 'country', 'language', 'age_rating', 'status_admin']);
+        $categoryIds = $this->normalizedCategoryIds($request);
+        $data['category_id'] = $categoryIds[0] ?? null;
+
+        if ($request->type === 'phimbo' && $data['status'] === 'Chiếu rạp') {
+            $data['status'] = 'Chiếu online';
+        }
 
         // Handle file uploads
         if ($request->hasFile('thumbnail_file')) {
@@ -300,7 +311,13 @@ class AdminController extends Controller
             $data['banner'] = $request->banner;
         }
 
-        if ($request->hasFile('trailer_file')) {
+        if ($request->type === 'phimbo') {
+            if ($movie->getRawOriginal('trailer_url')) {
+                Storage::disk('public')->delete($movie->getRawOriginal('trailer_url'));
+            }
+
+            $data['trailer_url'] = null;
+        } elseif ($request->hasFile('trailer_file')) {
             if ($movie->trailer_url) Storage::disk('public')->delete($movie->trailer_url);
             $data['trailer_url'] = $request->file('trailer_file')->store('trailers', 'public');
         } elseif ($request->trailer_url) {
@@ -315,36 +332,22 @@ class AdminController extends Controller
             $data['video_url'] = $request->video_url;
         }
 
-        // Handle category_ids (multi-category via pivot table)
-        if ($request->has('category_ids')) {
-            $categoryIds = $request->input('category_ids', []);
-            $data['category_id'] = !empty($categoryIds) ? $categoryIds[0] : null;
-
-            if (DB::getSchemaBuilder()->hasTable('movie_category')) {
-                DB::table('movie_category')->where('movie_id', $movie->id)->delete();
-                foreach ($categoryIds as $catId) {
-                    DB::table('movie_category')->insert([
-                        'movie_id' => $movie->id,
-                        'category_id' => $catId,
-                    ]);
-                }
-            }
-        }
-
         $movie->update($data);
+        $this->syncMovieCategories($movie, $categoryIds);
+        $this->syncMovieEpisodesFromRequest($movie, $request);
 
         // Update showtimes if provided
-        if ($request->status === 'Chiếu rạp' && $request->filled(['from_date', 'to_date'])) {
+        if ($request->type !== 'phimbo' && $data['status'] === 'Chiếu rạp' && $request->filled(['from_date', 'to_date'])) {
             $this->createShowtimes($movie, $request);
         }
 
-        return redirect()->route('admin.movies.index')->with('success', 'Cập nhật phim "' . $movie->title . '" thành công!');
+        return redirect()->route('admin.movies.edit', $id)->with('success', 'Cập nhật phim thành công!');
     }
 
     public function moviesDelete($id)
     {
         $movie = Movie::findOrFail($id);
-
+        
         // Delete associated files
         if ($movie->thumbnail) Storage::disk('public')->delete($movie->thumbnail);
         if ($movie->banner) Storage::disk('public')->delete($movie->banner);
@@ -352,7 +355,6 @@ class AdminController extends Controller
         if ($movie->video_url) Storage::disk('public')->delete($movie->video_url);
 
         $movie->delete();
-
 
         return redirect()->route('admin.movies.index')->with('success', 'Xóa phim thành công!');
     }
@@ -373,6 +375,25 @@ class AdminController extends Controller
         }
 
         return redirect()->route('admin.movies.edit', $movieId)->with('success', 'Xóa tập phim thành công!');
+    }
+
+    protected function normalizedCategoryIds(Request $request): array
+    {
+        return collect($request->input('category_ids', []))
+            ->filter()
+            ->map(fn ($categoryId) => (int) $categoryId)
+            ->unique()
+            ->values()
+            ->toArray();
+    }
+
+    protected function syncMovieCategories(Movie $movie, array $categoryIds): void
+    {
+        if (!DB::getSchemaBuilder()->hasTable('movie_category')) {
+            return;
+        }
+
+        $movie->categories()->sync($categoryIds);
     }
 
     protected function syncMovieEpisodesFromRequest(Movie $movie, Request $request): void
@@ -404,7 +425,6 @@ class AdminController extends Controller
             ]);
         }
 
-        // Process new episode video file uploads only
         foreach ($request->allFiles() as $key => $file) {
             if (!preg_match('/^new_episode_video_(\d+)$/', $key, $matches)) {
                 continue;
@@ -441,7 +461,6 @@ class AdminController extends Controller
             $episode->save();
         }
 
-        // Process new episodes (with or without video)
         foreach ($request->all() as $key => $value) {
             if (!preg_match('/^new_episode_number_(\d+)$/', $key, $matches)) {
                 continue;
@@ -451,12 +470,6 @@ class AdminController extends Controller
             $episodeNumber = (int) $value;
 
             if ($episodeNumber < 1) {
-                continue;
-            }
-
-            // Skip if already saved in the file loop above
-            $fileKey = "new_episode_video_{$index}";
-            if ($request->hasFile($fileKey)) {
                 continue;
             }
 
@@ -596,9 +609,9 @@ class AdminController extends Controller
     public function theaters()
     {
         $user = Auth::user();
-
+        
         $query = Theater::query();
-
+        
         // Moderators can only see their theater
         if ($user->role === 'moderator' && $user->theater_id) {
             $query->where('id', $user->theater_id);
@@ -639,7 +652,32 @@ class AdminController extends Controller
             'is_active' => 1
         ]);
 
-        return redirect()->route('admin.theaters')->with('success', 'Thêm rạp thành công!');
+        return redirect()->route('admin.theaters.index')->with('success', 'Thêm rạp thành công!');
+    }
+
+    public function theatersShow($id)
+    {
+        $user = Auth::user();
+        $theater = Theater::findOrFail($id);
+
+        if ($user->role === 'moderator' && $user->theater_id != $id) {
+            return redirect()->route('admin.theaters.index')->with('error', 'Bạn không có quyền xem rạp này!');
+        }
+
+        $moderator = User::where('theater_id', $id)
+            ->where(function ($query) {
+                $query->where('role', 'moderator')
+                    ->orWhereHas('roles', function ($roleQuery) {
+                        $roleQuery->whereIn('name', ['Moderator', 'Theater Manager']);
+                    });
+            })
+            ->first();
+
+        $screens = Screen::where('theater_id', $id)
+            ->orderBy('screen_name')
+            ->get();
+
+        return view('admin.theaters.view', compact('theater', 'moderator', 'screens'));
     }
 
     public function theatersEdit($id)
@@ -649,7 +687,7 @@ class AdminController extends Controller
 
         // Check permission
         if ($user->role === 'moderator' && $user->theater_id != $id) {
-            return redirect()->route('admin.theaters')->with('error', 'Bạn không có quyền sửa rạp này!');
+            return redirect()->route('admin.theaters.index')->with('error', 'Bạn không có quyền sửa rạp này!');
         }
 
         return view('admin.theaters.edit', compact('theater'));
@@ -661,7 +699,7 @@ class AdminController extends Controller
         $theater = Theater::findOrFail($id);
 
         if ($user->role === 'moderator' && $user->theater_id != $id) {
-            return redirect()->route('admin.theaters')->with('error', 'Bạn không có quyền sửa rạp này!');
+            return redirect()->route('admin.theaters.index')->with('error', 'Bạn không có quyền sửa rạp này!');
         }
 
         $request->validate([
@@ -679,7 +717,7 @@ class AdminController extends Controller
 
         $theater->update($data);
 
-        return redirect()->route('admin.theaters')->with('success', 'Cập nhật rạp thành công!');
+        return redirect()->route('admin.theaters.index')->with('success', 'Cập nhật rạp thành công!');
     }
 
     public function theatersDelete($id)
@@ -688,7 +726,7 @@ class AdminController extends Controller
         if ($theater->image) Storage::disk('public')->delete($theater->image);
         $theater->delete();
 
-        return redirect()->route('admin.theaters')->with('success', 'Xóa rạp thành công!');
+        return redirect()->route('admin.theaters.index')->with('success', 'Xóa rạp thành công!');
     }
 
     // Analytics
@@ -737,7 +775,7 @@ class AdminController extends Controller
             ->groupBy('period')
             ->orderBy('period')
             ->get();
-
+        
         // Safely get top movies by revenue with error handling
         try {
             $topMoviesByRevenue = Ticket::whereBetween('tickets.created_at', [$start, $end])
@@ -794,7 +832,7 @@ class AdminController extends Controller
     public function tickets(Request $request)
     {
         $user = Auth::user();
-
+        
         $query = Ticket::with(['user', 'showtime.movie', 'showtime.theater']);
 
         // Filter by theater for moderators
@@ -825,7 +863,7 @@ class AdminController extends Controller
     public function foodItems()
     {
         $user = Auth::user();
-
+        
         $query = FoodItem::query();
 
         if ($user->role === 'moderator' && $user->theater_id) {
@@ -839,7 +877,7 @@ class AdminController extends Controller
 
     public function foodItemsCreate()
     {
-        return view('admin.food-items.create');
+        return view('admin.food_items.create');
     }
 
     public function foodItemsEdit($id)
@@ -870,7 +908,7 @@ class AdminController extends Controller
 
         FoodItem::create($data);
 
-        return redirect()->route('admin.foodItems')->with('success', 'Thêm combo/đồ ăn thành công!');
+        return redirect()->route('admin.foodItems.index')->with('success', 'Thêm combo/đồ ăn thành công!');
     }
 
     public function foodItemsUpdate(Request $request, $id)
@@ -892,17 +930,17 @@ class AdminController extends Controller
 
         $foodItem->update($data);
 
-        return redirect()->route('admin.foodItems')->with('success', 'Cập nhật combo/đồ ăn thành công!');
+        return redirect()->route('admin.foodItems.index')->with('success', 'Cập nhật combo/đồ ăn thành công!');
     }
 
     public function foodItemsDelete($id)
     {
         $foodItem = FoodItem::findOrFail($id);
-
+        
         if ($foodItem->image) Storage::disk('public')->delete($foodItem->image);
         $foodItem->delete();
 
-        return redirect()->route('admin.foodItems')->with('success', 'Xóa combo/đồ ăn thành công!');
+        return redirect()->route('admin.foodItems.index')->with('success', 'Xóa combo/đồ ăn thành công!');
     }
 
     // Categories Management
@@ -928,7 +966,7 @@ class AdminController extends Controller
 
         Category::create($request->only(['name', 'parent_id']));
 
-        return redirect()->route('admin.categories')->with('success', 'Thêm thể loại thành công!');
+        return redirect()->route('admin.categories.index')->with('success', 'Thêm thể loại thành công!');
     }
 
     public function categoriesUpdate(Request $request, $id)
@@ -944,12 +982,12 @@ class AdminController extends Controller
         ]);
 
         if ($request->parent_id == $id) {
-            return redirect()->route('admin.categories')->with('error', 'Không thể chọn chính thể loại này làm thể loại cha!');
+            return redirect()->route('admin.categories.index')->with('error', 'Không thể chọn chính thể loại này làm thể loại cha!');
         }
 
         $category->update($request->only(['name', 'parent_id']));
 
-        return redirect()->route('admin.categories')->with('success', 'Cập nhật thể loại thành công!');
+        return redirect()->route('admin.categories.index')->with('success', 'Cập nhật thể loại thành công!');
     }
 
     public function categoriesDelete($id)
@@ -960,12 +998,12 @@ class AdminController extends Controller
         $category = Category::findOrFail($id);
 
         if ($category->movies()->count() > 0) {
-            return redirect()->route('admin.categories')->with('error', 'Không thể xóa! Có phim đang sử dụng thể loại này.');
+            return redirect()->route('admin.categories.index')->with('error', 'Không thể xóa! Có phim đang sử dụng thể loại này.');
         }
 
         $category->delete();
 
-        return redirect()->route('admin.categories')->with('success', 'Xóa thể loại thành công!');
+        return redirect()->route('admin.categories.index')->with('success', 'Xóa thể loại thành công!');
     }
 
     // Admin Logs
