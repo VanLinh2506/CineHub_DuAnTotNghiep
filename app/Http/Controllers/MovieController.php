@@ -23,7 +23,7 @@ class MovieController extends Controller
         $type = $request->input('type');
         $minRating = $request->input('min_rating');
 
-        $query = Movie::with('category');
+        $query = Movie::with(['category', 'categories']);
 
         // Search
         if ($search) {
@@ -37,7 +37,12 @@ class MovieController extends Controller
 
         // Filters
         if ($categoryId) {
-            $query->where('category_id', $categoryId);
+            $query->where(function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId)
+                    ->orWhereHas('categories', function ($categoryQuery) use ($categoryId) {
+                        $categoryQuery->where('categories.id', $categoryId);
+                    });
+            });
         }
 
         if ($status) {
@@ -226,6 +231,77 @@ class MovieController extends Controller
     }
 
     /**
+     * Show curated movie library groups from the top menu.
+     */
+    public function library(Request $request, string $audience)
+    {
+        $audienceLabels = [
+            'tre-em' => 'Trẻ em',
+            'nguoi-lon' => 'Người lớn',
+            'mot-phim' => 'Mọt phim',
+        ];
+
+        abort_unless(isset($audienceLabels[$audience]), 404);
+
+        $query = Movie::with(['category', 'categories'])
+            ->where('status_admin', 'published')
+            ->where('status', '!=', 'Chiếu rạp');
+
+        $this->applyAudienceFilter($query, $audience);
+        $this->prioritizeWatchedMovies($query);
+
+        $movies = $query
+            ->orderByDesc('rating')
+            ->orderByDesc('created_at')
+            ->paginate(12);
+
+        $movies->each(function ($movie) {
+            if ($movie->type === 'phimbo') {
+                $movie->episode_count = $movie->episodes()->count();
+            }
+        });
+
+        $categories = Category::orderBy('name')->get();
+        $countries = Movie::select('country')
+            ->whereNotNull('country')
+            ->where('country', '!=', '')
+            ->distinct()
+            ->orderBy('country')
+            ->pluck('country');
+
+        $favorites = [];
+        if (Auth::check()) {
+            $favorites = WatchHistory::where('user_id', Auth::id())
+                ->where('favorite', true)
+                ->pluck('movie_id')
+                ->toArray();
+        }
+
+        $search = '';
+        $categoryId = null;
+        $status = null;
+        $country = null;
+        $type = null;
+        $minRating = null;
+        $audienceTitle = $audienceLabels[$audience];
+
+        return view('movie.index', compact(
+            'movies',
+            'categories',
+            'countries',
+            'favorites',
+            'search',
+            'categoryId',
+            'status',
+            'country',
+            'type',
+            'minRating',
+            'audience',
+            'audienceTitle'
+        ));
+    }
+
+    /**
      * Show movies by category
      */
     public function category(Request $request, $id)
@@ -233,7 +309,12 @@ class MovieController extends Controller
         $category = Category::findOrFail($id);
 
         $query = Movie::with('category')
-            ->where('category_id', $id)
+            ->where(function ($q) use ($id) {
+                $q->where('category_id', $id)
+                    ->orWhereHas('categories', function ($categoryQuery) use ($id) {
+                        $categoryQuery->where('categories.id', $id);
+                    });
+            })
             ->orderBy('created_at', 'desc');
 
         $movies = $query->paginate(12);
@@ -464,6 +545,81 @@ class MovieController extends Controller
 
         return $userLevel >= $requiredLevel;
     }
+
+    private function applyAudienceFilter($query, string $audience): void
+    {
+        if ($audience === 'mot-phim') {
+            return;
+        }
+
+        if ($audience === 'tre-em') {
+            $query->where(function ($q) {
+                $q->whereIn('age_rating', ['G', 'PG', 'P', 'K'])
+                    ->orWhereHas('category', function ($categoryQuery) {
+                        $categoryQuery->where('name', 'LIKE', '%hoạt hình%')
+                            ->orWhere('name', 'LIKE', '%thiếu nhi%')
+                            ->orWhere('name', 'LIKE', '%gia đình%')
+                            ->orWhere('name', 'LIKE', '%trẻ em%');
+                    })
+                    ->orWhereHas('categories', function ($categoryQuery) {
+                        $categoryQuery->where('name', 'LIKE', '%hoạt hình%')
+                            ->orWhere('name', 'LIKE', '%thiếu nhi%')
+                            ->orWhere('name', 'LIKE', '%gia đình%')
+                            ->orWhere('name', 'LIKE', '%trẻ em%');
+                    })
+                    ->orWhere('title', 'LIKE', '%thiếu nhi%')
+                    ->orWhere('description', 'LIKE', '%thiếu nhi%')
+                    ->orWhere('description', 'LIKE', '%trẻ em%');
+            });
+
+            return;
+        }
+
+        if ($audience === 'nguoi-lon') {
+            $query->where(function ($q) {
+                $q->where('type', 'phimbo')
+                    ->orWhereHas('category', function ($categoryQuery) {
+                        $categoryQuery->where('name', 'LIKE', '%tình cảm%')
+                            ->orWhere('name', 'LIKE', '%tâm lý%')
+                            ->orWhere('name', 'LIKE', '%lãng mạn%')
+                            ->orWhere('name', 'LIKE', '%gia đình%');
+                    })
+                    ->orWhereHas('categories', function ($categoryQuery) {
+                        $categoryQuery->where('name', 'LIKE', '%tình cảm%')
+                            ->orWhere('name', 'LIKE', '%tâm lý%')
+                            ->orWhere('name', 'LIKE', '%lãng mạn%')
+                            ->orWhere('name', 'LIKE', '%gia đình%');
+                    })
+                    ->orWhere('description', 'LIKE', '%tình cảm%')
+                    ->orWhere('description', 'LIKE', '%lãng mạn%');
+            });
+        }
+    }
+
+    private function prioritizeWatchedMovies($query): void
+    {
+        if (!Auth::check()) {
+            return;
+        }
+
+        $watchedMovieIds = WatchHistory::where('user_id', Auth::id())
+            ->latest('updated_at')
+            ->pluck('movie_id')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        if (empty($watchedMovieIds)) {
+            return;
+        }
+
+        $cases = collect($watchedMovieIds)
+            ->map(fn ($movieId, $index) => 'WHEN ' . (int) $movieId . ' THEN ' . (int) $index)
+            ->implode(' ');
+
+        $query->orderByRaw("CASE id {$cases} ELSE 999999 END");
+    }
+
     public function introduce($id)
     {
         $movie = Movie::with(['category', 'episodes', 'reviews.user'])->findOrFail($id);
