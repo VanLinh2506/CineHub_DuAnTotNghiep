@@ -70,6 +70,9 @@ Route::middleware('auth')->prefix('booking')->name('booking.')->group(function (
 
     // Booking process
     Route::post('/process', [BookingController::class, 'processBooking'])->name('processBooking');
+    Route::post('/seats/reserve', [BookingController::class, 'reserveSeats'])->name('reservations.reserve');
+    Route::post('/seats/release', [BookingController::class, 'releaseReservedSeats'])->name('reservations.release');
+    Route::post('/seats/extend', [BookingController::class, 'extendReservedSeats'])->name('reservations.extend');
     Route::get('/showtime/{showtimeId}', [BookingController::class, 'selectSeats'])->name('selectSeats');
     Route::get('/history', [BookingController::class, 'myTickets'])->name('history');
     Route::get('/my-tickets', [BookingController::class, 'myTickets'])->name('my-tickets');
@@ -241,7 +244,9 @@ Route::middleware(['auth', 'moderator'])->prefix('moderator')->name('moderator.'
     // Food Items Management
     Route::prefix('food-items')->name('foodItems.')->group(function () {
         Route::get('/', [ModeratorController::class, 'foodItems'])->name('index');
+        Route::get('/create', [ModeratorController::class, 'foodItemsCreate'])->name('create');
         Route::post('/', [ModeratorController::class, 'foodItemsStore'])->name('store');
+        Route::get('/{id}/edit', [ModeratorController::class, 'foodItemsEdit'])->name('edit');
         Route::put('/{id}', [ModeratorController::class, 'foodItemsUpdate'])->name('update');
         Route::delete('/{id}', [ModeratorController::class, 'foodItemsDelete'])->name('destroy');
     });

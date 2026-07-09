@@ -336,12 +336,29 @@ document.addEventListener('DOMContentLoaded', function() {
             const formattedTime = `${parts[0].padStart(2,'0')}:${parts[1].padStart(2,'0')}`;
             const endTime = calculateEndTime(formattedTime, movieDuration);
             timeSlotButtons.forEach(btn => {
-                const slotTime = btn.textContent.trim();
+                const slotTime = btn.dataset.time || btn.textContent.trim();
                 if (slotTime === formattedTime) { btn.style.display = ''; btn.disabled = false; btn.classList.remove('disabled-slot'); return; }
                 if (isTimeInRange(slotTime, formattedTime, endTime)) {
                     btn.style.display = 'none'; btn.disabled = true; btn.classList.add('disabled-slot');
                 } else { btn.style.display = ''; btn.disabled = false; btn.classList.remove('disabled-slot'); }
             });
+        }
+
+        function selectStartTime(time, selectedButton) {
+            if (!timeInput || !time) return;
+
+            timeInput.value = time;
+            timeSlotButtons.forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline-primary');
+            });
+
+            if (selectedButton) {
+                selectedButton.classList.remove('btn-outline-primary', 'd-none');
+                selectedButton.classList.add('btn-primary');
+            }
+
+            updateTimeSlotsVisibility(time);
         }
 
         function loadAvailableTimeSlots() {
@@ -373,6 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             button.type = 'button';
                             button.className = 'btn btn-sm btn-outline-primary me-2 mb-2 time-slot-btn';
                             button.textContent = slot.label;
+                            button.dataset.time = slot.time;
                             
                             // Ẩn các button sau 8 cái đầu tiên
                             if (index >= 8) {
@@ -380,14 +398,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                             
                             button.onclick = function() {
-                                timeInput.value = slot.time;
-                                timeSlotsContainer.querySelectorAll('button').forEach(btn => { 
-                                    btn.classList.remove('btn-primary'); 
-                                    btn.classList.add('btn-outline-primary'); 
-                                });
-                                button.classList.remove('btn-outline-primary'); 
-                                button.classList.add('btn-primary');
-                                updateTimeSlotsVisibility(slot.time);
+                                selectStartTime(slot.time, button);
                             };
                             slotsWrapper.appendChild(button);
                             timeSlotButtons.push(button);

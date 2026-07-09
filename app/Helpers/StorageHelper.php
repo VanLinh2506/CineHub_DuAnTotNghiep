@@ -70,7 +70,8 @@ if (!function_exists('normalize_storage_path')) {
 if (!function_exists('storage_url')) {
     /**
      * Get full URL for storage file
-     * Automatically converts old paths to new paths
+     * Automatically converts old paths to new paths.
+     * Handles both symlinked public/storage and real directory.
      * 
      * @param string|null $path
      * @return string|null
@@ -89,15 +90,45 @@ if (!function_exists('storage_url')) {
         $normalizedPath = normalize_storage_path($path);
         $convertedPath = old_to_new_path($normalizedPath);
 
+        // Determine the final relative path to use
+        $finalPath = $normalizedPath;
         if (
             $convertedPath !== $normalizedPath &&
             !\Illuminate\Support\Facades\Storage::disk('public')->exists($normalizedPath) &&
             \Illuminate\Support\Facades\Storage::disk('public')->exists($convertedPath)
         ) {
-            $normalizedPath = $convertedPath;
+            $finalPath = $convertedPath;
         }
 
-        return asset('storage/' . ltrim($normalizedPath, '/'));
+        // Check if public/storage is a real directory (not a symlink)
+        $publicStoragePath = public_path('storage');
+        $isSymlinked = is_link($publicStoragePath);
+
+        if ($isSymlinked) {
+            // Normal Laravel symlink: asset('storage/...') works
+            return asset('storage/' . ltrim($finalPath, '/'));
+        }
+
+        // public/storage is a real directory - need to check if file exists there
+        $publicFilePath = $publicStoragePath . '/' . ltrim($finalPath, '/');
+        if (file_exists($publicFilePath)) {
+            return asset('storage/' . ltrim($finalPath, '/'));
+        }
+
+        // File not in public/storage, it's in storage/app/public/
+        // Use Storage::url() which returns the correct path
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($finalPath)) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($finalPath);
+        }
+
+        // Last resort: try old path location in public/storage/data/
+        $oldPublicPath = $publicStoragePath . '/data/img/' . basename($finalPath);
+        if (file_exists($oldPublicPath)) {
+            return asset('storage/data/img/' . basename($finalPath));
+        }
+
+        // Return null if nothing found
+        return null;
     }
 }
 

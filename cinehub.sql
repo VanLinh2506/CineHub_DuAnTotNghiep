@@ -1440,9 +1440,9 @@ CREATE TABLE `seat_reservations` (
   `showtime_id` int(11) NOT NULL,
   `seat` varchar(10) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `session_id` varchar(255) NOT NULL,
+  `session_id` varchar(255) DEFAULT NULL,
   `reserved_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `expires_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00'
+  `expires_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -10995,6 +10995,30 @@ INSERT INTO `users` (`id`, `name`, `email`, `phone`, `password`, `avatar`, `birt
 (34, 'Lê Đình Trung', 'ledinhtrung12a1@gmail.com', NULL, '$2y$10$3do8eryE78u/sJzquhBSaeTFsEmnUyC2tnfIR1CqibwCVEk4Bod76', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 13:45:23', '2026-01-27 13:45:23', 'user', NULL, 1, NULL, 0, 1),
 (36, 'Nhân viên Test', 'staff@test.com', NULL, '$2y$12$AdgTudGlcDVX9bZq8iy5mO86/U2FS99uOD4C3gfwpFheO7eyRSvze', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2026-06-15 20:25:51', '2026-06-15 20:25:51', 'user', 3, 1, NULL, 0, 1),
 (37, 'Test User', 'user@test.com', NULL, '$2y$12$g.mQB8igYCB0lret.NqjWuAeYu6/uBegOjPjFjcGNMeEGcIP0tD0C', NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2026-06-22 23:21:50', '2026-06-22 23:21:50', 'user', NULL, 1, NULL, 0, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `user_roles`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `sessions`
+--
+
+CREATE TABLE `sessions` (
+  `id` varchar(255) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `payload` longtext NOT NULL,
+  `last_activity` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sessions_user_id_index` (`user_id`),
+  KEY `sessions_last_activity_index` (`last_activity`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
