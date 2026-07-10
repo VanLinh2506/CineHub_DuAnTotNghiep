@@ -34,6 +34,16 @@ Route::middleware('guest')->group(function () {
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
 
+    // Email OTP Register routes
+    Route::get('/verify-otp', [AuthController::class, 'showVerifyOtp'])->name('auth.verify-otp-view');
+    Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('auth.verify-otp');
+    Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('auth.resend-otp');
+
+    // Email OTP Login routes
+    Route::get('/verify-login-otp', [AuthController::class, 'showVerifyLoginOtp'])->name('auth.verify-login-otp-view');
+    Route::post('/verify-login-otp', [AuthController::class, 'verifyLoginOtp'])->name('auth.verify-login-otp');
+    Route::post('/resend-login-otp', [AuthController::class, 'resendLoginOtp'])->name('auth.resend-login-otp');
+
     // Google OAuth routes
     Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');

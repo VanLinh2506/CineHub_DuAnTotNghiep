@@ -929,7 +929,7 @@ function handleRegister(event) {
 
         if (!response.ok) {
             const firstError = data.errors ? Object.values(data.errors)[0]?.[0] : null;
-            throw new Error(firstError || data.message || 'Khong the dang ky. Vui long kiem tra lai thong tin.');
+            throw new Error(firstError || data.message || data.error || 'Không thể đăng ký. Vui lòng kiểm tra lại thông tin.');
         }
 
         return data;
@@ -945,7 +945,7 @@ function handleRegister(event) {
         }
     })
     .catch(error => {
-        errorDiv.textContent = 'Có lỗi xảy ra. Vui lòng thử lại!';
+        errorDiv.textContent = error.message || 'Có lỗi xảy ra. Vui lòng thử lại!';
         errorDiv.style.display = 'block';
         submitBtn.disabled = false;
         submitBtn.textContent = 'Đăng ký';
