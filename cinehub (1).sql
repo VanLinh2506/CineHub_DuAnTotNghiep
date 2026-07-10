@@ -11186,7 +11186,7 @@ INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `google_id`, `p
 -- Cấu trúc bảng cho bảng `sessions`
 --
 
-CREATE TABLE `sessions` (
+CREATE TABLE IF NOT EXISTS `sessions` (
   `id` varchar(255) NOT NULL,
   `user_id` int(11) DEFAULT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
