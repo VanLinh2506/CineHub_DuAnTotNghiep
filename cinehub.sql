@@ -1,3 +1,12 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Máy chủ: 127.0.0.1
+-- Thời gian đã tạo: Th7 11, 2026 lúc 02:42 AM
+-- Phiên bản máy phục vụ: 10.4.32-MariaDB
+-- Phiên bản PHP: 8.2.12
+
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
@@ -9,13 +18,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `cinehub`
+-- Cơ sở dữ liệu: `cinehub`
 --
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `admin_logs`
+-- Cấu trúc bảng cho bảng `admin_logs`
 --
 
 CREATE TABLE `admin_logs` (
@@ -33,7 +42,7 @@ CREATE TABLE `admin_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `admin_logs`
+-- Đang đổ dữ liệu cho bảng `admin_logs`
 --
 
 INSERT INTO `admin_logs` (`id`, `user_id`, `action`, `module`, `target_type`, `target_id`, `old_data`, `new_data`, `ip_address`, `user_agent`, `created_at`) VALUES
@@ -97,7 +106,7 @@ INSERT INTO `admin_logs` (`id`, `user_id`, `action`, `module`, `target_type`, `t
 -- --------------------------------------------------------
 
 --
--- Table structure for table `booking_food_items`
+-- Cấu trúc bảng cho bảng `booking_food_items`
 --
 
 CREATE TABLE `booking_food_items` (
@@ -111,7 +120,7 @@ CREATE TABLE `booking_food_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `booking_food_items`
+-- Đang đổ dữ liệu cho bảng `booking_food_items`
 --
 
 INSERT INTO `booking_food_items` (`id`, `ticket_id`, `booking_pending_id`, `food_item_id`, `quantity`, `price`, `created_at`) VALUES
@@ -197,7 +206,7 @@ INSERT INTO `booking_food_items` (`id`, `ticket_id`, `booking_pending_id`, `food
 -- --------------------------------------------------------
 
 --
--- Table structure for table `booking_pending`
+-- Cấu trúc bảng cho bảng `booking_pending`
 --
 
 CREATE TABLE `booking_pending` (
@@ -219,7 +228,7 @@ CREATE TABLE `booking_pending` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `booking_pending`
+-- Đang đổ dữ liệu cho bảng `booking_pending`
 --
 
 INSERT INTO `booking_pending` (`id`, `user_id`, `customer_name`, `customer_phone`, `showtime_id`, `seats`, `food_items`, `customer_email`, `total_amount`, `vnp_txn_ref`, `booking_code`, `status`, `created_at`, `expires_at`, `qr_code`) VALUES
@@ -265,12 +274,43 @@ INSERT INTO `booking_pending` (`id`, `user_id`, `customer_name`, `customer_phone
 (901, 9, NULL, NULL, 50255, '[\"C4\",\"C3\",\"C2\",\"C1\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 640000.00, 'BKG9_1783587645', NULL, 'pending', '2026-07-09 09:00:45', '2026-07-09 09:08:01', NULL),
 (902, 38, NULL, NULL, 50255, '[\"D9\",\"D8\",\"D7\"]', '{\"13\":\"1\",\"14\":\"1\"}', 'phucthien3156@gmail.com', 764000.00, 'BKG38_1783587907', NULL, 'pending', '2026-07-09 09:05:07', '2026-07-09 09:07:13', NULL),
 (903, 9, NULL, NULL, 50256, '[\"G9\",\"G8\",\"G7\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 90390.00, 'BKG9_1783612168', NULL, 'pending', '2026-07-09 15:49:28', '2026-07-09 15:58:28', NULL),
-(904, 9, NULL, NULL, 50256, '[\"G9\",\"G8\",\"G7\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 90390.00, 'BKG9_1783612176', NULL, 'completed', '2026-07-09 15:49:36', '2026-07-09 15:58:28', 'BOOKING_Jqt9Xs5nTUYpp1ss6TZucfWE');
+(904, 9, NULL, NULL, 50256, '[\"G9\",\"G8\",\"G7\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 90390.00, 'BKG9_1783612176', NULL, 'completed', '2026-07-09 15:49:36', '2026-07-09 15:58:28', 'BOOKING_Jqt9Xs5nTUYpp1ss6TZucfWE'),
+(905, 1, 'Khách kiểm thử 1', '0900000001', 50257, '[\"A1\",\"A2\"]', NULL, 'admin-test-1@cinehub.local', 180000.00, 'ADMINTEST2026071001', 'ADMIN-TEST-20260710-01', 'completed', '2026-07-10 11:15:00', '2026-07-10 11:30:00', 'ADMIN-TEST-QR-1'),
+(906, 4, 'Khách kiểm thử 2', '0900000002', 50258, '[\"A1\",\"A2\"]', NULL, 'admin-test-2@cinehub.local', 180000.00, 'ADMINTEST2026070902', 'ADMIN-TEST-20260709-02', 'completed', '2026-07-09 11:15:00', '2026-07-09 11:30:00', 'ADMIN-TEST-QR-2'),
+(907, 5, 'Khách kiểm thử 3', '0900000003', 50259, '[\"D1\",\"D2\"]', NULL, 'admin-test-3@cinehub.local', 240000.00, 'ADMINTEST2026070803', 'ADMIN-TEST-20260708-03', 'completed', '2026-07-08 11:15:00', '2026-07-08 11:30:00', 'ADMIN-TEST-QR-3'),
+(908, 6, 'Khách kiểm thử 4', '0900000004', 50260, '[\"A1\",\"A2\"]', NULL, 'admin-test-4@cinehub.local', 180000.00, 'ADMINTEST2026070704', 'ADMIN-TEST-20260707-04', 'completed', '2026-07-07 11:15:00', '2026-07-07 11:30:00', 'ADMIN-TEST-QR-4'),
+(909, 7, 'Khách kiểm thử 5', '0900000005', 49770, '[\"A1\",\"A2\"]', NULL, 'admin-test-5@cinehub.local', 180000.00, 'ADMINTEST2026070605', 'ADMIN-TEST-20260706-05', 'completed', '2026-07-06 11:15:00', '2026-07-06 11:30:00', 'ADMIN-TEST-QR-5'),
+(910, 8, 'Khách kiểm thử 6', '0900000006', 48957, '[\"D1\",\"D2\"]', NULL, 'admin-test-6@cinehub.local', 240000.00, 'ADMINTEST2026070506', 'ADMIN-TEST-20260705-06', 'completed', '2026-07-05 11:15:00', '2026-07-05 11:30:00', 'ADMIN-TEST-QR-6'),
+(911, 11, 'Khách kiểm thử 7', '0900000007', 48186, '[\"A1\",\"A2\"]', NULL, 'admin-test-7@cinehub.local', 180000.00, 'ADMINTEST2026070407', 'ADMIN-TEST-20260704-07', 'completed', '2026-07-04 11:15:00', '2026-07-04 11:30:00', 'ADMIN-TEST-QR-7'),
+(912, 12, 'Khách kiểm thử 8', '0900000008', 47676, '[\"A1\",\"A2\"]', NULL, 'admin-test-8@cinehub.local', 180000.00, 'ADMINTEST2026070308', 'ADMIN-TEST-20260703-08', 'completed', '2026-07-03 11:15:00', '2026-07-03 11:30:00', 'ADMIN-TEST-QR-8'),
+(913, 1, 'Khách kiểm thử 1', '0900000009', 50261, '[\"D1\",\"D2\"]', NULL, 'admin-test-9@cinehub.local', 240000.00, 'ADMINTEST2026070209', 'ADMIN-TEST-20260702-09', 'completed', '2026-07-02 11:15:00', '2026-07-02 11:30:00', 'ADMIN-TEST-QR-9'),
+(914, 4, 'Khách kiểm thử 2', '0900000010', 50262, '[\"A1\",\"A2\"]', NULL, 'admin-test-10@cinehub.local', 180000.00, 'ADMINTEST2026070110', 'ADMIN-TEST-20260701-10', 'completed', '2026-07-01 11:15:00', '2026-07-01 11:30:00', 'ADMIN-TEST-QR-10'),
+(915, 5, 'Khách kiểm thử 3', '0900000011', 50263, '[\"A1\",\"A2\"]', NULL, 'admin-test-11@cinehub.local', 180000.00, 'ADMINTEST2026063011', 'ADMIN-TEST-20260630-11', 'completed', '2026-06-30 11:15:00', '2026-06-30 11:30:00', 'ADMIN-TEST-QR-11'),
+(916, 6, 'Khách kiểm thử 4', '0900000012', 50264, '[\"D1\",\"D2\"]', NULL, 'admin-test-12@cinehub.local', 240000.00, 'ADMINTEST2026062912', 'ADMIN-TEST-20260629-12', 'completed', '2026-06-29 11:15:00', '2026-06-29 11:30:00', 'ADMIN-TEST-QR-12'),
+(917, 7, 'Khách kiểm thử 5', '0900000013', 44837, '[\"A1\",\"A2\"]', NULL, 'admin-test-13@cinehub.local', 180000.00, 'ADMINTEST2026062813', 'ADMIN-TEST-20260628-13', 'completed', '2026-06-28 11:15:00', '2026-06-28 11:30:00', 'ADMIN-TEST-QR-13'),
+(918, 8, 'Khách kiểm thử 6', '0900000014', 50265, '[\"A1\",\"A2\"]', NULL, 'admin-test-14@cinehub.local', 180000.00, 'ADMINTEST2026062714', 'ADMIN-TEST-20260627-14', 'completed', '2026-06-27 11:15:00', '2026-06-27 11:30:00', 'ADMIN-TEST-QR-14'),
+(919, 11, 'Khách kiểm thử 7', '0900000015', 43564, '[\"D1\",\"D2\"]', NULL, 'admin-test-15@cinehub.local', 240000.00, 'ADMINTEST2026062615', 'ADMIN-TEST-20260626-15', 'completed', '2026-06-26 11:15:00', '2026-06-26 11:30:00', 'ADMIN-TEST-QR-15'),
+(920, 12, 'Khách kiểm thử 8', '0900000016', 50266, '[\"A1\",\"A2\"]', NULL, 'admin-test-16@cinehub.local', 180000.00, 'ADMINTEST2026062516', 'ADMIN-TEST-20260625-16', 'completed', '2026-06-25 11:15:00', '2026-06-25 11:30:00', 'ADMIN-TEST-QR-16'),
+(921, 1, 'Khách kiểm thử 1', '0900000017', 50267, '[\"A1\",\"A2\"]', NULL, 'admin-test-17@cinehub.local', 180000.00, 'ADMINTEST2026062417', 'ADMIN-TEST-20260624-17', 'completed', '2026-06-24 11:15:00', '2026-06-24 11:30:00', 'ADMIN-TEST-QR-17'),
+(922, 4, 'Khách kiểm thử 2', '0900000018', 50268, '[\"D1\",\"D2\"]', NULL, 'admin-test-18@cinehub.local', 240000.00, 'ADMINTEST2026062318', 'ADMIN-TEST-20260623-18', 'completed', '2026-06-23 11:15:00', '2026-06-23 11:30:00', 'ADMIN-TEST-QR-18'),
+(923, 5, 'Khách kiểm thử 3', '0900000019', 50269, '[\"A1\",\"A2\"]', NULL, 'admin-test-19@cinehub.local', 180000.00, 'ADMINTEST2026062219', 'ADMIN-TEST-20260622-19', 'completed', '2026-06-22 11:15:00', '2026-06-22 11:30:00', 'ADMIN-TEST-QR-19'),
+(924, 6, 'Khách kiểm thử 4', '0900000020', 50270, '[\"A1\",\"A2\"]', NULL, 'admin-test-20@cinehub.local', 180000.00, 'ADMINTEST2026062120', 'ADMIN-TEST-20260621-20', 'completed', '2026-06-21 11:15:00', '2026-06-21 11:30:00', 'ADMIN-TEST-QR-20'),
+(925, 7, 'Khách kiểm thử 5', '0900000021', 50271, '[\"D1\",\"D2\"]', NULL, 'admin-test-21@cinehub.local', 240000.00, 'ADMINTEST2026062021', 'ADMIN-TEST-20260620-21', 'completed', '2026-06-20 11:15:00', '2026-06-20 11:30:00', 'ADMIN-TEST-QR-21'),
+(926, 8, 'Khách kiểm thử 6', '0900000022', 50272, '[\"A1\",\"A2\"]', NULL, 'admin-test-22@cinehub.local', 180000.00, 'ADMINTEST2026061922', 'ADMIN-TEST-20260619-22', 'completed', '2026-06-19 11:15:00', '2026-06-19 11:30:00', 'ADMIN-TEST-QR-22'),
+(927, 11, 'Khách kiểm thử 7', '0900000023', 50273, '[\"A1\",\"A2\"]', NULL, 'admin-test-23@cinehub.local', 180000.00, 'ADMINTEST2026061823', 'ADMIN-TEST-20260618-23', 'completed', '2026-06-18 11:15:00', '2026-06-18 11:30:00', 'ADMIN-TEST-QR-23'),
+(928, 12, 'Khách kiểm thử 8', '0900000024', 50274, '[\"D1\",\"D2\"]', NULL, 'admin-test-24@cinehub.local', 240000.00, 'ADMINTEST2026061724', 'ADMIN-TEST-20260617-24', 'completed', '2026-06-17 11:15:00', '2026-06-17 11:30:00', 'ADMIN-TEST-QR-24'),
+(929, 1, 'Khách kiểm thử 1', '0900000025', 50275, '[\"A1\",\"A2\"]', NULL, 'admin-test-25@cinehub.local', 180000.00, 'ADMINTEST2026061625', 'ADMIN-TEST-20260616-25', 'completed', '2026-06-16 11:15:00', '2026-06-16 11:30:00', 'ADMIN-TEST-QR-25'),
+(930, 4, 'Khách kiểm thử 2', '0900000026', 42020, '[\"A1\",\"A2\"]', NULL, 'admin-test-26@cinehub.local', 180000.00, 'ADMINTEST2026061526', 'ADMIN-TEST-20260615-26', 'completed', '2026-06-15 11:15:00', '2026-06-15 11:30:00', 'ADMIN-TEST-QR-26'),
+(931, 5, 'Khách kiểm thử 3', '0900000027', 50276, '[\"D1\",\"D2\"]', NULL, 'admin-test-27@cinehub.local', 240000.00, 'ADMINTEST2026061427', 'ADMIN-TEST-20260614-27', 'completed', '2026-06-14 11:15:00', '2026-06-14 11:30:00', 'ADMIN-TEST-QR-27'),
+(932, 6, 'Khách kiểm thử 4', '0900000028', 50277, '[\"A1\",\"A2\"]', NULL, 'admin-test-28@cinehub.local', 180000.00, 'ADMINTEST2026061328', 'ADMIN-TEST-20260613-28', 'completed', '2026-06-13 11:15:00', '2026-06-13 11:30:00', 'ADMIN-TEST-QR-28'),
+(933, 7, 'Khách kiểm thử 5', '0900000029', 41875, '[\"A1\",\"A2\"]', NULL, 'admin-test-29@cinehub.local', 180000.00, 'ADMINTEST2026061229', 'ADMIN-TEST-20260612-29', 'completed', '2026-06-12 11:15:00', '2026-06-12 11:30:00', 'ADMIN-TEST-QR-29'),
+(934, 8, 'Khách kiểm thử 6', '0900000030', 41948, '[\"D1\",\"D2\"]', NULL, 'admin-test-30@cinehub.local', 240000.00, 'ADMINTEST2026061130', 'ADMIN-TEST-20260611-30', 'completed', '2026-06-11 11:15:00', '2026-06-11 11:30:00', 'ADMIN-TEST-QR-30'),
+(935, 9, NULL, NULL, 50348, '[\"F5\",\"F4\",\"F6\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 585000.00, 'BKG9_1783727191', NULL, 'completed', '2026-07-10 23:46:31', '2026-07-10 23:56:21', 'BOOKING_CM97zo5QHEXbPZnFBk5Av8aZ');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `booking_session_tracking`
+-- Cấu trúc bảng cho bảng `booking_session_tracking`
 --
 
 CREATE TABLE `booking_session_tracking` (
@@ -288,7 +328,7 @@ CREATE TABLE `booking_session_tracking` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `booking_session_tracking`
+-- Đang đổ dữ liệu cho bảng `booking_session_tracking`
 --
 
 INSERT INTO `booking_session_tracking` (`id`, `user_id`, `showtime_id`, `screen_id`, `session_start`, `session_end`, `total_duration_seconds`, `violation_count`, `is_banned`, `ban_until`, `created_at`) VALUES
@@ -407,12 +447,17 @@ INSERT INTO `booking_session_tracking` (`id`, `user_id`, `showtime_id`, `screen_
 (199, 33, 41829, 5, '2026-02-03 09:08:36', NULL, 0, 0, 0, NULL, '2026-02-03 02:08:36'),
 (200, 9, 41830, 5, '2026-02-04 14:10:00', NULL, 0, 0, 0, NULL, '2026-02-04 07:10:00'),
 (202, 9, 41893, 3, '2026-06-09 15:40:44', NULL, 0, 0, 0, NULL, '2026-06-09 08:40:44'),
-(203, 3, 41893, 3, '2026-06-09 15:56:14', NULL, 0, 0, 0, NULL, '2026-06-09 08:56:14');
+(203, 3, 41893, 3, '2026-06-09 15:56:14', NULL, 0, 0, 0, NULL, '2026-06-09 08:56:14'),
+(204, 9, 50256, 39, '2026-07-11 06:08:40', '2026-07-11 06:19:35', 656, 1, 1, '2026-07-12 09:30:00', '2026-07-10 23:08:40'),
+(205, 3, 50256, 39, '2026-07-11 06:10:39', '2026-07-11 06:21:35', 656, 1, 1, '2026-07-12 09:30:00', '2026-07-10 23:10:39'),
+(206, 9, 50348, 6, '2026-07-11 06:45:06', NULL, 91, 0, 0, NULL, '2026-07-10 23:45:06'),
+(207, 3, 50349, 6, '2026-07-11 06:45:54', NULL, 0, 0, 0, NULL, '2026-07-10 23:45:54'),
+(208, 3, 50348, 6, '2026-07-11 06:46:03', NULL, 525, 0, 0, NULL, '2026-07-10 23:46:03');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `cache`
+-- Cấu trúc bảng cho bảng `cache`
 --
 
 CREATE TABLE `cache` (
@@ -424,7 +469,7 @@ CREATE TABLE `cache` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `cache_locks`
+-- Cấu trúc bảng cho bảng `cache_locks`
 --
 
 CREATE TABLE `cache_locks` (
@@ -436,7 +481,7 @@ CREATE TABLE `cache_locks` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `categories`
+-- Cấu trúc bảng cho bảng `categories`
 --
 
 CREATE TABLE `categories` (
@@ -446,7 +491,7 @@ CREATE TABLE `categories` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `categories`
+-- Đang đổ dữ liệu cho bảng `categories`
 --
 
 INSERT INTO `categories` (`id`, `name`, `parent_id`) VALUES
@@ -464,7 +509,7 @@ INSERT INTO `categories` (`id`, `name`, `parent_id`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `comments`
+-- Cấu trúc bảng cho bảng `comments`
 --
 
 CREATE TABLE `comments` (
@@ -481,7 +526,7 @@ CREATE TABLE `comments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `comments`
+-- Đang đổ dữ liệu cho bảng `comments`
 --
 
 INSERT INTO `comments` (`id`, `user_id`, `movie_id`, `parent_id`, `content`, `status`, `created_at`, `updated_at`, `likes`, `dislikes`) VALUES
@@ -505,7 +550,7 @@ INSERT INTO `comments` (`id`, `user_id`, `movie_id`, `parent_id`, `content`, `st
 -- --------------------------------------------------------
 
 --
--- Table structure for table `comment_likes`
+-- Cấu trúc bảng cho bảng `comment_likes`
 --
 
 CREATE TABLE `comment_likes` (
@@ -517,7 +562,7 @@ CREATE TABLE `comment_likes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `comment_likes`
+-- Đang đổ dữ liệu cho bảng `comment_likes`
 --
 
 INSERT INTO `comment_likes` (`id`, `comment_id`, `user_id`, `type`, `created_at`) VALUES
@@ -528,7 +573,7 @@ INSERT INTO `comment_likes` (`id`, `comment_id`, `user_id`, `type`, `created_at`
 -- --------------------------------------------------------
 
 --
--- Table structure for table `coupons`
+-- Cấu trúc bảng cho bảng `coupons`
 --
 
 CREATE TABLE `coupons` (
@@ -548,7 +593,7 @@ CREATE TABLE `coupons` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `coupons`
+-- Đang đổ dữ liệu cho bảng `coupons`
 --
 
 INSERT INTO `coupons` (`id`, `code`, `name`, `type`, `value`, `min_amount`, `max_discount`, `usage_limit`, `used_count`, `valid_from`, `valid_to`, `status`, `created_at`) VALUES
@@ -561,7 +606,7 @@ INSERT INTO `coupons` (`id`, `code`, `name`, `type`, `value`, `min_amount`, `max
 -- --------------------------------------------------------
 
 --
--- Table structure for table `disabled_seats`
+-- Cấu trúc bảng cho bảng `disabled_seats`
 --
 
 CREATE TABLE `disabled_seats` (
@@ -579,7 +624,7 @@ CREATE TABLE `disabled_seats` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `episodes`
+-- Cấu trúc bảng cho bảng `episodes`
 --
 
 CREATE TABLE `episodes` (
@@ -596,7 +641,7 @@ CREATE TABLE `episodes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `episodes`
+-- Đang đổ dữ liệu cho bảng `episodes`
 --
 
 INSERT INTO `episodes` (`id`, `movie_id`, `episode_number`, `title`, `video_url`, `thumbnail`, `duration`, `description`, `created_at`, `updated_at`) VALUES
@@ -623,7 +668,7 @@ INSERT INTO `episodes` (`id`, `movie_id`, `episode_number`, `title`, `video_url`
 -- --------------------------------------------------------
 
 --
--- Table structure for table `failed_jobs`
+-- Cấu trúc bảng cho bảng `failed_jobs`
 --
 
 CREATE TABLE `failed_jobs` (
@@ -639,7 +684,7 @@ CREATE TABLE `failed_jobs` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `food_items`
+-- Cấu trúc bảng cho bảng `food_items`
 --
 
 CREATE TABLE `food_items` (
@@ -655,7 +700,7 @@ CREATE TABLE `food_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `food_items`
+-- Đang đổ dữ liệu cho bảng `food_items`
 --
 
 INSERT INTO `food_items` (`id`, `theater_id`, `name`, `description`, `price`, `image`, `type`, `is_active`, `created_at`) VALUES
@@ -703,7 +748,7 @@ INSERT INTO `food_items` (`id`, `theater_id`, `name`, `description`, `price`, `i
 -- --------------------------------------------------------
 
 --
--- Table structure for table `ip_blocks`
+-- Cấu trúc bảng cho bảng `ip_blocks`
 --
 
 CREATE TABLE `ip_blocks` (
@@ -718,7 +763,7 @@ CREATE TABLE `ip_blocks` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `ip_room_tracking`
+-- Cấu trúc bảng cho bảng `ip_room_tracking`
 --
 
 CREATE TABLE `ip_room_tracking` (
@@ -736,7 +781,7 @@ CREATE TABLE `ip_room_tracking` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `ip_room_tracking`
+-- Đang đổ dữ liệu cho bảng `ip_room_tracking`
 --
 
 INSERT INTO `ip_room_tracking` (`id`, `ip_address`, `screen_id`, `showtime_id`, `first_enter_time`, `last_enter_time`, `total_duration_seconds`, `is_banned`, `ban_until`, `created_at`, `updated_at`) VALUES
@@ -920,7 +965,7 @@ INSERT INTO `ip_room_tracking` (`id`, `ip_address`, `screen_id`, `showtime_id`, 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `ip_spam_logs`
+-- Cấu trúc bảng cho bảng `ip_spam_logs`
 --
 
 CREATE TABLE `ip_spam_logs` (
@@ -934,7 +979,7 @@ CREATE TABLE `ip_spam_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `ip_spam_logs`
+-- Đang đổ dữ liệu cho bảng `ip_spam_logs`
 --
 
 INSERT INTO `ip_spam_logs` (`id`, `ip_address`, `action_type`, `is_spam`, `details`, `user_id`, `created_at`) VALUES
@@ -1001,7 +1046,7 @@ INSERT INTO `ip_spam_logs` (`id`, `ip_address`, `action_type`, `is_spam`, `detai
 -- --------------------------------------------------------
 
 --
--- Table structure for table `jobs`
+-- Cấu trúc bảng cho bảng `jobs`
 --
 
 CREATE TABLE `jobs` (
@@ -1017,7 +1062,7 @@ CREATE TABLE `jobs` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `job_batches`
+-- Cấu trúc bảng cho bảng `job_batches`
 --
 
 CREATE TABLE `job_batches` (
@@ -1036,7 +1081,7 @@ CREATE TABLE `job_batches` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `migrations`
+-- Cấu trúc bảng cho bảng `migrations`
 --
 
 CREATE TABLE `migrations` (
@@ -1046,7 +1091,7 @@ CREATE TABLE `migrations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `migrations`
+-- Đang đổ dữ liệu cho bảng `migrations`
 --
 
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
@@ -1080,7 +1125,7 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `moderator_permission_requests`
+-- Cấu trúc bảng cho bảng `moderator_permission_requests`
 --
 
 CREATE TABLE `moderator_permission_requests` (
@@ -1098,7 +1143,7 @@ CREATE TABLE `moderator_permission_requests` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `moderator_permission_requests`
+-- Đang đổ dữ liệu cho bảng `moderator_permission_requests`
 --
 
 INSERT INTO `moderator_permission_requests` (`id`, `theater_id`, `moderator_id`, `requested_by`, `target_user_id`, `action`, `old_data`, `new_data`, `status`, `created_at`, `responded_at`) VALUES
@@ -1108,7 +1153,7 @@ INSERT INTO `moderator_permission_requests` (`id`, `theater_id`, `moderator_id`,
 -- --------------------------------------------------------
 
 --
--- Table structure for table `movies`
+-- Cấu trúc bảng cho bảng `movies`
 --
 
 CREATE TABLE `movies` (
@@ -1142,7 +1187,7 @@ CREATE TABLE `movies` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `movies`
+-- Đang đổ dữ liệu cho bảng `movies`
 --
 
 INSERT INTO `movies` (`id`, `title`, `category_id`, `level`, `duration`, `description`, `director`, `actors`, `video_url`, `trailer_url`, `thumbnail`, `status`, `rating`, `created_at`, `status_admin`, `publish_date`, `geo_restriction`, `drm_enabled`, `banner`, `country`, `language`, `age_rating`, `type`, `max_tickets`, `normal_price`, `vip_price`, `couple_price`) VALUES
@@ -1184,15 +1229,127 @@ INSERT INTO `movies` (`id`, `title`, `category_id`, `level`, `duration`, `descri
 (36, 'Series: Tình Yêu và Tham Vọng', 7, 'Gold', 45, 'Phim thương trường với những cuộc chiến khốc liệt giữa các tập đoàn và câu chuyện tình yêu phức tạp.', 'Bùi Tiến Huy', 'Nhan Phúc Vinh, Diễm My 9x, Lã Thanh Huyền', 'data/phim/phimbo/tinh_yeu_va_tham_vong', 'https://example.com/tyvtc-trailer.mp4', 'data/img/tinh_yeu_va_tham_vong_img.jpg', 'Chiếu online', 7.8, '2025-11-25 09:25:05', 'published', NULL, NULL, 0, 'data/img/tinh_yeu_va_tham_vong.jpg', 'Việt Nam', 'Tiếng Việt', 'P', 'phimbo', NULL, 90000, 120000, 180000),
 (37, 'Phim ngắn: Ngã Ba Đồng Lộc', 7, 'Free', 30, 'Phim tài liệu/chiến tranh về sự hy sinh anh dũng của 10 cô gái thanh niên xung phong.', 'Nguyễn Minh Chung', 'Nhiều diễn viên', 'data/phim/phimle/nga_ba_dong_loc.mp4', 'https://example.com/nbdl-trailer.mp4', 'data/img/nga_ba_dong_loc_img.jpg', 'Chiếu online', 8.2, '2025-11-25 09:25:05', 'published', NULL, NULL, 0, 'data/img/nga_ba_dong_loc.jpg', 'Việt Nam', 'Tiếng Việt', 'P', 'phimle', NULL, 90000, 120000, 180000),
 (38, 'hheheh', 1, 'Free', 124, 'sdd', '', 'fgd', '', '', 'data/img/hai_phuong_img.jpg', 'Chiếu rạp', 0, '2025-12-04 02:26:18', 'published', NULL, NULL, 0, 'data/img/hai_phuong.jpg', 'fdg', 'dfg', 'p', 'phimle', NULL, 90000, 120000, 180000),
-(51, 'Phàm Nhân Tu Tiên', 1, 'Free', NULL, 'Khúc Hồn thành công kết đan! hai người ở Loạn Tinh hải còn gặp được cơ duyên gì gì? “Tinh Hải Phi Trì” , xin đợi trở về\r\nĐồng thời Manhua cũng đang trong quá trình khẩn trương remake, ngày nào đó sẽ gặp lại', NULL, 'Hàn Lập,', 'data/storage/data/phim/phimbo/phamnhantutien/', NULL, 'data/img/posters/Pha__m_Nh__n_Tu_Ti__n_poster_1765762815.jpg', 'Chiếu online', 0, '2025-12-15 01:40:15', 'draft', NULL, NULL, 0, 'data/img/banners/Pha__m_Nh__n_Tu_Ti__n_banner_1765762815.webp', 'Trung Quốc', NULL, '12', 'phimbo', NULL, 90000, 120000, 180000),
+(51, 'Phàm Nhân Tu Tiên', 1, 'Free', NULL, 'Khúc Hồn thành công kết đan! hai người ở Loạn Tinh hải còn gặp được cơ duyên gì gì? “Tinh Hải Phi Trì” , xin đợi trở về\r\nĐồng thời Manhua cũng đang trong quá trình khẩn trương remake, ngày nào đó sẽ gặp lại', NULL, 'Hàn Lập,', 'data/storage/data/phim/phimbo/phamnhantutien/', NULL, 'posters/V7ZPSN3AoJ6aLu8oTLYttQJ3nW0IjOoR2iBmEaf9.jpg', 'Chiếu online', 0, '2025-12-15 01:40:15', 'draft', NULL, NULL, 0, 'banners/HrFRC16FI9rNHPVfz7a0IAoTwV16yZI3a5JC5TS8.jpg', 'Trung Quốc', NULL, '12', 'phimbo', NULL, 90000, 120000, 180000),
 (52, 'mưa đỏ', NULL, 'Gold', 120, 'abc', 'Vince Gilligan', 'Hàn Lập, ', 'data/phim/phimle/m__a___o__.mp4', 'https://www.youtube.com/watch?v=BD6PoZJdt_M', 'data/img/posters/m__a___o___poster_1769519309.jpg', 'Chiếu rạp', 0, '2025-12-15 03:22:07', 'draft', NULL, NULL, 0, 'data/img/banners/m__a___o___banner_1769519309.jpg', 'viet nam', 'tieng viet', '16', 'phimle', NULL, 90000, 120000, 180000),
 (53, 'Tiên nghịch', 1, 'Silver', NULL, '', 'Hàn Lập', 'Vương Lâm', '', 'data/phim/trailers/Ti__n_ngh___ch_trailer_1770606401.mp4', 'data/img/tiennghich.webp', 'Chiếu online', 0, '2026-02-09 03:06:41', 'published', NULL, NULL, 0, 'data/img/tiennghich.webp', 'Trung Quốc', 'Tiếng Trung, Tiếng Việt', '20', 'phimbo', NULL, 90000, 120000, 180000),
-(54, 'fds', NULL, 'Free', NULL, 'aa', 'Beau Willimona', 'Kevin Spacey, Robin Wright, Kate Mara, Michael Kelly', NULL, NULL, 'posters/9b7OHuvgX8hRbER5juiAjjmaGyZrT2Ck8TowBiaH.png', 'Chiếu online', 0, '2026-06-22 23:00:52', 'draft', NULL, NULL, 0, 'banners/zVfyPbwGhfgcJracXnl4A6RZNQXegoyM95SFk1MV.png', 'Vietnam', 'Aymara', '17', 'phimbo', NULL, 90000, 120000, 180000);
+(54, 'fds', NULL, 'Free', NULL, 'aa', 'Beau Willimona', 'Kevin Spacey, Robin Wright, Kate Mara, Michael Kelly', NULL, NULL, 'posters/9b7OHuvgX8hRbER5juiAjjmaGyZrT2Ck8TowBiaH.png', 'Chiếu online', 0, '2026-06-22 23:00:52', 'draft', NULL, NULL, 0, 'banners/zVfyPbwGhfgcJracXnl4A6RZNQXegoyM95SFk1MV.png', 'Vietnam', 'Aymara', '17', 'phimbo', NULL, 90000, 120000, 180000),
+(62, '[ADMIN TEST] Phim rạp lịch sử', 1, 'Free', 118, 'Phim dùng tạo dữ liệu booking và doanh thu lịch sử cho admin.', 'CineHub Test Studio', 'Test Cast', NULL, NULL, 'posters/9b7OHuvgX8hRbER5juiAjjmaGyZrT2Ck8TowBiaH.png', 'Chiếu rạp', 8.1, '2026-05-10 23:44:12', 'published', '2026-05-11 06:44:12', NULL, 0, 'banners/zVfyPbwGhfgcJracXnl4A6RZNQXegoyM95SFk1MV.png', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(84, 'John Wick (2014)', 1, 'Gold', 100, 'Phim bổ sung cho thể loại Hành động. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/ZpSp8Fd6Xak6AgUqEDzzYUodFrB4TmIsQv47Q9fQ.webp', 'Chiếu online', 7.5, '2026-07-10 23:18:35', 'published', '2026-06-30 06:48:35', NULL, 0, 'banners/JMlXzsBCNDGuiQ6ln7JrzPsfxFIeBHDENf63QJJN.jpg', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(85, 'Mad Max: Fury Road (2015)', 1, 'Premium', 107, 'Phim bổ sung cho thể loại Hành động. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/DQDgqzHt76RwSWihjRZ7KqdteXYS2DXahH9ywX0v.webp', 'Chiếu online', 7.6, '2026-07-10 23:17:35', 'published', '2026-06-29 06:48:35', NULL, 0, 'banners/tH761AqrEhd8G4cyiYULIqTDEFErE0ZiK83aqPqL.jpg', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(86, 'Die Hard (1988)', 1, 'Free', 114, 'Phim bổ sung cho thể loại Hành động. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/o73rezbHG1v6W5IOsyy1Y4wSMiLiKRVr3gjwf8JT.webp', 'Chiếu online', 7.7, '2026-07-10 23:16:35', 'published', '2026-06-28 06:48:35', NULL, 0, 'banners/LiSvFM14SiQLO94LkKEP3TAmyqnBdtYJlEsKi5Nq.jpg', 'Việt Nam', 'Tiếng Việt', 'T16', 'phimbo', NULL, 90000, 120000, 180000),
+(87, 'The Raid: Redemption (2011)', 1, 'Silver', 121, 'Phim bổ sung cho thể loại Hành động. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/FrfBiRLRqlZZlbKfi45qiCJrP9wjpN8dx9LNixf5.jpg', 'Chiếu online', 7.8, '2026-07-10 23:15:35', 'published', '2026-06-27 06:48:35', NULL, 0, 'banners/ran4r9atdn91E8KLnaw4Q4slicXxNlRTksEorsyd.webp', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(88, 'Mission: Impossible - Fallout (2018)', 1, 'Gold', 128, 'Phim bổ sung cho thể loại Hành động. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/Dg0W4fv1xtujc8KQRFjcjBmhHRYmtYcwgOXttT1J.webp', 'Chiếu online', 7.9, '2026-07-10 23:14:35', 'published', '2026-06-26 06:48:35', NULL, 0, 'banners/nbh10FjkvBQgzPktOPakcx5urLilmEtRmuGYZoPc.webp', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(89, 'The Notebook (2004)', 2, 'Gold', 100, 'Phim bổ sung cho thể loại Tình cảm. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/hPuwKPPT1T16ZsgiSEZ1mJRYA0A0pkKWQdPfaS8d.webp', 'Chiếu online', 7.5, '2026-07-10 22:58:35', 'published', '2026-06-30 06:48:35', NULL, 0, 'banners/gj5yK8EkrIpP53VyhwpSkZ1bZ4nKiL3RUYKDRSEq.webp', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(90, 'La La Land (2016)', 2, 'Premium', 107, 'Phim bổ sung cho thể loại Tình cảm. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/5Mz0IrWv5SwmhbQKYsVYpruLEDWXgn2Uh7DAtyA6.webp', 'Chiếu online', 7.6, '2026-07-10 22:57:35', 'published', '2026-06-29 06:48:35', NULL, 0, 'banners/qBXjfnYeoNm61VVYmrqAFX9v66BtgqYmLigr0IhK.webp', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(91, 'Pride & Prejudice (2005)', 2, 'Free', 114, 'Phim bổ sung cho thể loại Tình cảm. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/kYPi2CN0LX5pvtu4w7nkJ89HjSOGpi55rdn07uTD.webp', 'Chiếu online', 7.7, '2026-07-10 22:56:35', 'published', '2026-06-28 06:48:35', NULL, 0, 'banners/QNxnzL9D9clJXb2Xkx4Fv0PUZ3DMuL0T5WNzwdnX.webp', 'Việt Nam', 'Tiếng Việt', 'T16', 'phimbo', NULL, 90000, 120000, 180000),
+(92, 'Before Sunrise (1995)', 2, 'Silver', 121, 'Phim bổ sung cho thể loại Tình cảm. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/qOW67gDp6vJPYyOcklFLnkYKvqURQaaew55tPSMW.webp', 'Chiếu online', 7.8, '2026-07-10 22:55:35', 'published', '2026-06-27 06:48:35', NULL, 0, 'banners/x6a9bIX8oH2Zvs10TpfbX6jhZrQNAu6Ta4K0CnXz.jpg', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(93, 'A Walk to Remember (2002)', 2, 'Gold', 128, 'Phim bổ sung cho thể loại Tình cảm. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/yoWe53LoZV7Gh1MFB7ym57kdVNkfBW9OzkBJb73H.webp', 'Chiếu online', 7.9, '2026-07-10 22:54:35', 'published', '2026-06-26 06:48:35', NULL, 0, 'banners/diVoXI726pvVIVLAwDUKhtU82sk3yjYWfFKS9uO1.webp', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(94, 'Groundhog Day (1993)', 3, 'Premium', 134, 'Phim bổ sung cho thể loại Hài. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/blsdVLJGShrR76uu5zT7gQk7vmjOq8XWsREusDYC.webp', 'Chiếu online', 7.2, '2026-07-10 22:41:35', 'published', '2026-07-03 06:48:35', NULL, 0, 'banners/qV8SIm3VMGkh1RjFZ0rVY3WqHypMz5ISqyYOzm3l.webp', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(95, 'Superbad (2007)', 3, 'Free', 86, 'Phim bổ sung cho thể loại Hài. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/sYs4yBViI3JC4hwKOeW0TroRTZ80wV2cNAD6SMwg.webp', 'Chiếu online', 7.3, '2026-07-10 22:40:35', 'published', '2026-07-02 06:48:35', NULL, 0, 'banners/ucwFhaqiB1VZJmpA7mwmCfymTH2lipbetj4T4jQp.jpg', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimbo', NULL, 90000, 120000, 180000),
+(96, 'The Grand Budapest Hotel (2014)', 3, 'Silver', 93, 'Phim bổ sung cho thể loại Hài. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/EhCYBZgzwqSus3I1wJ5tYH7qWKWe6QNEp6TFYnz6.webp', 'Chiếu online', 7.4, '2026-07-10 22:39:35', 'published', '2026-07-01 06:48:35', NULL, 0, 'banners/pOMPPUI1zUDrbfAeBdTxqu7hhkrEcT37o8YEzER7.avif', 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(97, 'Bridesmaids (2011)', 3, 'Gold', 100, 'Phim bổ sung cho thể loại Hài. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/W2OSbq9sp1mex6F3e6DnfAYCoh5ABtxSgR9PXMAF.jpg', 'Chiếu online', 7.5, '2026-07-10 22:38:35', 'published', '2026-06-30 06:48:35', NULL, 0, 'banners/Ez3OyG4JiLMJjOe67M3YXO0Kg2UbiMEe50Xuy9qq.jpg', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(98, 'The Big Lebowski (1998)', 3, 'Premium', 107, 'Phim bổ sung cho thể loại Hài. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/iKQAYuLo13FxfnE49tgYfmjkSgBaxhmPDLTZ4Eth.webp', 'Chiếu online', 7.6, '2026-07-10 22:37:35', 'published', '2026-06-29 06:48:35', NULL, 0, 'banners/Myg4pFolTV6Z9aeb12GZMDEscSVoHTsCCDfLyO1h.webp', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(99, 'Mean Girls (2004)', 3, 'Free', 114, 'Phim bổ sung cho thể loại Hài. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/2Wkkgzm1vly9BdXLcQpYzhL0dL0de7NtnI2knyP1.webp', 'Chiếu online', 7.7, '2026-07-10 22:36:35', 'published', '2026-06-28 06:48:35', NULL, 0, 'banners/rVyBjLdUx4863POh0gEEwS3SdWTR1eVcU8NZ0My0.jpg', 'Việt Nam', 'Tiếng Việt', 'T16', 'phimbo', NULL, 90000, 120000, 180000),
+(100, 'Home Alone (1990)', 3, 'Silver', 121, 'Phim bổ sung cho thể loại Hài. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/LXz2H2pLJ4KBVNzbxJSIUup8ndk6uGY1ZrJsITzu.webp', 'Chiếu online', 7.8, '2026-07-10 22:35:35', 'published', '2026-06-27 06:48:35', NULL, 0, 'banners/Dg30DlAy2aBUHlMuDS3dQCuRS5Z4QZgfu3u4RzG6.jpg', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(101, 'Mrs. Doubtfire (1993)', 3, 'Gold', 128, 'Phim bổ sung cho thể loại Hài. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.9, '2026-07-10 22:34:35', 'published', '2026-06-26 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(102, 'The Exorcist (1973)', 4, 'Premium', 106, 'Phim bổ sung cho thể loại Kinh dị. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.8, '2026-07-10 22:25:35', 'published', '2026-07-07 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(103, 'The Shining (1980)', 4, 'Free', 113, 'Phim bổ sung cho thể loại Kinh dị. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.9, '2026-07-10 22:24:35', 'published', '2026-07-06 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimbo', NULL, 90000, 120000, 180000),
+(104, 'Get Out (2017)', 4, 'Silver', 120, 'Phim bổ sung cho thể loại Kinh dị. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7, '2026-07-10 22:23:35', 'published', '2026-07-05 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(105, 'Hereditary (2018)', 4, 'Gold', 127, 'Phim bổ sung cho thể loại Kinh dị. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.1, '2026-07-10 22:22:35', 'published', '2026-07-04 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(106, 'A Quiet Place (2018)', 4, 'Premium', 134, 'Phim bổ sung cho thể loại Kinh dị. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.2, '2026-07-10 22:21:35', 'published', '2026-07-03 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(107, 'The Babadook (2014)', 4, 'Free', 86, 'Phim bổ sung cho thể loại Kinh dị. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.3, '2026-07-10 22:20:35', 'published', '2026-07-02 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimbo', NULL, 90000, 120000, 180000),
+(108, 'It (2017)', 4, 'Silver', 93, 'Phim bổ sung cho thể loại Kinh dị. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.4, '2026-07-10 22:19:35', 'published', '2026-07-01 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(109, 'The Ring (2002)', 4, 'Gold', 100, 'Phim bổ sung cho thể loại Kinh dị. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.5, '2026-07-10 22:18:35', 'published', '2026-06-30 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(110, 'Sinister (2012)', 4, 'Premium', 107, 'Phim bổ sung cho thể loại Kinh dị. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.6, '2026-07-10 22:17:35', 'published', '2026-06-29 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(111, 'Insidious (2010)', 4, 'Free', 114, 'Phim bổ sung cho thể loại Kinh dị. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.7, '2026-07-10 22:16:35', 'published', '2026-06-28 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimbo', NULL, 90000, 120000, 180000),
+(112, 'The Witch (2015)', 4, 'Silver', 121, 'Phim bổ sung cho thể loại Kinh dị. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.8, '2026-07-10 22:15:35', 'published', '2026-06-27 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(113, 'Midsommar (2019)', 4, 'Gold', 128, 'Phim bổ sung cho thể loại Kinh dị. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.9, '2026-07-10 22:14:35', 'published', '2026-06-26 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(114, 'Spirited Away (2001)', 5, 'Premium', 106, 'Phim bổ sung cho thể loại Hoạt hình. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.8, '2026-07-10 22:05:35', 'published', '2026-07-07 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'P', 'phimle', NULL, 90000, 120000, 180000),
+(115, 'Coco (2017)', 5, 'Free', 113, 'Phim bổ sung cho thể loại Hoạt hình. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.9, '2026-07-10 22:04:35', 'published', '2026-07-06 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'P', 'phimbo', NULL, 90000, 120000, 180000),
+(116, 'WALL-E (2008)', 5, 'Silver', 120, 'Phim bổ sung cho thể loại Hoạt hình. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7, '2026-07-10 22:03:35', 'published', '2026-07-05 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'P', 'phimle', NULL, 90000, 120000, 180000),
+(117, 'Up (2009)', 5, 'Gold', 127, 'Phim bổ sung cho thể loại Hoạt hình. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.1, '2026-07-10 22:02:35', 'published', '2026-07-04 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'P', 'phimle', NULL, 90000, 120000, 180000),
+(118, 'Inside Out (2015)', 5, 'Premium', 134, 'Phim bổ sung cho thể loại Hoạt hình. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.2, '2026-07-10 22:01:35', 'published', '2026-07-03 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'P', 'phimle', NULL, 90000, 120000, 180000),
+(119, 'Ratatouille (2007)', 5, 'Free', 86, 'Phim bổ sung cho thể loại Hoạt hình. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.3, '2026-07-10 22:00:35', 'published', '2026-07-02 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'P', 'phimbo', NULL, 90000, 120000, 180000),
+(120, 'The Lion King (1994)', 5, 'Silver', 93, 'Phim bổ sung cho thể loại Hoạt hình. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.4, '2026-07-10 21:59:35', 'published', '2026-07-01 06:48:35', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'P', 'phimle', NULL, 90000, 120000, 180000),
+(121, 'Spider-Man: Into the Spider-Verse (2018)', 5, 'Gold', 100, 'Phim bổ sung cho thể loại Hoạt hình. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.5, '2026-07-10 21:58:36', 'published', '2026-06-30 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'P', 'phimle', NULL, 90000, 120000, 180000),
+(122, 'How to Train Your Dragon (2010)', 5, 'Premium', 107, 'Phim bổ sung cho thể loại Hoạt hình. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.6, '2026-07-10 21:57:36', 'published', '2026-06-29 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'P', 'phimle', NULL, 90000, 120000, 180000),
+(123, 'Zootopia (2016)', 5, 'Free', 114, 'Phim bổ sung cho thể loại Hoạt hình. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.7, '2026-07-10 21:56:36', 'published', '2026-06-28 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'P', 'phimbo', NULL, 90000, 120000, 180000),
+(124, 'Klaus (2019)', 5, 'Silver', 121, 'Phim bổ sung cho thể loại Hoạt hình. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.8, '2026-07-10 21:55:36', 'published', '2026-06-27 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'P', 'phimle', NULL, 90000, 120000, 180000),
+(125, 'Your Name. (2016)', 5, 'Gold', 128, 'Phim bổ sung cho thể loại Hoạt hình. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.9, '2026-07-10 21:54:36', 'published', '2026-06-26 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'P', 'phimle', NULL, 90000, 120000, 180000),
+(126, 'Interstellar (2014)', 6, 'Gold', 99, 'Phim bổ sung cho thể loại Khoa học viễn tưởng. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.7, '2026-07-10 21:46:36', 'published', '2026-07-08 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(127, 'Inception (2010)', 6, 'Premium', 106, 'Phim bổ sung cho thể loại Khoa học viễn tưởng. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.8, '2026-07-10 21:45:36', 'published', '2026-07-07 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(128, 'Blade Runner 2049 (2017)', 6, 'Free', 113, 'Phim bổ sung cho thể loại Khoa học viễn tưởng. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.9, '2026-07-10 21:44:36', 'published', '2026-07-06 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimbo', NULL, 90000, 120000, 180000),
+(129, 'The Matrix (1999)', 6, 'Silver', 120, 'Phim bổ sung cho thể loại Khoa học viễn tưởng. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7, '2026-07-10 21:43:36', 'published', '2026-07-05 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(130, 'Arrival (2016)', 6, 'Gold', 127, 'Phim bổ sung cho thể loại Khoa học viễn tưởng. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.1, '2026-07-10 21:42:36', 'published', '2026-07-04 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(131, 'Dune (2021)', 6, 'Premium', 134, 'Phim bổ sung cho thể loại Khoa học viễn tưởng. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.2, '2026-07-10 21:41:36', 'published', '2026-07-03 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(132, 'Ex Machina (2014)', 6, 'Free', 86, 'Phim bổ sung cho thể loại Khoa học viễn tưởng. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.3, '2026-07-10 21:40:36', 'published', '2026-07-02 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimbo', NULL, 90000, 120000, 180000),
+(133, 'Edge of Tomorrow (2014)', 6, 'Silver', 93, 'Phim bổ sung cho thể loại Khoa học viễn tưởng. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.4, '2026-07-10 21:39:36', 'published', '2026-07-01 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(134, 'District 9 (2009)', 6, 'Gold', 100, 'Phim bổ sung cho thể loại Khoa học viễn tưởng. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.5, '2026-07-10 21:38:36', 'published', '2026-06-30 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(135, 'Children of Men (2006)', 6, 'Premium', 107, 'Phim bổ sung cho thể loại Khoa học viễn tưởng. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.6, '2026-07-10 21:37:36', 'published', '2026-06-29 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(136, 'Moon (2009)', 6, 'Free', 114, 'Phim bổ sung cho thể loại Khoa học viễn tưởng. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.7, '2026-07-10 21:36:36', 'published', '2026-06-28 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimbo', NULL, 90000, 120000, 180000),
+(137, 'Looper (2012)', 6, 'Silver', 121, 'Phim bổ sung cho thể loại Khoa học viễn tưởng. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.8, '2026-07-10 21:35:36', 'published', '2026-06-27 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(138, 'Minority Report (2002)', 6, 'Gold', 128, 'Phim bổ sung cho thể loại Khoa học viễn tưởng. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.9, '2026-07-10 21:34:36', 'published', '2026-06-26 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(139, 'The Lord of the Rings: The Fellowship of the Ring (2001)', 7, 'Gold', 127, 'Phim bổ sung cho thể loại Phiêu lưu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.1, '2026-07-10 21:22:36', 'published', '2026-07-04 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(140, 'Raiders of the Lost Ark (1981)', 7, 'Premium', 134, 'Phim bổ sung cho thể loại Phiêu lưu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.2, '2026-07-10 21:21:36', 'published', '2026-07-03 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(141, 'Jurassic Park (1993)', 7, 'Free', 86, 'Phim bổ sung cho thể loại Phiêu lưu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.3, '2026-07-10 21:20:36', 'published', '2026-07-02 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimbo', NULL, 90000, 120000, 180000),
+(142, 'Life of Pi (2012)', 7, 'Silver', 93, 'Phim bổ sung cho thể loại Phiêu lưu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.4, '2026-07-10 21:19:36', 'published', '2026-07-01 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(143, 'The Revenant (2015)', 7, 'Gold', 100, 'Phim bổ sung cho thể loại Phiêu lưu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.5, '2026-07-10 21:18:36', 'published', '2026-06-30 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(144, 'Cast Away (2000)', 7, 'Premium', 107, 'Phim bổ sung cho thể loại Phiêu lưu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.6, '2026-07-10 21:17:36', 'published', '2026-06-29 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(145, 'The Secret Life of Walter Mitty (2013)', 7, 'Free', 114, 'Phim bổ sung cho thể loại Phiêu lưu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.7, '2026-07-10 21:16:36', 'published', '2026-06-28 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimbo', NULL, 90000, 120000, 180000),
+(146, 'Pirates of the Caribbean: The Curse of the Black Pearl (2003)', 7, 'Silver', 121, 'Phim bổ sung cho thể loại Phiêu lưu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.8, '2026-07-10 21:15:36', 'published', '2026-06-27 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(147, 'The Hobbit: An Unexpected Journey (2012)', 7, 'Gold', 128, 'Phim bổ sung cho thể loại Phiêu lưu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.9, '2026-07-10 21:14:36', 'published', '2026-06-26 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(148, 'Planet Earth (2006)', 8, 'Free', 85, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.5, '2026-07-10 21:08:36', 'published', '2026-07-10 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimbo', NULL, 90000, 120000, 180000),
+(149, 'Free Solo (2018)', 8, 'Silver', 92, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.6, '2026-07-10 21:07:36', 'published', '2026-07-09 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(150, 'My Octopus Teacher (2020)', 8, 'Gold', 99, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.7, '2026-07-10 21:06:36', 'published', '2026-07-08 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(151, '13th (2016)', 8, 'Premium', 106, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.8, '2026-07-10 21:05:36', 'published', '2026-07-07 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(152, 'Won’t You Be My Neighbor? (2018)', 8, 'Free', 113, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.9, '2026-07-10 21:04:36', 'published', '2026-07-06 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimbo', NULL, 90000, 120000, 180000),
+(153, 'The Social Dilemma (2020)', 8, 'Silver', 120, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7, '2026-07-10 21:03:36', 'published', '2026-07-05 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(154, 'Blackfish (2013)', 8, 'Gold', 127, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.1, '2026-07-10 21:02:36', 'published', '2026-07-04 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(155, 'March of the Penguins (2005)', 8, 'Premium', 134, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.2, '2026-07-10 21:01:36', 'published', '2026-07-03 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(156, 'Amy (2015)', 8, 'Free', 86, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.3, '2026-07-10 21:00:36', 'published', '2026-07-02 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimbo', NULL, 90000, 120000, 180000),
+(157, 'Senna (2010)', 8, 'Silver', 93, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.4, '2026-07-10 20:59:36', 'published', '2026-07-01 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(158, 'Man on Wire (2008)', 8, 'Gold', 100, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.5, '2026-07-10 20:58:36', 'published', '2026-06-30 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(159, 'Inside Job (2010)', 8, 'Premium', 107, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.6, '2026-07-10 20:57:36', 'published', '2026-06-29 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(160, 'The Act of Killing (2012)', 8, 'Free', 114, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.7, '2026-07-10 20:56:36', 'published', '2026-06-28 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimbo', NULL, 90000, 120000, 180000),
+(161, 'Searching for Sugar Man (2012)', 8, 'Silver', 121, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.8, '2026-07-10 20:55:36', 'published', '2026-06-27 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000);
+INSERT INTO `movies` (`id`, `title`, `category_id`, `level`, `duration`, `description`, `director`, `actors`, `video_url`, `trailer_url`, `thumbnail`, `status`, `rating`, `created_at`, `status_admin`, `publish_date`, `geo_restriction`, `drm_enabled`, `banner`, `country`, `language`, `age_rating`, `type`, `max_tickets`, `normal_price`, `vip_price`, `couple_price`) VALUES
+(162, 'Apollo 11 (2019)', 8, 'Gold', 128, 'Phim bổ sung cho thể loại Tài liệu. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.9, '2026-07-10 20:54:36', 'published', '2026-06-26 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(163, 'Saving Private Ryan (1998)', 9, 'Free', 85, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.5, '2026-07-10 20:48:36', 'published', '2026-07-10 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimbo', NULL, 90000, 120000, 180000),
+(164, '1917 (2019)', 9, 'Silver', 92, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.6, '2026-07-10 20:47:36', 'published', '2026-07-09 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(165, 'Dunkirk (2017)', 9, 'Gold', 99, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.7, '2026-07-10 20:46:36', 'published', '2026-07-08 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(166, 'Schindler’s List (1993)', 9, 'Premium', 106, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.8, '2026-07-10 20:45:36', 'published', '2026-07-07 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(167, 'Apocalypse Now (1979)', 9, 'Free', 113, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.9, '2026-07-10 20:44:36', 'published', '2026-07-06 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimbo', NULL, 90000, 120000, 180000),
+(168, 'Full Metal Jacket (1987)', 9, 'Silver', 120, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7, '2026-07-10 20:43:36', 'published', '2026-07-05 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(169, 'Platoon (1986)', 9, 'Gold', 127, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.1, '2026-07-10 20:42:36', 'published', '2026-07-04 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(170, 'The Thin Red Line (1998)', 9, 'Premium', 134, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.2, '2026-07-10 20:41:36', 'published', '2026-07-03 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(171, 'Hacksaw Ridge (2016)', 9, 'Free', 86, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.3, '2026-07-10 20:40:36', 'published', '2026-07-02 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimbo', NULL, 90000, 120000, 180000),
+(172, 'Letters from Iwo Jima (2006)', 9, 'Silver', 93, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.4, '2026-07-10 20:39:36', 'published', '2026-07-01 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(173, 'All Quiet on the Western Front (2022)', 9, 'Gold', 100, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.5, '2026-07-10 20:38:36', 'published', '2026-06-30 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(174, 'The Hurt Locker (2008)', 9, 'Premium', 107, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.6, '2026-07-10 20:37:36', 'published', '2026-06-29 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(175, 'Fury (2014)', 9, 'Free', 114, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.7, '2026-07-10 20:36:36', 'published', '2026-06-28 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimbo', NULL, 90000, 120000, 180000),
+(176, 'Enemy at the Gates (2001)', 9, 'Silver', 121, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.8, '2026-07-10 20:35:36', 'published', '2026-06-27 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(177, 'The Pianist (2002)', 9, 'Gold', 128, 'Phim bổ sung cho thể loại Chiến tranh. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.9, '2026-07-10 20:34:36', 'published', '2026-06-26 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(178, 'Rocky (1976)', 10, 'Free', 85, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.5, '2026-07-10 20:28:36', 'published', '2026-07-10 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimbo', NULL, 90000, 120000, 180000),
+(179, 'Raging Bull (1980)', 10, 'Silver', 92, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.6, '2026-07-10 20:27:36', 'published', '2026-07-09 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(180, 'Moneyball (2011)', 10, 'Gold', 99, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.7, '2026-07-10 20:26:36', 'published', '2026-07-08 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(181, 'Ford v Ferrari (2019)', 10, 'Premium', 106, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.8, '2026-07-10 20:25:36', 'published', '2026-07-07 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(182, 'Remember the Titans (2000)', 10, 'Free', 113, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 6.9, '2026-07-10 20:24:36', 'published', '2026-07-06 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimbo', NULL, 90000, 120000, 180000),
+(183, 'Coach Carter (2005)', 10, 'Silver', 120, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7, '2026-07-10 20:23:36', 'published', '2026-07-05 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(184, 'Rush (2013)', 10, 'Gold', 127, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.1, '2026-07-10 20:22:36', 'published', '2026-07-04 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(185, 'Creed (2015)', 10, 'Premium', 134, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.2, '2026-07-10 20:21:36', 'published', '2026-07-03 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(186, 'The Blind Side (2009)', 10, 'Free', 86, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.3, '2026-07-10 20:20:36', 'published', '2026-07-02 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimbo', NULL, 90000, 120000, 180000),
+(187, 'Million Dollar Baby (2004)', 10, 'Silver', 93, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.4, '2026-07-10 20:19:36', 'published', '2026-07-01 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimle', NULL, 90000, 120000, 180000),
+(188, 'Warrior (2011)', 10, 'Gold', 100, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.5, '2026-07-10 20:18:36', 'published', '2026-06-30 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(189, 'The Wrestler (2008)', 10, 'Premium', 107, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.6, '2026-07-10 20:17:36', 'published', '2026-06-29 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(190, 'I, Tonya (2017)', 10, 'Free', 114, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.7, '2026-07-10 20:16:36', 'published', '2026-06-28 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T16', 'phimbo', NULL, 90000, 120000, 180000),
+(191, 'Chariots of Fire (1981)', 10, 'Silver', 121, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.8, '2026-07-10 20:15:36', 'published', '2026-06-27 06:48:36', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(192, 'Top Gun: Maverick (2022)', 1, 'Gold', 128, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/mGI48vPLWlLqHFUzapuYToAFwYpnWdExG1PKprkL.webp', 'Chiếu online', 7.9, '2026-07-10 20:14:36', 'published', '2026-06-26 06:48:36', NULL, 0, 'banners/40FFbZi7HN44k1wz8VsCtLKxp3vVsiOxBgzlrsoW.jpg', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000),
+(193, 'Bend It Like Beckham (2002)', 10, 'Gold', 128, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, NULL, 'Chiếu online', 7.9, '2026-07-10 21:02:54', 'published', '2026-06-26 07:36:54', NULL, 0, NULL, 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, 90000, 120000, 180000);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `movie_categories`
+-- Cấu trúc bảng cho bảng `movie_categories`
 --
 
 CREATE TABLE `movie_categories` (
@@ -1203,7 +1360,7 @@ CREATE TABLE `movie_categories` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `movie_categories`
+-- Đang đổ dữ liệu cho bảng `movie_categories`
 --
 
 INSERT INTO `movie_categories` (`id`, `movie_id`, `category_id`, `created_at`) VALUES
@@ -1254,7 +1411,7 @@ INSERT INTO `movie_categories` (`id`, `movie_id`, `category_id`, `created_at`) V
 -- --------------------------------------------------------
 
 --
--- Table structure for table `movie_category`
+-- Cấu trúc bảng cho bảng `movie_category`
 --
 
 CREATE TABLE `movie_category` (
@@ -1265,10 +1422,224 @@ CREATE TABLE `movie_category` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `movie_category`
+--
+
+INSERT INTO `movie_category` (`id`, `movie_id`, `category_id`, `created_at`, `updated_at`) VALUES
+(1, 51, 1, '2026-07-10 13:33:13', '2026-07-10 13:33:13'),
+(2, 51, 2, '2026-07-10 13:33:13', '2026-07-10 13:33:13'),
+(3, 51, 3, '2026-07-10 13:33:13', '2026-07-10 13:33:13'),
+(4, 84, 1, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(5, 85, 1, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(6, 86, 1, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(7, 87, 1, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(8, 88, 1, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(9, 89, 2, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(10, 90, 2, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(11, 91, 2, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(12, 92, 2, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(13, 93, 2, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(14, 94, 3, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(15, 95, 3, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(16, 96, 3, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(17, 97, 3, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(18, 98, 3, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(19, 99, 3, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(20, 100, 3, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(21, 101, 3, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(22, 102, 4, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(23, 103, 4, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(24, 104, 4, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(25, 105, 4, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(26, 106, 4, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(27, 107, 4, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(28, 108, 4, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(29, 109, 4, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(30, 110, 4, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(31, 111, 4, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(32, 112, 4, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(33, 113, 4, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(34, 114, 5, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(35, 115, 5, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(36, 116, 5, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(37, 117, 5, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(38, 118, 5, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(39, 119, 5, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(40, 120, 5, '2026-07-10 23:48:35', '2026-07-10 23:48:35'),
+(41, 121, 5, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(42, 122, 5, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(43, 123, 5, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(44, 124, 5, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(45, 125, 5, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(46, 126, 6, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(47, 127, 6, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(48, 128, 6, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(49, 129, 6, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(50, 130, 6, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(51, 131, 6, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(52, 132, 6, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(53, 133, 6, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(54, 134, 6, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(55, 135, 6, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(56, 136, 6, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(57, 137, 6, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(58, 138, 6, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(59, 139, 7, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(60, 140, 7, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(61, 141, 7, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(62, 142, 7, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(63, 143, 7, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(64, 144, 7, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(65, 145, 7, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(66, 146, 7, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(67, 147, 7, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(68, 148, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(69, 149, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(70, 150, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(71, 151, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(72, 152, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(73, 153, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(74, 154, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(75, 155, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(76, 156, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(77, 157, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(78, 158, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(79, 159, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(80, 160, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(81, 161, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(82, 162, 8, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(83, 163, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(84, 164, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(85, 165, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(86, 166, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(87, 167, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(88, 168, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(89, 169, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(90, 170, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(91, 171, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(92, 172, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(93, 173, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(94, 174, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(95, 175, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(96, 176, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(97, 177, 9, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(98, 178, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(99, 179, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(100, 180, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(101, 181, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(102, 182, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(103, 183, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(104, 184, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(105, 185, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(106, 186, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(107, 187, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(108, 188, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(109, 189, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(110, 190, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(111, 191, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(112, 192, 10, '2026-07-10 23:48:36', '2026-07-10 23:48:36'),
+(113, 84, 2, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(114, 84, 4, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(115, 85, 2, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(116, 87, 2, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(117, 88, 2, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(118, 88, 4, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(119, 90, 3, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(120, 91, 3, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(121, 93, 3, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(122, 94, 4, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(123, 96, 4, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(124, 96, 6, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(125, 97, 4, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(126, 99, 4, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(127, 100, 4, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(128, 100, 6, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(129, 102, 5, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(130, 103, 5, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(131, 105, 5, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(132, 106, 5, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(133, 108, 5, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(134, 108, 7, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(135, 109, 5, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(136, 111, 5, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(137, 112, 5, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(138, 112, 7, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(139, 114, 6, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(140, 115, 6, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(141, 117, 6, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(142, 118, 6, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(143, 120, 6, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(144, 120, 8, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(145, 121, 6, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(146, 123, 6, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(147, 124, 6, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(148, 124, 8, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(149, 126, 7, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(150, 127, 7, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(151, 129, 7, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(152, 130, 7, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(153, 132, 7, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(154, 132, 9, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(155, 133, 7, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(156, 135, 7, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(157, 136, 7, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(158, 136, 9, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(159, 138, 7, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(160, 139, 8, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(161, 141, 8, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(162, 142, 8, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(163, 144, 8, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(164, 144, 10, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(165, 145, 8, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(166, 147, 8, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(167, 148, 9, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(168, 148, 1, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(169, 150, 9, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(170, 151, 9, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(171, 153, 9, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(172, 154, 9, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(173, 156, 9, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(174, 156, 1, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(175, 157, 9, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(176, 159, 9, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(177, 160, 9, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(178, 160, 1, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(179, 162, 9, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(180, 163, 10, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(181, 165, 10, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(182, 166, 10, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(183, 168, 10, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(184, 168, 2, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(185, 169, 10, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(186, 171, 10, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(187, 172, 10, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(188, 172, 2, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(189, 174, 10, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(190, 175, 10, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(191, 177, 10, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(192, 178, 1, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(193, 180, 1, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(194, 180, 3, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(195, 181, 1, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(196, 183, 1, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(197, 184, 1, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(198, 184, 3, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(199, 186, 1, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(200, 187, 1, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(201, 189, 1, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(202, 190, 1, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(203, 192, 1, '2026-07-10 23:52:36', '2026-07-10 23:52:36'),
+(204, 192, 3, '2026-07-10 23:52:36', '2026-07-10 23:52:36'),
+(205, 193, 10, '2026-07-11 00:36:54', '2026-07-11 00:36:54'),
+(206, 192, 2, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(207, 192, 4, '2026-07-11 00:39:20', '2026-07-11 00:39:20'),
+(208, 193, 1, '2026-07-11 00:39:20', '2026-07-11 00:39:20');
+
 -- --------------------------------------------------------
 
 --
--- Table structure for table `news`
+-- Cấu trúc bảng cho bảng `news`
 --
 
 CREATE TABLE `news` (
@@ -1290,7 +1661,7 @@ CREATE TABLE `news` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `news_categories`
+-- Cấu trúc bảng cho bảng `news_categories`
 --
 
 CREATE TABLE `news_categories` (
@@ -1304,7 +1675,7 @@ CREATE TABLE `news_categories` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `notifications`
+-- Cấu trúc bảng cho bảng `notifications`
 --
 
 CREATE TABLE `notifications` (
@@ -1319,7 +1690,7 @@ CREATE TABLE `notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `notifications`
+-- Đang đổ dữ liệu cho bảng `notifications`
 --
 
 INSERT INTO `notifications` (`id`, `user_id`, `type`, `title`, `message`, `link`, `is_read`, `created_at`) VALUES
@@ -1372,12 +1743,13 @@ INSERT INTO `notifications` (`id`, `user_id`, `type`, `title`, `message`, `link`
 (47, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 3 vé xem phim \"Avengers: Endgame\" tại ghế C4, C5, C6. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 1, '2026-06-23 01:42:40'),
 (48, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 3 vé xem phim \"Avengers: Endgame\" tại ghế G4, G6, G5. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 0, '2026-06-29 21:33:00'),
 (49, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 2 vé xem phim \"Avengers: Endgame\" tại ghế D5, D6. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 1, '2026-06-30 08:07:26'),
-(50, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 3 vé xem phim \"Tấm Cám: Chuyện Chưa Kể\" tại ghế G9, G8, G7. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 0, '2026-07-09 15:49:36');
+(50, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 3 vé xem phim \"Tấm Cám: Chuyện Chưa Kể\" tại ghế G9, G8, G7. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 1, '2026-07-09 15:49:36'),
+(51, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 3 vé xem phim \"Hai Phượng\" tại ghế F5, F4, F6. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 0, '2026-07-10 23:46:31');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `password_reset_tokens`
+-- Cấu trúc bảng cho bảng `password_reset_tokens`
 --
 
 CREATE TABLE `password_reset_tokens` (
@@ -1389,7 +1761,7 @@ CREATE TABLE `password_reset_tokens` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `permissions`
+-- Cấu trúc bảng cho bảng `permissions`
 --
 
 CREATE TABLE `permissions` (
@@ -1401,7 +1773,7 @@ CREATE TABLE `permissions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `permissions`
+-- Đang đổ dữ liệu cho bảng `permissions`
 --
 
 INSERT INTO `permissions` (`id`, `name`, `description`, `module`, `created_at`) VALUES
@@ -1436,7 +1808,7 @@ INSERT INTO `permissions` (`id`, `name`, `description`, `module`, `created_at`) 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `promotions`
+-- Cấu trúc bảng cho bảng `promotions`
 --
 
 CREATE TABLE `promotions` (
@@ -1453,7 +1825,7 @@ CREATE TABLE `promotions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `promotions`
+-- Đang đổ dữ liệu cho bảng `promotions`
 --
 
 INSERT INTO `promotions` (`id`, `name`, `description`, `type`, `discount_value`, `start_date`, `end_date`, `status`, `target_audience`, `created_at`) VALUES
@@ -1466,7 +1838,7 @@ INSERT INTO `promotions` (`id`, `name`, `description`, `type`, `discount_value`,
 -- --------------------------------------------------------
 
 --
--- Table structure for table `reviews`
+-- Cấu trúc bảng cho bảng `reviews`
 --
 
 CREATE TABLE `reviews` (
@@ -1480,7 +1852,7 @@ CREATE TABLE `reviews` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `reviews`
+-- Đang đổ dữ liệu cho bảng `reviews`
 --
 
 INSERT INTO `reviews` (`id`, `user_id`, `movie_id`, `rating`, `comment`, `created_at`, `is_pinned`) VALUES
@@ -1502,7 +1874,7 @@ INSERT INTO `reviews` (`id`, `user_id`, `movie_id`, `rating`, `comment`, `create
 -- --------------------------------------------------------
 
 --
--- Table structure for table `roles`
+-- Cấu trúc bảng cho bảng `roles`
 --
 
 CREATE TABLE `roles` (
@@ -1513,7 +1885,7 @@ CREATE TABLE `roles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `roles`
+-- Đang đổ dữ liệu cho bảng `roles`
 --
 
 INSERT INTO `roles` (`id`, `name`, `description`, `created_at`) VALUES
@@ -1529,7 +1901,7 @@ INSERT INTO `roles` (`id`, `name`, `description`, `created_at`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `role_permissions`
+-- Cấu trúc bảng cho bảng `role_permissions`
 --
 
 CREATE TABLE `role_permissions` (
@@ -1540,7 +1912,7 @@ CREATE TABLE `role_permissions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `role_permissions`
+-- Đang đổ dữ liệu cho bảng `role_permissions`
 --
 
 INSERT INTO `role_permissions` (`id`, `role_id`, `permission_id`, `created_at`) VALUES
@@ -1569,7 +1941,7 @@ INSERT INTO `role_permissions` (`id`, `role_id`, `permission_id`, `created_at`) 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `seat_reservations`
+-- Cấu trúc bảng cho bảng `seat_reservations`
 --
 
 CREATE TABLE `seat_reservations` (
@@ -1582,19 +1954,10 @@ CREATE TABLE `seat_reservations` (
   `expires_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `seat_reservations`
---
-
-INSERT INTO `seat_reservations` (`id`, `showtime_id`, `seat`, `user_id`, `session_id`, `reserved_at`, `expires_at`) VALUES
-(1112, 50256, 'E1', 3, 'kqyNO4P7kp3lnLBIPuNM97Hu6288ncUszmV8pVYQ', '2026-07-09 15:56:55', '2026-07-09 16:06:55'),
-(1113, 50256, 'E2', 3, 'kqyNO4P7kp3lnLBIPuNM97Hu6288ncUszmV8pVYQ', '2026-07-09 15:56:55', '2026-07-09 16:06:55'),
-(1114, 50256, 'E3', 3, 'kqyNO4P7kp3lnLBIPuNM97Hu6288ncUszmV8pVYQ', '2026-07-09 15:56:55', '2026-07-09 16:06:55');
-
 -- --------------------------------------------------------
 
 --
--- Table structure for table `seat_selection_logs`
+-- Cấu trúc bảng cho bảng `seat_selection_logs`
 --
 
 CREATE TABLE `seat_selection_logs` (
@@ -1609,7 +1972,7 @@ CREATE TABLE `seat_selection_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `seat_selection_logs`
+-- Đang đổ dữ liệu cho bảng `seat_selection_logs`
 --
 
 INSERT INTO `seat_selection_logs` (`id`, `user_id`, `ip_address`, `showtime_id`, `seat_count`, `seats`, `is_spam`, `created_at`) VALUES
@@ -1700,7 +2063,7 @@ INSERT INTO `seat_selection_logs` (`id`, `user_id`, `ip_address`, `showtime_id`,
 -- --------------------------------------------------------
 
 --
--- Table structure for table `sessions`
+-- Cấu trúc bảng cho bảng `sessions`
 --
 
 CREATE TABLE `sessions` (
@@ -1713,17 +2076,35 @@ CREATE TABLE `sessions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `sessions`
+-- Đang đổ dữ liệu cho bảng `sessions`
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('kqyNO4P7kp3lnLBIPuNM97Hu6288ncUszmV8pVYQ', 3, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiYjNFQldPWEJ1SHBjTG5jV3R1d1dPVDFFMnBROHlLNGZIT2FUWjJpbiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJuZXciO2E6MDp7fXM6Mzoib2xkIjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6ODQ6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hcGkvYm9va2luZy9zaG93dGltZXM/ZGF0ZT0yMDI2LTA3LTEyJm1vdmllX2lkPTI3JnRoZWF0ZXJfaWQ9MyI7czo1OiJyb3V0ZSI7czoyMToiYXBpLmJvb2tpbmcuc2hvd3RpbWVzIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6Mzt9', 1783613004),
-('qZHhOEbWlfBrLuVqmiveSv20X7oLJTJkuFoUGTpr', 9, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36', 'YToxMDp7czo2OiJfdG9rZW4iO3M6NDA6Imd5ZnM0dXpaU3VuQ1AxQ0NKZzJMRVRwTHdPZHV1dzlKSkI0Z2QxUFQiO3M6MzoidXJsIjthOjE6e3M6ODoiaW50ZW5kZWQiO3M6NDI6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9tb2RlcmF0b3IvZm9vZC1pdGVtcyI7fXM6OToiX3ByZXZpb3VzIjthOjI6e3M6MzoidXJsIjtzOjM4OiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYm9va2luZz9tb3ZpZT0yNyI7czo1OiJyb3V0ZSI7czoxMzoiYm9va2luZy5pbmRleCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjk7czoxMzoidXNlcl9sYXRpdHVkZSI7ZDoxOS44MDk3NDAzNzIxNTIxMzU7czoxNDoidXNlcl9sb25naXR1ZGUiO2Q6MTA1Ljc5NTM3NzUxODU1NzUzO3M6MTg6InBlbmRpbmdfYm9va2luZ19pZCI7aTo5MDQ7czoxMToic2hvd3RpbWVfaWQiO3M6NToiNTAyNTYiO3M6MTY6Imxhc3RfcGF5bWVudF91cmwiO3M6NTk3OiJodHRwczovL3NhbmRib3gudm5wYXltZW50LnZuL3BheW1lbnR2Mi92cGNwYXkuaHRtbD92bnBfQW1vdW50PTkwMzkwMDAmdm5wX0NvbW1hbmQ9cGF5JnZucF9DcmVhdGVEYXRlPTIwMjYwNzA5MjI0OTI4JnZucF9DdXJyQ29kZT1WTkQmdm5wX0V4cGlyZURhdGU9MjAyNjA3MDkyMzA0Mjgmdm5wX0lwQWRkcj0xMjcuMC4wLjEmdm5wX0xvY2FsZT12biZ2bnBfT3JkZXJJbmZvPVRoYW5oK3RvYW4rdmUreGVtK3BoaW0rVCVFMSVCQSVBNW0rQyVDMyVBMW0lM0ErQ2h1eSVFMSVCQiU4N24rQ2glQzYlQjBhK0slRTElQkIlODMmdm5wX09yZGVyVHlwZT1vdGhlciZ2bnBfUmV0dXJuVXJsPWh0dHAlM0ElMkYlMkYxMjcuMC4wLjElM0E4MDAwJTJGcGF5bWVudCUyRnZucGF5JTJGY2FsbGJhY2smdm5wX1RtbkNvZGU9QTAxMUpENkQmdm5wX1R4blJlZj1CS0c5XzE3ODM2MTIxNjgmdm5wX1ZlcnNpb249Mi4xLjAmdm5wX1NlY3VyZUhhc2g9MTRjZjI3Mjc2OGRhMGQ1NjFjNzU4MTk1OWZmNmI0ODhmNDFlMDU0Mjk0NzAzYjgxNTZjMWM1NWU5ZGI3MGRhMDU3NTZkOGIyZmVlZTYyYjA2NDZiZmUzMzE0YTczMzU1ZWRjYjM0MjYyYWI1NWM0YWVkYTZmOTNiNWFkYzY5OTEiO30=', 1783612183);
+('0uNTLfW2gISmhg9u4zNbD5nwWQbAdflEEjdHqPaO', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiZmk5NWNFTmgxVGFockg5cDFSMTRNZEdjeEhBU0phdHlhcUNHUVB4NSI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czozNDoiaHR0cDovLzEyNy4wLjAuMTo4MDAwL2FkbWluL21vdmllcyI7fXM6OToiX3ByZXZpb3VzIjthOjI6e3M6MzoidXJsIjtzOjM0OiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYWRtaW4vbW92aWVzIjtzOjU6InJvdXRlIjtzOjE4OiJhZG1pbi5tb3ZpZXMuaW5kZXgiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1783726290),
+('cU0nBxSXlcfk4lR0y8N16RvnYYoWQg6LNchaLPYQ', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiTWRsQk8wT2F1NElnSnBVaXgxM3ZRU3R1Wmc4eTB2ZnczNjIzaHE3SSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6ODM6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hcGkvYm9va2luZy9zaG93dGltZXM/ZGF0ZT0yMDI2LTA3LTEyJm1vdmllX2lkPTEmdGhlYXRlcl9pZD0xIjtzOjU6InJvdXRlIjtzOjIxOiJhcGkuYm9va2luZy5zaG93dGltZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1783727054),
+('EARsfhMndIe51JhPVBPNUTemvZuIFvG8AEP1sRBX', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiTkN3cWxrUmpzOVBsNzhla3ZNTUF2YXlsOVpxYVFRZW80cDBoOVF6MiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NjA6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hcGkvYm9va2luZy9zZWF0LW1hcD9zaG93dGltZV9pZD01MDI1NiI7czo1OiJyb3V0ZSI7czoxOToiYXBpLmJvb2tpbmcuc2VhdE1hcCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1783725217),
+('EXMd0SqEe5LHx76uRWWop5koWJGL5ZnCdW3l35Yn', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiUGE3VUx5MjVGdkV1U3lFNzJBTHkxMG9ZUFFaZ205TE9yR1M5WldaNiI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czozNToiaHR0cDovLzEyNy4wLjAuMTo4MDAwL21vdmllcy9vbmxpbmUiO31zOjk6Il9wcmV2aW91cyI7YToyOntzOjM6InVybCI7czozNToiaHR0cDovLzEyNy4wLjAuMTo4MDAwL21vdmllcy9vbmxpbmUiO3M6NToicm91dGUiO3M6MTM6Im1vdmllcy5vbmxpbmUiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1783726289),
+('fh2e4fe6qy4lHrHS2V40JHeZKZxZANZxAMTyeF4j', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiZVd4N0dNQWlHOGFBTVJKTUE4T2RKamZaRXA5MWJOclpxaGk4MzM3OSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7czo0OiJob21lIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1783728547),
+('FyOdIamxZzJb9tHX1PRoppi3sLMy2xxgwxhDG0jy', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoidklSQ0lLd2JwME9FM1czRXF5eG5JMlUybTdmdkRaVFFNOGlLVHltbiI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czozNToiaHR0cDovLzEyNy4wLjAuMTo4MDAwL21vdmllcy9vbmxpbmUiO31zOjk6Il9wcmV2aW91cyI7YToyOntzOjM6InVybCI7czozNToiaHR0cDovLzEyNy4wLjAuMTo4MDAwL21vdmllcy9vbmxpbmUiO3M6NToicm91dGUiO3M6MTM6Im1vdmllcy5vbmxpbmUiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1783726301),
+('G7Y6xHOdpb1N4BdkDJXsJ5HwSlu9g120sLEYFIyQ', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiYkJrSUREd2ZGNjZiU2NHejZOQTR1cGltTVd0cXRPZ0ZUdDAycm9zZiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7czo0OiJob21lIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1783726289),
+('gOsIWTfzRKiPYuVxfQN7GP7o9HWXCgHcZKnvXWUJ', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiWTdvakFXUDlpTmhSeXhIYXBaTkk5Zjg0ck5tZGJ4dGZ0ejUxdGpibyI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NDQ6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9tb3ZpZXMva2hvLXBoaW0vdHJlLWVtIjtzOjU6InJvdXRlIjtzOjE0OiJtb3ZpZXMubGlicmFyeSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1783730215),
+('GYClGPwZ1gs2DlKDYyWk98oD0Bn63f4mNR1x70j0', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiZk4waW1pVmE4RWh6bWpUbGowSjJBZUpuSXRjUlkyTlNnajBwd3hPQSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NDQ6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9tb3ZpZXMva2hvLXBoaW0vdHJlLWVtIjtzOjU6InJvdXRlIjtzOjE0OiJtb3ZpZXMubGlicmFyeSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1783730363),
+('IInf65ZHKA7CRqclBQQYg9Jk8gUSeDSCI4AwN7s0', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiZFZpdmNCc1N2ZjB6SXN1emxmelBrcXdVaVluTFh5MHZ6S0NoMVlQOSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7czo0OiJob21lIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1783726325),
+('jQ1Vbvoj2LvyDtfDZk7EgstS0HSmV8puvYTqTp8q', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiQ3lrdU50c0g5Z01ObGxpRUM1OVREdkZwM0ZNUzdEeEJWT1lQT0xJaiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NDQ6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9tb3ZpZXMva2hvLXBoaW0vdHJlLWVtIjtzOjU6InJvdXRlIjtzOjE0OiJtb3ZpZXMubGlicmFyeSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1783730238),
+('LteyiBPHB53tCFeZyMLchHmHzdntPbt9SLqpdbk9', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiT2d0aTFnTWI0ZVRFZW9XbzMwR0VWNFdVd0Q0c1JWcEtJSHhLZXRsciI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6ODM6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hcGkvYm9va2luZy9zaG93dGltZXM/ZGF0ZT0yMDI2LTA3LTE0Jm1vdmllX2lkPTEmdGhlYXRlcl9pZD0xIjtzOjU6InJvdXRlIjtzOjIxOiJhcGkuYm9va2luZy5zaG93dGltZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1783727055),
+('MfQbwQLgICPuTO0bTSUHlUMpAxcmZ1JpILEvG7oW', 9, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'YTo2OntzOjY6Il90b2tlbiI7czo0MDoiZ1lyMnZjSUFMTzFyZGxYVE56UTlJTEJtZFQyZjg1WldJQjRiTml3RyI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NDQ6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9tb3ZpZXMva2hvLXBoaW0vdHJlLWVtIjtzOjU6InJvdXRlIjtzOjE0OiJtb3ZpZXMubGlicmFyeSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjk7czoxMzoidXNlcl9sYXRpdHVkZSI7ZDoxOS43NzM5MDE5MzI0NzIzNzM7czoxNDoidXNlcl9sb25naXR1ZGUiO2Q6MTA1Ljc4Njg5MzMzNzMzNzU5O30=', 1783730432),
+('MJPfbvi5rGJDlghxI8AWnolu0yxb3VEpQ3gS5pQ4', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiNlZQdGJHRzdzVURFMDFPTVNkMEVlc1U0N1ZlYjhQRFpheFZ5YmlPWCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6ODM6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hcGkvYm9va2luZy9zaG93dGltZXM/ZGF0ZT0yMDI2LTA3LTEzJm1vdmllX2lkPTEmdGhlYXRlcl9pZD0xIjtzOjU6InJvdXRlIjtzOjIxOiJhcGkuYm9va2luZy5zaG93dGltZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1783727055),
+('QFxPz8dVCM9mdeOwfXC7MopYsDCkRmTCGjaklWOK', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiYVlYdEF1WEJKWXA0U2NkdEYwdXBKeEFpMFB6TDFZMEN6bktvemt2QyI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6ODM6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hcGkvYm9va2luZy9zaG93dGltZXM/ZGF0ZT0yMDI2LTA3LTE3Jm1vdmllX2lkPTEmdGhlYXRlcl9pZD0xIjtzOjU6InJvdXRlIjtzOjIxOiJhcGkuYm9va2luZy5zaG93dGltZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1783727056),
+('ScifFX3jkWiS1xVzIvGm1294TyJ53tZCVAufV6IT', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiSFZ1TU5HbVMyZzZwUk9zQ1Faa1h1QjR5Y3p2dTJjQm56OE1EeWRobCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6ODM6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hcGkvYm9va2luZy9zaG93dGltZXM/ZGF0ZT0yMDI2LTA3LTE1Jm1vdmllX2lkPTEmdGhlYXRlcl9pZD0xIjtzOjU6InJvdXRlIjtzOjIxOiJhcGkuYm9va2luZy5zaG93dGltZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1783727056),
+('SulfhFW5MAzb6i7Vp1FDSYuw7XVoCjDigNMsyF87', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiWUVHQWFLREpKR2JzSzZNVzNQcThxRjRJRDBVUXpWZkZmQ05vMjJ0TiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7czo0OiJob21lIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1783728154),
+('TPQShx0LXzC2Xmte15IooT2uELQHt4U7Tysl6khH', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiUjVINk1QMTI4cmhpeDFnRW9Ka0szYnI3R1FESnBBVk02YUM5WXJESSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6ODM6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hcGkvYm9va2luZy9zaG93dGltZXM/ZGF0ZT0yMDI2LTA3LTE2Jm1vdmllX2lkPTEmdGhlYXRlcl9pZD0xIjtzOjU6InJvdXRlIjtzOjIxOiJhcGkuYm9va2luZy5zaG93dGltZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1783727056),
+('U1x1UcZMvrQZOR963AXIMZdibuM3d5Y13uLLbKop', 3, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'YTo2OntzOjY6Il90b2tlbiI7czo0MDoiM1dpZDkyZmx6REN3a2ExVFRhRmFlWEFubmtXaDJYTWV1SEFrMjhvcSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MzQ6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9tb3ZpZXMiO3M6NToicm91dGUiO3M6MTg6ImFkbWluLm1vdmllcy5pbmRleCI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjM7czoxMzoidXNlcl9sYXRpdHVkZSI7ZDoxOS43NzQxMTUzMTQzMTIzNzU7czoxNDoidXNlcl9sb25naXR1ZGUiO2Q6MTA1Ljc4NzIyOTE4NTYzNDc0O30=', 1783730052),
+('ygivdhUq5aZTrQnkohlTFr1xTMmbZoKwNeSQ6AaK', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.8655', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiU1N1Mno2Qk9hU3Y2ZmtIV2hmRHpBZEU0VE9KTnhUVTE2UVpZa1puNSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6ODM6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hcGkvYm9va2luZy9zaG93dGltZXM/ZGF0ZT0yMDI2LTA3LTExJm1vdmllX2lkPTEmdGhlYXRlcl9pZD0xIjtzOjU6InJvdXRlIjtzOjIxOiJhcGkuYm9va2luZy5zaG93dGltZXMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1783727054);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `showtimes`
+-- Cấu trúc bảng cho bảng `showtimes`
 --
 
 CREATE TABLE `showtimes` (
@@ -1739,7 +2120,7 @@ CREATE TABLE `showtimes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `showtimes`
+-- Đang đổ dữ liệu cho bảng `showtimes`
 --
 
 INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `show_date`, `show_time`, `price`, `available_seats`, `created_at`, `screen_id`) VALUES
@@ -2044,7 +2425,7 @@ INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `show_date`, `show_time
 (41872, 1, 1, '2026-06-11', '21:00:00', 90000.00, 144, '2026-06-08 22:40:55', 1),
 (41873, 1, 1, '2026-06-12', '10:00:00', 90000.00, 144, '2026-06-08 22:40:55', 1),
 (41874, 1, 1, '2026-06-12', '14:00:00', 90000.00, 144, '2026-06-08 22:40:55', 1),
-(41875, 1, 1, '2026-06-12', '18:00:00', 90000.00, 144, '2026-06-08 22:40:55', 1),
+(41875, 62, 1, '2026-06-12', '18:00:00', 90000.00, 118, '2026-06-07 11:15:00', 1),
 (41876, 1, 1, '2026-06-12', '21:00:00', 90000.00, 144, '2026-06-08 22:40:55', 1),
 (41877, 1, 1, '2026-06-13', '10:00:00', 90000.00, 144, '2026-06-08 22:40:55', 1),
 (41878, 1, 1, '2026-06-13', '14:00:00', 90000.00, 144, '2026-06-08 22:40:55', 1),
@@ -2116,7 +2497,7 @@ INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `show_date`, `show_time
 (41945, 1, 2, '2026-06-10', '21:00:00', 90000.00, 144, '2026-06-09 00:40:02', 3),
 (41946, 1, 2, '2026-06-10', '12:00:00', 90000.00, 144, '2026-06-09 00:40:02', 4),
 (41947, 1, 2, '2026-06-10', '18:00:00', 90000.00, 144, '2026-06-09 00:40:02', 4),
-(41948, 1, 1, '2026-06-11', '09:00:00', 90000.00, 144, '2026-06-09 00:40:02', 1),
+(41948, 62, 1, '2026-06-11', '09:00:00', 90000.00, 118, '2026-06-06 11:15:00', 1),
 (41949, 1, 1, '2026-06-11', '15:00:00', 90000.00, 144, '2026-06-09 00:40:02', 1),
 (41950, 1, 1, '2026-06-11', '12:00:00', 90000.00, 144, '2026-06-09 00:40:02', 2),
 (41951, 1, 1, '2026-06-11', '15:00:00', 90000.00, 144, '2026-06-09 00:40:02', 2),
@@ -2188,7 +2569,7 @@ INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `show_date`, `show_time
 (42017, 3, 2, '2026-06-14', '15:00:00', 90000.00, 144, '2026-06-09 00:40:02', 4),
 (42018, 3, 2, '2026-06-14', '21:00:00', 90000.00, 144, '2026-06-09 00:40:02', 4),
 (42019, 3, 1, '2026-06-15', '09:00:00', 90000.00, 144, '2026-06-09 00:40:02', 1),
-(42020, 3, 1, '2026-06-15', '15:00:00', 90000.00, 144, '2026-06-09 00:40:02', 1),
+(42020, 62, 1, '2026-06-15', '15:00:00', 90000.00, 118, '2026-06-10 11:15:00', 1),
 (42021, 3, 2, '2026-06-15', '09:00:00', 90000.00, 144, '2026-06-09 00:40:02', 3),
 (42022, 4, 2, '2026-06-09', '15:00:00', 90000.00, 144, '2026-06-09 00:40:02', 3),
 (42023, 4, 1, '2026-06-10', '09:00:00', 90000.00, 144, '2026-06-09 00:40:02', 2),
@@ -3734,7 +4115,7 @@ INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `show_date`, `show_time
 (43561, 21, 1, '2026-06-26', '17:00:00', 80161.00, 144, '2026-06-23 01:29:43', 1),
 (43562, 21, 1, '2026-06-26', '15:30:00', 79819.00, 144, '2026-06-23 01:29:43', 1),
 (43563, 25, 1, '2026-06-26', '10:00:00', 59860.00, 144, '2026-06-23 01:29:43', 1),
-(43564, 25, 1, '2026-06-26', '14:00:00', 68469.00, 144, '2026-06-23 01:29:43', 1),
+(43564, 62, 1, '2026-06-26', '14:00:00', 90000.00, 118, '2026-06-21 11:15:00', 1),
 (43565, 25, 1, '2026-06-26', '23:00:00', 92778.00, 144, '2026-06-23 01:29:43', 1),
 (43566, 25, 1, '2026-06-26', '13:30:00', 71579.00, 144, '2026-06-23 01:29:43', 1),
 (43567, 18, 1, '2026-06-26', '21:30:00', 86679.00, 144, '2026-06-23 01:29:43', 2),
@@ -5009,7 +5390,7 @@ INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `show_date`, `show_time
 (44834, 20, 1, '2026-06-28', '22:30:00', 119927.00, 144, '2026-06-23 01:29:45', 1),
 (44835, 20, 1, '2026-06-28', '10:30:00', 49593.00, 144, '2026-06-23 01:29:45', 1),
 (44836, 20, 1, '2026-06-28', '09:30:00', 58102.00, 144, '2026-06-23 01:29:45', 1),
-(44837, 20, 1, '2026-06-28', '12:00:00', 80518.00, 144, '2026-06-23 01:29:45', 1),
+(44837, 62, 1, '2026-06-28', '12:00:00', 90000.00, 118, '2026-06-23 11:15:00', 1),
 (44838, 20, 1, '2026-06-28', '13:00:00', 75052.00, 144, '2026-06-23 01:29:45', 1),
 (44839, 21, 1, '2026-06-28', '17:00:00', 63006.00, 144, '2026-06-23 01:29:45', 1),
 (44840, 21, 1, '2026-06-28', '18:30:00', 81310.00, 144, '2026-06-23 01:29:45', 1),
@@ -7852,7 +8233,7 @@ INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `show_date`, `show_time
 (47673, 5, 1, '2026-07-03', '22:30:00', 104338.00, 144, '2026-06-29 21:27:07', 1),
 (47674, 21, 1, '2026-07-03', '17:30:00', 88873.00, 144, '2026-06-29 21:27:07', 1),
 (47675, 21, 1, '2026-07-03', '21:00:00', 109926.00, 144, '2026-06-29 21:27:07', 1),
-(47676, 21, 1, '2026-07-03', '17:00:00', 85869.00, 144, '2026-06-29 21:27:07', 1),
+(47676, 62, 1, '2026-07-03', '17:00:00', 90000.00, 118, '2026-06-28 11:15:00', 1),
 (47677, 23, 1, '2026-07-03', '10:30:00', 53360.00, 144, '2026-06-29 21:27:07', 1),
 (47678, 23, 1, '2026-07-03', '23:00:00', 108670.00, 144, '2026-06-29 21:27:07', 1),
 (47679, 23, 1, '2026-07-03', '15:00:00', 82385.00, 144, '2026-06-29 21:27:07', 1),
@@ -8363,7 +8744,7 @@ INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `show_date`, `show_time
 (48183, 25, 1, '2026-07-04', '10:00:00', 61053.00, 144, '2026-06-29 21:27:08', 1),
 (48184, 52, 1, '2026-07-04', '15:00:00', 77998.00, 144, '2026-06-29 21:27:08', 1),
 (48185, 52, 1, '2026-07-04', '12:00:00', 66473.00, 144, '2026-06-29 21:27:08', 1),
-(48186, 52, 1, '2026-07-04', '16:00:00', 67119.00, 144, '2026-06-29 21:27:08', 1),
+(48186, 62, 1, '2026-07-04', '16:00:00', 90000.00, 118, '2026-06-29 11:15:00', 1),
 (48187, 52, 1, '2026-07-04', '14:30:00', 66617.00, 144, '2026-06-29 21:27:08', 1),
 (48188, 52, 1, '2026-07-04', '22:30:00', 105568.00, 144, '2026-06-29 21:27:08', 1),
 (48189, 2, 1, '2026-07-04', '08:30:00', 69707.00, 144, '2026-06-29 21:27:08', 2),
@@ -9136,7 +9517,7 @@ INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `show_date`, `show_time
 (48954, 20, 1, '2026-07-05', '19:30:00', 81285.00, 144, '2026-06-29 21:27:11', 1),
 (48955, 20, 1, '2026-07-05', '09:00:00', 49036.00, 144, '2026-06-29 21:27:11', 1),
 (48956, 20, 1, '2026-07-05', '14:00:00', 82904.00, 144, '2026-06-29 21:27:11', 1),
-(48957, 20, 1, '2026-07-05', '15:00:00', 68467.00, 144, '2026-06-29 21:27:11', 1),
+(48957, 62, 1, '2026-07-05', '15:00:00', 90000.00, 118, '2026-06-30 11:15:00', 1),
 (48958, 21, 1, '2026-07-05', '23:30:00', 102944.00, 144, '2026-06-29 21:27:11', 1),
 (48959, 21, 1, '2026-07-05', '19:00:00', 97423.00, 144, '2026-06-29 21:27:11', 1),
 (48960, 21, 1, '2026-07-05', '21:00:00', 102277.00, 144, '2026-06-29 21:27:11', 1),
@@ -9950,7 +10331,7 @@ INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `show_date`, `show_time
 (49767, 21, 1, '2026-07-06', '11:00:00', 64425.00, 144, '2026-06-29 21:27:13', 1),
 (49768, 21, 1, '2026-07-06', '15:30:00', 62438.00, 144, '2026-06-29 21:27:13', 1),
 (49769, 21, 1, '2026-07-06', '17:00:00', 76855.00, 144, '2026-06-29 21:27:13', 1),
-(49770, 23, 1, '2026-07-06', '14:00:00', 78590.00, 144, '2026-06-29 21:27:13', 1),
+(49770, 62, 1, '2026-07-06', '14:00:00', 90000.00, 118, '2026-07-01 11:15:00', 1),
 (49771, 23, 1, '2026-07-06', '19:30:00', 82082.00, 144, '2026-06-29 21:27:13', 1),
 (49772, 26, 1, '2026-07-06', '13:00:00', 72271.00, 144, '2026-06-29 21:27:13', 1),
 (49773, 26, 1, '2026-07-06', '09:00:00', 46049.00, 144, '2026-06-29 21:27:13', 1),
@@ -10437,12 +10818,85 @@ INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `show_date`, `show_time
 (50253, 25, 3, '2026-07-08', '08:00:00', 120000.00, 144, '2026-07-08 16:32:36', 6),
 (50254, 23, 3, '2026-07-09', '08:00:00', 120000.00, 144, '2026-07-08 16:33:10', 12),
 (50255, 52, 3, '2026-07-10', '10:30:00', 130000.00, 144, '2026-07-09 01:18:45', 27),
-(50256, 27, 3, '2026-07-12', '09:30:00', 130.00, 144, '2026-07-09 06:55:44', 39);
+(50256, 27, 3, '2026-07-12', '09:30:00', 130.00, 144, '2026-07-09 06:55:44', 39),
+(50257, 62, 1, '2026-07-10', '10:00:00', 90000.00, 118, '2026-07-05 11:15:00', 1),
+(50258, 62, 1, '2026-07-09', '11:00:00', 90000.00, 118, '2026-07-04 11:15:00', 1),
+(50259, 62, 1, '2026-07-08', '12:00:00', 90000.00, 118, '2026-07-03 11:15:00', 1),
+(50260, 62, 1, '2026-07-07', '13:00:00', 90000.00, 118, '2026-07-02 11:15:00', 1),
+(50261, 62, 1, '2026-07-02', '18:00:00', 90000.00, 118, '2026-06-27 11:15:00', 1),
+(50262, 62, 1, '2026-07-01', '09:00:00', 90000.00, 118, '2026-06-26 11:15:00', 1),
+(50263, 62, 1, '2026-06-30', '10:00:00', 90000.00, 118, '2026-06-25 11:15:00', 1),
+(50264, 62, 1, '2026-06-29', '11:00:00', 90000.00, 118, '2026-06-24 11:15:00', 1),
+(50265, 62, 1, '2026-06-27', '13:00:00', 90000.00, 118, '2026-06-22 11:15:00', 1),
+(50266, 62, 1, '2026-06-25', '15:00:00', 90000.00, 118, '2026-06-20 11:15:00', 1),
+(50267, 62, 1, '2026-06-24', '16:00:00', 90000.00, 118, '2026-06-19 11:15:00', 1),
+(50268, 62, 1, '2026-06-23', '17:00:00', 90000.00, 118, '2026-06-18 11:15:00', 1),
+(50269, 62, 1, '2026-06-22', '18:00:00', 90000.00, 118, '2026-06-17 11:15:00', 1),
+(50270, 62, 1, '2026-06-21', '09:00:00', 90000.00, 118, '2026-06-16 11:15:00', 1),
+(50271, 62, 1, '2026-06-20', '10:00:00', 90000.00, 118, '2026-06-15 11:15:00', 1),
+(50272, 62, 1, '2026-06-19', '11:00:00', 90000.00, 118, '2026-06-14 11:15:00', 1),
+(50273, 62, 1, '2026-06-18', '12:00:00', 90000.00, 118, '2026-06-13 11:15:00', 1),
+(50274, 62, 1, '2026-06-17', '13:00:00', 90000.00, 118, '2026-06-12 11:15:00', 1),
+(50275, 62, 1, '2026-06-16', '14:00:00', 90000.00, 118, '2026-06-11 11:15:00', 1),
+(50276, 62, 1, '2026-06-14', '16:00:00', 90000.00, 118, '2026-06-09 11:15:00', 1),
+(50277, 62, 1, '2026-06-13', '17:00:00', 90000.00, 118, '2026-06-08 11:15:00', 1),
+(50303, 19, 4, '2026-07-18', '10:00:00', 90000.00, 120, '2026-07-10 23:38:36', 7),
+(50304, 19, 5, '2026-07-18', '15:00:00', 105000.00, 120, '2026-07-10 23:38:36', 8),
+(50305, 19, 1, '2026-07-18', '20:00:00', 120000.00, 120, '2026-07-10 23:38:36', 9),
+(50313, 1, 1, '2026-07-11', '23:00:00', 90000.00, 120, '2026-07-10 23:44:12', 1),
+(50314, 1, 1, '2026-07-12', '10:00:00', 90000.00, 120, '2026-07-10 23:44:12', 1),
+(50315, 1, 1, '2026-07-13', '10:00:00', 90000.00, 120, '2026-07-10 23:44:12', 1),
+(50316, 1, 1, '2026-07-14', '10:00:00', 90000.00, 120, '2026-07-10 23:44:12', 1),
+(50317, 1, 1, '2026-07-15', '10:00:00', 90000.00, 120, '2026-07-10 23:44:12', 1),
+(50318, 1, 1, '2026-07-16', '10:00:00', 90000.00, 120, '2026-07-10 23:44:12', 1),
+(50319, 1, 1, '2026-07-17', '10:00:00', 90000.00, 120, '2026-07-10 23:44:12', 1),
+(50320, 2, 1, '2026-07-11', '23:00:00', 105000.00, 120, '2026-07-10 23:44:12', 2),
+(50321, 2, 1, '2026-07-12', '12:00:00', 105000.00, 120, '2026-07-10 23:44:12', 2),
+(50322, 2, 1, '2026-07-13', '12:00:00', 105000.00, 120, '2026-07-10 23:44:12', 2),
+(50323, 2, 1, '2026-07-14', '12:00:00', 105000.00, 120, '2026-07-10 23:44:12', 2),
+(50324, 2, 1, '2026-07-15', '12:00:00', 105000.00, 120, '2026-07-10 23:44:12', 2),
+(50325, 2, 1, '2026-07-16', '12:00:00', 105000.00, 120, '2026-07-10 23:44:12', 2),
+(50326, 2, 1, '2026-07-17', '12:00:00', 105000.00, 120, '2026-07-10 23:44:12', 2),
+(50327, 3, 2, '2026-07-11', '23:00:00', 120000.00, 120, '2026-07-10 23:44:12', 3),
+(50328, 3, 2, '2026-07-12', '14:00:00', 120000.00, 120, '2026-07-10 23:44:12', 3),
+(50329, 3, 2, '2026-07-13', '14:00:00', 120000.00, 120, '2026-07-10 23:44:12', 3),
+(50330, 3, 2, '2026-07-14', '14:00:00', 120000.00, 120, '2026-07-10 23:44:12', 3),
+(50331, 3, 2, '2026-07-15', '14:00:00', 120000.00, 120, '2026-07-10 23:44:12', 3),
+(50332, 3, 2, '2026-07-16', '14:00:00', 120000.00, 120, '2026-07-10 23:44:12', 3),
+(50333, 3, 2, '2026-07-17', '14:00:00', 120000.00, 120, '2026-07-10 23:44:12', 3),
+(50334, 4, 2, '2026-07-11', '23:00:00', 90000.00, 120, '2026-07-10 23:44:12', 4),
+(50335, 4, 2, '2026-07-12', '16:00:00', 90000.00, 120, '2026-07-10 23:44:12', 4),
+(50336, 4, 2, '2026-07-13', '16:00:00', 90000.00, 120, '2026-07-10 23:44:12', 4),
+(50337, 4, 2, '2026-07-14', '16:00:00', 90000.00, 120, '2026-07-10 23:44:12', 4),
+(50338, 4, 2, '2026-07-15', '16:00:00', 90000.00, 120, '2026-07-10 23:44:12', 4),
+(50339, 4, 2, '2026-07-16', '16:00:00', 90000.00, 120, '2026-07-10 23:44:12', 4),
+(50340, 4, 2, '2026-07-17', '16:00:00', 90000.00, 120, '2026-07-10 23:44:12', 4),
+(50341, 5, 3, '2026-07-11', '23:00:00', 105000.00, 120, '2026-07-10 23:44:12', 5),
+(50342, 5, 3, '2026-07-12', '18:00:00', 105000.00, 120, '2026-07-10 23:44:12', 5),
+(50343, 5, 3, '2026-07-13', '18:00:00', 105000.00, 120, '2026-07-10 23:44:12', 5),
+(50344, 5, 3, '2026-07-14', '18:00:00', 105000.00, 120, '2026-07-10 23:44:12', 5),
+(50345, 5, 3, '2026-07-15', '18:00:00', 105000.00, 120, '2026-07-10 23:44:12', 5),
+(50346, 5, 3, '2026-07-16', '18:00:00', 105000.00, 120, '2026-07-10 23:44:12', 5),
+(50347, 5, 3, '2026-07-17', '18:00:00', 105000.00, 120, '2026-07-10 23:44:12', 5),
+(50348, 18, 3, '2026-07-11', '23:00:00', 120000.00, 120, '2026-07-10 23:44:12', 6),
+(50349, 18, 3, '2026-07-12', '20:00:00', 120000.00, 120, '2026-07-10 23:44:12', 6),
+(50350, 18, 3, '2026-07-13', '20:00:00', 120000.00, 120, '2026-07-10 23:44:12', 6),
+(50351, 18, 3, '2026-07-14', '20:00:00', 120000.00, 120, '2026-07-10 23:44:12', 6),
+(50352, 18, 3, '2026-07-15', '20:00:00', 120000.00, 120, '2026-07-10 23:44:12', 6),
+(50353, 18, 3, '2026-07-16', '20:00:00', 120000.00, 120, '2026-07-10 23:44:12', 6),
+(50354, 18, 3, '2026-07-17', '20:00:00', 120000.00, 120, '2026-07-10 23:44:12', 6),
+(50355, 19, 4, '2026-07-11', '23:00:00', 90000.00, 120, '2026-07-10 23:44:12', 7),
+(50356, 19, 4, '2026-07-12', '22:00:00', 90000.00, 120, '2026-07-10 23:44:12', 7),
+(50357, 19, 4, '2026-07-13', '22:00:00', 90000.00, 120, '2026-07-10 23:44:12', 7),
+(50358, 19, 4, '2026-07-14', '22:00:00', 90000.00, 120, '2026-07-10 23:44:12', 7),
+(50359, 19, 4, '2026-07-15', '22:00:00', 90000.00, 120, '2026-07-10 23:44:12', 7),
+(50360, 19, 4, '2026-07-16', '22:00:00', 90000.00, 120, '2026-07-10 23:44:12', 7),
+(50361, 19, 4, '2026-07-17', '22:00:00', 90000.00, 120, '2026-07-10 23:44:12', 7);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `subscriptions`
+-- Cấu trúc bảng cho bảng `subscriptions`
 --
 
 CREATE TABLE `subscriptions` (
@@ -10455,7 +10909,7 @@ CREATE TABLE `subscriptions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `subscriptions`
+-- Đang đổ dữ liệu cho bảng `subscriptions`
 --
 
 INSERT INTO `subscriptions` (`id`, `name`, `price`, `description`, `benefits`, `created_at`) VALUES
@@ -10468,7 +10922,7 @@ INSERT INTO `subscriptions` (`id`, `name`, `price`, `description`, `benefits`, `
 -- --------------------------------------------------------
 
 --
--- Table structure for table `support_tickets`
+-- Cấu trúc bảng cho bảng `support_tickets`
 --
 
 CREATE TABLE `support_tickets` (
@@ -10485,7 +10939,7 @@ CREATE TABLE `support_tickets` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `support_tickets`
+-- Đang đổ dữ liệu cho bảng `support_tickets`
 --
 
 INSERT INTO `support_tickets` (`id`, `user_id`, `subject`, `message`, `status`, `priority`, `tags`, `assigned_to`, `created_at`, `updated_at`) VALUES
@@ -10500,7 +10954,7 @@ INSERT INTO `support_tickets` (`id`, `user_id`, `subject`, `message`, `status`, 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `system_config`
+-- Cấu trúc bảng cho bảng `system_config`
 --
 
 CREATE TABLE `system_config` (
@@ -10513,7 +10967,7 @@ CREATE TABLE `system_config` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `system_config`
+-- Đang đổ dữ liệu cho bảng `system_config`
 --
 
 INSERT INTO `system_config` (`id`, `config_key`, `config_value`, `description`, `updated_by`, `updated_at`) VALUES
@@ -10526,7 +10980,7 @@ INSERT INTO `system_config` (`id`, `config_key`, `config_value`, `description`, 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `theaters`
+-- Cấu trúc bảng cho bảng `theaters`
 --
 
 CREATE TABLE `theaters` (
@@ -10543,7 +10997,7 @@ CREATE TABLE `theaters` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `theaters`
+-- Đang đổ dữ liệu cho bảng `theaters`
 --
 
 INSERT INTO `theaters` (`id`, `name`, `location`, `phone`, `created_at`, `total_screens`, `address`, `is_active`, `latitude`, `longitude`) VALUES
@@ -10558,7 +11012,7 @@ INSERT INTO `theaters` (`id`, `name`, `location`, `phone`, `created_at`, `total_
 -- --------------------------------------------------------
 
 --
--- Table structure for table `theater_managers`
+-- Cấu trúc bảng cho bảng `theater_managers`
 --
 
 CREATE TABLE `theater_managers` (
@@ -10571,7 +11025,7 @@ CREATE TABLE `theater_managers` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `theater_screens`
+-- Cấu trúc bảng cho bảng `theater_screens`
 --
 
 CREATE TABLE `theater_screens` (
@@ -10587,7 +11041,7 @@ CREATE TABLE `theater_screens` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `theater_screens`
+-- Đang đổ dữ liệu cho bảng `theater_screens`
 --
 
 INSERT INTO `theater_screens` (`id`, `theater_id`, `screen_name`, `total_seats`, `seat_layout`, `seat_layout_config`, `screen_type`, `is_active`, `created_at`) VALUES
@@ -10635,7 +11089,7 @@ INSERT INTO `theater_screens` (`id`, `theater_id`, `screen_name`, `total_seats`,
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tickets`
+-- Cấu trúc bảng cho bảng `tickets`
 --
 
 CREATE TABLE `tickets` (
@@ -10657,7 +11111,7 @@ CREATE TABLE `tickets` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `tickets`
+-- Đang đổ dữ liệu cho bảng `tickets`
 --
 
 INSERT INTO `tickets` (`id`, `user_id`, `showtime_id`, `booking_pending_id`, `seat`, `seat_type`, `qr_code`, `price`, `status`, `is_counter_sale`, `sold_by`, `is_picked_up`, `picked_up_at`, `picked_up_by`, `created_at`) VALUES
@@ -10916,12 +11370,75 @@ INSERT INTO `tickets` (`id`, `user_id`, `showtime_id`, `booking_pending_id`, `se
 (6146, 9, 46544, 899, 'D6', 'vip', 'TICKET_pf8IfbewgcTejlnRHcMe1pbr', 109447.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-06-30 08:07:26'),
 (6147, 9, 50256, 904, 'G9', 'normal', 'TICKET_UU58rRRQq2LRv1OpYxwxXv0U', 30130.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-07-09 15:49:36'),
 (6148, 9, 50256, 904, 'G8', 'normal', 'TICKET_lNz0aQw8gCwAjVen6yawY4Gp', 30130.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-07-09 15:49:36'),
-(6149, 9, 50256, 904, 'G7', 'normal', 'TICKET_Zomx68JyPefz8ebv6qir4nRx', 30130.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-07-09 15:49:36');
+(6149, 9, 50256, 904, 'G7', 'normal', 'TICKET_Zomx68JyPefz8ebv6qir4nRx', 30130.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-07-09 15:49:36'),
+(6150, 1, 50257, 905, 'A1', 'normal', 'ADMIN-TEST-20260710-01-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-07-10 18:35:00', NULL, '2026-07-10 11:15:00'),
+(6151, 1, 50257, 905, 'A2', 'normal', 'ADMIN-TEST-20260710-01-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-07-10 18:35:00', NULL, '2026-07-10 11:15:00'),
+(6152, 4, 50258, 906, 'A1', 'normal', 'ADMIN-TEST-20260709-02-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-07-09 18:35:00', NULL, '2026-07-09 11:15:00'),
+(6153, 4, 50258, 906, 'A2', 'normal', 'ADMIN-TEST-20260709-02-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-07-09 18:35:00', NULL, '2026-07-09 11:15:00'),
+(6154, 5, 50259, 907, 'D1', 'vip', 'ADMIN-TEST-20260708-03-D1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-07-08 18:35:00', NULL, '2026-07-08 11:15:00'),
+(6155, 5, 50259, 907, 'D2', 'vip', 'ADMIN-TEST-20260708-03-D2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-07-08 18:35:00', NULL, '2026-07-08 11:15:00'),
+(6156, 6, 50260, 908, 'A1', 'normal', 'ADMIN-TEST-20260707-04-A1', 90000.00, 'Đã đặt', 1, NULL, 1, '2026-07-07 18:35:00', NULL, '2026-07-07 11:15:00'),
+(6157, 6, 50260, 908, 'A2', 'normal', 'ADMIN-TEST-20260707-04-A2', 90000.00, 'Đã đặt', 1, NULL, 1, '2026-07-07 18:35:00', NULL, '2026-07-07 11:15:00'),
+(6158, 7, 49770, 909, 'A1', 'normal', 'ADMIN-TEST-20260706-05-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-07-06 18:35:00', NULL, '2026-07-06 11:15:00'),
+(6159, 7, 49770, 909, 'A2', 'normal', 'ADMIN-TEST-20260706-05-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-07-06 18:35:00', NULL, '2026-07-06 11:15:00'),
+(6160, 8, 48957, 910, 'D1', 'vip', 'ADMIN-TEST-20260705-06-D1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-07-05 18:35:00', NULL, '2026-07-05 11:15:00'),
+(6161, 8, 48957, 910, 'D2', 'vip', 'ADMIN-TEST-20260705-06-D2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-07-05 18:35:00', NULL, '2026-07-05 11:15:00'),
+(6162, 11, 48186, 911, 'A1', 'normal', 'ADMIN-TEST-20260704-07-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-07-04 18:35:00', NULL, '2026-07-04 11:15:00'),
+(6163, 11, 48186, 911, 'A2', 'normal', 'ADMIN-TEST-20260704-07-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-07-04 18:35:00', NULL, '2026-07-04 11:15:00'),
+(6164, 12, 47676, 912, 'A1', 'normal', 'ADMIN-TEST-20260703-08-A1', 90000.00, 'Đã đặt', 1, NULL, 1, '2026-07-03 18:35:00', NULL, '2026-07-03 11:15:00'),
+(6165, 12, 47676, 912, 'A2', 'normal', 'ADMIN-TEST-20260703-08-A2', 90000.00, 'Đã đặt', 1, NULL, 1, '2026-07-03 18:35:00', NULL, '2026-07-03 11:15:00'),
+(6166, 1, 50261, 913, 'D1', 'vip', 'ADMIN-TEST-20260702-09-D1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-07-02 18:35:00', NULL, '2026-07-02 11:15:00'),
+(6167, 1, 50261, 913, 'D2', 'vip', 'ADMIN-TEST-20260702-09-D2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-07-02 18:35:00', NULL, '2026-07-02 11:15:00'),
+(6168, 4, 50262, 914, 'A1', 'normal', 'ADMIN-TEST-20260701-10-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-07-01 18:35:00', NULL, '2026-07-01 11:15:00'),
+(6169, 4, 50262, 914, 'A2', 'normal', 'ADMIN-TEST-20260701-10-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-07-01 18:35:00', NULL, '2026-07-01 11:15:00'),
+(6170, 5, 50263, 915, 'A1', 'normal', 'ADMIN-TEST-20260630-11-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-30 18:35:00', NULL, '2026-06-30 11:15:00'),
+(6171, 5, 50263, 915, 'A2', 'normal', 'ADMIN-TEST-20260630-11-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-30 18:35:00', NULL, '2026-06-30 11:15:00'),
+(6172, 6, 50264, 916, 'D1', 'vip', 'ADMIN-TEST-20260629-12-D1', 120000.00, 'Đã đặt', 1, NULL, 1, '2026-06-29 18:35:00', NULL, '2026-06-29 11:15:00'),
+(6173, 6, 50264, 916, 'D2', 'vip', 'ADMIN-TEST-20260629-12-D2', 120000.00, 'Đã đặt', 1, NULL, 1, '2026-06-29 18:35:00', NULL, '2026-06-29 11:15:00'),
+(6174, 7, 44837, 917, 'A1', 'normal', 'ADMIN-TEST-20260628-13-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-28 18:35:00', NULL, '2026-06-28 11:15:00'),
+(6175, 7, 44837, 917, 'A2', 'normal', 'ADMIN-TEST-20260628-13-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-28 18:35:00', NULL, '2026-06-28 11:15:00'),
+(6176, 8, 50265, 918, 'A1', 'normal', 'ADMIN-TEST-20260627-14-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-27 18:35:00', NULL, '2026-06-27 11:15:00'),
+(6177, 8, 50265, 918, 'A2', 'normal', 'ADMIN-TEST-20260627-14-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-27 18:35:00', NULL, '2026-06-27 11:15:00'),
+(6178, 11, 43564, 919, 'D1', 'vip', 'ADMIN-TEST-20260626-15-D1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-06-26 18:35:00', NULL, '2026-06-26 11:15:00'),
+(6179, 11, 43564, 919, 'D2', 'vip', 'ADMIN-TEST-20260626-15-D2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-06-26 18:35:00', NULL, '2026-06-26 11:15:00'),
+(6180, 12, 50266, 920, 'A1', 'normal', 'ADMIN-TEST-20260625-16-A1', 90000.00, 'Đã đặt', 1, NULL, 1, '2026-06-25 18:35:00', NULL, '2026-06-25 11:15:00'),
+(6181, 12, 50266, 920, 'A2', 'normal', 'ADMIN-TEST-20260625-16-A2', 90000.00, 'Đã đặt', 1, NULL, 1, '2026-06-25 18:35:00', NULL, '2026-06-25 11:15:00'),
+(6182, 1, 50267, 921, 'A1', 'normal', 'ADMIN-TEST-20260624-17-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-24 18:35:00', NULL, '2026-06-24 11:15:00'),
+(6183, 1, 50267, 921, 'A2', 'normal', 'ADMIN-TEST-20260624-17-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-24 18:35:00', NULL, '2026-06-24 11:15:00'),
+(6184, 4, 50268, 922, 'D1', 'vip', 'ADMIN-TEST-20260623-18-D1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-06-23 18:35:00', NULL, '2026-06-23 11:15:00'),
+(6185, 4, 50268, 922, 'D2', 'vip', 'ADMIN-TEST-20260623-18-D2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-06-23 18:35:00', NULL, '2026-06-23 11:15:00'),
+(6186, 5, 50269, 923, 'A1', 'normal', 'ADMIN-TEST-20260622-19-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-22 18:35:00', NULL, '2026-06-22 11:15:00'),
+(6187, 5, 50269, 923, 'A2', 'normal', 'ADMIN-TEST-20260622-19-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-22 18:35:00', NULL, '2026-06-22 11:15:00'),
+(6188, 6, 50270, 924, 'A1', 'normal', 'ADMIN-TEST-20260621-20-A1', 90000.00, 'Đã đặt', 1, NULL, 1, '2026-06-21 18:35:00', NULL, '2026-06-21 11:15:00'),
+(6189, 6, 50270, 924, 'A2', 'normal', 'ADMIN-TEST-20260621-20-A2', 90000.00, 'Đã đặt', 1, NULL, 1, '2026-06-21 18:35:00', NULL, '2026-06-21 11:15:00'),
+(6190, 7, 50271, 925, 'D1', 'vip', 'ADMIN-TEST-20260620-21-D1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-06-20 18:35:00', NULL, '2026-06-20 11:15:00'),
+(6191, 7, 50271, 925, 'D2', 'vip', 'ADMIN-TEST-20260620-21-D2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-06-20 18:35:00', NULL, '2026-06-20 11:15:00'),
+(6192, 8, 50272, 926, 'A1', 'normal', 'ADMIN-TEST-20260619-22-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-19 18:35:00', NULL, '2026-06-19 11:15:00'),
+(6193, 8, 50272, 926, 'A2', 'normal', 'ADMIN-TEST-20260619-22-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-19 18:35:00', NULL, '2026-06-19 11:15:00'),
+(6194, 11, 50273, 927, 'A1', 'normal', 'ADMIN-TEST-20260618-23-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-18 18:35:00', NULL, '2026-06-18 11:15:00'),
+(6195, 11, 50273, 927, 'A2', 'normal', 'ADMIN-TEST-20260618-23-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-18 18:35:00', NULL, '2026-06-18 11:15:00'),
+(6196, 12, 50274, 928, 'D1', 'vip', 'ADMIN-TEST-20260617-24-D1', 120000.00, 'Đã đặt', 1, NULL, 1, '2026-06-17 18:35:00', NULL, '2026-06-17 11:15:00'),
+(6197, 12, 50274, 928, 'D2', 'vip', 'ADMIN-TEST-20260617-24-D2', 120000.00, 'Đã đặt', 1, NULL, 1, '2026-06-17 18:35:00', NULL, '2026-06-17 11:15:00'),
+(6198, 1, 50275, 929, 'A1', 'normal', 'ADMIN-TEST-20260616-25-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-16 18:35:00', NULL, '2026-06-16 11:15:00'),
+(6199, 1, 50275, 929, 'A2', 'normal', 'ADMIN-TEST-20260616-25-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-16 18:35:00', NULL, '2026-06-16 11:15:00'),
+(6200, 4, 42020, 930, 'A1', 'normal', 'ADMIN-TEST-20260615-26-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-15 18:35:00', NULL, '2026-06-15 11:15:00'),
+(6201, 4, 42020, 930, 'A2', 'normal', 'ADMIN-TEST-20260615-26-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-15 18:35:00', NULL, '2026-06-15 11:15:00'),
+(6202, 5, 50276, 931, 'D1', 'vip', 'ADMIN-TEST-20260614-27-D1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-06-14 18:35:00', NULL, '2026-06-14 11:15:00'),
+(6203, 5, 50276, 931, 'D2', 'vip', 'ADMIN-TEST-20260614-27-D2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-06-14 18:35:00', NULL, '2026-06-14 11:15:00'),
+(6204, 6, 50277, 932, 'A1', 'normal', 'ADMIN-TEST-20260613-28-A1', 90000.00, 'Đã đặt', 1, NULL, 1, '2026-06-13 18:35:00', NULL, '2026-06-13 11:15:00'),
+(6205, 6, 50277, 932, 'A2', 'normal', 'ADMIN-TEST-20260613-28-A2', 90000.00, 'Đã đặt', 1, NULL, 1, '2026-06-13 18:35:00', NULL, '2026-06-13 11:15:00'),
+(6206, 7, 41875, 933, 'A1', 'normal', 'ADMIN-TEST-20260612-29-A1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-12 18:35:00', NULL, '2026-06-12 11:15:00'),
+(6207, 7, 41875, 933, 'A2', 'normal', 'ADMIN-TEST-20260612-29-A2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-06-12 18:35:00', NULL, '2026-06-12 11:15:00'),
+(6208, 8, 41948, 934, 'D1', 'vip', 'ADMIN-TEST-20260611-30-D1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-06-11 18:35:00', NULL, '2026-06-11 11:15:00'),
+(6209, 8, 41948, 934, 'D2', 'vip', 'ADMIN-TEST-20260611-30-D2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-06-11 18:35:00', NULL, '2026-06-11 11:15:00'),
+(6210, 9, 50348, 935, 'F5', 'vip', 'TICKET_kbBS0BEOfyuGbWpjhhb5DHs2', 195000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-07-10 23:46:31'),
+(6211, 9, 50348, 935, 'F4', 'vip', 'TICKET_ToPk9R5JgsXuxchvdEZ37yGi', 195000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-07-10 23:46:31'),
+(6212, 9, 50348, 935, 'F6', 'vip', 'TICKET_ws7feLxob6zdbsZswN9NkSDu', 195000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-07-10 23:46:31');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `transactions`
+-- Cấu trúc bảng cho bảng `transactions`
 --
 
 CREATE TABLE `transactions` (
@@ -10936,7 +11453,7 @@ CREATE TABLE `transactions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `transactions`
+-- Đang đổ dữ liệu cho bảng `transactions`
 --
 
 INSERT INTO `transactions` (`id`, `user_id`, `type`, `related_id`, `amount`, `method`, `status`, `created_at`) VALUES
@@ -11097,12 +11614,43 @@ INSERT INTO `transactions` (`id`, `user_id`, `type`, `related_id`, `amount`, `me
 (155, 9, 'ticket', 889, 292480.00, 'Bank', 'Thành công', '2026-06-23 01:42:40'),
 (156, 9, 'ticket', 892, 337570.00, 'Bank', 'Thành công', '2026-06-29 21:33:00'),
 (157, 9, 'ticket', 899, 303894.00, 'Momo', 'Thành công', '2026-06-30 08:07:26'),
-(158, 9, 'ticket', 904, 90390.00, 'Bank', 'Thành công', '2026-07-09 15:49:36');
+(158, 9, 'ticket', 904, 90390.00, 'Bank', 'Thành công', '2026-07-09 15:49:36'),
+(249, 1, 'ticket', 905, 180000.00, 'Cash', 'Thành công', '2026-07-10 11:15:00'),
+(250, 4, 'ticket', 906, 180000.00, 'Bank', 'Thành công', '2026-07-09 11:15:00'),
+(251, 5, 'ticket', 907, 240000.00, 'Cash', 'Thành công', '2026-07-08 11:15:00'),
+(252, 6, 'ticket', 908, 180000.00, 'Bank', 'Thành công', '2026-07-07 11:15:00'),
+(253, 7, 'ticket', 909, 180000.00, 'Cash', 'Thành công', '2026-07-06 11:15:00'),
+(254, 8, 'ticket', 910, 240000.00, 'Bank', 'Thành công', '2026-07-05 11:15:00'),
+(255, 11, 'ticket', 911, 180000.00, 'Cash', 'Thành công', '2026-07-04 11:15:00'),
+(256, 12, 'ticket', 912, 180000.00, 'Bank', 'Thành công', '2026-07-03 11:15:00'),
+(257, 1, 'ticket', 913, 240000.00, 'Cash', 'Thành công', '2026-07-02 11:15:00'),
+(258, 4, 'ticket', 914, 180000.00, 'Bank', 'Thành công', '2026-07-01 11:15:00'),
+(259, 5, 'ticket', 915, 180000.00, 'Cash', 'Thành công', '2026-06-30 11:15:00'),
+(260, 6, 'ticket', 916, 240000.00, 'Bank', 'Thành công', '2026-06-29 11:15:00'),
+(261, 7, 'ticket', 917, 180000.00, 'Cash', 'Thành công', '2026-06-28 11:15:00'),
+(262, 8, 'ticket', 918, 180000.00, 'Bank', 'Thành công', '2026-06-27 11:15:00'),
+(263, 11, 'ticket', 919, 240000.00, 'Cash', 'Thành công', '2026-06-26 11:15:00'),
+(264, 12, 'ticket', 920, 180000.00, 'Bank', 'Thành công', '2026-06-25 11:15:00'),
+(265, 1, 'ticket', 921, 180000.00, 'Cash', 'Thành công', '2026-06-24 11:15:00'),
+(266, 4, 'ticket', 922, 240000.00, 'Bank', 'Thành công', '2026-06-23 11:15:00'),
+(267, 5, 'ticket', 923, 180000.00, 'Cash', 'Thành công', '2026-06-22 11:15:00'),
+(268, 6, 'ticket', 924, 180000.00, 'Bank', 'Thành công', '2026-06-21 11:15:00'),
+(269, 7, 'ticket', 925, 240000.00, 'Cash', 'Thành công', '2026-06-20 11:15:00'),
+(270, 8, 'ticket', 926, 180000.00, 'Bank', 'Thành công', '2026-06-19 11:15:00'),
+(271, 11, 'ticket', 927, 180000.00, 'Cash', 'Thành công', '2026-06-18 11:15:00'),
+(272, 12, 'ticket', 928, 240000.00, 'Bank', 'Thành công', '2026-06-17 11:15:00'),
+(273, 1, 'ticket', 929, 180000.00, 'Cash', 'Thành công', '2026-06-16 11:15:00'),
+(274, 4, 'ticket', 930, 180000.00, 'Bank', 'Thành công', '2026-06-15 11:15:00'),
+(275, 5, 'ticket', 931, 240000.00, 'Cash', 'Thành công', '2026-06-14 11:15:00'),
+(276, 6, 'ticket', 932, 180000.00, 'Bank', 'Thành công', '2026-06-13 11:15:00'),
+(277, 7, 'ticket', 933, 180000.00, 'Cash', 'Thành công', '2026-06-12 11:15:00'),
+(278, 8, 'ticket', 934, 240000.00, 'Bank', 'Thành công', '2026-06-11 11:15:00'),
+(279, 9, 'ticket', 935, 585000.00, 'Bank', 'Thành công', '2026-07-10 23:46:31');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `users`
+-- Cấu trúc bảng cho bảng `users`
 --
 
 CREATE TABLE `users` (
@@ -11132,7 +11680,7 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `users`
+-- Đang đổ dữ liệu cho bảng `users`
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `google_id`, `phone`, `password`, `avatar`, `birthdate`, `address`, `rank`, `points`, `subscription_id`, `status`, `email_verified`, `created_at`, `updated_at`, `role`, `theater_id`, `is_active`, `last_login`, `newsletter`, `notifications_enabled`) VALUES
@@ -11144,7 +11692,7 @@ INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `google_id`, `p
 (6, 'Lê Văn C', 'levanc@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Bronze', 100, 1, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
 (7, 'Phạm Thị D', 'phamthid@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Platinum', 2500, 4, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
 (8, 'Hoàng Văn E', 'hoangvane@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, 'Silver', 800, 2, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
-(9, 'vanlinh', 'nguyenvanlinh25062006@gmail.com', NULL, NULL, NULL, '$2y$12$X9rtzLgIJYy3cWi4VLsth.GZaihA0lIw6ZXMQoK7CXyb6Xi3OrMQ2', 'avatars/avatar_9_1782064502.png', NULL, NULL, 'Bronze', 8784560, 5, 'active', 0, '2025-11-14 01:35:37', '2026-07-09 15:49:36', 'moderator', 3, 1, NULL, 0, 1),
+(9, 'vanlinh', 'nguyenvanlinh25062006@gmail.com', NULL, NULL, NULL, '$2y$12$X9rtzLgIJYy3cWi4VLsth.GZaihA0lIw6ZXMQoK7CXyb6Xi3OrMQ2', 'avatars/avatar_9_1782064502.png', NULL, NULL, 'Bronze', 8199560, 5, 'active', 0, '2025-11-14 01:35:37', '2026-07-10 23:46:31', 'moderator', 3, 1, NULL, 0, 1),
 (10, 'Tuan_awh', 'tuanawh@gmail.com', NULL, NULL, NULL, '$2y$10$5NwNHefnp5jwjr1Vls5HG.dnt4SWC1newqSkuV8X4QTcwZ0Ok1JQ.', 'data/avatars/avatar_10_1765506885.jpg', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-14 01:45:51', '2025-12-12 02:34:45', 'moderator', 2, 1, NULL, 0, 1),
 (11, 'Hoang Son', 'hsson97805@gmail.com', NULL, NULL, NULL, '$2y$10$4OBk1HA71jEhbVPP7FA7VueQ8B30EgEy9eB9tAHRFmUvA8I7lwAPe', NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-24 08:52:25', '2025-11-24 08:52:25', 'user', NULL, 1, NULL, 0, 1),
 (12, 'jack', 'jack@gmail.com', NULL, NULL, NULL, '$2y$10$4OPMx0NC7sXIg23/hWQt1u0t52jEDgc5grk/LZAOmmFw8a3DAy.BW', NULL, NULL, NULL, 'Bronze', 297000, 3, 'active', 0, '2025-11-25 02:20:46', '2025-11-25 02:27:04', 'user', NULL, 1, NULL, 0, 1),
@@ -11177,30 +11725,6 @@ INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `google_id`, `p
 -- --------------------------------------------------------
 
 --
--- Table structure for table `user_roles`
---
-
--- --------------------------------------------------------
-
---
--- Cấu trúc bảng cho bảng `sessions`
---
-
-CREATE TABLE IF NOT EXISTS `sessions` (
-  `id` varchar(255) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `ip_address` varchar(45) DEFAULT NULL,
-  `user_agent` text DEFAULT NULL,
-  `payload` longtext NOT NULL,
-  `last_activity` int(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `sessions_user_id_index` (`user_id`),
-  KEY `sessions_last_activity_index` (`last_activity`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Cấu trúc bảng cho bảng `user_roles`
 --
 
@@ -11212,7 +11736,7 @@ CREATE TABLE `user_roles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `user_roles`
+-- Đang đổ dữ liệu cho bảng `user_roles`
 --
 
 INSERT INTO `user_roles` (`id`, `user_id`, `role_id`, `created_at`) VALUES
@@ -11230,7 +11754,7 @@ INSERT INTO `user_roles` (`id`, `user_id`, `role_id`, `created_at`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `user_tokens`
+-- Cấu trúc bảng cho bảng `user_tokens`
 --
 
 CREATE TABLE `user_tokens` (
@@ -11244,7 +11768,7 @@ CREATE TABLE `user_tokens` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `user_tokens`
+-- Đang đổ dữ liệu cho bảng `user_tokens`
 --
 
 INSERT INTO `user_tokens` (`id`, `user_id`, `token`, `device_info`, `ip_address`, `expires_at`, `created_at`) VALUES
@@ -11253,7 +11777,7 @@ INSERT INTO `user_tokens` (`id`, `user_id`, `token`, `device_info`, `ip_address`
 -- --------------------------------------------------------
 
 --
--- Table structure for table `watch_history`
+-- Cấu trúc bảng cho bảng `watch_history`
 --
 
 CREATE TABLE `watch_history` (
@@ -11268,7 +11792,7 @@ CREATE TABLE `watch_history` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `watch_history`
+-- Đang đổ dữ liệu cho bảng `watch_history`
 --
 
 INSERT INTO `watch_history` (`id`, `user_id`, `movie_id`, `last_time`, `rating`, `favorite`, `created_at`, `updated_at`) VALUES
@@ -11322,14 +11846,15 @@ INSERT INTO `watch_history` (`id`, `user_id`, `movie_id`, `last_time`, `rating`,
 (215, 10, 51, 0, NULL, 0, '2026-02-03 02:28:47', NULL),
 (227, 3, 53, 0, NULL, 0, '2026-02-09 03:08:09', NULL),
 (233, 9, 53, 0, NULL, 0, '2026-06-08 23:48:31', '2026-06-08 23:48:31'),
-(234, 3, 28, 0, NULL, 0, '2026-06-22 02:48:48', '2026-06-22 02:48:48');
+(234, 3, 28, 0, NULL, 0, '2026-06-22 02:48:48', '2026-06-22 02:48:48'),
+(235, 3, 62, 0, NULL, 0, '2026-07-11 00:34:02', '2026-07-11 00:34:02');
 
 --
--- Indexes for dumped tables
+-- Chỉ mục cho các bảng đã đổ
 --
 
 --
--- Indexes for table `admin_logs`
+-- Chỉ mục cho bảng `admin_logs`
 --
 ALTER TABLE `admin_logs`
   ADD PRIMARY KEY (`id`),
@@ -11338,7 +11863,7 @@ ALTER TABLE `admin_logs`
   ADD KEY `idx_module` (`module`);
 
 --
--- Indexes for table `booking_food_items`
+-- Chỉ mục cho bảng `booking_food_items`
 --
 ALTER TABLE `booking_food_items`
   ADD PRIMARY KEY (`id`),
@@ -11347,7 +11872,7 @@ ALTER TABLE `booking_food_items`
   ADD KEY `fk_booking_food_pending` (`booking_pending_id`);
 
 --
--- Indexes for table `booking_pending`
+-- Chỉ mục cho bảng `booking_pending`
 --
 ALTER TABLE `booking_pending`
   ADD PRIMARY KEY (`id`),
@@ -11359,7 +11884,7 @@ ALTER TABLE `booking_pending`
   ADD KEY `idx_status` (`status`);
 
 --
--- Indexes for table `booking_session_tracking`
+-- Chỉ mục cho bảng `booking_session_tracking`
 --
 ALTER TABLE `booking_session_tracking`
   ADD PRIMARY KEY (`id`),
@@ -11370,28 +11895,28 @@ ALTER TABLE `booking_session_tracking`
   ADD KEY `is_banned` (`is_banned`);
 
 --
--- Indexes for table `cache`
+-- Chỉ mục cho bảng `cache`
 --
 ALTER TABLE `cache`
   ADD PRIMARY KEY (`key`),
   ADD KEY `cache_expiration_index` (`expiration`);
 
 --
--- Indexes for table `cache_locks`
+-- Chỉ mục cho bảng `cache_locks`
 --
 ALTER TABLE `cache_locks`
   ADD PRIMARY KEY (`key`),
   ADD KEY `cache_locks_expiration_index` (`expiration`);
 
 --
--- Indexes for table `categories`
+-- Chỉ mục cho bảng `categories`
 --
 ALTER TABLE `categories`
   ADD PRIMARY KEY (`id`),
   ADD KEY `parent_id` (`parent_id`);
 
 --
--- Indexes for table `comments`
+-- Chỉ mục cho bảng `comments`
 --
 ALTER TABLE `comments`
   ADD PRIMARY KEY (`id`),
@@ -11401,7 +11926,7 @@ ALTER TABLE `comments`
   ADD KEY `idx_status` (`status`);
 
 --
--- Indexes for table `comment_likes`
+-- Chỉ mục cho bảng `comment_likes`
 --
 ALTER TABLE `comment_likes`
   ADD PRIMARY KEY (`id`),
@@ -11410,7 +11935,7 @@ ALTER TABLE `comment_likes`
   ADD KEY `idx_user_id` (`user_id`);
 
 --
--- Indexes for table `coupons`
+-- Chỉ mục cho bảng `coupons`
 --
 ALTER TABLE `coupons`
   ADD PRIMARY KEY (`id`),
@@ -11419,7 +11944,7 @@ ALTER TABLE `coupons`
   ADD KEY `idx_status` (`status`);
 
 --
--- Indexes for table `disabled_seats`
+-- Chỉ mục cho bảng `disabled_seats`
 --
 ALTER TABLE `disabled_seats`
   ADD PRIMARY KEY (`id`),
@@ -11427,7 +11952,7 @@ ALTER TABLE `disabled_seats`
   ADD KEY `disabled_seats_screen_id_is_active_index` (`screen_id`,`is_active`);
 
 --
--- Indexes for table `episodes`
+-- Chỉ mục cho bảng `episodes`
 --
 ALTER TABLE `episodes`
   ADD PRIMARY KEY (`id`),
@@ -11435,21 +11960,21 @@ ALTER TABLE `episodes`
   ADD KEY `idx_movie_id` (`movie_id`);
 
 --
--- Indexes for table `failed_jobs`
+-- Chỉ mục cho bảng `failed_jobs`
 --
 ALTER TABLE `failed_jobs`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`);
 
 --
--- Indexes for table `food_items`
+-- Chỉ mục cho bảng `food_items`
 --
 ALTER TABLE `food_items`
   ADD PRIMARY KEY (`id`),
   ADD KEY `theater_id` (`theater_id`);
 
 --
--- Indexes for table `ip_blocks`
+-- Chỉ mục cho bảng `ip_blocks`
 --
 ALTER TABLE `ip_blocks`
   ADD PRIMARY KEY (`id`),
@@ -11458,7 +11983,7 @@ ALTER TABLE `ip_blocks`
   ADD KEY `idx_ip_expires` (`ip_address`,`expires_at`);
 
 --
--- Indexes for table `ip_room_tracking`
+-- Chỉ mục cho bảng `ip_room_tracking`
 --
 ALTER TABLE `ip_room_tracking`
   ADD PRIMARY KEY (`id`),
@@ -11467,7 +11992,7 @@ ALTER TABLE `ip_room_tracking`
   ADD KEY `idx_is_banned` (`is_banned`,`ban_until`);
 
 --
--- Indexes for table `ip_spam_logs`
+-- Chỉ mục cho bảng `ip_spam_logs`
 --
 ALTER TABLE `ip_spam_logs`
   ADD PRIMARY KEY (`id`),
@@ -11479,26 +12004,26 @@ ALTER TABLE `ip_spam_logs`
   ADD KEY `idx_user_id` (`user_id`);
 
 --
--- Indexes for table `jobs`
+-- Chỉ mục cho bảng `jobs`
 --
 ALTER TABLE `jobs`
   ADD PRIMARY KEY (`id`),
   ADD KEY `jobs_queue_index` (`queue`);
 
 --
--- Indexes for table `job_batches`
+-- Chỉ mục cho bảng `job_batches`
 --
 ALTER TABLE `job_batches`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `migrations`
+-- Chỉ mục cho bảng `migrations`
 --
 ALTER TABLE `migrations`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `moderator_permission_requests`
+-- Chỉ mục cho bảng `moderator_permission_requests`
 --
 ALTER TABLE `moderator_permission_requests`
   ADD PRIMARY KEY (`id`),
@@ -11508,14 +12033,14 @@ ALTER TABLE `moderator_permission_requests`
   ADD KEY `target_user_id` (`target_user_id`);
 
 --
--- Indexes for table `movies`
+-- Chỉ mục cho bảng `movies`
 --
 ALTER TABLE `movies`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_category` (`category_id`);
 
 --
--- Indexes for table `movie_categories`
+-- Chỉ mục cho bảng `movie_categories`
 --
 ALTER TABLE `movie_categories`
   ADD PRIMARY KEY (`id`),
@@ -11524,7 +12049,7 @@ ALTER TABLE `movie_categories`
   ADD KEY `category_id` (`category_id`);
 
 --
--- Indexes for table `movie_category`
+-- Chỉ mục cho bảng `movie_category`
 --
 ALTER TABLE `movie_category`
   ADD PRIMARY KEY (`id`),
@@ -11533,7 +12058,7 @@ ALTER TABLE `movie_category`
   ADD KEY `movie_category_category_id_index` (`category_id`);
 
 --
--- Indexes for table `news`
+-- Chỉ mục cho bảng `news`
 --
 ALTER TABLE `news`
   ADD PRIMARY KEY (`id`),
@@ -11543,14 +12068,14 @@ ALTER TABLE `news`
   ADD KEY `news_status_published_at_index` (`status`,`published_at`);
 
 --
--- Indexes for table `news_categories`
+-- Chỉ mục cho bảng `news_categories`
 --
 ALTER TABLE `news_categories`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `news_categories_slug_unique` (`slug`);
 
 --
--- Indexes for table `notifications`
+-- Chỉ mục cho bảng `notifications`
 --
 ALTER TABLE `notifications`
   ADD PRIMARY KEY (`id`),
@@ -11558,26 +12083,26 @@ ALTER TABLE `notifications`
   ADD KEY `is_read` (`is_read`);
 
 --
--- Indexes for table `password_reset_tokens`
+-- Chỉ mục cho bảng `password_reset_tokens`
 --
 ALTER TABLE `password_reset_tokens`
   ADD PRIMARY KEY (`email`);
 
 --
--- Indexes for table `permissions`
+-- Chỉ mục cho bảng `permissions`
 --
 ALTER TABLE `permissions`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `name` (`name`);
 
 --
--- Indexes for table `promotions`
+-- Chỉ mục cho bảng `promotions`
 --
 ALTER TABLE `promotions`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `reviews`
+-- Chỉ mục cho bảng `reviews`
 --
 ALTER TABLE `reviews`
   ADD PRIMARY KEY (`id`),
@@ -11585,14 +12110,14 @@ ALTER TABLE `reviews`
   ADD KEY `idx_rev_movie` (`movie_id`);
 
 --
--- Indexes for table `roles`
+-- Chỉ mục cho bảng `roles`
 --
 ALTER TABLE `roles`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `name` (`name`);
 
 --
--- Indexes for table `role_permissions`
+-- Chỉ mục cho bảng `role_permissions`
 --
 ALTER TABLE `role_permissions`
   ADD PRIMARY KEY (`id`),
@@ -11600,7 +12125,7 @@ ALTER TABLE `role_permissions`
   ADD KEY `permission_id` (`permission_id`);
 
 --
--- Indexes for table `seat_reservations`
+-- Chỉ mục cho bảng `seat_reservations`
 --
 ALTER TABLE `seat_reservations`
   ADD PRIMARY KEY (`id`),
@@ -11611,7 +12136,7 @@ ALTER TABLE `seat_reservations`
   ADD KEY `idx_active_reservations` (`showtime_id`,`expires_at`);
 
 --
--- Indexes for table `seat_selection_logs`
+-- Chỉ mục cho bảng `seat_selection_logs`
 --
 ALTER TABLE `seat_selection_logs`
   ADD PRIMARY KEY (`id`),
@@ -11622,7 +12147,7 @@ ALTER TABLE `seat_selection_logs`
   ADD KEY `is_spam` (`is_spam`);
 
 --
--- Indexes for table `sessions`
+-- Chỉ mục cho bảng `sessions`
 --
 ALTER TABLE `sessions`
   ADD PRIMARY KEY (`id`),
@@ -11630,7 +12155,7 @@ ALTER TABLE `sessions`
   ADD KEY `sessions_last_activity_index` (`last_activity`);
 
 --
--- Indexes for table `showtimes`
+-- Chỉ mục cho bảng `showtimes`
 --
 ALTER TABLE `showtimes`
   ADD PRIMARY KEY (`id`),
@@ -11641,13 +12166,13 @@ ALTER TABLE `showtimes`
   ADD KEY `idx_theater_screen` (`theater_id`,`screen_id`);
 
 --
--- Indexes for table `subscriptions`
+-- Chỉ mục cho bảng `subscriptions`
 --
 ALTER TABLE `subscriptions`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `support_tickets`
+-- Chỉ mục cho bảng `support_tickets`
 --
 ALTER TABLE `support_tickets`
   ADD PRIMARY KEY (`id`),
@@ -11655,7 +12180,7 @@ ALTER TABLE `support_tickets`
   ADD KEY `assigned_to` (`assigned_to`);
 
 --
--- Indexes for table `system_config`
+-- Chỉ mục cho bảng `system_config`
 --
 ALTER TABLE `system_config`
   ADD PRIMARY KEY (`id`),
@@ -11663,13 +12188,13 @@ ALTER TABLE `system_config`
   ADD KEY `updated_by` (`updated_by`);
 
 --
--- Indexes for table `theaters`
+-- Chỉ mục cho bảng `theaters`
 --
 ALTER TABLE `theaters`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `theater_managers`
+-- Chỉ mục cho bảng `theater_managers`
 --
 ALTER TABLE `theater_managers`
   ADD PRIMARY KEY (`id`),
@@ -11677,14 +12202,14 @@ ALTER TABLE `theater_managers`
   ADD KEY `theater_id` (`theater_id`);
 
 --
--- Indexes for table `theater_screens`
+-- Chỉ mục cho bảng `theater_screens`
 --
 ALTER TABLE `theater_screens`
   ADD PRIMARY KEY (`id`),
   ADD KEY `theater_id` (`theater_id`);
 
 --
--- Indexes for table `tickets`
+-- Chỉ mục cho bảng `tickets`
 --
 ALTER TABLE `tickets`
   ADD PRIMARY KEY (`id`),
@@ -11699,14 +12224,14 @@ ALTER TABLE `tickets`
   ADD KEY `idx_picked_up_by` (`picked_up_by`);
 
 --
--- Indexes for table `transactions`
+-- Chỉ mục cho bảng `transactions`
 --
 ALTER TABLE `transactions`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_tx_user` (`user_id`);
 
 --
--- Indexes for table `users`
+-- Chỉ mục cho bảng `users`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
@@ -11717,7 +12242,7 @@ ALTER TABLE `users`
   ADD KEY `idx_theater_id` (`theater_id`);
 
 --
--- Indexes for table `user_roles`
+-- Chỉ mục cho bảng `user_roles`
 --
 ALTER TABLE `user_roles`
   ADD PRIMARY KEY (`id`),
@@ -11725,7 +12250,7 @@ ALTER TABLE `user_roles`
   ADD KEY `role_id` (`role_id`);
 
 --
--- Indexes for table `user_tokens`
+-- Chỉ mục cho bảng `user_tokens`
 --
 ALTER TABLE `user_tokens`
   ADD PRIMARY KEY (`id`),
@@ -11734,7 +12259,7 @@ ALTER TABLE `user_tokens`
   ADD KEY `expires_at` (`expires_at`);
 
 --
--- Indexes for table `watch_history`
+-- Chỉ mục cho bảng `watch_history`
 --
 ALTER TABLE `watch_history`
   ADD PRIMARY KEY (`id`),
@@ -11743,279 +12268,279 @@ ALTER TABLE `watch_history`
   ADD KEY `idx_wh_movie` (`movie_id`);
 
 --
--- AUTO_INCREMENT for dumped tables
+-- AUTO_INCREMENT cho các bảng đã đổ
 --
 
 --
--- AUTO_INCREMENT for table `admin_logs`
+-- AUTO_INCREMENT cho bảng `admin_logs`
 --
 ALTER TABLE `admin_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
 
 --
--- AUTO_INCREMENT for table `booking_food_items`
+-- AUTO_INCREMENT cho bảng `booking_food_items`
 --
 ALTER TABLE `booking_food_items`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
 
 --
--- AUTO_INCREMENT for table `booking_pending`
+-- AUTO_INCREMENT cho bảng `booking_pending`
 --
 ALTER TABLE `booking_pending`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=905;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=936;
 
 --
--- AUTO_INCREMENT for table `booking_session_tracking`
+-- AUTO_INCREMENT cho bảng `booking_session_tracking`
 --
 ALTER TABLE `booking_session_tracking`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=204;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=209;
 
 --
--- AUTO_INCREMENT for table `categories`
+-- AUTO_INCREMENT cho bảng `categories`
 --
 ALTER TABLE `categories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
--- AUTO_INCREMENT for table `comments`
+-- AUTO_INCREMENT cho bảng `comments`
 --
 ALTER TABLE `comments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
--- AUTO_INCREMENT for table `comment_likes`
+-- AUTO_INCREMENT cho bảng `comment_likes`
 --
 ALTER TABLE `comment_likes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `coupons`
+-- AUTO_INCREMENT cho bảng `coupons`
 --
 ALTER TABLE `coupons`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `disabled_seats`
+-- AUTO_INCREMENT cho bảng `disabled_seats`
 --
 ALTER TABLE `disabled_seats`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `episodes`
+-- AUTO_INCREMENT cho bảng `episodes`
 --
 ALTER TABLE `episodes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
--- AUTO_INCREMENT for table `failed_jobs`
+-- AUTO_INCREMENT cho bảng `failed_jobs`
 --
 ALTER TABLE `failed_jobs`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `food_items`
+-- AUTO_INCREMENT cho bảng `food_items`
 --
 ALTER TABLE `food_items`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
--- AUTO_INCREMENT for table `ip_blocks`
+-- AUTO_INCREMENT cho bảng `ip_blocks`
 --
 ALTER TABLE `ip_blocks`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `ip_room_tracking`
+-- AUTO_INCREMENT cho bảng `ip_room_tracking`
 --
 ALTER TABLE `ip_room_tracking`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=195;
 
 --
--- AUTO_INCREMENT for table `ip_spam_logs`
+-- AUTO_INCREMENT cho bảng `ip_spam_logs`
 --
 ALTER TABLE `ip_spam_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
--- AUTO_INCREMENT for table `jobs`
+-- AUTO_INCREMENT cho bảng `jobs`
 --
 ALTER TABLE `jobs`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `migrations`
+-- AUTO_INCREMENT cho bảng `migrations`
 --
 ALTER TABLE `migrations`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
--- AUTO_INCREMENT for table `moderator_permission_requests`
+-- AUTO_INCREMENT cho bảng `moderator_permission_requests`
 --
 ALTER TABLE `moderator_permission_requests`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `movies`
+-- AUTO_INCREMENT cho bảng `movies`
 --
 ALTER TABLE `movies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=194;
 
 --
--- AUTO_INCREMENT for table `movie_categories`
+-- AUTO_INCREMENT cho bảng `movie_categories`
 --
 ALTER TABLE `movie_categories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
 
 --
--- AUTO_INCREMENT for table `movie_category`
+-- AUTO_INCREMENT cho bảng `movie_category`
 --
 ALTER TABLE `movie_category`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=209;
 
 --
--- AUTO_INCREMENT for table `news`
+-- AUTO_INCREMENT cho bảng `news`
 --
 ALTER TABLE `news`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `news_categories`
+-- AUTO_INCREMENT cho bảng `news_categories`
 --
 ALTER TABLE `news_categories`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `notifications`
+-- AUTO_INCREMENT cho bảng `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
--- AUTO_INCREMENT for table `permissions`
+-- AUTO_INCREMENT cho bảng `permissions`
 --
 ALTER TABLE `permissions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
--- AUTO_INCREMENT for table `promotions`
+-- AUTO_INCREMENT cho bảng `promotions`
 --
 ALTER TABLE `promotions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `reviews`
+-- AUTO_INCREMENT cho bảng `reviews`
 --
 ALTER TABLE `reviews`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
--- AUTO_INCREMENT for table `roles`
+-- AUTO_INCREMENT cho bảng `roles`
 --
 ALTER TABLE `roles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
--- AUTO_INCREMENT for table `role_permissions`
+-- AUTO_INCREMENT cho bảng `role_permissions`
 --
 ALTER TABLE `role_permissions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
--- AUTO_INCREMENT for table `seat_reservations`
+-- AUTO_INCREMENT cho bảng `seat_reservations`
 --
 ALTER TABLE `seat_reservations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1115;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1130;
 
 --
--- AUTO_INCREMENT for table `seat_selection_logs`
+-- AUTO_INCREMENT cho bảng `seat_selection_logs`
 --
 ALTER TABLE `seat_selection_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=202;
 
 --
--- AUTO_INCREMENT for table `showtimes`
+-- AUTO_INCREMENT cho bảng `showtimes`
 --
 ALTER TABLE `showtimes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50257;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50362;
 
 --
--- AUTO_INCREMENT for table `subscriptions`
+-- AUTO_INCREMENT cho bảng `subscriptions`
 --
 ALTER TABLE `subscriptions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `support_tickets`
+-- AUTO_INCREMENT cho bảng `support_tickets`
 --
 ALTER TABLE `support_tickets`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
--- AUTO_INCREMENT for table `system_config`
+-- AUTO_INCREMENT cho bảng `system_config`
 --
 ALTER TABLE `system_config`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `theaters`
+-- AUTO_INCREMENT cho bảng `theaters`
 --
 ALTER TABLE `theaters`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
--- AUTO_INCREMENT for table `theater_managers`
+-- AUTO_INCREMENT cho bảng `theater_managers`
 --
 ALTER TABLE `theater_managers`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `theater_screens`
+-- AUTO_INCREMENT cho bảng `theater_screens`
 --
 ALTER TABLE `theater_screens`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
--- AUTO_INCREMENT for table `tickets`
+-- AUTO_INCREMENT cho bảng `tickets`
 --
 ALTER TABLE `tickets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6150;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6213;
 
 --
--- AUTO_INCREMENT for table `transactions`
+-- AUTO_INCREMENT cho bảng `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=159;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=280;
 
 --
--- AUTO_INCREMENT for table `users`
+-- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
--- AUTO_INCREMENT for table `user_roles`
+-- AUTO_INCREMENT cho bảng `user_roles`
 --
 ALTER TABLE `user_roles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
--- AUTO_INCREMENT for table `watch_history`
+-- AUTO_INCREMENT cho bảng `watch_history`
 --
 ALTER TABLE `watch_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=235;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=236;
 
 --
--- Constraints for dumped tables
+-- Các ràng buộc cho các bảng đã đổ
 --
 
 --
--- Constraints for table `admin_logs`
+-- Các ràng buộc cho bảng `admin_logs`
 --
 ALTER TABLE `admin_logs`
   ADD CONSTRAINT `admin_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `booking_food_items`
+-- Các ràng buộc cho bảng `booking_food_items`
 --
 ALTER TABLE `booking_food_items`
   ADD CONSTRAINT `fk_booking_food_item` FOREIGN KEY (`food_item_id`) REFERENCES `food_items` (`id`) ON DELETE CASCADE,
@@ -12023,14 +12548,14 @@ ALTER TABLE `booking_food_items`
   ADD CONSTRAINT `fk_booking_food_ticket` FOREIGN KEY (`ticket_id`) REFERENCES `tickets` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `booking_pending`
+-- Các ràng buộc cho bảng `booking_pending`
 --
 ALTER TABLE `booking_pending`
   ADD CONSTRAINT `booking_pending_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `booking_pending_ibfk_2` FOREIGN KEY (`showtime_id`) REFERENCES `showtimes` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `booking_session_tracking`
+-- Các ràng buộc cho bảng `booking_session_tracking`
 --
 ALTER TABLE `booking_session_tracking`
   ADD CONSTRAINT `booking_session_tracking_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
@@ -12038,13 +12563,13 @@ ALTER TABLE `booking_session_tracking`
   ADD CONSTRAINT `booking_session_tracking_ibfk_3` FOREIGN KEY (`screen_id`) REFERENCES `theater_screens` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `categories`
+-- Các ràng buộc cho bảng `categories`
 --
 ALTER TABLE `categories`
   ADD CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
--- Constraints for table `comments`
+-- Các ràng buộc cho bảng `comments`
 --
 ALTER TABLE `comments`
   ADD CONSTRAINT `comments_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
@@ -12052,13 +12577,13 @@ ALTER TABLE `comments`
   ADD CONSTRAINT `comments_ibfk_3` FOREIGN KEY (`parent_id`) REFERENCES `comments` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `episodes`
+-- Các ràng buộc cho bảng `episodes`
 --
 ALTER TABLE `episodes`
   ADD CONSTRAINT `fk_episodes_movie` FOREIGN KEY (`movie_id`) REFERENCES `movies` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `moderator_permission_requests`
+-- Các ràng buộc cho bảng `moderator_permission_requests`
 --
 ALTER TABLE `moderator_permission_requests`
   ADD CONSTRAINT `moderator_permission_requests_ibfk_1` FOREIGN KEY (`theater_id`) REFERENCES `theaters` (`id`) ON DELETE CASCADE,
@@ -12066,54 +12591,54 @@ ALTER TABLE `moderator_permission_requests`
   ADD CONSTRAINT `moderator_permission_requests_ibfk_3` FOREIGN KEY (`requested_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `movies`
+-- Các ràng buộc cho bảng `movies`
 --
 ALTER TABLE `movies`
   ADD CONSTRAINT `movies_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
--- Constraints for table `movie_categories`
+-- Các ràng buộc cho bảng `movie_categories`
 --
 ALTER TABLE `movie_categories`
   ADD CONSTRAINT `fk_movie_categories_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_movie_categories_movie` FOREIGN KEY (`movie_id`) REFERENCES `movies` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `notifications`
+-- Các ràng buộc cho bảng `notifications`
 --
 ALTER TABLE `notifications`
   ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `reviews`
+-- Các ràng buộc cho bảng `reviews`
 --
 ALTER TABLE `reviews`
   ADD CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`movie_id`) REFERENCES `movies` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `role_permissions`
+-- Các ràng buộc cho bảng `role_permissions`
 --
 ALTER TABLE `role_permissions`
   ADD CONSTRAINT `role_permissions_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `role_permissions_ibfk_2` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `seat_reservations`
+-- Các ràng buộc cho bảng `seat_reservations`
 --
 ALTER TABLE `seat_reservations`
   ADD CONSTRAINT `fk_seat_reservations_showtime` FOREIGN KEY (`showtime_id`) REFERENCES `showtimes` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_seat_reservations_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `seat_selection_logs`
+-- Các ràng buộc cho bảng `seat_selection_logs`
 --
 ALTER TABLE `seat_selection_logs`
   ADD CONSTRAINT `seat_selection_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `seat_selection_logs_ibfk_2` FOREIGN KEY (`showtime_id`) REFERENCES `showtimes` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `showtimes`
+-- Các ràng buộc cho bảng `showtimes`
 --
 ALTER TABLE `showtimes`
   ADD CONSTRAINT `showtimes_ibfk_1` FOREIGN KEY (`movie_id`) REFERENCES `movies` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -12121,33 +12646,33 @@ ALTER TABLE `showtimes`
   ADD CONSTRAINT `showtimes_ibfk_3` FOREIGN KEY (`screen_id`) REFERENCES `theater_screens` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
--- Constraints for table `support_tickets`
+-- Các ràng buộc cho bảng `support_tickets`
 --
 ALTER TABLE `support_tickets`
   ADD CONSTRAINT `support_tickets_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `support_tickets_ibfk_2` FOREIGN KEY (`assigned_to`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `system_config`
+-- Các ràng buộc cho bảng `system_config`
 --
 ALTER TABLE `system_config`
   ADD CONSTRAINT `system_config_ibfk_1` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `theater_managers`
+-- Các ràng buộc cho bảng `theater_managers`
 --
 ALTER TABLE `theater_managers`
   ADD CONSTRAINT `theater_managers_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `theater_managers_ibfk_2` FOREIGN KEY (`theater_id`) REFERENCES `theaters` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `theater_screens`
+-- Các ràng buộc cho bảng `theater_screens`
 --
 ALTER TABLE `theater_screens`
   ADD CONSTRAINT `theater_screens_ibfk_1` FOREIGN KEY (`theater_id`) REFERENCES `theaters` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `tickets`
+-- Các ràng buộc cho bảng `tickets`
 --
 ALTER TABLE `tickets`
   ADD CONSTRAINT `tickets_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -12155,32 +12680,32 @@ ALTER TABLE `tickets`
   ADD CONSTRAINT `tickets_ibfk_3` FOREIGN KEY (`booking_pending_id`) REFERENCES `booking_pending` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
--- Constraints for table `transactions`
+-- Các ràng buộc cho bảng `transactions`
 --
 ALTER TABLE `transactions`
   ADD CONSTRAINT `transactions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `users`
+-- Các ràng buộc cho bảng `users`
 --
 ALTER TABLE `users`
   ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`subscription_id`) REFERENCES `subscriptions` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
--- Constraints for table `user_roles`
+-- Các ràng buộc cho bảng `user_roles`
 --
 ALTER TABLE `user_roles`
   ADD CONSTRAINT `user_roles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `user_roles_ibfk_2` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `user_tokens`
+-- Các ràng buộc cho bảng `user_tokens`
 --
 ALTER TABLE `user_tokens`
   ADD CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `watch_history`
+-- Các ràng buộc cho bảng `watch_history`
 --
 ALTER TABLE `watch_history`
   ADD CONSTRAINT `watch_history_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,

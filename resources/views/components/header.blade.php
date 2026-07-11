@@ -877,9 +877,15 @@ function handleLogin(event) {
         const contentType = response.headers.get('content-type') || '';
         const data = contentType.includes('application/json') ? await response.json() : {};
 
+        if (response.status === 419) {
+            const csrfError = new Error('Phiên đăng nhập đã được làm mới. Vui lòng đăng nhập lại.');
+            csrfError.isCsrfMismatch = true;
+            throw csrfError;
+        }
+
         if (!response.ok) {
             const firstError = data.errors ? Object.values(data.errors)[0]?.[0] : null;
-            throw new Error(firstError || data.message || 'Khong the dang nhap. Vui long kiem tra lai thong tin.');
+            throw new Error(firstError || data.error || data.message || 'Không thể đăng nhập. Vui lòng kiểm tra lại thông tin.');
         }
 
         return data;
@@ -895,7 +901,12 @@ function handleLogin(event) {
         }
     })
     .catch(error => {
-        errorDiv.textContent = 'Có lỗi xảy ra. Vui lòng thử lại!';
+        if (error.isCsrfMismatch) {
+            window.location.reload();
+            return;
+        }
+
+        errorDiv.textContent = error.message || 'Có lỗi xảy ra. Vui lòng thử lại!';
         errorDiv.style.display = 'block';
         submitBtn.disabled = false;
         submitBtn.textContent = 'Đăng nhập';
@@ -991,5 +1002,13 @@ document.addEventListener('DOMContentLoaded', function() {
             openAuthModal('register');
         }, 300);
     @endif
+});
+
+// Browsers can restore the login modal from back/forward cache with an old
+// CSRF token after visiting the OTP page. Always request a fresh form/session.
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
 });
 </script>

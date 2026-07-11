@@ -66,7 +66,7 @@ function startServerReservationCountdown(payload) {
 
 function setPostSeatSectionsVisible(visible) {
     var displayValue = visible ? 'block' : 'none';
-    var ids = ['foodModalLauncher', 'paymentSection', 'emailSection', 'priceInfoBox'];
+    var ids = ['foodModalLauncher', 'emailSection', 'priceInfoBox'];
 
     for (var i = 0; i < ids.length; i++) {
         var element = document.getElementById(ids[i]);
@@ -1019,6 +1019,25 @@ window.requestUserLocation = function() {
             return false;
         }
 
+        var paymentSection = document.getElementById('paymentSection');
+        var selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+        if (!paymentSection || paymentSection.getAttribute('data-payment-confirmed') !== 'true') {
+            if (paymentSection) {
+                paymentSection.style.display = 'flex';
+                paymentSection.classList.add('payment-options-open');
+            }
+            return false;
+        }
+
+        if (!selectedPayment) {
+            if (paymentSection) {
+                paymentSection.style.display = 'flex';
+                paymentSection.classList.add('payment-options-open');
+            }
+            alert('Vui lòng chọn phương thức thanh toán.');
+            return false;
+        }
+
         if (!email || !email.trim()) {
             alert('Vui lòng nhập email nhận vé!');
             return false;
@@ -1044,6 +1063,8 @@ window.requestUserLocation = function() {
 
         return true;
     }
+
+    window.validateFormBeforeSubmit = validateFormBeforeSubmit;
 
     document.addEventListener('DOMContentLoaded', function() {
         var terms = document.querySelector('input[name="accept_terms"]');
@@ -1833,6 +1854,31 @@ window.requestUserLocation = function() {
                     return a - b;
                 });
 
+                if (cols.length === 1) {
+                    var allGroupCols = groupSeats.map(function(seatEl) {
+                        return parseInt(seatEl.dataset.seat.substring(1), 10);
+                    }).sort(function(a, b) {
+                        return a - b;
+                    });
+                    var selectedCol = cols[0];
+                    var minCol = allGroupCols[0];
+                    var maxCol = allGroupCols[allGroupCols.length - 1];
+                    var leftEdgeBooked = booked.indexOf(rowName + minCol) !== -1;
+                    var rightEdgeBooked = booked.indexOf(rowName + maxCol) !== -1;
+
+                    if (selectedCol === minCol + 1 && !leftEdgeBooked) {
+                        var leftMessage = 'Không được chọn một ghế ở vị trí thứ 2 từ đầu cụm ' + rowName + '. Hãy chọn ghế ngoài cùng hoặc chọn thêm ghế liền kề.';
+                        if (showAlert) showErrorMsg(leftMessage);
+                        return { valid: false, message: leftMessage };
+                    }
+
+                    if (selectedCol === maxCol - 1 && !rightEdgeBooked) {
+                        var rightMessage = 'Không được chọn một ghế ở vị trí thứ 2 từ cuối cụm ' + rowName + '. Hãy chọn ghế ngoài cùng hoặc chọn thêm ghế liền kề.';
+                        if (showAlert) showErrorMsg(rightMessage);
+                        return { valid: false, message: rightMessage };
+                    }
+                }
+
                 for (var i = 0; i < cols.length - 1; i++) {
                     if (cols[i + 1] - cols[i] > 1) {
                         var hasFreeGap = false;
@@ -2290,10 +2336,7 @@ function loadSeatMapNow(showtimeId, options) {
             }
         }
 
-        return {
-            valid: true,
-            message: ''
-        };
+        return validateSeatSelectionForSeatsLegacy(selected, showAlert);
     }
 
 (function() {
@@ -2721,12 +2764,18 @@ function loadSeatMapNow(showtimeId, options) {
     function setPostSeatSectionsVisible(visible) {
         var displayValue = visible ? 'block' : 'none';
         setElementDisplay('foodModalLauncher', displayValue);
-        setElementDisplay('paymentSection', displayValue);
         setElementDisplay('emailSection', displayValue);
         setElementDisplay('priceInfoBox', displayValue);
 
         if (!visible && typeof window.closeFoodModal === 'function') {
             window.closeFoodModal();
+        }
+
+        var paymentSection = document.getElementById('paymentSection');
+        if (paymentSection) {
+            paymentSection.style.display = 'none';
+            paymentSection.classList.remove('payment-options-open');
+            paymentSection.setAttribute('data-payment-confirmed', 'false');
         }
     }
 
@@ -3000,7 +3049,7 @@ function loadSeatMapNow(showtimeId, options) {
 
         var showtimeId = getCurrentSeatMapShowtimeId();
         if (!showtimeId) {
-            showErrorMsg('Vui lĂ²ng chá»n suáº¥t chiáº¿u trÆ°á»›c.');
+            showErrorMsg('Vui lĂ²ng chọn suất chiếu trước.');
             return false;
         }
 
@@ -3033,7 +3082,7 @@ function loadSeatMapNow(showtimeId, options) {
 
                 var responseMessage = result.data && result.data.message
                     ? result.data.message
-                    : 'KhĂ´ng thá»ƒ giá»¯ gháº¿. Vui lĂ²ng thá»­ láº¡i.';
+                    : 'KhĂ´ng thể giữ ghế. Vui lĂ²ng thử lại.';
 
                 console.warn('Reservation API returned non-success:', result.data);
                 window.selectedSeats = selectedBeforeReserve.slice();
@@ -3044,7 +3093,7 @@ function loadSeatMapNow(showtimeId, options) {
             .catch(function(error) {
                 console.error('Reserve seats error:', error);
                 window.selectedSeats = selectedBeforeReserve.slice();
-                showEditableSeatUi('KhĂ´ng thá»ƒ giá»¯ gháº¿ trĂªn server. Vui lĂ²ng kiá»ƒm tra káº¿t ná»‘i vĂ  thá»­ láº¡i.', 'warning');
+                showEditableSeatUi('KhĂ´ng thể giữ ghế trĂªn server. Vui lĂ²ng kiểm tra kết nối vĂ  thử lại.', 'warning');
                 refreshSeatStatusNow(showtimeId, true);
             })
             .finally(function() {

@@ -177,9 +177,9 @@
 @endpush
 
 @php
-$title = 'Äáº·t VÃ© Xem Phim';
-$meta_description = isset($movie) ? 'Äáº·t vÃ© xem phim ' . $movie->title . ' táº¡i CineHub. Chá»n ráº¡p, ngÃ y, giá» vÃ  gháº¿ ngá»“i phÃ¹ há»£p cho báº¡n.' : 'Äáº·t vÃ© xem phim táº¡i CineHub.';
-$meta_keywords = 'Ä‘áº·t vÃ© xem phim, vÃ© xem phim online, mua vÃ© xem phim, CineHub';
+$title = 'Đặt Vé Xem Phim';
+$meta_description = isset($movie) ? 'Đặt vé xem phim ' . $movie->title . ' tại CineHub. Chọn rạp, ngày, giờ và ghế ngồi phù hợp cho bạn.' : 'Đặt vé xem phim tại CineHub.';
+$meta_keywords = 'đặt vé xem phim, vé xem phim online, mua vé xem phim, CineHub';
 $meta_og_title = $title . ' - CineHub';
 $meta_og_description = $meta_description;
 @endphp
@@ -218,7 +218,7 @@ $meta_og_description = $meta_description;
                     <div class="booking-movie-details">
                         @if ($movie->rating)
                         <div class="detail-item">
-                            <span class="detail-label">ÄÃ¡nh giÃ¡:</span>
+                            <span class="detail-label">Đánh giá:</span>
                             <span class="detail-value">
                                 <i class="fas fa-star"></i>
                                 {{ number_format($movie->rating, 1) }}/10
@@ -228,7 +228,7 @@ $meta_og_description = $meta_description;
 
                         @if ($movie->duration)
                         <div class="detail-item">
-                            <span class="detail-label">Thá»i lÆ°á»£ng:</span>
+                            <span class="detail-label">Thời lượng:</span>
                             <span class="detail-value">{{ floor($movie->duration / 60) }}h {{ $movie->duration % 60 }}m</span>
                         </div>
                         @endif
@@ -242,14 +242,14 @@ $meta_og_description = $meta_description;
 
                         @if ($bookingCategories->isNotEmpty())
                         <div class="detail-item">
-                            <span class="detail-label">Thá»ƒ loáº¡i:</span>
+                            <span class="detail-label">Thể loại:</span>
                             <span class="detail-value">{{ $bookingCategories->pluck('name')->join(', ') }}</span>
                         </div>
                         @endif
 
                         @if ($movie->country)
                         <div class="detail-item">
-                            <span class="detail-label">Quá»‘c gia:</span>
+                            <span class="detail-label">Quốc gia:</span>
                             <span class="detail-value">{{ $movie->country }}</span>
                         </div>
                         @endif
@@ -258,7 +258,7 @@ $meta_og_description = $meta_description;
                     <!-- Movie Description -->
                     @if ($movie->description)
                     <div class="booking-movie-description">
-                        <h3>MÃ´ táº£</h3>
+                        <h3>Mô tả</h3>
                         <p itemprop="description">{{ $movie->description }}</p>
                     </div>
                     @endif
@@ -266,7 +266,7 @@ $meta_og_description = $meta_description;
                 @else
                 <div class="alert alert-warning">
                     <i class="fas fa-film"></i>
-                    Vui lÃ²ng chá»n má»™t bá»™ phim Ä‘á»ƒ Ä‘áº·t vÃ©
+                    Vui lòng chọn một bộ phim để đặt vé
                 </div>
                 @endif
             </div>
@@ -276,9 +276,9 @@ $meta_og_description = $meta_description;
                 <div class="booking-form-container">
                     <h2 class="booking-form-title">
                         @if(!isset($movie))
-                        Äáº·t vÃ© xem phim
+                        Đặt vé xem phim
                         @else
-                        Chá»n Lá»‹ch Chiáº¿u & Gháº¿
+                        Chọn Lịch Chiếu & Ghế
                         @endif
                     </h2>
 
@@ -302,12 +302,12 @@ $meta_og_description = $meta_description;
                     <!-- Movies List - Display when no movie selected -->
                     <div class="booking-step mb-4">
                         <label class="booking-label">
-                            <i class="fas fa-film me-2"></i>Danh sÃ¡ch phim Ä‘ang chiáº¿u
+                            <i class="fas fa-film me-2"></i>Danh sách phim đang chiếu
                         </label>
                         @if(count($allMovies) == 0)
                         <div class="alert alert-warning">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            Hiá»‡n táº¡i chÆ°a cÃ³ phim nÃ o Ä‘ang chiáº¿u ráº¡p. Vui lÃ²ng quay láº¡i sau!
+                            Hiện tại chưa có phim nào đang chiếu rạp. Vui lòng quay lại sau!
                         </div>
                         @else
                         <div class="movies-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
@@ -355,12 +355,12 @@ $meta_og_description = $meta_description;
                         <div class="form-group">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <label class="form-label mb-0">
-                                    <i class="fas fa-building me-2"></i>Chá»n ráº¡p cho phim nÃ y
+                                    <i class="fas fa-building me-2"></i>Chọn rạp cho phim này
                                 </label>
                                 <div id="userLocationBadge" style="display: none; font-size: 12px; padding: 6px 12px; background: rgba(40, 167, 69, 0.1); border-radius: 20px; color: #28a745;">
                                     <i class="fas fa-map-marker-alt"></i>
-                                    <span id="userLocationText">Äang láº¥y vá»‹ trÃ­...</span>
-                                    <button type="button" class="btn btn-sm btn-link p-0 ms-2" onclick="requestUserLocation()" title="Láº¥y láº¡i vá»‹ trÃ­" style="font-size: 12px;">
+                                    <span id="userLocationText">Đang lấy vị trí...</span>
+                                    <button type="button" class="btn btn-sm btn-link p-0 ms-2" onclick="requestUserLocation()" title="Lấy lại vị trí" style="font-size: 12px;">
                                         <i class="fas fa-sync-alt"></i>
                                     </button>
                                 </div>
@@ -370,7 +370,7 @@ $meta_og_description = $meta_description;
 
                             <!-- Test button for debugging -->
                             <button type="button" onclick="alert('Button works! Theater cards: ' + document.querySelectorAll('.theater-card').length)" style="display: none; margin-bottom: 10px; padding: 8px 16px; background: #e50914; color: white; border: none; border-radius: 4px;">
-                                ðŸ” Test Click (Debug)
+                                🔍 Test Click (Debug)
                             </button>
 
                             @if (isset($theaters) && count($theaters) > 0)
@@ -422,7 +422,7 @@ $meta_og_description = $meta_description;
                             @else
                             <div class="alert alert-warning">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
-                                Hiá»‡n táº¡i chÆ°a cÃ³ ráº¡p nÃ o chiáº¿u phim nÃ y.
+                                Hiện tại chưa có rạp nào chiếu phim này.
                             </div>
                             @endif
                         </div>
@@ -508,10 +508,10 @@ $meta_og_description = $meta_description;
                             }
                         </style>
 
-                        <!-- Date Selection (hiá»ƒn thá»‹ sau khi chá»n ráº¡p) -->
+                        <!-- Date Selection (hiển thị sau khi chọn rạp) -->
                         <div id="dateSelectionSection" class="form-group" style="display: none;">
                             <label class="form-label">
-                                <i class="fas fa-calendar-alt me-2"></i>Chá»n ngÃ y xem
+                                <i class="fas fa-calendar-alt me-2"></i>Chọn ngày xem
                             </label>
                             <div id="datesContainer" class="dates-tabs" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;">
                                 <!-- Dates will be loaded via JavaScript when theater is selected -->
@@ -521,7 +521,7 @@ $meta_og_description = $meta_description;
                         <!-- Showtime Selection (appears after date selection) -->
                         <div id="showtimeSelectionSection" class="form-group" style="display: none;">
                             <label class="form-label">
-                                <i class="fas fa-clock me-2"></i>Chá»n khung giá» chiáº¿u
+                                <i class="fas fa-clock me-2"></i>Chọn khung giờ chiếu
                             </label>
                             <div id="showtimesContainer" class="showtimes-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px;">
                                 <!-- Showtimes will be loaded via JavaScript -->
@@ -535,38 +535,38 @@ $meta_og_description = $meta_description;
                         <!-- Seat Selection -->
                         <div id="seatSelectionSection" class="form-group" style="display: none;">
                             <label class="form-label">
-                                <i class="fas fa-couch me-2"></i>Chá»n Gháº¿
+                                <i class="fas fa-couch me-2"></i>Chọn Ghế
                                 <span id="screenNameDisplay" style="margin-left: 10px; color: #ffc107; font-weight: bold;"></span>
                             </label>
 
                             <!-- Screen indicator -->
                             <div class="screen-indicator" style="margin: 20px 0; text-align: center;">
                                 <div style="width: 80%; height: 4px; background: linear-gradient(to bottom, #fff, #666); margin: 0 auto; border-radius: 50%; box-shadow: 0 3px 10px rgba(255,255,255,0.4);"></div>
-                                <p style="color: #999; margin-top: 10px; font-size: 12px;">MÃ n hÃ¬nh</p>
+                                <p style="color: #999; margin-top: 10px; font-size: 12px;">Màn hình</p>
                             </div>
 
                             <!-- Seat map container -->
                             <div id="seatMap" class="seat-map-container" style="padding: 20px; background: #2a2a2a; border-radius: 8px; max-width: 600px; margin: 0 auto;">
-                                <p class="text-center text-muted">Vui lÃ²ng chá»n khung giá» chiáº¿u</p>
+                                <p class="text-center text-muted">Vui lòng chọn khung giờ chiếu</p>
                             </div>
 
                             <!-- Seat legend -->
                             <div class="seat-legend" style="display: flex; justify-content: center; gap: 20px; margin-top: 15px; flex-wrap: wrap;">
                                 <div class="legend-item" style="display: flex; align-items: center; gap: 5px;">
                                     <div class="seat seat-legend-box"></div>
-                                    <span style="font-size: 12px; color: #ccc;">Trá»‘ng</span>
+                                    <span style="font-size: 12px; color: #ccc;">Trống</span>
                                 </div>
                                 <div class="legend-item" style="display: flex; align-items: center; gap: 5px;">
                                     <div class="seat seat-legend-box seat-selected"></div>
-                                    <span style="font-size: 12px; color: #ccc;">Äang chá»n</span>
+                                    <span style="font-size: 12px; color: #ccc;">Đang chọn</span>
                                 </div>
                                 <div class="legend-item" style="display: flex; align-items: center; gap: 5px;">
                                     <div class="seat seat-legend-box seat-booked"></div>
-                                    <span style="font-size: 12px; color: #ccc;">ÄÃ£ Ä‘áº·t</span>
+                                    <span style="font-size: 12px; color: #ccc;">Đã đặt</span>
                                 </div>
                                 <div class="legend-item" style="display: flex; align-items: center; gap: 5px;">
                                     <div class="seat seat-legend-box seat-reserved"></div>
-                                    <span style="font-size: 12px; color: #ccc;">Äang giá»¯ chá»—</span>
+                                    <span style="font-size: 12px; color: #ccc;">Đang giữ chỗ</span>
                                 </div>
                                 <div class="legend-item" style="display: flex; align-items: center; gap: 5px;">
                                     <div class="seat seat-legend-box seat-vip"></div>
@@ -574,7 +574,7 @@ $meta_og_description = $meta_description;
                                 </div>
                                 <div class="legend-item" style="display: flex; align-items: center; gap: 5px;">
                                     <div class="seat seat-legend-box seat-couple"></div>
-                                    <span style="font-size: 12px; color: #ccc;">ÄÃ´i</span>
+                                    <span style="font-size: 12px; color: #ccc;">Đôi</span>
                                 </div>
                             </div>
                         </div>
@@ -582,7 +582,7 @@ $meta_og_description = $meta_description;
                         <!-- Email for ticket -->
                         <div id="emailSection" class="form-group" style="display: none;">
                             <label class="form-label">
-                                <i class="fas fa-envelope me-2"></i>Email nháº­n vÃ©
+                                <i class="fas fa-envelope me-2"></i>Email nhận vé
                             </label>
                             <input type="email"
                                 name="customer_email"
@@ -591,26 +591,26 @@ $meta_og_description = $meta_description;
                                 placeholder="email@example.com"
                                 value="{{ old('customer_email', Auth::check() ? Auth::user()->email : '') }}">
                             <small class="text-muted" style="font-size: 11px; display: block; margin-top: 5px;">
-                                <i class="fas fa-info-circle"></i> VÃ© Ä‘iá»‡n tá»­ sáº½ Ä‘Æ°á»£c gá»­i Ä‘áº¿n email nÃ y
+                                <i class="fas fa-info-circle"></i> Vé điện tử sẽ được gửi đến email này
                             </small>
                         </div>
 
                         <!-- Selected Seats Display -->
                         <div id="selectedSeatsDisplay" class="selected-seats-display" style="display: none;">
-                            <strong>Gháº¿ Ä‘Ã£ chá»n:</strong>
+                            <strong>Ghế đã chọn:</strong>
                             <span id="seatsText"></span>
                         </div>
 
                         <!-- Confirm Seats Button -->
                         <div class="confirm-seats-section" style="margin: 15px 0;">
                             <button type="button" id="confirmSeatsBtn" onclick="confirmSeats()" disabled class="btn-confirm-seats" style="width: 100%; padding: 12px; background: #ffc107; color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: all 0.3s;">
-                                <i class="fas fa-check-circle"></i> XÃ¡c nháº­n chá»n gháº¿
+                                <i class="fas fa-check-circle"></i> Xác nhận chọn ghế
                             </button>
                             <button type="button" id="reselectSeatsBtn" onclick="reselectSeats()" style="display: none; width: 100%; padding: 12px; background: #6c757d; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: all 0.3s;">
-                                <i class="fas fa-redo"></i> Chá»n láº¡i gháº¿
+                                <i class="fas fa-redo"></i> Chọn lại ghế
                             </button>
                             {{-- <div id="reservationTimerBoxOld" class="reservation-timer-box" style="display: none;">
-                                <span>Thá»i gian giá»¯ gháº¿ cÃ²n láº¡i:</span>
+                                <span>Thời gian giữ ghế còn lại:</span>
                                 <strong id="reservationTimerTextOld">10:00</strong>
                             </div> --}}
                         </div>
@@ -635,20 +635,20 @@ $meta_og_description = $meta_description;
                         <!-- Price Info Box -->
                         <div id="priceInfoBox" class="price-info-box" style="display: none; background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                             <h6 style="color: #ffc107; margin-bottom: 10px;">
-                                <i class="fas fa-info-circle"></i> ThÃ´ng tin giÃ¡ vÃ©
+                                <i class="fas fa-info-circle"></i> Thông tin giá vé
                             </h6>
                             <div style="font-size: 13px; color: #ccc;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                    <span><i class="fas fa-couch" style="color: #999;"></i> Gháº¿ thÆ°á»ng:</span>
-                                    <span id="normalPriceDisplay">150.000Ä‘</span>
+                                    <span><i class="fas fa-couch" style="color: #999;"></i> Ghế thường:</span>
+                                    <span id="normalPriceDisplay">150.000đ</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                    <span><i class="fas fa-crown" style="color: #764ba2;"></i> Gháº¿ VIP (+30%):</span>
-                                    <span id="vipPriceDisplay">186.000Ä‘</span>
+                                    <span><i class="fas fa-crown" style="color: #764ba2;"></i> Ghế VIP (+30%):</span>
+                                    <span id="vipPriceDisplay">186.000đ</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between;">
-                                    <span><i class="fas fa-heart" style="color: #f5576c;"></i> Gháº¿ Ä‘Ã´i (+50%/gháº¿):</span>
-                                    <span id="couplePriceDisplay">210.000Ä‘</span>
+                                    <span><i class="fas fa-heart" style="color: #f5576c;"></i> Ghế đôi (+50%/ghế):</span>
+                                    <span id="couplePriceDisplay">210.000đ</span>
                                 </div>
                             </div>
                         </div>
@@ -664,12 +664,12 @@ $meta_og_description = $meta_description;
                         <!-- Food Items Section - iframe-style scrollable panel -->
                         <div id="foodSection" class="form-group" style="display: none;">
                             <label class="form-label" style="margin-bottom: 10px;">
-                                <i class="fas fa-utensils me-2"></i>Combo Äá»“ Ä‚n & NÆ°á»›c (TÃ¹y chá»n)
+                                <i class="fas fa-utensils me-2"></i>Combo Đồ Ăn & Nước (Tùy chọn)
                             </label>
                             <div class="food-iframe-shell">
                                 <div class="food-iframe-header">
-                                    <span><i class="fas fa-shopping-basket"></i> Chá»n combo</span>
-                                    <small>Cuá»™n xuá»‘ng Ä‘á»ƒ xem thÃªm</small>
+                                    <span><i class="fas fa-shopping-basket"></i> Chọn combo</span>
+                                    <small>Cuộn xuống để xem thêm</small>
                                 </div>
                                 <div class="food-order-frame">
                                     <div id="foodItemsContainer" class="food-items-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
@@ -688,16 +688,16 @@ $meta_og_description = $meta_description;
                                             </div>
                                             @endif
                                             <h6 style="margin: 0 0 5px 0; color: #fff; font-size: 12px; font-weight: 600; min-height: 32px; display: flex; align-items: center; justify-content: center;">{{ $food->name }}</h6>
-                                            <p style="margin: 0 0 8px 0; color: #ffc107; font-weight: bold; font-size: 13px;">{{ number_format($food->price) }}Ä‘</p>
+                                            <p style="margin: 0 0 8px 0; color: #ffc107; font-weight: bold; font-size: 13px;">{{ number_format($food->price) }}đ</p>
                                             <div class="quantity-control" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
-                                                <button type="button" class="btn-quantity-compact" onclick="updateFoodQuantity({{ $food->id }}, -1)" style="width: 26px; height: 26px; border: 1px solid #666; background: #3a3a3a; color: #fff; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">âˆ’</button>
+                                                <button type="button" class="btn-quantity-compact" onclick="updateFoodQuantity({{ $food->id }}, -1)" style="width: 26px; height: 26px; border: 1px solid #666; background: #3a3a3a; color: #fff; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">−</button>
                                                 <input type="number" name="food_items[{{ $food->id }}]" id="food_{{ $food->id }}" value="0" min="0" max="10" readonly style="width: 40px; height: 26px; text-align: center; background: #1a1a1a; border: 1px solid #666; color: #fff; border-radius: 4px; font-size: 14px; font-weight: bold; padding: 0;">
                                                 <button type="button" class="btn-quantity-compact" onclick="updateFoodQuantity({{ $food->id }}, 1)" style="width: 26px; height: 26px; border: 1px solid #666; background: #3a3a3a; color: #fff; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">+</button>
                                             </div>
                                         </div>
                                         @endforeach
                                         @else
-                                        <p class="text-muted" style="text-align: center; grid-column: 1 / -1;">KhÃ´ng cÃ³ combo Ä‘á»“ Äƒn nÃ o</p>
+                                        <p class="text-muted" style="text-align: center; grid-column: 1 / -1;">Không có combo đồ ăn nào</p>
                                         @endif
                                     </div>
                                 </div>
@@ -979,33 +979,35 @@ $meta_og_description = $meta_description;
                         </style>
 
                         <!-- Payment Method Selection -->
-                        <div id="paymentSection" class="form-group" style="display: none;">
+                        <div id="paymentSection" class="form-group" data-payment-confirmed="false" style="display: none;">
+                            <div class="payment-options-dialog">
                             <label class="form-label" style="margin-bottom: 10px;">
-                                <i class="fas fa-credit-card me-2"></i>PhÆ°Æ¡ng thá»©c thanh toÃ¡n
+                                <i class="fas fa-credit-card me-2"></i>Phương thức thanh toán
                             </label>
                             @if(empty($vnpayConfigured))
                             <div class="alert alert-warning" style="font-size: 13px; margin-bottom: 10px;">
                                 <i class="fas fa-exclamation-triangle"></i>
-                                VNPay chÆ°a cáº¥u hÃ¬nh (.env). Báº¡n cÃ³ thá»ƒ thanh toÃ¡n báº±ng <strong>VÃ­ CineHub</strong>.
+                                VNPay chưa cấu hình (.env). Bạn có thể thanh toán bằng <strong>Ví CineHub</strong>.
                             </div>
                             @endif
                             <div class="payment-methods" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                 <label class="payment-method-card" style="border: 2px solid #444; border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.3s; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; {{ empty($vnpayConfigured) ? 'opacity:0.55;' : '' }}">
-                                    <input type="radio" name="payment_method" value="vnpay" {{ !empty($vnpayConfigured) ? 'checked' : 'disabled' }} style="position: absolute; opacity: 0;">
+                                    <input type="radio" name="payment_method" value="vnpay" {{ empty($vnpayConfigured) ? 'disabled' : '' }} style="position: absolute; opacity: 0;">
                                     <i class="fas fa-credit-card" style="color: #1e88e5; font-size: 24px;"></i>
                                     <div>
                                         <div style="color: #fff; font-weight: bold; font-size: 13px;">VNPay</div>
-                                        <small style="color: #999; font-size: 11px;">Tháº»/QR</small>
+                                        <small style="color: #999; font-size: 11px;">Thẻ/QR</small>
                                     </div>
                                 </label>
                                 <label class="payment-method-card" style="border: 2px solid #444; border-radius: 10px; padding: 12px; cursor: pointer; transition: all 0.3s; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                                    <input type="radio" name="payment_method" value="wallet" {{ empty($vnpayConfigured) ? 'checked' : '' }} style="position: absolute; opacity: 0;">
+                                    <input type="radio" name="payment_method" value="wallet" style="position: absolute; opacity: 0;">
                                     <i class="fas fa-wallet" style="color: #28a745; font-size: 24px;"></i>
                                     <div>
-                                        <div style="color: #fff; font-weight: bold; font-size: 13px;">VÃ­ CineHub</div>
-                                        <small style="color: #999; font-size: 11px;" id="walletBalance">{{ Auth::check() ? number_format(Auth::user()->points ?? 0) : 0 }}Ä‘</small>
+                                        <div style="color: #fff; font-weight: bold; font-size: 13px;">Ví CineHub</div>
+                                        <small style="color: #999; font-size: 11px;" id="walletBalance">{{ Auth::check() ? number_format(Auth::user()->points ?? 0) : 0 }}đ</small>
                                     </div>
                                 </label>
+                            </div>
                             </div>
                         </div>
 
@@ -1015,31 +1017,66 @@ $meta_og_description = $meta_description;
                                 background: rgba(255, 193, 7, 0.1) !important;
                             }
 
+                            #paymentSection.payment-options-open {
+                                position: fixed;
+                                inset: 0;
+                                z-index: 10060;
+                                align-items: center;
+                                justify-content: center;
+                                padding: 20px;
+                                background: rgba(0, 0, 0, 0.78);
+                                backdrop-filter: blur(9px);
+                            }
+
+                            #paymentSection .payment-options-dialog {
+                                width: min(520px, 100%);
+                                padding: 24px;
+                                border: 1px solid rgba(255, 255, 255, 0.18);
+                                border-radius: 18px;
+                                background: linear-gradient(145deg, #29242a, #171317);
+                                box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+                            }
+
                             .btn-quantity:hover {
                                 background: #4a4a4a !important;
                             }
                         </style>
 
+                        <script>
+                            document.addEventListener('change', function (event) {
+                                if (!event.target || event.target.name !== 'payment_method') return;
+
+                                var paymentSection = document.getElementById('paymentSection');
+                                if (!paymentSection) return;
+
+                                paymentSection.setAttribute('data-payment-confirmed', 'true');
+                                window.setTimeout(function () {
+                                    paymentSection.classList.remove('payment-options-open');
+                                    paymentSection.style.display = 'none';
+                                }, 180);
+                            });
+                        </script>
+
                         <!-- Price Summary -->
                         <div class="price-summary">
                             <div class="price-row">
-                                <span>GiÃ¡ vÃ© (1 vÃ©):</span>
-                                <span id="unitPrice">0 â‚«</span>
+                                <span>Giá vé (1 vé):</span>
+                                <span id="unitPrice">0 ₫</span>
                             </div>
                             <div class="price-row">
-                                <span>Sá»‘ lÆ°á»£ng gháº¿:</span>
+                                <span>Số lượng ghế:</span>
                                 <span id="quantity">0</span>
                             </div>
                             <div class="price-row">
-                                <span>Tiá»n vÃ©:</span>
-                                <span id="seatsTotal">0 â‚«</span>
+                                <span>Tiền vé:</span>
+                                <span id="seatsTotal">0 ₫</span>
                             </div>
                             <div id="foodSummaryRows" style="border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 8px; margin-top: 8px; display: none;">
                                 <!-- Food items will be added here dynamically -->
                             </div>
                             <div class="price-row total" style="border-top: 2px solid rgba(229, 9, 20, 0.5); margin-top: 8px; padding-top: 8px; font-size: 18px;">
-                                <span style="font-weight: bold;">Tá»•ng thanh toÃ¡n:</span>
-                                <span id="totalPrice" style="font-weight: bold; color: #ffc107;">0 â‚«</span>
+                                <span style="font-weight: bold;">Tổng thanh toán:</span>
+                                <span id="totalPrice" style="font-weight: bold; color: #ffc107;">0 ₫</span>
                             </div>
                         </div>
 
@@ -1047,14 +1084,14 @@ $meta_og_description = $meta_description;
                         <div class="form-group">
                             <label class="checkbox-label">
                                 <input type="checkbox" name="accept_terms" value="1">
-                                <span>TÃ´i Ä‘á»“ng Ã½ vá»›i Ä‘iá»u khoáº£n vÃ  chÃ­nh sÃ¡ch</span>
+                                <span>Tôi đồng ý với điều khoản và chính sách</span>
                             </label>
                         </div>
 
                         <!-- Submit Button -->
                         <button type="submit" class="btn-book" id="bookBtn" disabled>
                             <i class="fas fa-credit-card"></i>
-                            Tiáº¿p tá»¥c thanh toÃ¡n
+                            Tiếp tục thanh toán
                         </button>
                     </form>
                     @endif

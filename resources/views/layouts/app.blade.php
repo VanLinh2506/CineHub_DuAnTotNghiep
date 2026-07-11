@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    @auth
+        <meta name="auth-user-id" content="{{ Auth::id() }}">
+    @endauth
     <title>
         @if(isset($title))
             {{ $title }}@if($title !== 'CineHub') - @endif

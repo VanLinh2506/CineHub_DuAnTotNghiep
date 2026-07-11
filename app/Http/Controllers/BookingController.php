@@ -803,10 +803,23 @@ class BookingController extends Controller
         );
 
         $broadcastEvent = function () use ($event, $toOthers): void {
-            $broadcast = broadcast($event);
+            try {
+                $broadcast = broadcast($event);
 
-            if ($toOthers) {
-                $broadcast->toOthers();
+                if ($toOthers) {
+                    $broadcast->toOthers();
+                }
+
+                // PendingBroadcast dispatches in its destructor. Trigger it
+                // inside the try block so a stopped Reverb server never
+                // interrupts seat loading/reservation.
+                unset($broadcast);
+            } catch (\Throwable $exception) {
+                Log::warning('Seat realtime broadcast unavailable; continuing without websocket.', [
+                    'showtime_id' => $event->showtimeId,
+                    'action' => $event->action,
+                    'error' => $exception->getMessage(),
+                ]);
             }
         };
 
@@ -1042,6 +1055,15 @@ class BookingController extends Controller
 
         try {
             $showtime = Showtime::with('screen')->findOrFail((int) $data['showtime_id']);
+            $validationError = $this->validateSeatSelection($data['seats'], (int) $data['showtime_id']);
+            if ($validationError) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validationError,
+                    'error' => 'invalid_seat_selection',
+                ], 422);
+            }
+
             $roomSession = $this->touchBookingRoomSession($showtime, Auth::user());
             if (!$roomSession['allowed']) {
                 return response()->json([
@@ -1778,6 +1800,20 @@ class BookingController extends Controller
                 $selectedInGroup = array_values(array_intersect($selectedCols, $groupCols));
                 if (empty($selectedInGroup)) {
                     continue;
+                }
+
+                if (count($selectedInGroup) === 1) {
+                    $singleSeatError = $this->validateSingleSeat(
+                        $row,
+                        $selectedInGroup[0],
+                        $groupCols,
+                        min($groupCols),
+                        max($groupCols),
+                        $bookedSeats
+                    );
+                    if ($singleSeatError) {
+                        return $singleSeatError;
+                    }
                 }
 
                 for ($i = 0; $i < count($selectedInGroup) - 1; $i++) {

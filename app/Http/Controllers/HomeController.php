@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Movie;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -91,6 +92,31 @@ class HomeController extends Controller
             ->orderBy('rating', 'desc')
             ->limit(10)
             ->get();
+
+        // Ranking rows by genre. Weekly views are the primary signal; rating
+        // keeps useful ordering while test catalogs do not have watch data.
+        $topMoviesByCategory = Category::query()
+            ->orderBy('id')
+            ->get()
+            ->mapWithKeys(function (Category $category) {
+                $movies = Movie::with(['category', 'categories'])
+                    ->withCount(['watchHistory' => function ($query) {
+                        $query->where('created_at', '>=', now()->subDays(7));
+                    }])
+                    ->where('status_admin', 'published')
+                    ->where(function ($query) use ($category) {
+                        $query->where('category_id', $category->id)
+                            ->orWhereHas('categories', function ($categoryQuery) use ($category) {
+                                $categoryQuery->where('categories.id', $category->id);
+                            });
+                    })
+                    ->orderByDesc('watch_history_count')
+                    ->orderByDesc('rating')
+                    ->limit(10)
+                    ->get();
+
+                return $movies->isEmpty() ? [] : [$category->name => $movies];
+            });
         
         // Lấy danh sách favorites nếu đã đăng nhập
         $favorites = [];
@@ -108,6 +134,7 @@ class HomeController extends Controller
             'phimLe',
             'phimBo',
             'topMoviesWeek',
+            'topMoviesByCategory',
             'user',
             'favorites'
         ));

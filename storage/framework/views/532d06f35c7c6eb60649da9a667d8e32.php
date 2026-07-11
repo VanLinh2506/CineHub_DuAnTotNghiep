@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php if(auth()->guard()->check()): ?>
+        <meta name="auth-user-id" content="<?php echo e(Auth::id()); ?>">
+    <?php endif; ?>
     <title>
         <?php if(isset($title)): ?>
             <?php echo e($title); ?><?php if($title !== 'CineHub'): ?> - <?php endif; ?>
