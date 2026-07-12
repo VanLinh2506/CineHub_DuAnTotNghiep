@@ -25,7 +25,9 @@ return new class extends Migration
         }
 
         // Change role column from ENUM to VARCHAR to support more roles.
-        DB::statement("ALTER TABLE users MODIFY COLUMN role VARCHAR(50) DEFAULT 'user'");
+        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE users MODIFY COLUMN role VARCHAR(50) DEFAULT 'user'");
+        }
     }
 
     /**

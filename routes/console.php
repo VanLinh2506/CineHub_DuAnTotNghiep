@@ -11,3 +11,7 @@ Artisan::command('inspire', function () {
 Schedule::command('bookings:clean-expired')
     ->everyTenSeconds()
     ->withoutOverlapping();
+
+Schedule::command('contracts:expire-theater-admins')
+    ->dailyAt('00:10')
+    ->withoutOverlapping();

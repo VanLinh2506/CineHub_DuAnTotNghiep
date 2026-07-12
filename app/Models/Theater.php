@@ -37,6 +37,11 @@ class Theater extends Model
         return $this->hasMany(Showtime::class);
     }
 
+    public function contracts()
+    {
+        return $this->hasMany(TheaterContract::class);
+    }
+
     // Scopes
     public function scopeActive($query)
     {

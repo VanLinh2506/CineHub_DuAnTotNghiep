@@ -1123,7 +1123,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (24, '2026_06_24_063320_create_sessions_table', 12),
 (25, '2026_07_09_000001_create_missing_cinehub_core_tables', 12),
 (26, '2026_07_09_000002_create_missing_cinehub_booking_tables', 12),
-(27, '2026_07_09_000003_normalize_seat_reservations_for_realtime', 13);
+(27, '2026_07_09_000003_normalize_seat_reservations_for_realtime', 13),
+(28, '2026_07_12_000001_create_theater_contracts_table', 14);
 
 -- --------------------------------------------------------
 
@@ -11009,6 +11010,33 @@ INSERT INTO `theaters` (`id`, `name`, `location`, `phone`, `created_at`, `total_
 -- Cấu trúc bảng cho bảng `theater_managers`
 --
 
+CREATE TABLE `theater_contracts` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `contract_code` varchar(50) NOT NULL,
+  `theater_id` int(11) NOT NULL,
+  `representative_user_id` int(11) NOT NULL,
+  `super_admin_id` int(11) DEFAULT NULL,
+  `renewed_from_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `admin_permissions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`admin_permissions`)),
+  `auto_revoke_terms` text DEFAULT NULL,
+  `super_admin_signature` varchar(255) DEFAULT NULL,
+  `representative_signature` varchar(255) DEFAULT NULL,
+  `pdf_path` varchar(255) DEFAULT NULL,
+  `status` varchar(30) NOT NULL DEFAULT 'pending',
+  `activated_at` timestamp NULL DEFAULT NULL,
+  `revoked_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Cáº¥u trÃºc báº£ng cho báº£ng `theater_contracts`
+--
+
 CREATE TABLE `theater_managers` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
@@ -12189,6 +12217,18 @@ ALTER TABLE `theaters`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Chỉ mục cho bảng `theater_contracts`
+--
+ALTER TABLE `theater_contracts`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `theater_contracts_contract_code_unique` (`contract_code`),
+  ADD KEY `theater_contracts_theater_id_index` (`theater_id`),
+  ADD KEY `theater_contracts_representative_user_id_index` (`representative_user_id`),
+  ADD KEY `theater_contracts_super_admin_id_index` (`super_admin_id`),
+  ADD KEY `theater_contracts_renewed_from_id_index` (`renewed_from_id`),
+  ADD KEY `theater_contracts_status_start_date_end_date_index` (`status`,`start_date`,`end_date`);
+
+--
 -- Chỉ mục cho bảng `theater_managers`
 --
 ALTER TABLE `theater_managers`
@@ -12366,7 +12406,7 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT cho bảng `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT cho bảng `moderator_permission_requests`
@@ -12481,6 +12521,12 @@ ALTER TABLE `system_config`
 --
 ALTER TABLE `theaters`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT cho bảng `theater_contracts`
+--
+ALTER TABLE `theater_contracts`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT cho bảng `theater_managers`
@@ -12665,6 +12711,15 @@ ALTER TABLE `theater_managers`
 --
 ALTER TABLE `theater_screens`
   ADD CONSTRAINT `theater_screens_ibfk_1` FOREIGN KEY (`theater_id`) REFERENCES `theaters` (`id`) ON DELETE CASCADE;
+
+--
+-- Các ràng buộc cho bảng `theater_contracts`
+--
+ALTER TABLE `theater_contracts`
+  ADD CONSTRAINT `theater_contracts_representative_user_id_foreign` FOREIGN KEY (`representative_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `theater_contracts_renewed_from_id_foreign` FOREIGN KEY (`renewed_from_id`) REFERENCES `theater_contracts` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `theater_contracts_super_admin_id_foreign` FOREIGN KEY (`super_admin_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `theater_contracts_theater_id_foreign` FOREIGN KEY (`theater_id`) REFERENCES `theaters` (`id`) ON DELETE CASCADE;
 
 --
 -- Các ràng buộc cho bảng `tickets`

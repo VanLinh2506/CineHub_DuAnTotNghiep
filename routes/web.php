@@ -10,6 +10,7 @@ use App\Http\Controllers\{
     NotificationController,
     ReviewController,
     AdminController,
+    TheaterContractController,
     ModeratorController,
     CounterStaffController,
     NewsController
@@ -183,6 +184,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{id}/edit', [AdminController::class, 'theatersEdit'])->name('edit');
         Route::put('/{id}', [AdminController::class, 'theatersUpdate'])->name('update');
         Route::delete('/{id}', [AdminController::class, 'theatersDelete'])->name('destroy');
+    });
+
+    // Theater Contracts Management
+    Route::prefix('contracts')->name('contracts.')->group(function () {
+        Route::get('/', [TheaterContractController::class, 'index'])->name('index');
+        Route::get('/create', [TheaterContractController::class, 'create'])->name('create');
+        Route::post('/', [TheaterContractController::class, 'store'])->name('store');
+        Route::get('/{contract}', [TheaterContractController::class, 'show'])->name('show');
+        Route::post('/{contract}/renew', [TheaterContractController::class, 'renew'])->name('renew');
+        Route::get('/{contract}/download', [TheaterContractController::class, 'download'])->name('download');
     });
 
     // Categories Management

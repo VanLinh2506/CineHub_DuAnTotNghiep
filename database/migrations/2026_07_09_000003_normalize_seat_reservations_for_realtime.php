@@ -12,6 +12,10 @@ return new class extends Migration
             return;
         }
 
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement('SET @OLD_SEAT_RESERVATION_SQL_MODE=@@SESSION.sql_mode');
         DB::statement("SET SESSION sql_mode=(SELECT REPLACE(REPLACE(@@SESSION.sql_mode, 'NO_ZERO_DATE', ''), 'NO_ZERO_IN_DATE', ''))");
 
