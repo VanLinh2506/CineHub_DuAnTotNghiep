@@ -31,7 +31,14 @@ class MovieController extends Controller
                 $q->where('title', 'LIKE', "%{$search}%")
                     ->orWhere('director', 'LIKE', "%{$search}%")
                     ->orWhere('actors', 'LIKE', "%{$search}%")
-                    ->orWhere('description', 'LIKE', "%{$search}%");
+                    ->orWhere('description', 'LIKE', "%{$search}%")
+                    ->orWhere('country', 'LIKE', "%{$search}%")
+                    ->orWhereHas('category', function ($categoryQuery) use ($search) {
+                        $categoryQuery->where('name', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('categories', function ($categoryQuery) use ($search) {
+                        $categoryQuery->where('categories.name', 'LIKE', "%{$search}%");
+                    });
             });
         }
 
@@ -64,7 +71,7 @@ class MovieController extends Controller
         }
 
         // Pagination
-        $movies = $query->orderBy('created_at', 'desc')->paginate(12);
+        $movies = $query->orderBy('created_at', 'desc')->paginate(12)->withQueryString();
 
         // Add episode count for phim bá»™
         $movies->each(function ($movie) {
@@ -238,20 +245,20 @@ class MovieController extends Controller
         $libraryGroups = [
             [
                 'key' => 'tre-em',
-                'title' => 'Tráº» em',
-                'description' => 'Phim nháº¹ nhÃ ng, vui tÆ°Æ¡i vÃ  phÃ¹ há»£p cho gia Ä‘Ã¬nh.',
+                'title' => 'Trẻ em',
+                'description' => 'Phim nhẹ nhàng, vui tươi và phù hợp cho gia đình.',
                 'image' => asset('storage/data/img/treem.jpg'),
             ],
             [
                 'key' => 'nguoi-lon',
-                'title' => 'NgÆ°á»i lá»›n',
-                'description' => 'Ná»™i dung trÆ°á»Ÿng thÃ nh hÆ¡n, tÃ¬nh cáº£m vÃ  ká»‹ch tÃ­nh.',
+                'title' => 'Người lớn',
+                'description' => 'Nội dung trưởng thành hơn, tình cảm và kịch tính.',
                 'image' => asset('storage/data/img/nguoilon.jpg'),
             ],
             [
                 'key' => 'mot-phim',
-                'title' => 'Má»t phim',
-                'description' => 'Danh sÃ¡ch dÃ nh cho ngÆ°á»i xem nghiá»n phim vÃ  thÃ­ch phim hot.',
+                'title' => 'Mọt phim',
+                'description' => 'Danh sách dành cho người xem nghiền phim và thích phim nổi bật.',
                 'image' => asset('storage/data/img/motphim.jpg'),
             ],
         ];
@@ -265,9 +272,9 @@ class MovieController extends Controller
     public function library(Request $request, string $audience)
     {
         $audienceLabels = [
-            'tre-em' => 'Tráº» em',
-            'nguoi-lon' => 'NgÆ°á»i lá»›n',
-            'mot-phim' => 'Má»t phim',
+            'tre-em' => 'Trẻ em',
+            'nguoi-lon' => 'Người lớn',
+            'mot-phim' => 'Mọt phim',
         ];
 
         abort_unless(isset($audienceLabels[$audience]), 404);

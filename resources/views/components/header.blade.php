@@ -31,9 +31,8 @@
             </div>
             
             <div class="search-bar">
-                <form method="GET" action="{{ route('home') }}" class="search-form-inline">
-                    <input type="hidden" name="route" value="movie/index">
-                    <input type="text" name="search" id="search-input-header" class="search-input" placeholder="Tìm kiếm phim...">
+                <form method="GET" action="{{ route('search') }}" class="search-form-inline" data-movie-search>
+                    <input type="text" name="search" id="search-input-header" class="search-input" value="{{ request('search') }}" placeholder="Tìm kiếm phim...">
                     <button type="submit" class="search-btn">
                         <i class="fas fa-search"></i>
                     </button>
@@ -189,9 +188,8 @@
     @endif
     
     <div class="mobile-menu-search">
-        <form method="GET" action="{{ route('movies.index') }}">
-            <input type="hidden" name="route" value="movie/index">
-            <input type="text" name="search" placeholder="Tìm kiếm phim..." class="mobile-search-input">
+        <form method="GET" action="{{ route('search') }}" data-movie-search>
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Tìm kiếm phim..." class="mobile-search-input">
             <button type="submit" class="mobile-search-btn">
                 <i class="fas fa-search"></i>
             </button>
@@ -965,6 +963,24 @@ function handleRegister(event) {
 
 // Close modal when clicking outside
 document.addEventListener('DOMContentLoaded', function() {
+    // Keep header search independent from other page scripts. This also avoids
+    // stale query parameters and always opens the canonical search URL.
+    document.querySelectorAll('form[data-movie-search]').forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            const input = form.querySelector('input[name="search"]');
+            const keyword = input ? input.value.trim() : '';
+
+            event.preventDefault();
+
+            if (!keyword) {
+                if (input) input.focus();
+                return;
+            }
+
+            window.location.assign(@json(route('search')) + '?search=' + encodeURIComponent(keyword));
+        });
+    });
+
     const modal = document.getElementById('authModal');
     if (modal) {
         modal.addEventListener('click', function(e) {

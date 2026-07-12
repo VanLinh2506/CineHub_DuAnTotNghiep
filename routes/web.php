@@ -23,7 +23,7 @@ use App\Http\Controllers\{
 
 // Home
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/search', [HomeController::class, 'search'])->name('search');
+Route::get('/search', [MovieController::class, 'index'])->name('search');
 
 // ==================== AUTH ROUTES ====================
 Route::middleware('guest')->group(function () {
