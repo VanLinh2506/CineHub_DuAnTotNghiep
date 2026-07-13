@@ -134,12 +134,11 @@
                             <i class="fas fa-star"></i> {{ number_format($movie['rating'], 1) }}
                         </span>
                         @endif
+                        <span class="movie-level">{{ $movie['level'] ?? 'Free' }}</span>
                         @if(($movie['type'] ?? 'phimle') === 'phimbo')
                         <div class="movie-badge" title="Số tập">
-                            {{ isset($movie['episode_count']) && $movie['episode_count'] > 0 ? $movie['episode_count'] . ' tập' : '? tập' }}
+                            {{ (int) ($movie['episode_count'] ?? 0) . ' tập' }}
                         </div>
-                        @else
-                        <span class="movie-level">{{ $movie['level'] }}</span>
                         @endif
                     </div>
                 </a>
@@ -214,7 +213,7 @@
     .movie-grid {
         grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
         gap: 22px;
-        align-items: start;
+        align-items: stretch;
     }
 
     .movie-card {
@@ -225,6 +224,9 @@
         background: #151515;
         box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
         transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
     }
 
     .movie-card:hover {
@@ -318,8 +320,7 @@
         font-size: 11px;
     }
 
-    .movie-level,
-    .movie-badge {
+    .movie-level {
         top: 10px;
         left: 10px;
         right: auto;
@@ -328,8 +329,20 @@
         backdrop-filter: blur(8px);
     }
 
+    .movie-badge {
+        top: 10px;
+        right: 10px;
+        left: auto;
+        background: rgba(15, 15, 15, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        backdrop-filter: blur(8px);
+    }
+
     .movie-info {
         padding: 13px 14px 15px;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
     }
 
     .movie-info h3 {
@@ -360,6 +373,11 @@
         color: rgba(255, 255, 255, 0.62);
         font-size: 12px;
         line-height: 1.45;
+        min-height: 42px;
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
     }
 
     .movie-type-badge {

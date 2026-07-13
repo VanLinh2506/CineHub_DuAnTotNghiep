@@ -127,6 +127,13 @@
 
 <!-- Movie Grid Sections -->
 <div class="container">
+    {{-- Đưa bảng Top đầu tiên lên gần đầu trang; bảng Top thứ hai vẫn giữ ở vị trí cũ. --}}
+    @if (!empty($topMoviesByCategory) && $topMoviesByCategory->isNotEmpty())
+        @foreach ($topMoviesByCategory->take(1) as $categoryName => $rankedMovies)
+            @include('components.ranking-section', compact('categoryName', 'rankedMovies'))
+        @endforeach
+    @endif
+
     @if (!empty($latestMovies))
     <section class="movies-section">
         <div class="section-header">
@@ -145,7 +152,7 @@
     <!-- Promotion Banners Section - Vertical Layout -->
     <section class="promotion-banners-section">
         <div class="promo-banners-wrapper">
-            <a href="{{ route('profile.index') }}" class="promo-banner-vertical">
+            <a href="{{ route('profile.index') }}#subscription" class="promo-banner-vertical">
                 <img src="{{ storage_url('data/img/poster/poster_nangcap.jpg') }}" alt="Nâng cấp gói VIP">
                 <div class="promo-overlay-vertical">
                     <h3 class="promo-title-vertical">Trải nghiệm ngay gói pro vip</h3>
@@ -153,7 +160,7 @@
                     <span class="promo-btn-vertical">Nâng cấp ngay</span>
                 </div>
             </a>
-            <a href="{{ route('movies.index') }}" class="promo-banner-vertical">
+            <a href="{{ route('movies.theater') }}" class="promo-banner-vertical">
                 <img src="{{ storage_url('data/img/poster/poster_datve.jpg') }}" alt="Đặt vé online">
                 <div class="promo-overlay-vertical">
                     <h3 class="promo-title-vertical">Đặt vé online</h3>
@@ -200,32 +207,8 @@
             <p>Xếp hạng theo lượt xem trong tuần và điểm đánh giá.</p>
         </div>
 
-        @foreach ($topMoviesByCategory->take(2) as $categoryName => $rankedMovies)
-            <section class="movies-section ranking-section">
-                <div class="section-header">
-                    <h2 class="section-title">Top {{ $categoryName }}</h2>
-                    <a href="{{ route('movies.index', ['category' => $rankedMovies->first()->category_id]) }}" class="view-all-link">Xem tất cả</a>
-                </div>
-                <div class="ranking-row">
-                    @foreach ($rankedMovies as $rank => $movie)
-                        <a href="{{ route('movies.introduce', $movie->id) }}" class="ranking-card">
-                            <span class="ranking-number" data-rank="{{ $rank + 1 }}">{{ $rank + 1 }}</span>
-                            <div class="ranking-poster">
-                                @if($movie->thumbnail)
-                                    <img src="{{ $movie->thumbnail }}" alt="{{ $movie->title }}" loading="lazy">
-                                @else
-                                    <div class="ranking-poster-empty"><i class="fas fa-film"></i></div>
-                                @endif
-                                <span class="ranking-rating"><i class="fas fa-star"></i> {{ number_format($movie->rating ?? 0, 1) }}</span>
-                            </div>
-                            <div class="ranking-info">
-                                <strong>{{ $movie->title }}</strong>
-                                <small>{{ $movie->watch_history_count }} lượt xem tuần này</small>
-                            </div>
-                        </a>
-                    @endforeach
-                </div>
-            </section>
+        @foreach ($topMoviesByCategory->skip(1)->take(1) as $categoryName => $rankedMovies)
+            @include('components.ranking-section', compact('categoryName', 'rankedMovies'))
         @endforeach
 
         <div class="genre-heading">

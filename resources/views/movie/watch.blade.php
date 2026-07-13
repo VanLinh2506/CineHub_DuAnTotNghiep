@@ -109,7 +109,7 @@ if (!empty($episodes)) {
                 }
 
                 $fullTrailerUrl = null;
-                if (!empty($movie['trailer_url'])) {
+                if (($movie['type'] ?? 'phimle') !== 'phimbo' && !empty($movie['trailer_url'])) {
                     $fullTrailerUrl = $movie['trailer_url'];
                     if (strpos($movie['trailer_url'], 'http') !== 0) {
                         $fullTrailerUrl = $baseUrl . '/' . ltrim($movie['trailer_url'], '/');

@@ -857,7 +857,15 @@
         }
         
         // Add active class to clicked nav item
-        event.target.closest('.profile-nav-item').classList.add('active');
+        const activeNav = event
+            ? event.target.closest('.profile-nav-item')
+            : document.querySelector(`.profile-nav-item[href="#${tabId}"]`);
+        if (activeNav) activeNav.classList.add('active');
+    }
+
+    const requestedProfileTab = window.location.hash.substring(1);
+    if (requestedProfileTab && document.getElementById(requestedProfileTab)) {
+        switchProfileTab(requestedProfileTab);
     }
     
     function toggleEditMode(section) {

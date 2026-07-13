@@ -10,6 +10,7 @@ use App\Models\Movie;
 use App\Models\Ticket;
 use App\Models\FoodItem;
 use App\Models\Transaction;
+use App\Models\TheaterContract;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,33 @@ use Illuminate\Support\Facades\Storage;
 class ModeratorController extends Controller
 {
     private $theaterId;
+
+    public function contracts()
+    {
+        if ($error = $this->checkPermission()) return $error;
+
+        $theater = Theater::findOrFail($this->theaterId);
+        $contracts = TheaterContract::with(['representative', 'superAdmin'])
+            ->where('theater_id', $this->theaterId)
+            ->latest('start_date')
+            ->paginate(10);
+
+        return view('admin.moderator.contracts', compact('theater', 'contracts'));
+    }
+
+    public function contractDownload(TheaterContract $contract)
+    {
+        if ($error = $this->checkPermission()) return $error;
+        abort_unless((int) $contract->theater_id === (int) $this->theaterId, 403);
+
+        $path = $contract->source_pdf_path && Storage::disk('public')->exists($contract->source_pdf_path)
+            ? $contract->source_pdf_path
+            : $contract->pdf_path;
+
+        abort_unless($path && Storage::disk('public')->exists($path), 404, 'Không tìm thấy file hợp đồng.');
+
+        return Storage::disk('public')->download($path, $contract->contract_code . '.pdf');
+    }
     
     public function __construct()
     {
@@ -244,8 +272,12 @@ class ModeratorController extends Controller
         
         $movies = Movie::where('status', 'Chiếu rạp')->orderBy('title')->get();
         $screens = Screen::where('theater_id', $this->theaterId)->orderBy('screen_name')->get();
+        $contractPrices = TheaterContract::where('theater_id', $this->theaterId)
+            ->whereIn('status', [TheaterContract::STATUS_ACTIVE, TheaterContract::STATUS_PENDING])
+            ->orderBy('start_date')
+            ->get(['id', 'contract_code', 'start_date', 'end_date', 'bestseller_price_min', 'bestseller_price_max', 'new_release_price_min', 'new_release_price_max']);
         
-        return view('admin.moderator.showtimes', compact('theater', 'showtimes', 'movies', 'screens', 'date'));
+        return view('admin.moderator.showtimes', compact('theater', 'showtimes', 'movies', 'screens', 'date', 'contractPrices'));
     }
     
     public function showtimesStore(Request $request)
@@ -265,7 +297,27 @@ class ModeratorController extends Controller
             'show_date' => 'required|date',
             'show_time' => 'required',
             'price' => 'required|numeric|min:0',
+            'contract_price_type' => 'required|in:bestseller,new_release',
         ]);
+
+        $contract = TheaterContract::where('theater_id', $this->theaterId)
+            ->whereIn('status', [TheaterContract::STATUS_ACTIVE, TheaterContract::STATUS_PENDING])
+            ->whereDate('start_date', '<=', $request->show_date)
+            ->whereDate('end_date', '>=', $request->show_date)
+            ->orderByDesc('start_date')
+            ->first();
+
+        if (!$contract) {
+            return back()->withInput()->withErrors(['show_date' => 'Ngày chiếu không nằm trong thời hạn hợp đồng của rạp.']);
+        }
+
+        [$minimumPrice, $maximumPrice] = $contract->listedPriceRange($request->contract_price_type);
+        $showtimePrice = (int) $request->price;
+        if ($showtimePrice < $minimumPrice || $showtimePrice > $maximumPrice) {
+            return back()->withInput()->withErrors([
+                'price' => 'Giá suất chiếu phải từ ' . number_format($minimumPrice) . ' đến ' . number_format($maximumPrice) . ' VNĐ theo hợp đồng ' . $contract->contract_code . '.',
+            ]);
+        }
         
         // Kiểm tra screen thuộc theater
         $screen = Screen::where('id', $request->screen_id)
@@ -309,10 +361,12 @@ class ModeratorController extends Controller
         Showtime::create([
             'movie_id' => $request->movie_id,
             'theater_id' => $this->theaterId,
+            'theater_contract_id' => $contract->id,
             'screen_id' => $request->screen_id,
             'show_date' => $request->show_date,
             'show_time' => $request->show_time,
-            'price' => $request->price,
+            'price' => $showtimePrice,
+            'contract_price_type' => $request->contract_price_type,
             'available_seats' => $screen->total_seats, // Set available seats based on screen capacity
         ]);
         

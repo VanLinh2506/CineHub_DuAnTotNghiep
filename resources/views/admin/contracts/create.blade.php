@@ -15,7 +15,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.contracts.store') }}" class="stat-card">
+    <form method="POST" action="{{ route('admin.contracts.store') }}" class="stat-card" enctype="multipart/form-data">
         @csrf
         @include('admin.contracts.form', [
             'submitLabel' => 'Tạo hợp đồng và sinh PDF',

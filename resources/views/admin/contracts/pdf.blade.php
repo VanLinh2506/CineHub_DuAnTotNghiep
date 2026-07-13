@@ -144,6 +144,12 @@
         </tr>
     </table>
 
+    <div class="section-title">Bảng giá niêm yết cho suất chiếu</div>
+    <table class="info-table">
+        <tr><td>Phim bán chạy</td><td>{{ number_format($contract->bestseller_price_min) }} - {{ number_format($contract->bestseller_price_max) }} VNĐ/vé</td></tr>
+        <tr><td>Phim mới phát hành</td><td>{{ number_format($contract->new_release_price_min) }} - {{ number_format($contract->new_release_price_max) }} VNĐ/vé</td></tr>
+    </table>
+
     <div class="section-title">Quyền của Admin rạp</div>
     <ul>
         @foreach($contract->admin_permissions ?: [] as $permission)

@@ -14,10 +14,12 @@ class Showtime extends Model
     protected $fillable = [
         'movie_id',
         'theater_id',
+        'theater_contract_id',
         'screen_id',
         'show_date',
         'show_time',
         'price',
+        'contract_price_type',
         'available_seats',
     ];
 
@@ -41,6 +43,11 @@ class Showtime extends Model
     public function screen()
     {
         return $this->belongsTo(Screen::class);
+    }
+
+    public function theaterContract()
+    {
+        return $this->belongsTo(TheaterContract::class);
     }
 
     public function tickets()

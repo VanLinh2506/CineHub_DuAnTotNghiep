@@ -298,6 +298,10 @@
                 <i class="fas fa-chart-line"></i> Thống kê
             </a></li>
             
+            <li><a href="{{ route('moderator.contracts.index') }}" class="{{ request()->routeIs('moderator.contracts.*') ? 'active' : '' }}">
+                <i class="fas fa-file-contract"></i> Hợp đồng của rạp
+            </a></li>
+
             <li><a href="{{ route('moderator.permissionRequests') }}" class="{{ request()->routeIs('moderator.permissionRequests') ? 'active' : '' }}">
                 <i class="fas fa-user-shield"></i> Yêu cầu thay đổi quyền
             </a></li>

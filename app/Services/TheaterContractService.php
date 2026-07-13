@@ -25,11 +25,17 @@ class TheaterContractService
                 'renewed_from_id' => $data['renewed_from_id'] ?? null,
                 'start_date' => $data['start_date'],
                 'end_date' => $data['end_date'],
+                'bestseller_price_min' => $data['bestseller_price_min'] ?? 90000,
+                'bestseller_price_max' => $data['bestseller_price_max'] ?? 100000,
+                'new_release_price_min' => $data['new_release_price_min'] ?? 100000,
+                'new_release_price_max' => $data['new_release_price_max'] ?? 120000,
                 'admin_permissions' => $data['admin_permissions'] ?? $this->defaultPermissions(),
                 'auto_revoke_terms' => $data['auto_revoke_terms'] ?? $this->defaultAutoRevokeTerms(),
                 'super_admin_signature' => $data['super_admin_signature'] ?? null,
                 'representative_signature' => $data['representative_signature'] ?? null,
                 'status' => $this->initialStatus($data['start_date'], $data['end_date']),
+                'source_pdf_path' => $data['source_pdf_path'] ?? null,
+                'extracted_text' => $data['extracted_text'] ?? null,
             ]);
 
             if ($contract->status === TheaterContract::STATUS_ACTIVE) {

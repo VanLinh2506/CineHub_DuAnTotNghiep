@@ -8,12 +8,102 @@ use App\Models\Review;
 use App\Models\Comment;
 use App\Models\WatchHistory;
 use App\Models\Episode;
+use App\Models\Subscription;
+use App\Models\MovieViewEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class MovieController extends Controller
 {
+    public function searchSuggestions(Request $request)
+    {
+        $keyword = trim((string) $request->input('q', ''));
+        $history = collect($request->input('history', []))
+            ->filter(fn ($item) => is_string($item) && trim($item) !== '')
+            ->map(fn ($item) => mb_substr(trim($item), 0, 80))
+            ->unique()
+            ->take(6)
+            ->values();
+
+        $query = Movie::query()
+            ->where('status', 'Chiếu online')
+            ->withCount(['viewEvents as watch_history_count']);
+
+        if ($keyword !== '') {
+            $normalizedMatchIds = $this->normalizedMovieMatchIds($keyword);
+            $query->where(function ($movieQuery) use ($keyword, $normalizedMatchIds) {
+                $movieQuery->where('title', 'LIKE', "%{$keyword}%")
+                    ->orWhere('director', 'LIKE', "%{$keyword}%")
+                    ->orWhereHas('category', fn ($categoryQuery) =>
+                        $categoryQuery->where('name', 'LIKE', "%{$keyword}%")
+                    );
+
+                if ($normalizedMatchIds !== []) {
+                    $movieQuery->orWhereIn('id', $normalizedMatchIds);
+                }
+            });
+        } elseif ($history->isNotEmpty()) {
+            $historyMatchIds = $history
+                ->flatMap(fn ($term) => $this->normalizedMovieMatchIds($term))
+                ->unique()
+                ->values()
+                ->all();
+
+            $query->where(function ($movieQuery) use ($history, $historyMatchIds) {
+                foreach ($history as $term) {
+                    $movieQuery->orWhere('title', 'LIKE', "%{$term}%");
+                }
+
+                if ($historyMatchIds !== []) {
+                    $movieQuery->orWhereIn('id', $historyMatchIds);
+                }
+            });
+        }
+
+        $movies = $query
+            ->orderByDesc('watch_history_count')
+            ->orderByDesc('rating')
+            ->limit(15)
+            ->get()
+            ->map(function (Movie $movie) use ($keyword, $history) {
+                $normalizedTitle = $this->normalizeSearchText($movie->title);
+                $score = 0;
+
+                if ($keyword !== '' && str_contains($normalizedTitle, $this->normalizeSearchText($keyword))) {
+                    $score += 200;
+                }
+
+                foreach ($history as $index => $term) {
+                    if (str_contains($normalizedTitle, $this->normalizeSearchText($term))) {
+                        $score += 100 - ($index * 10);
+                    }
+                }
+
+                return [
+                    'id' => $movie->id,
+                    'title' => $movie->title,
+                    'thumbnail' => $movie->thumbnail,
+                    'rating' => number_format((float) ($movie->rating ?? 0), 1),
+                    'year' => optional($movie->publish_date)->format('Y'),
+                    'level' => $movie->level ?? 'Free',
+                    'url' => route('movies.introduce', $movie->id),
+                    '_score' => $score,
+                    '_views' => (int) $movie->watch_history_count,
+                ];
+            })
+            ->sortByDesc(fn ($movie) => [$movie['_score'], $movie['_views'], (float) $movie['rating']])
+            ->take(3)
+            ->values()
+            ->map(function ($movie) {
+                unset($movie['_score'], $movie['_views']);
+                return $movie;
+            });
+
+        return response()->json(['movies' => $movies]);
+    }
+
     public function index(Request $request)
     {
         $search = trim($request->input('search', ''));
@@ -23,11 +113,13 @@ class MovieController extends Controller
         $type = $request->input('type');
         $minRating = $request->input('min_rating');
 
-        $query = Movie::with(['category', 'categories']);
+        $query = Movie::with(['category', 'categories'])
+            ->withCount(['episodes as episode_count']);
 
         // Search
         if ($search) {
-            $query->where(function ($q) use ($search) {
+            $normalizedMatchIds = $this->normalizedMovieMatchIds($search);
+            $query->where(function ($q) use ($search, $normalizedMatchIds) {
                 $q->where('title', 'LIKE', "%{$search}%")
                     ->orWhere('director', 'LIKE', "%{$search}%")
                     ->orWhere('actors', 'LIKE', "%{$search}%")
@@ -39,6 +131,10 @@ class MovieController extends Controller
                     ->orWhereHas('categories', function ($categoryQuery) use ($search) {
                         $categoryQuery->where('categories.name', 'LIKE', "%{$search}%");
                     });
+
+                if ($normalizedMatchIds !== []) {
+                    $q->orWhereIn('movies.id', $normalizedMatchIds);
+                }
             });
         }
 
@@ -52,11 +148,9 @@ class MovieController extends Controller
             });
         }
 
-        if ($status) {
-            $query->where('status', $status);
-        } else {
-            $query->where('status', '!=', 'Chiáº¿u ráº¡p');
-        }
+        // Kho xem online tuyệt đối không lấy phim chỉ dành cho rạp.
+        // Chỉ chấp nhận trạng thái online thay vì dùng so sánh loại trừ dễ lọt dữ liệu lỗi.
+        $query->where('status', 'Chiếu online');
 
         if ($country) {
             $query->where('country', $country);
@@ -72,13 +166,6 @@ class MovieController extends Controller
 
         // Pagination
         $movies = $query->orderBy('created_at', 'desc')->paginate(12)->withQueryString();
-
-        // Add episode count for phim bá»™
-        $movies->each(function ($movie) {
-            if ($movie->type === 'phimbo') {
-                $movie->episode_count = $movie->episodes()->count();
-            }
-        });
 
         $categories = Category::orderBy('name')->get();
         $countries = Movie::select('country')
@@ -126,8 +213,10 @@ class MovieController extends Controller
      */
     public function online(Request $request)
     {
-        $query = Movie::with('category')
-            ->where('status', '!=', 'Chiáº¿u ráº¡p')
+        $query = Movie::with(['category', 'categories'])
+            ->withCount(['episodes as episode_count'])
+            ->where('status', 'Chiếu online')
+            ->where('status_admin', 'published')
             ->orderBy('created_at', 'desc');
 
         $movies = $query->paginate(12);
@@ -163,8 +252,11 @@ class MovieController extends Controller
      */
     public function phimLe(Request $request)
     {
-        $query = Movie::with('category')
+        $query = Movie::with(['category', 'categories'])
+            ->withCount(['episodes as episode_count'])
             ->where('type', 'phimle')
+            ->where('status', 'Chiếu online')
+            ->where('status_admin', 'published')
             ->orderBy('created_at', 'desc');
 
         $movies = $query->paginate(12);
@@ -200,16 +292,14 @@ class MovieController extends Controller
      */
     public function phimBo(Request $request)
     {
-        $query = Movie::with('category')
+        $query = Movie::with(['category', 'categories'])
+            ->withCount(['episodes as episode_count'])
             ->where('type', 'phimbo')
+            ->where('status', 'Chiếu online')
+            ->where('status_admin', 'published')
             ->orderBy('created_at', 'desc');
 
         $movies = $query->paginate(12);
-
-        // Add episode count
-        $movies->each(function ($movie) {
-            $movie->episode_count = $movie->episodes()->count();
-        });
 
         $categories = Category::orderBy('name')->get();
         $countries = collect();
@@ -280,8 +370,9 @@ class MovieController extends Controller
         abort_unless(isset($audienceLabels[$audience]), 404);
 
         $query = Movie::with(['category', 'categories'])
+            ->withCount(['episodes as episode_count'])
             ->where('status_admin', 'published')
-            ->where('status', '!=', 'Chiáº¿u ráº¡p');
+            ->where('status', 'Chiếu online');
 
         $this->applyAudienceFilter($query, $audience);
         $this->prioritizeWatchedMovies($query);
@@ -290,12 +381,6 @@ class MovieController extends Controller
             ->orderByDesc('rating')
             ->orderByDesc('created_at')
             ->paginate(12);
-
-        $movies->each(function ($movie) {
-            if ($movie->type === 'phimbo') {
-                $movie->episode_count = $movie->episodes()->count();
-            }
-        });
 
         $categories = Category::orderBy('name')->get();
         $countries = Movie::select('country')
@@ -344,7 +429,8 @@ class MovieController extends Controller
     {
         $category = Category::findOrFail($id);
 
-        $query = Movie::with('category')
+        $query = Movie::with(['category', 'categories'])
+            ->withCount(['episodes as episode_count'])
             ->where(function ($q) use ($id) {
                 $q->where('category_id', $id)
                     ->orWhereHas('categories', function ($categoryQuery) use ($id) {
@@ -410,9 +496,8 @@ class MovieController extends Controller
         // Check access level
         $movieLevel = $movie->level ?? 'Free';
         if (!$this->checkMovieAccess($user, $movieLevel)) {
-            $subscriptionName = $user->subscription->name ?? 'Free';
-            return redirect()->route('movies.index')
-                ->with('error', "Phim nÃ y yÃªu cáº§u gÃ³i {$movieLevel}. GÃ³i hiá»‡n táº¡i cá»§a báº¡n: {$subscriptionName}");
+            return redirect()->route('movies.introduce', $movie->id)
+                ->with('showUpgradeModal', true);
         }
 
         // Save watch history
@@ -442,6 +527,16 @@ class MovieController extends Controller
                 }
             }
         }
+
+        // Every successful visit to a concrete movie/episode watch page is a
+        // separate view. WatchHistory remains unique per user for favorites
+        // and resume data, while this event table powers popularity rankings.
+        MovieViewEvent::create([
+            'movie_id' => $movie->id,
+            'user_id' => $user->id,
+            'episode_id' => $currentEpisode?->id,
+            'created_at' => now(),
+        ]);
 
         // Reviews and Comments
         $reviews = $movie->reviews()
@@ -549,6 +644,62 @@ class MovieController extends Controller
         return $distribution;
     }
 
+    /**
+     * MySQL does not consistently treat composed and decomposed Vietnamese
+     * characters as equal. Build a small normalized index so visually
+     * identical searches such as "phàm" and "phàm" still match.
+     */
+    private function normalizedMovieMatchIds(string $keyword): array
+    {
+        $needle = $this->normalizeSearchText($keyword);
+        if ($needle === '') {
+            return [];
+        }
+
+        return Movie::with(['category:id,name', 'categories:id,name'])
+            ->get(['id', 'title', 'director', 'actors', 'country', 'category_id'])
+            ->filter(function (Movie $movie) use ($needle) {
+                $categoryNames = $movie->categories->pluck('name')->all();
+                if ($movie->category?->name) {
+                    $categoryNames[] = $movie->category->name;
+                }
+
+                $searchableText = implode(' ', array_filter([
+                    $movie->title,
+                    $movie->director,
+                    $movie->actors,
+                    $movie->country,
+                    implode(' ', $categoryNames),
+                ]));
+
+                return str_contains($this->normalizeSearchText($searchableText), $needle);
+            })
+            ->pluck('id')
+            ->all();
+    }
+
+    private function normalizeSearchText(?string $value): string
+    {
+        $value = mb_strtolower(trim((string) $value), 'UTF-8');
+
+        if (class_exists(\Normalizer::class)) {
+            $value = \Normalizer::normalize($value, \Normalizer::FORM_D) ?: $value;
+        }
+
+        $value = preg_replace('/\p{Mn}+/u', '', $value) ?? $value;
+        $value = Str::ascii($value, 'vi');
+
+        return trim(preg_replace('/\s+/', ' ', $value) ?? $value);
+    }
+
+    private const LEVEL_HIERARCHY = [
+        'Free' => 0,
+        'Basic' => 1,
+        'Silver' => 2,
+        'Gold' => 3,
+        'Premium' => 4,
+    ];
+
     private function checkMovieAccess($user, $movieLevel)
     {
         // Admin always has access
@@ -568,16 +719,8 @@ class MovieController extends Controller
             return false;
         }
 
-        $levelHierarchy = [
-            'Free' => 0,
-            'Basic' => 1,
-            'Silver' => 2,
-            'Gold' => 3,
-            'Premium' => 4
-        ];
-
-        $userLevel = $levelHierarchy[$subscriptionName] ?? 0;
-        $requiredLevel = $levelHierarchy[$movieLevel] ?? 0;
+        $userLevel = self::LEVEL_HIERARCHY[$subscriptionName] ?? 0;
+        $requiredLevel = self::LEVEL_HIERARCHY[$movieLevel] ?? 0;
 
         return $userLevel >= $requiredLevel;
     }
@@ -700,6 +843,30 @@ class MovieController extends Controller
             'distribution' => $this->getRatingDistribution($movie->reviews)
         ];
 
-        return view('movie.introduce', compact('movie', 'relatedMovies', 'ratingStats'));
+        $showUpgradeModal = session('showUpgradeModal', false);
+        $eligibleSubscriptions = collect();
+        $subscriptionName = 'Free';
+        $user = Auth::user();
+
+        if ($showUpgradeModal && $user) {
+            $subscriptionName = $user->subscription->name ?? 'Free';
+            $requiredLevel = self::LEVEL_HIERARCHY[$movie->level ?? 'Free'] ?? 0;
+            $eligibleSubscriptions = Subscription::orderBy('price')
+                ->get()
+                ->filter(function (Subscription $subscription) use ($requiredLevel) {
+                    return (self::LEVEL_HIERARCHY[$subscription->name] ?? 0) >= $requiredLevel;
+                })
+                ->values();
+        }
+
+        return view('movie.introduce', compact(
+            'movie',
+            'relatedMovies',
+            'ratingStats',
+            'showUpgradeModal',
+            'eligibleSubscriptions',
+            'subscriptionName',
+            'user'
+        ));
     }
 }

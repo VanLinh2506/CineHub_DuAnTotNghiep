@@ -72,6 +72,11 @@ class Movie extends Model
         return $this->hasMany(WatchHistory::class);
     }
 
+    public function viewEvents()
+    {
+        return $this->hasMany(MovieViewEvent::class);
+    }
+
     public function showtimes()
     {
         return $this->hasMany(Showtime::class);

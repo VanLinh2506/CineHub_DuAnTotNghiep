@@ -13,8 +13,10 @@ class HomeController extends Controller
     {
         $user = auth()->user();
         
-        // Slider phim nổi bật
+        // Banner trang chủ: chọn ngẫu nhiên trong nhóm phim có nhiều lượt xem.
+        // Nếu chưa có lịch sử xem, rating và ngày tạo sẽ làm tiêu chí dự phòng.
         $sliderMovies = Movie::with(['category', 'categories'])
+            ->withCount(['viewEvents as watch_history_count'])
             ->where('status', 'Chiếu online')
             ->where('status_admin', 'published')
             ->where(function($query) {
@@ -25,22 +27,27 @@ class HomeController extends Controller
                             ->where('thumbnail', '!=', '');
                       });
             })
-            ->orderByRaw('CASE WHEN banner IS NOT NULL AND banner != "" THEN 1 ELSE 2 END')
-            ->orderBy('rating', 'desc')
-            ->inRandomOrder()
-            ->limit(5)
-            ->get();
+            ->orderByDesc('watch_history_count')
+            ->orderByDesc('rating')
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get()
+            ->shuffle()
+            ->take(5)
+            ->values();
         
         // Nếu không đủ 5 phim, lấy thêm
         if ($sliderMovies->count() < 5) {
             $existingIds = $sliderMovies->pluck('id')->toArray();
             $additionalMovies = Movie::with(['category', 'categories'])
-                ->where('status', '!=', 'Chiếu rạp')
+                ->withCount(['viewEvents as watch_history_count'])
+                ->where('status', 'Chiếu online')
                 ->where('status_admin', 'published')
                 ->whereNotNull('thumbnail')
                 ->where('thumbnail', '!=', '')
                 ->whereNotIn('id', $existingIds ?: [0])
-                ->orderBy('rating', 'desc')
+                ->orderByDesc('watch_history_count')
+                ->orderByDesc('rating')
                 ->inRandomOrder()
                 ->limit(5 - $sliderMovies->count())
                 ->get();
@@ -54,7 +61,7 @@ class HomeController extends Controller
                 $query->where('type', 'phimle')
                       ->orWhereNull('type');
             })
-            ->where('status', '!=', 'Chiếu rạp')
+            ->where('status', 'Chiếu online')
             ->where('status_admin', 'published')
             ->orderBy('rating', 'desc')
             ->orderBy('created_at', 'desc')
@@ -65,7 +72,7 @@ class HomeController extends Controller
         $phimBo = Movie::with(['category', 'categories'])
             ->withCount('episodes')
             ->where('type', 'phimbo')
-            ->where('status', '!=', 'Chiếu rạp')
+            ->where('status', 'Chiếu online')
             ->where('status_admin', 'published')
             ->orderBy('rating', 'desc')
             ->orderBy('created_at', 'desc')
@@ -75,7 +82,7 @@ class HomeController extends Controller
         // Phim mới nhất
         $latestMovies = Movie::with(['category', 'categories'])
             ->withCount('episodes')
-            ->where('status', '!=', 'Chiếu rạp')
+            ->where('status', 'Chiếu online')
             ->where('status_admin', 'published')
             ->orderBy('created_at', 'desc')
             ->limit(12)
@@ -83,10 +90,13 @@ class HomeController extends Controller
         
         // Top phim xem nhiều trong tuần
         $topMoviesWeek = Movie::with(['category', 'categories'])
-            ->withCount(['episodes', 'watchHistory' => function($query) {
-                $query->where('created_at', '>=', now()->subDays(7));
-            }])
-            ->where('status', '!=', 'Chiếu rạp')
+            ->withCount([
+                'episodes',
+                'viewEvents as watch_history_count' => function($query) {
+                    $query->where('created_at', '>=', now()->subDays(7));
+                },
+            ])
+            ->where('status', 'Chiếu online')
             ->where('status_admin', 'published')
             ->orderBy('watch_history_count', 'desc')
             ->orderBy('rating', 'desc')
@@ -100,10 +110,11 @@ class HomeController extends Controller
             ->get()
             ->mapWithKeys(function (Category $category) {
                 $movies = Movie::with(['category', 'categories'])
-                    ->withCount(['watchHistory' => function ($query) {
+                    ->withCount(['viewEvents as watch_history_count' => function ($query) {
                         $query->where('created_at', '>=', now()->subDays(7));
                     }])
                     ->where('status_admin', 'published')
+                    ->where('status', 'Chiếu online')
                     ->where(function ($query) use ($category) {
                         $query->where('category_id', $category->id)
                             ->orWhereHas('categories', function ($categoryQuery) use ($category) {

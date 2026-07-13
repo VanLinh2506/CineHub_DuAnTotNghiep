@@ -1,6 +1,13 @@
 @extends('admin.layout')
 
 @section('content')
+    @if(session('created_admin_credentials'))
+        <div class="alert alert-warning">
+            <strong>Tài khoản Admin rạp vừa tạo:</strong>
+            {{ session('created_admin_credentials.email') }} / {{ session('created_admin_credentials.password') }}.
+            Hãy lưu lại mật khẩu này; hệ thống chỉ hiển thị một lần.
+        </div>
+    @endif
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">{{ $contract->contract_code }}</h2>
@@ -34,6 +41,8 @@
                 <p><strong>Ngày bắt đầu:</strong> {{ $contract->start_date->format('d/m/Y') }}</p>
                 <p><strong>Ngày kết thúc:</strong> {{ $contract->end_date->format('d/m/Y') }}</p>
                 <p><strong>Super Admin:</strong> {{ $contract->superAdmin->name ?? 'N/A' }}</p>
+                <p><strong>Phim bán chạy:</strong> {{ number_format($contract->bestseller_price_min) }} - {{ number_format($contract->bestseller_price_max) }} VNĐ/vé</p>
+                <p><strong>Phim mới phát hành:</strong> {{ number_format($contract->new_release_price_min) }} - {{ number_format($contract->new_release_price_max) }} VNĐ/vé</p>
                 @if($contract->revoked_at)
                     <p><strong>Ngày thu hồi:</strong> {{ $contract->revoked_at->format('d/m/Y H:i') }}</p>
                 @endif

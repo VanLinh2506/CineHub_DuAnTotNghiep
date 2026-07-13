@@ -833,7 +833,13 @@ class AdminController extends Controller
     {
         $user = Auth::user();
         
-        $query = Ticket::with(['user', 'showtime.movie', 'showtime.theater']);
+        $query = Ticket::with([
+            'user',
+            'bookingPending.user',
+            'showtime.movie',
+            'showtime.theater',
+            'showtime.screen',
+        ]);
 
         // Filter by theater for moderators
         if ($user->role === 'moderator' && $user->theater_id) {
@@ -856,7 +862,36 @@ class AdminController extends Controller
 
         $movies = Movie::where('status', 'Chiếu rạp')->get();
 
-        return view('admin.tickets', compact('tickets', 'movies'));
+        $overallStats = [
+            'total_tickets' => Ticket::count(),
+            'tickets_sold' => Ticket::where('status', 'Đã đặt')->count(),
+            'tickets_cancelled' => Ticket::where('status', 'Đã hủy')->count(),
+            'total_revenue' => Ticket::where('status', 'Đã đặt')->sum('price'),
+        ];
+
+        $status = $request->input('status');
+        $movie_id = $request->input('movie_id');
+
+        return view('admin.tickets', compact(
+            'tickets',
+            'movies',
+            'overallStats',
+            'status',
+            'movie_id'
+        ));
+    }
+
+    public function ticketShow(Ticket $ticket)
+    {
+        $ticket->load([
+            'user',
+            'bookingPending.user',
+            'showtime.movie',
+            'showtime.theater',
+            'showtime.screen',
+        ]);
+
+        return view('admin.tickets.view', compact('ticket'));
     }
 
     // Food Items Management

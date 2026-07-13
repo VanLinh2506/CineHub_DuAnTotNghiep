@@ -6,15 +6,22 @@ use App\Models\Theater;
 use App\Models\TheaterContract;
 use App\Models\User;
 use App\Services\TheaterContractService;
+use App\Services\ContractPdfExtractor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class TheaterContractController extends Controller
 {
-    public function __construct(private TheaterContractService $contracts)
+    public function __construct(
+        private TheaterContractService $contracts,
+        private ContractPdfExtractor $pdfExtractor,
+    )
     {
     }
 
@@ -55,16 +62,36 @@ class TheaterContractController extends Controller
 
     public function store(Request $request)
     {
-        $data = $this->validatedData($request);
-        $this->ensureNoConflictingContract($data['theater_id'], $data['representative_user_id']);
+        $contract = DB::transaction(function () use ($request) {
+            $data = $this->validatedData($request);
+            $this->ensureNoConflictingContract($data['theater_id'], $data['representative_user_id']);
+            $data['super_admin_id'] = Auth::id();
 
-        $data['super_admin_id'] = Auth::id();
+            if ($request->hasFile('contract_pdf')) {
+                $data['source_pdf_path'] = $request->file('contract_pdf')->store('contracts/source', 'public');
+                $data['extracted_text'] = $this->pdfExtractor
+                    ->extract(Storage::disk('public')->path($data['source_pdf_path']))['text'] ?? null;
+            }
 
-        $contract = $this->contracts->createContract($data);
+            return $this->contracts->createContract($data);
+        });
 
         return redirect()
             ->route('admin.contracts.show', $contract)
             ->with('success', 'Đã tạo hợp đồng và sinh PDF tự động.');
+    }
+
+    public function extractPdf(Request $request)
+    {
+        $request->validate(['contract_pdf' => ['required', 'file', 'mimes:pdf', 'max:10240']]);
+        $result = $this->pdfExtractor->extract($request->file('contract_pdf')->getRealPath());
+
+        if (!empty($result['theater_name'])) {
+            $theater = Theater::where('name', 'like', '%' . trim($result['theater_name']) . '%')->first();
+            $result['theater_id'] = $theater?->id;
+        }
+
+        return response()->json($result);
     }
 
     public function show(TheaterContract $contract)
@@ -111,16 +138,42 @@ class TheaterContractController extends Controller
         $data = $request->validate([
             'theater_id' => ['required', 'exists:theaters,id'],
             'representative_user_id' => ['nullable', 'exists:users,id'],
-            'representative_email' => ['required_without:representative_user_id', 'nullable', 'email', 'max:255'],
+            'representative_email' => ['required_unless:create_admin,1', 'nullable', 'email', 'max:255'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+            'bestseller_price_min' => ['required', 'integer', 'min:0'],
+            'bestseller_price_max' => ['required', 'integer', 'gte:bestseller_price_min'],
+            'new_release_price_min' => ['required', 'integer', 'min:0'],
+            'new_release_price_max' => ['required', 'integer', 'gte:new_release_price_min'],
             'admin_permissions' => ['nullable', 'array'],
             'admin_permissions.*' => ['nullable', 'string', 'max:255'],
             'auto_revoke_terms' => ['nullable', 'string'],
             'super_admin_signature' => ['nullable', 'string', 'max:255'],
             'representative_signature' => ['nullable', 'string', 'max:255'],
             'contract_code' => ['nullable', 'string', 'max:50', Rule::unique('theater_contracts', 'contract_code')],
+            'contract_pdf' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
+            'create_admin' => ['nullable', 'boolean'],
+            'admin_name' => ['required_if:create_admin,1', 'nullable', 'string', 'max:255'],
+            'admin_email' => ['required_if:create_admin,1', 'nullable', 'email', 'max:255', Rule::unique('users', 'email')],
+            'admin_password' => ['nullable', 'string', 'min:8'],
         ]);
+
+        if ($request->boolean('create_admin')) {
+            $plainPassword = $data['admin_password'] ?: Str::password(12);
+            $representative = User::create([
+                'name' => $data['admin_name'],
+                'email' => $data['admin_email'],
+                'password' => Hash::make($plainPassword),
+                'role' => 'user',
+                'is_active' => true,
+                'status' => 'active',
+            ]);
+            $data['representative_user_id'] = $representative->id;
+            session()->flash('created_admin_credentials', [
+                'email' => $representative->email,
+                'password' => $plainPassword,
+            ]);
+        }
 
         if (empty($data['representative_user_id'])) {
             $email = trim((string) ($data['representative_email'] ?? ''));
@@ -141,7 +194,7 @@ class TheaterContractController extends Controller
             $data['representative_user_id'] = $representative->id;
         }
 
-        unset($data['representative_email']);
+        unset($data['representative_email'], $data['contract_pdf'], $data['create_admin'], $data['admin_name'], $data['admin_email'], $data['admin_password']);
 
         $data['admin_permissions'] = collect($data['admin_permissions'] ?? $this->contracts->defaultPermissions())
             ->filter()

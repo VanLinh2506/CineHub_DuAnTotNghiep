@@ -650,7 +650,7 @@ $bgImage = !empty($movie->banner) ? $movie->banner : $movie->thumbnail;
                             </a>
                             @endif
 
-                            @if ($movie->hasTrailer())
+                            @if ($movie->isPhimLe() && $movie->hasTrailer())
                             <a href="{{ $movie->trailer_url_full }}" target="_blank" class="btn-intro-fav">
                                 <i class="fas fa-video"></i> Trailer
                             </a>
@@ -723,7 +723,7 @@ $bgImage = !empty($movie->banner) ? $movie->banner : $movie->thumbnail;
             @endif
 
             <!-- Trailer -->
-            @if ($movie->hasTrailer())
+            @if ($movie->isPhimLe() && $movie->hasTrailer())
             <h2 class="intro-section-title">Trailer</h2>
             <div class="intro-trailer">
                 <video controls preload="metadata" poster="{{ $movie->thumbnail }}">
@@ -832,4 +832,13 @@ $bgImage = !empty($movie->banner) ? $movie->banner : $movie->thumbnail;
     </section>
     @endif
 </div>
+
+@if($showUpgradeModal && $user)
+    @include('movie.access-denied', [
+        'movieLevel' => $movie->level ?? 'Free',
+        'subscriptionName' => $subscriptionName,
+        'eligibleSubscriptions' => $eligibleSubscriptions,
+        'user' => $user,
+    ])
+@endif
 @endsection

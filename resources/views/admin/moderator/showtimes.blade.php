@@ -150,8 +150,16 @@
                         </div>
                     </div>
                     <div class="mb-3">
+                        <label for="contract_price_type" class="form-label">Nhóm giá hợp đồng <span class="text-danger">*</span></label>
+                        <select name="contract_price_type" id="contract_price_type" class="form-select" required>
+                            <option value="bestseller">Phim bán chạy</option>
+                            <option value="new_release">Phim mới phát hành</option>
+                        </select>
+                        <small id="contractPriceHelp" class="text-muted">Chọn ngày chiếu để áp dụng hợp đồng.</small>
+                    </div>
+                    <div class="mb-3">
                         <label for="price" class="form-label">Giá vé (VNĐ) <span class="text-danger">*</span></label>
-                        <input type="number" name="price" id="price" class="form-control" min="0" required>
+                        <input type="number" name="price" id="price" class="form-control" min="0" step="1000" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -290,6 +298,35 @@
 
 @push('scripts')
 <script>
+const contractPrices = @json($contractPrices);
+
+function applyContractPrice() {
+    const date = document.getElementById('show_date')?.value;
+    const type = document.getElementById('contract_price_type')?.value || 'bestseller';
+    const priceInput = document.getElementById('price');
+    const help = document.getElementById('contractPriceHelp');
+    if (!date || !priceInput || !help) return;
+
+    const contract = contractPrices.find(item => date >= item.start_date && date <= item.end_date);
+    if (!contract) {
+        priceInput.value = '';
+        help.className = 'text-danger';
+        help.textContent = 'Ngày này không có hợp đồng còn thời hạn.';
+        return;
+    }
+
+    const minimum = Number(type === 'new_release' ? contract.new_release_price_min : contract.bestseller_price_min);
+    const maximum = Number(type === 'new_release' ? contract.new_release_price_max : contract.bestseller_price_max);
+    priceInput.min = minimum;
+    priceInput.max = maximum;
+    priceInput.value = minimum;
+    help.className = 'text-success';
+    help.textContent = `${contract.contract_code}: ${minimum.toLocaleString('vi-VN')} - ${maximum.toLocaleString('vi-VN')} VNĐ/vé`;
+}
+
+document.getElementById('show_date')?.addEventListener('change', applyContractPrice);
+document.getElementById('contract_price_type')?.addEventListener('change', applyContractPrice);
+
 document.addEventListener('DOMContentLoaded', function() {
     // Edit showtime modal
     const editShowtimeModal = document.getElementById('editShowtimeModal');

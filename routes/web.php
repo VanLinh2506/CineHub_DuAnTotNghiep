@@ -25,6 +25,7 @@ use App\Http\Controllers\{
 // Home
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [MovieController::class, 'index'])->name('search');
+Route::get('/search/suggestions', [MovieController::class, 'searchSuggestions'])->name('search.suggestions');
 
 // ==================== AUTH ROUTES ====================
 Route::middleware('guest')->group(function () {
@@ -190,6 +191,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::prefix('contracts')->name('contracts.')->group(function () {
         Route::get('/', [TheaterContractController::class, 'index'])->name('index');
         Route::get('/create', [TheaterContractController::class, 'create'])->name('create');
+        Route::post('/extract-pdf', [TheaterContractController::class, 'extractPdf'])->name('extract-pdf');
         Route::post('/', [TheaterContractController::class, 'store'])->name('store');
         Route::get('/{contract}', [TheaterContractController::class, 'show'])->name('show');
         Route::post('/{contract}/renew', [TheaterContractController::class, 'renew'])->name('renew');
@@ -208,6 +210,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::prefix('tickets')->name('tickets.')->group(function () {
         Route::get('/', [AdminController::class, 'tickets'])->name('index');
         Route::post('/update-movie', [AdminController::class, 'ticketsUpdateMovie'])->name('updateMovie');
+        Route::get('/{ticket}', [AdminController::class, 'ticketShow'])->name('show');
     });
 
     // Food Items Management
@@ -227,6 +230,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 // ==================== MODERATOR ROUTES ====================
 Route::middleware(['auth', 'moderator'])->prefix('moderator')->name('moderator.')->group(function () {
     Route::get('/', [ModeratorController::class, 'index'])->name('index');
+    Route::get('/contracts', [ModeratorController::class, 'contracts'])->name('contracts.index');
+    Route::get('/contracts/{contract}/download', [ModeratorController::class, 'contractDownload'])->name('contracts.download');
 
     // Showtimes Management
     Route::prefix('showtimes')->name('showtimes.')->group(function () {

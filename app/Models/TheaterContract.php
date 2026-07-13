@@ -22,11 +22,17 @@ class TheaterContract extends Model
         'renewed_from_id',
         'start_date',
         'end_date',
+        'bestseller_price_min',
+        'bestseller_price_max',
+        'new_release_price_min',
+        'new_release_price_max',
         'admin_permissions',
         'auto_revoke_terms',
         'super_admin_signature',
         'representative_signature',
         'pdf_path',
+        'source_pdf_path',
+        'extracted_text',
         'status',
         'activated_at',
         'revoked_at',
@@ -38,6 +44,10 @@ class TheaterContract extends Model
         'admin_permissions' => 'array',
         'activated_at' => 'datetime',
         'revoked_at' => 'datetime',
+        'bestseller_price_min' => 'integer',
+        'bestseller_price_max' => 'integer',
+        'new_release_price_min' => 'integer',
+        'new_release_price_max' => 'integer',
     ];
 
     public function theater()
@@ -70,5 +80,12 @@ class TheaterContract extends Model
         return $this->status === self::STATUS_ACTIVE
             && $this->start_date->lte(today())
             && $this->end_date->gte(today());
+    }
+
+    public function listedPriceRange(string $type): array
+    {
+        return $type === 'new_release'
+            ? [(int) $this->new_release_price_min, (int) $this->new_release_price_max]
+            : [(int) $this->bestseller_price_min, (int) $this->bestseller_price_max];
     }
 }
