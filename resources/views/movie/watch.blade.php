@@ -242,7 +242,7 @@ if (!empty($episodes)) {
                         <div class="user-rating-info" style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
                             <p style="margin: 0; color: #d4af37;">
                                 <i class="fas fa-check-circle"></i> Bạn đã đánh giá phim này:
-                                <strong>{{ $userRating }} sao</strong>
+                                <strong>{{ $userRating }}/10 ({{ number_format($userRating / 2, 1) }}/5 sao)</strong>
                             </p>
                         </div>
                     @else
@@ -253,11 +253,11 @@ if (!empty($episodes)) {
                                 <label>Đánh giá của bạn:</label>
                                 <div class="star-rating" id="starRating">
                                     <input type="hidden" name="rating" id="ratingValue" value="" required>
-                                    <span class="star" data-value="1"><i class="far fa-star"></i></span>
                                     <span class="star" data-value="2"><i class="far fa-star"></i></span>
-                                    <span class="star" data-value="3"><i class="far fa-star"></i></span>
                                     <span class="star" data-value="4"><i class="far fa-star"></i></span>
-                                    <span class="star" data-value="5"><i class="far fa-star"></i></span>
+                                    <span class="star" data-value="6"><i class="far fa-star"></i></span>
+                                    <span class="star" data-value="8"><i class="far fa-star"></i></span>
+                                    <span class="star" data-value="10"><i class="far fa-star"></i></span>
                                     <span class="rating-text" id="ratingText">Chọn số sao</span>
                                 </div>
                             </div>
@@ -289,9 +289,16 @@ if (!empty($episodes)) {
                                         <div>
                                             <strong style="color: #fff;">{{ $review['user_name'] ?? ($review['user']['name'] ?? 'Anonymous') }}</strong>
                                             <span style="margin-left: 10px; color: #ffc107;">
-                                                @for($i = 0; $i < ($review['rating'] ?? 0); $i++)
-                                                    <i class="fas fa-star"></i>
+                                                @for($i = 1; $i <= 5; $i++)
+                                                    @if(($review['rating'] ?? 0) >= $i * 2)
+                                                        <i class="fas fa-star"></i>
+                                                    @elseif(($review['rating'] ?? 0) >= ($i * 2) - 1)
+                                                        <i class="fas fa-star-half-alt"></i>
+                                                    @else
+                                                        <i class="far fa-star"></i>
+                                                    @endif
                                                 @endfor
+                                                <small style="color: #aaa; margin-left: 5px;">{{ $review['rating'] ?? 0 }}/10</small>
                                             </span>
                                         </div>
                                         <span style="color: #888; font-size: 0.85rem;">{{ isset($review['created_at']) ? date('d/m/Y', strtotime($review['created_at'])) : '' }}</span>
@@ -548,11 +555,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const submitBtn = document.getElementById('submitReview');
 
         const ratingTexts = {
-            1: 'Rất tệ',
-            2: 'Tệ',
-            3: 'Bình thường',
-            4: 'Hay',
-            5: 'Rất hay'
+            2: '1/5 sao · 2/10 - Rất tệ',
+            4: '2/5 sao · 4/10 - Tệ',
+            6: '3/5 sao · 6/10 - Bình thường',
+            8: '4/5 sao · 8/10 - Hay',
+            10: '5/5 sao · 10/10 - Rất hay'
         };
 
         stars.forEach(star => {

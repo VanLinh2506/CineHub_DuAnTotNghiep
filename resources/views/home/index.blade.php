@@ -729,7 +729,7 @@
         display: block;
         border-radius: 12px;
         overflow: hidden;
-        height: 550px;
+        height: 700px;
         text-decoration: none;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
@@ -844,7 +844,7 @@
         }
 
         .promo-banner-vertical {
-            height: 450px;
+            height: 600px;
         }
 
         .movies-grid-style-1 {
