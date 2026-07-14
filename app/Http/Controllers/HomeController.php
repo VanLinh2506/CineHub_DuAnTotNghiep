@@ -106,7 +106,9 @@ class HomeController extends Controller
         // Ranking rows by genre. Weekly views are the primary signal; rating
         // keeps useful ordering while test catalogs do not have watch data.
         $topMoviesByCategory = Category::query()
-            ->orderBy('id')
+            // Randomize category order on every request. The view uses the
+            // first two non-empty categories for its two ranking sections.
+            ->inRandomOrder()
             ->get()
             ->mapWithKeys(function (Category $category) {
                 $movies = Movie::with(['category', 'categories'])
