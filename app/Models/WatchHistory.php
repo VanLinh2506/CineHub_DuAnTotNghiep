@@ -17,10 +17,16 @@ class WatchHistory extends Model
         'episode_id',
         'favorite',
         'watch_time',
+        'last_time',
+        'playback_updated_at',
+        'episode_updated_at',
     ];
 
     protected $casts = [
         'favorite' => 'boolean',
+        'last_time' => 'integer',
+        'playback_updated_at' => 'datetime',
+        'episode_updated_at' => 'datetime',
     ];
 
     // Relationships

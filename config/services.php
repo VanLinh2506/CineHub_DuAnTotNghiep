@@ -48,4 +48,9 @@ return [
         'return_url' => env('VNPAY_RETURN_URL'),
     ],
 
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-flash-latest'),
+    ],
+
 ];

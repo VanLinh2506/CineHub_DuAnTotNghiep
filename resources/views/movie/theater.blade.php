@@ -38,11 +38,6 @@
                         ĐANG CHIẾU
                     </span>
 
-                    @if($movie['level'] && $movie['level'] !== 'Free')
-                    <span class="movie-level" style="position: absolute; top: 10px; left: 10px; background: {{ $movie['level'] === 'Gold' ? '#FFD700' : ($movie['level'] === 'Premium' ? '#9370DB' : '#C0C0C0') }}; color: #000; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: bold;">
-                        {{ $movie['level'] }}
-                    </span>
-                    @endif
                 </div>
 
                 <div class="movie-info" style="padding: 15px;">

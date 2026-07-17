@@ -201,17 +201,32 @@ class AdminController extends Controller
             'duration' => 'nullable|integer',
             'type' => 'required|in:phimle,phimbo',
             'status' => 'nullable|string',
+            'scheduled_status' => 'nullable|in:Chiếu online',
+            'publish_date' => 'nullable|date',
             'thumbnail_file' => 'nullable|image|max:5120',
             'banner_file' => 'nullable|image|max:5120',
             'trailer_file' => 'nullable|mimes:mp4,avi,mov,mkv,webm|max:102400',
         ]);
 
-        $data = $request->only(['title', 'level', 'duration', 'description', 'director', 'actors', 'status', 'type', 'country', 'language', 'age_rating']);
+        $data = $request->only(['title', 'level', 'duration', 'description', 'director', 'actors', 'status', 'scheduled_status', 'publish_date', 'type', 'country', 'language', 'age_rating']);
         $categoryIds = $this->normalizedCategoryIds($request);
         $data['category_id'] = $categoryIds[0] ?? null;
 
         if ($request->type === 'phimbo' && $data['status'] === 'Chiếu rạp') {
             $data['status'] = 'Chiếu online';
+        }
+        if ($data['status'] === 'Chiếu rạp') {
+            // Subscription levels only control online playback. Cinema access
+            // is handled by tickets/showtimes, so a theater movie is always Free.
+            $data['level'] = 'Free';
+        }
+        if ($data['status'] === 'Sắp chiếu' && $data['type'] === 'phimle') {
+            $request->validate([
+                'scheduled_status' => 'required|in:Chiếu online',
+                'publish_date' => 'required|date|after:now',
+            ]);
+        } else {
+            $data['scheduled_status'] = null;
         }
         $data['rating'] = 0;
         $data['status_admin'] = $request->status_admin ?? 'draft';
@@ -242,6 +257,9 @@ class AdminController extends Controller
             $data['video_url'] = $request->file('video_file')->store($path, 'public');
         } else {
             $data['video_url'] = $request->video_url;
+        }
+        if ($data['status'] === 'Sắp chiếu' && $data['scheduled_status'] === 'Chiếu online') {
+            $data['video_url'] = null;
         }
 
         if (DB::getSchemaBuilder()->hasColumn('movies', 'normal_price')) {
@@ -286,14 +304,27 @@ class AdminController extends Controller
             'title' => 'required|string|max:255',
             'category_ids' => 'nullable|array',
             'category_ids.*' => 'exists:categories,id',
+            'scheduled_status' => 'nullable|in:Chiếu online',
+            'publish_date' => 'nullable|date',
         ]);
 
-        $data = $request->only(['title', 'level', 'duration', 'description', 'director', 'actors', 'status', 'type', 'country', 'language', 'age_rating', 'status_admin']);
+        $data = $request->only(['title', 'level', 'duration', 'description', 'director', 'actors', 'status', 'scheduled_status', 'publish_date', 'type', 'country', 'language', 'age_rating', 'status_admin']);
         $categoryIds = $this->normalizedCategoryIds($request);
         $data['category_id'] = $categoryIds[0] ?? null;
 
         if ($request->type === 'phimbo' && $data['status'] === 'Chiếu rạp') {
             $data['status'] = 'Chiếu online';
+        }
+        if ($data['status'] === 'Chiếu rạp') {
+            $data['level'] = 'Free';
+        }
+        if ($data['status'] === 'Sắp chiếu' && $data['type'] === 'phimle') {
+            $request->validate([
+                'scheduled_status' => 'required|in:Chiếu online',
+                'publish_date' => 'required|date',
+            ]);
+        } else {
+            $data['scheduled_status'] = null;
         }
 
         // Handle file uploads
@@ -330,6 +361,9 @@ class AdminController extends Controller
             $data['video_url'] = $request->file('video_file')->store($path, 'public');
         } elseif ($request->video_url) {
             $data['video_url'] = $request->video_url;
+        }
+        if ($data['status'] === 'Sắp chiếu' && $data['scheduled_status'] === 'Chiếu online') {
+            $data['video_url'] = null;
         }
 
         $movie->update($data);

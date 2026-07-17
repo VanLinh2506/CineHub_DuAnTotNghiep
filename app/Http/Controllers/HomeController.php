@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Movie;
 use App\Models\Category;
+use App\Models\WatchHistory;
+use App\Models\MovieInterest;
+use App\Models\MovieViewEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -103,6 +106,18 @@ class HomeController extends Controller
             ->limit(10)
             ->get();
 
+        $upcomingMovies = Movie::with(['category', 'categories'])
+            ->withCount('interests')
+            ->where('type', 'phimle')
+            ->where('status', 'Sắp chiếu')
+            ->where('scheduled_status', 'Chiếu online')
+            ->where('publish_date', '>', now())
+            ->where('status_admin', 'published')
+            ->orderByDesc('interests_count')
+            ->orderBy('publish_date')
+            ->limit(6)
+            ->get();
+
         // Ranking rows by genre. Weekly views are the primary signal; rating
         // keeps useful ordering while test catalogs do not have watch data.
         $topMoviesByCategory = Category::query()
@@ -133,12 +148,34 @@ class HomeController extends Controller
         
         // Lấy danh sách favorites nếu đã đăng nhập
         $favorites = [];
+        $watchProgressByMovie = collect();
+        $continueWatching = collect();
+        $interestedMovieIds = [];
         if ($user) {
             $favorites = DB::table('watch_history')
                 ->where('user_id', $user->id)
                 ->where('favorite', 1)
                 ->pluck('movie_id')
                 ->toArray();
+
+            $watchProgressByMovie = MovieViewEvent::with('episode')
+                ->where('user_id', $user->id)
+                ->whereNotNull('episode_id')
+                ->get()
+                ->filter(fn ($event) => $event->episode)
+                ->sortByDesc(fn ($event) => (int) $event->episode->episode_number)
+                ->unique('movie_id')
+                ->keyBy('movie_id');
+
+            $continueWatching = WatchHistory::with(['movie.category', 'episode'])
+                ->where('user_id', $user->id)
+                ->where('last_time', '>', 0)
+                ->where('playback_updated_at', '>=', now()->subDays(30))
+                ->latest('playback_updated_at')
+                ->limit(8)
+                ->get()
+                ->filter(fn ($history) => $history->movie);
+            $interestedMovieIds = MovieInterest::where('user_id', $user->id)->pluck('movie_id')->all();
         }
         
         return view('home.index', compact(
@@ -149,7 +186,11 @@ class HomeController extends Controller
             'topMoviesWeek',
             'topMoviesByCategory',
             'user',
-            'favorites'
+            'favorites',
+            'watchProgressByMovie',
+            'continueWatching',
+            'upcomingMovies',
+            'interestedMovieIds'
         ));
     }
 }
