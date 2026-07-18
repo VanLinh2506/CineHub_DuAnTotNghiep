@@ -94,7 +94,7 @@
                     </label>
 
                     <select class="form-select" id="type" name="type"
-                        onchange="toggleSeriesSection(); toggleDurationField();">
+                        onchange="toggleSeriesSection(); toggleDurationField(); toggleOnlineSchedule();">
 
                         <option value="phimle">Phim lẻ</option>
                         <option value="phimbo">Phim bộ</option>
@@ -109,13 +109,20 @@
                     </label>
 
                     <select class="form-select" id="status" name="status"
-                        onchange="toggleTheaterSection(); toggleDurationField();">
+                        onchange="toggleTheaterSection(); toggleDurationField(); toggleOnlineSchedule();">
 
                         <option value="Sắp chiếu">Sắp chiếu</option>
                         <option value="Chiếu rạp">Chiếu rạp</option>
                         <option value="Chiếu online">Chiếu online</option>
 
                     </select>
+                </div>
+
+                <div class="col-md-6 mb-3" id="onlineScheduleSection" style="display:none;">
+                    <label for="publish_date" class="form-label">Ngày bắt đầu chiếu online <span class="text-danger">*</span></label>
+                    <input type="datetime-local" class="form-control" id="publish_date" name="publish_date" value="{{ old('publish_date') }}">
+                    <input type="hidden" name="scheduled_status" value="Chiếu online">
+                    <small class="text-muted">Trước ngày này phim nằm trong mục Sắp chiếu; đến ngày sẽ tự chuyển sang Chiếu online.</small>
                 </div>
 
                 <!-- Thời lượng chỉ hiện cho phim chiếu rạp -->
@@ -487,6 +494,17 @@
             }
         }
 
+        function toggleOnlineSchedule() {
+            const visible = document.getElementById('type').value === 'phimle'
+                && document.getElementById('status').value === 'Sắp chiếu';
+            const section = document.getElementById('onlineScheduleSection');
+            const input = document.getElementById('publish_date');
+            if (section) section.style.display = visible ? 'block' : 'none';
+            if (input) input.required = visible;
+            const videoSection = document.getElementById('videoSection');
+            if (videoSection && visible) videoSection.style.display = 'none';
+        }
+
         function toggleSeriesSection() {
             const type = document.getElementById('type').value;
             const statusSelect = document.getElementById('status');
@@ -600,6 +618,7 @@
             toggleTheaterSection();
             toggleSeriesSection();
             toggleDurationField();
+            toggleOnlineSchedule();
             syncEpisodeCounters();
         });
     </script>

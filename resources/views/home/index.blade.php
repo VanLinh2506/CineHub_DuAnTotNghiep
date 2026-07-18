@@ -127,6 +127,44 @@
 
 <!-- Movie Grid Sections -->
 <div class="container">
+    @if (!empty($continueWatching) && $continueWatching->isNotEmpty())
+    <section class="movies-section continue-watching-section">
+        <div class="section-header">
+            <h2 class="section-title">Tiếp tục xem</h2>
+        </div>
+        <div class="movies-grid-style-2">
+            @foreach ($continueWatching as $history)
+                @php
+                    $continueUrl = route('movies.watch', array_filter([
+                        'id' => $history->movie_id,
+                        'episode_id' => $history->episode_id,
+                    ]));
+                    $continueMinutes = max(1, (int) floor($history->last_time / 60));
+                @endphp
+                <a href="{{ $continueUrl }}" class="continue-watching-card">
+                    <img src="{{ $history->movie->thumbnail }}" alt="{{ $history->movie->title }}" loading="lazy">
+                    <span class="continue-play"><i class="fas fa-play"></i></span>
+                    <div class="continue-info">
+                        <strong>{{ $history->movie->title }}</strong>
+                        <small>
+                            @if($history->episode) Tập {{ $history->episode->episode_number }} · @endif
+                            Tiếp tục từ phút {{ $continueMinutes }}
+                        </small>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+    </section>
+    <style>
+        .continue-watching-card { position:relative; display:block; min-width:220px; aspect-ratio:16/9; overflow:hidden; border-radius:16px; color:#fff; background:#181818; }
+        .continue-watching-card img { width:100%; height:100%; object-fit:cover; }
+        .continue-watching-card::after { content:""; position:absolute; inset:35% 0 0; background:linear-gradient(transparent,rgba(0,0,0,.92)); }
+        .continue-info { position:absolute; z-index:2; left:14px; right:14px; bottom:12px; display:grid; gap:3px; }
+        .continue-info small { color:rgba(255,255,255,.78); }
+        .continue-play { position:absolute; z-index:2; inset:0; margin:auto; width:44px; height:44px; display:grid; place-items:center; border-radius:50%; background:#e50914; }
+    </style>
+    @endif
+
     {{-- Đưa bảng Top đầu tiên lên gần đầu trang; bảng Top thứ hai vẫn giữ ở vị trí cũ. --}}
     @if (!empty($topMoviesByCategory) && $topMoviesByCategory->isNotEmpty())
         @foreach ($topMoviesByCategory->take(1) as $categoryName => $rankedMovies)
@@ -185,6 +223,8 @@
         </div>
     </section>
     @endif
+
+    @include('components.upcoming-movies-strip')
 
     @if (!empty($phimBo))
     <section class="movies-section">

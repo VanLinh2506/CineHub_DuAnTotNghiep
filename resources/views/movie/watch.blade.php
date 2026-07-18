@@ -169,8 +169,11 @@ if (!empty($episodes)) {
                 @if(isset($episodes) && !empty($episodes))
                     <div class="episodes-list">
                         @foreach($episodes as $episode)
+                            @php
+                                $isWatchedEpisode = in_array((int) $episode['id'], $watchedEpisodeIds ?? [], true);
+                            @endphp
                             <a href="{{ route('movies.watch', ['id' => $movie['id'], 'episode_id' => $episode['id']]) }}"
-                               class="episode-item {{ (isset($currentEpisode) && $currentEpisode && $currentEpisode['id'] == $episode['id']) ? 'active' : '' }} {{ empty($episode['video_url']) ? 'episode-no-video' : '' }}"
+                               class="episode-item {{ $isWatchedEpisode ? 'watched' : '' }} {{ (isset($currentEpisode) && $currentEpisode && $currentEpisode['id'] == $episode['id']) ? 'active' : '' }} {{ empty($episode['video_url']) ? 'episode-no-video' : '' }}"
                                title="{{ $episode['title'] ?? 'Tập ' . $episode['episode_number'] }}">
                                 <div class="episode-number">{{ $episode['episode_number'] }}</div>
                             </a>
@@ -545,6 +548,51 @@ if (!empty($episodes)) {
 </style>
 
 <script>
+// Restore the last playback position and persist it every 10 seconds.
+document.addEventListener('DOMContentLoaded', function () {
+    const player = document.getElementById('videoPlayer');
+    if (!player) return;
+
+    const resumeSeconds = {{ (int) ($resumeSeconds ?? 0) }};
+    const progressUrl = @json(route('movies.progress', $movie['id']));
+    const episodeId = @json($currentEpisode['id'] ?? null);
+    let lastSavedSecond = -1;
+
+    player.addEventListener('loadedmetadata', function () {
+        if (resumeSeconds >= 10 && resumeSeconds < player.duration - 10) {
+            player.currentTime = resumeSeconds;
+        }
+    }, { once: true });
+
+    function savePlaybackProgress(force, overrideSeconds) {
+        if (!Number.isFinite(player.currentTime)) return;
+        const seconds = overrideSeconds === undefined
+            ? Math.max(0, Math.floor(player.currentTime))
+            : Math.max(0, Math.floor(overrideSeconds));
+        if (!force && (seconds === lastSavedSecond || player.paused)) return;
+        lastSavedSecond = seconds;
+
+        fetch(progressUrl, {
+            method: 'POST',
+            keepalive: !!force,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': @json(csrf_token()),
+            },
+            body: JSON.stringify({ seconds: seconds, episode_id: episodeId }),
+        }).catch(function () {});
+    }
+
+    const progressTimer = setInterval(function () { savePlaybackProgress(false); }, 10000);
+    player.addEventListener('pause', function () { savePlaybackProgress(true); });
+    player.addEventListener('ended', function () { savePlaybackProgress(true, 0); });
+    window.addEventListener('pagehide', function () {
+        clearInterval(progressTimer);
+        savePlaybackProgress(true);
+    });
+});
+
 // Star Rating functionality
 document.addEventListener('DOMContentLoaded', function() {
     const starRating = document.getElementById('starRating');

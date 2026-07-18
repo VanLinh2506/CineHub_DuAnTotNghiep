@@ -1,5 +1,8 @@
 @php
     $movieUrl = route('movies.introduce', $movie->id);
+    $cardProgress = isset($watchProgressByMovie) ? $watchProgressByMovie->get($movie->id) : null;
+    $currentEpisodeNumber = $cardProgress?->episode?->episode_number;
+    $maxEpisodeNumber = (int) ($movie->episodes_count ?? $movie->total_episodes ?? 0);
 @endphp
 
 <div class="movie-card">
@@ -19,6 +22,11 @@
         @if ($movie->rating)
         <span class="rating-badge">
             <i class="fas fa-star"></i> {{ number_format($movie->rating, 1) }}
+        </span>
+        @endif
+        @if (($movie->type ?? 'phimle') === 'phimbo' && $maxEpisodeNumber > 0)
+        <span class="episode-progress-badge">
+            {{ $currentEpisodeNumber ? $currentEpisodeNumber . '/' : '' }}{{ $maxEpisodeNumber }} tập
         </span>
         @endif
     </a>
@@ -157,6 +165,20 @@
     .rating-badge i {
         color: #ffd166;
         font-size: 11px;
+    }
+
+    .episode-progress-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 4;
+        padding: 8px 10px;
+        border-radius: 999px;
+        background: rgba(15, 15, 15, 0.88);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+        backdrop-filter: blur(8px);
     }
 
     .movie-card-info {

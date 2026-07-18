@@ -2,10 +2,14 @@
 
 @section('content')
 @php
-    $featuredMovie = $movies->getCollection()->sortByDesc(fn($movie) => $movie->rating ?? 0)->first();
+    $featuredMovie = !empty($isUpcoming)
+        ? $movies->getCollection()->first()
+        : $movies->getCollection()->sortByDesc(fn($movie) => $movie->rating ?? 0)->first();
     $contextTitle = 'Tất cả phim';
 
-    if (!empty($search)) {
+    if (!empty($isUpcoming)) {
+        $contextTitle = 'Phim sắp chiếu';
+    } elseif (!empty($search)) {
         $contextTitle = 'Kết quả tìm kiếm';
     } elseif (!empty($audienceTitle)) {
         $contextTitle = 'Kho phim ' . $audienceTitle;
@@ -62,6 +66,44 @@
 
 <section class="section">
     <div class="container">
+        @if(($type ?? null) === 'phimbo' && !empty($continueWatchingSeries) && $continueWatchingSeries->isNotEmpty())
+        <section class="series-resume-section">
+            <div class="series-resume-heading">
+                <div>
+                    <span>Dành riêng cho bạn</span>
+                    <h2><i class="fas fa-history"></i> Đang xem</h2>
+                </div>
+                <small>Lưu vị trí xem trong 30 ngày</small>
+            </div>
+            <div class="series-resume-list">
+                @foreach($continueWatchingSeries as $history)
+                    @php
+                        $resumeMovie = $history->movie;
+                        $resumeEpisode = $history->episode;
+                        $highestWatchedEpisode = $watchProgressByMovie->get($history->movie_id)?->episode?->episode_number
+                            ?? $resumeEpisode?->episode_number;
+                        $resumeMaxEpisode = (int) ($resumeMovie->episodes_count ?? $resumeMovie->total_episodes ?? 0);
+                        $resumeMinute = max(1, (int) floor($history->last_time / 60));
+                    @endphp
+                    <a class="series-resume-card" href="{{ route('movies.watch', array_filter(['id' => $history->movie_id, 'episode_id' => $history->episode_id])) }}">
+                        <div class="series-resume-poster">
+                            <img src="{{ $resumeMovie->thumbnail }}" alt="{{ $resumeMovie->title }}" loading="lazy">
+                            <span><i class="fas fa-play"></i></span>
+                            @if($highestWatchedEpisode)
+                            <b>{{ $highestWatchedEpisode }}/{{ $resumeMaxEpisode }} tập</b>
+                            @endif
+                        </div>
+                        <strong>{{ $resumeMovie->title }}</strong>
+                        <small>
+                            @if($resumeEpisode)Tập {{ $resumeEpisode->episode_number }} · @endif
+                            tiếp tục từ phút {{ $resumeMinute }}
+                        </small>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+        @endif
+
         <h2 class="section-title">
             <i class="fas fa-video"></i>
             @if($search)
@@ -106,6 +148,7 @@
         @else
         <div class="movie-grid">
             @foreach($movies as $movie)
+            @continue(empty($isUpcoming) && ($movie['status'] ?? null) !== 'Chiếu online')
             <div class="movie-card">
                 @php
                 // Nếu phim chiếu rạp, link đến trang đặt vé; các phim còn lại qua introduce
@@ -134,10 +177,22 @@
                             <i class="fas fa-star"></i> {{ number_format($movie['rating'], 1) }}
                         </span>
                         @endif
+                        @if(!empty($isUpcoming) && $movie->publish_date)
+                        <span class="upcoming-date-badge">
+                            <i class="far fa-calendar-alt"></i> {{ $movie->publish_date->format('d/m/Y H:i') }}
+                        </span>
+                        @endif
+                        @if(($movie['status'] ?? null) !== 'Chiếu rạp')
                         <span class="movie-level">{{ $movie['level'] ?? 'Free' }}</span>
+                        @endif
                         @if(($movie['type'] ?? 'phimle') === 'phimbo')
-                        <div class="movie-badge" title="Số tập">
-                            {{ (int) ($movie['episode_count'] ?? 0) . ' tập' }}
+                        @php
+                            $movieProgress = isset($watchProgressByMovie) ? $watchProgressByMovie->get($movie['id']) : null;
+                            $watchedEpisode = $movieProgress?->episode?->episode_number;
+                            $maximumEpisode = (int) ($movie['episode_count'] ?? $movie['total_episodes'] ?? 0);
+                        @endphp
+                        <div class="movie-badge" title="Tiến độ tập phim">
+                            {{ $watchedEpisode ? $watchedEpisode . '/' : '' }}{{ $maximumEpisode }} tập
                         </div>
                         @endif
                     </div>
@@ -178,6 +233,18 @@
                     @if($movie['description'])
                     <p class="movie-description">{{ mb_substr($movie['description'], 0, 100) }}...</p>
                     @endif
+                    @if(!empty($isUpcoming))
+                    @php $alreadyInterested = in_array($movie['id'], $interestedMovieIds ?? []); @endphp
+                    <button type="button"
+                        class="interest-button {{ $alreadyInterested ? 'interested' : '' }}"
+                        data-url="{{ route('movies.interest', $movie['id']) }}"
+                        onclick="markInterested(this)"
+                        {{ $alreadyInterested ? 'disabled' : '' }}>
+                        <i class="{{ $alreadyInterested ? 'fas' : 'far' }} fa-bell"></i>
+                        <span>{{ $alreadyInterested ? 'Đã quan tâm' : 'Quan tâm' }}</span>
+                        <b>{{ (int) ($movie->interests_count ?? 0) }}</b>
+                    </button>
+                    @endif
                     @if(isset($movie['status']) && $movie['status'] === 'Chiếu rạp')
                     <div class="mt-2">
                         <a href="{{ route('booking.index', ['movie' => $movie['id']]) }}"
@@ -205,6 +272,9 @@
             </div>
         </nav>
         @endif
+        @endif
+        @if(($type ?? null) === 'phimle' && empty($isUpcoming))
+            @include('components.upcoming-movies-strip')
         @endif
     </div>
 </section>
@@ -661,10 +731,64 @@
         width: 14px !important;
         height: 14px !important;
     }
+
+    .series-resume-section { margin: 0 0 34px; padding: 22px; border: 1px solid rgba(255,255,255,.09); border-radius: 20px; background: linear-gradient(135deg,rgba(229,9,20,.12),rgba(18,18,18,.96) 42%); }
+    .series-resume-heading { display:flex; align-items:end; justify-content:space-between; gap:18px; margin-bottom:18px; }
+    .series-resume-heading span { color:#ff6971; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; }
+    .series-resume-heading h2 { margin:4px 0 0; color:#fff; font-size:24px; }
+    .series-resume-heading small { color:rgba(255,255,255,.56); }
+    .series-resume-list { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(190px,230px); gap:15px; overflow-x:auto; padding-bottom:5px; scrollbar-width:thin; }
+    .series-resume-card { display:grid; gap:6px; color:#fff; text-decoration:none; min-width:0; }
+    .series-resume-poster { position:relative; aspect-ratio:16/9; overflow:hidden; border-radius:13px; background:#222; }
+    .series-resume-poster::after { content:""; position:absolute; inset:40% 0 0; background:linear-gradient(transparent,rgba(0,0,0,.85)); }
+    .series-resume-poster img { width:100%; height:100%; object-fit:cover; transition:transform .25s ease; }
+    .series-resume-card:hover img { transform:scale(1.04); }
+    .series-resume-poster span { position:absolute; z-index:2; inset:0; margin:auto; width:42px; height:42px; display:grid; place-items:center; border-radius:50%; background:#e50914; box-shadow:0 8px 24px rgba(229,9,20,.4); }
+    .series-resume-poster b { position:absolute; z-index:2; right:9px; bottom:8px; padding:5px 8px; border-radius:999px; background:rgba(0,0,0,.78); font-size:11px; }
+    .series-resume-card > strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px; }
+    .series-resume-card > small { color:rgba(255,255,255,.62); }
+    .upcoming-date-badge { position:absolute; z-index:4; left:10px; bottom:10px; padding:7px 9px; border-radius:999px; background:rgba(15,15,15,.9); color:#fff; font-size:11px; font-weight:800; backdrop-filter:blur(8px); }
+    .interest-button { width:100%; margin-top:12px; padding:10px 14px; display:flex; align-items:center; justify-content:center; gap:8px; border:1px solid #e50914; border-radius:999px; background:#e50914; color:#fff; font-weight:800; cursor:pointer; }
+    .interest-button b { min-width:24px; padding:2px 6px; border-radius:999px; background:rgba(0,0,0,.22); font-size:11px; }
+    .interest-button.interested { border-color:rgba(255,255,255,.16); background:rgba(255,255,255,.08); color:rgba(255,255,255,.72); cursor:default; }
+
+    @media (max-width: 576px) {
+        .series-resume-section { padding:16px; }
+        .series-resume-heading { align-items:start; flex-direction:column; gap:5px; }
+        .series-resume-list { grid-auto-columns:78%; }
+    }
 </style>
 
 @push('scripts')
 <script>
+    function markInterested(button) {
+        @guest
+        window.location.href = @json(route('login'));
+        return;
+        @endguest
+
+        if (button.disabled) return;
+        button.disabled = true;
+        fetch(button.dataset.url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': @json(csrf_token())
+            }
+        })
+        .then(response => response.ok ? response.json() : Promise.reject())
+        .then(data => {
+            button.classList.add('interested');
+            button.querySelector('i').className = 'fas fa-bell';
+            button.querySelector('span').textContent = 'Đã quan tâm';
+            button.querySelector('b').textContent = data.count;
+        })
+        .catch(() => {
+            button.disabled = false;
+            alert('Không thể lưu quan tâm lúc này.');
+        });
+    }
+
     function toggleFavorite(btn, movieId) {
         @if(!isset($user) || !$user)
         if (confirm('Vui lòng đăng nhập để thêm vào yêu thích!')) {

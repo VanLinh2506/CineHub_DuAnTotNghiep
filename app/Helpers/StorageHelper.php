@@ -105,26 +105,27 @@ if (!function_exists('storage_url')) {
         $isSymlinked = is_link($publicStoragePath);
 
         if ($isSymlinked) {
-            // Normal Laravel symlink: asset('storage/...') works
-            return asset('storage/' . ltrim($finalPath, '/'));
+            // Keep local media relative to the current host. This prevents
+            // APP_URL=127.0.0.1 from sending other devices to their own PC.
+            return '/storage/' . ltrim($finalPath, '/');
         }
 
         // public/storage is a real directory - need to check if file exists there
         $publicFilePath = $publicStoragePath . '/' . ltrim($finalPath, '/');
         if (file_exists($publicFilePath)) {
-            return asset('storage/' . ltrim($finalPath, '/'));
+            return '/storage/' . ltrim($finalPath, '/');
         }
 
         // File not in public/storage, it's in storage/app/public/
-        // Use Storage::url() which returns the correct path
+        // Use a host-relative URL so LAN/deployed clients use the same server.
         if (\Illuminate\Support\Facades\Storage::disk('public')->exists($finalPath)) {
-            return \Illuminate\Support\Facades\Storage::disk('public')->url($finalPath);
+            return '/storage/' . ltrim($finalPath, '/');
         }
 
         // Last resort: try old path location in public/storage/data/
         $oldPublicPath = $publicStoragePath . '/data/img/' . basename($finalPath);
         if (file_exists($oldPublicPath)) {
-            return asset('storage/data/img/' . basename($finalPath));
+            return '/storage/data/img/' . basename($finalPath);
         }
 
         // Return null if nothing found

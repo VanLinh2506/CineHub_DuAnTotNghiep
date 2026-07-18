@@ -119,6 +119,7 @@
     
     @if(!$isAuthPage)
         @include('components.footer')
+        @include('components.ai-chat')
     @endif
     
     <!-- Bootstrap JS -->

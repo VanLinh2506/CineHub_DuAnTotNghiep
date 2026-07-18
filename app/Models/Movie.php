@@ -27,6 +27,7 @@ class Movie extends Model
         'actors',
         'category_id',
         'status',
+        'scheduled_status',
         'status_admin',
         'type',
         'level',
@@ -75,6 +76,11 @@ class Movie extends Model
     public function viewEvents()
     {
         return $this->hasMany(MovieViewEvent::class);
+    }
+
+    public function interests()
+    {
+        return $this->hasMany(MovieInterest::class);
     }
 
     public function showtimes()
