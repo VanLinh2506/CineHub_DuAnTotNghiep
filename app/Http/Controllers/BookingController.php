@@ -26,6 +26,7 @@ use Carbon\Carbon;
 class BookingController extends Controller
 {
     private const SEAT_RESERVATION_MINUTES = 10;
+    private const MAX_SEAT_RESELECTIONS = 2;
     private const BOOKED_TICKET_STATUS = 'Đã đặt';
     private const RESERVATION_CONFLICT_MESSAGE = 'Ghế này vừa được người khác chọn. Vui lòng chọn ghế khác.';
     private const RESERVATION_SYSTEM_ERROR_MESSAGE = 'Không thể giữ ghế do lỗi hệ thống. Vui lòng thử lại.';
@@ -71,10 +72,14 @@ class BookingController extends Controller
                 ->with('success', 'Giao dich VNPay da duoc xac nhan truoc do.');
         }
 
-        if (!$this->vnpay->isPaymentSuccess($request)) {
+        if (!$this->vnpay->verifyCallback($request)) {
             if ($booking->status === 'pending') {
                 $booking->update(['status' => 'cancelled']);
-                $releasedSeats = $this->releaseSeatReservations($booking->showtime_id, $booking->seats ?? []);
+                $releasedSeats = $this->releaseSeatReservations(
+                    $booking->showtime_id,
+                    $booking->seats ?? [],
+                    $booking->user_id
+                );
                 if ($releasedSeats > 0) {
                     $seatStatus = $this->getSeatStatusData($booking->showtime_id, $booking->user_id);
                     $this->dispatchSeatMapChanged(
@@ -89,7 +94,22 @@ class BookingController extends Controller
             }
 
             return redirect()->route('booking.index', ['showtime_id' => $booking->showtime_id])
-                ->with('error', 'Thanh toan that bai hoac chu ky khong hop le.');
+                ->with('error', 'Chữ ký VNPay không hợp lệ. Vui lòng chọn lại ghế.');
+        }
+
+        if ($request->input('vnp_ResponseCode') !== '00') {
+            if ($booking->status === 'pending') {
+                $booking->update(['status' => 'cancelled']);
+            }
+
+            session()->forget(['pending_booking_id', 'showtime_id']);
+
+            $message = $request->input('vnp_ResponseCode') === '24'
+                ? 'Bạn đã hủy thanh toán. Ghế vẫn được giữ trong thời gian còn lại.'
+                : 'Thanh toán chưa thành công. Ghế vẫn được giữ trong thời gian còn lại.';
+
+            return redirect()->route('booking.index', ['showtime_id' => $booking->showtime_id])
+                ->with('error', $message);
         }
 
         $callbackAmount = ((int) $request->input('vnp_Amount', 0)) / 100;
@@ -103,7 +123,11 @@ class BookingController extends Controller
 
             if ($booking->status === 'pending') {
                 $booking->update(['status' => 'cancelled']);
-                $releasedSeats = $this->releaseSeatReservations($booking->showtime_id, $booking->seats ?? []);
+                $releasedSeats = $this->releaseSeatReservations(
+                    $booking->showtime_id,
+                    $booking->seats ?? [],
+                    $booking->user_id
+                );
                 if ($releasedSeats > 0) {
                     $seatStatus = $this->getSeatStatusData($booking->showtime_id, $booking->user_id);
                     $this->dispatchSeatMapChanged(
@@ -137,7 +161,11 @@ class BookingController extends Controller
 
             if ($booking->fresh()?->status === 'pending') {
                 $booking->update(['status' => 'cancelled']);
-                $releasedSeats = $this->releaseSeatReservations($booking->showtime_id, $booking->seats ?? []);
+                $releasedSeats = $this->releaseSeatReservations(
+                    $booking->showtime_id,
+                    $booking->seats ?? [],
+                    $booking->user_id
+                );
                 if ($releasedSeats > 0) {
                     $seatStatus = $this->getSeatStatusData($booking->showtime_id, $booking->user_id);
                     $this->dispatchSeatMapChanged(
@@ -620,6 +648,17 @@ class BookingController extends Controller
         return Carbon::parse($showtime->show_date)->setTimeFromTimeString($showtime->show_time);
     }
 
+    private function seatReselectionState(int $used): array
+    {
+        $normalizedUsed = min(max($used, 0), self::MAX_SEAT_RESELECTIONS);
+
+        return [
+            'used' => $normalizedUsed,
+            'remaining' => self::MAX_SEAT_RESELECTIONS - $normalizedUsed,
+            'max' => self::MAX_SEAT_RESELECTIONS,
+        ];
+    }
+
     private function touchBookingRoomSession(Showtime $showtime, ?User $user): array
     {
         $now = now();
@@ -630,6 +669,8 @@ class BookingController extends Controller
                 'allowed' => true,
                 'remainingSeconds' => $limitSeconds,
                 'message' => null,
+                'trackingId' => null,
+                'seatReselection' => $this->seatReselectionState(0),
             ];
         }
 
@@ -653,6 +694,8 @@ class BookingController extends Controller
                 'allowed' => false,
                 'remainingSeconds' => 0,
                 'message' => 'Ban da het 10 phut dat ve cho phong nay. Vui long chon suat chieu/phong khac.',
+                'trackingId' => (int) $activeBan->id,
+                'seatReselection' => $this->seatReselectionState((int) ($activeBan->seat_reselection_count ?? 0)),
             ];
         }
 
@@ -673,6 +716,7 @@ class BookingController extends Controller
                 'session_end' => null,
                 'total_duration_seconds' => 0,
                 'violation_count' => 0,
+                'seat_reselection_count' => 0,
                 'is_banned' => 0,
                 'ban_until' => null,
                 'created_at' => $now,
@@ -726,6 +770,8 @@ class BookingController extends Controller
                 'allowed' => false,
                 'remainingSeconds' => 0,
                 'message' => 'Ban da het 10 phut dat ve cho phong nay. Vui long chon suat chieu/phong khac.',
+                'trackingId' => (int) $tracking->id,
+                'seatReselection' => $this->seatReselectionState((int) ($tracking->seat_reselection_count ?? 0)),
             ];
         }
 
@@ -739,6 +785,8 @@ class BookingController extends Controller
             'allowed' => true,
             'remainingSeconds' => $remainingSeconds,
             'message' => null,
+            'trackingId' => (int) $tracking->id,
+            'seatReselection' => $this->seatReselectionState((int) ($tracking->seat_reselection_count ?? 0)),
         ];
     }
 
@@ -1029,6 +1077,7 @@ class BookingController extends Controller
             'reservationExpiresAt' => $timer['reservationExpiresAt'],
             'remainingSeconds' => $timer['remainingSeconds'],
             'roomRemainingSeconds' => $roomSession['remainingSeconds'],
+            'seatReselection' => $roomSession['seatReselection'],
             'prices' => [
                 'base' => $basePrice,
                 'normal' => $normalPrice,
@@ -1114,6 +1163,7 @@ class BookingController extends Controller
                 'reservationExpiresAt' => $timer['reservationExpiresAt'],
                 'remainingSeconds' => $timer['remainingSeconds'],
                 'roomRemainingSeconds' => $roomSession['remainingSeconds'],
+                'seatReselection' => $roomSession['seatReselection'],
             ]);
         } catch (\RuntimeException $e) {
             $status = $e->getMessage() === self::RESERVATION_SYSTEM_ERROR_MESSAGE ? 500 : 409;
@@ -1134,18 +1184,117 @@ class BookingController extends Controller
         $data = $request->validate([
             'showtime_id' => 'required|exists:showtimes,id',
             'seats' => 'required|array|min:1',
+            'reselection' => 'sometimes|boolean',
         ]);
 
-        $released = $this->releaseSeatReservations(
-            (int) $data['showtime_id'],
-            $data['seats'],
-            Auth::id()
-        );
+        $showtimeId = (int) $data['showtime_id'];
+        $isReselection = (bool) ($data['reselection'] ?? false);
+        $seatReselection = null;
 
-        $seatStatus = $this->getSeatStatusData((int) $data['showtime_id'], Auth::id());
+        if ($isReselection) {
+            $showtime = Showtime::with('screen')->findOrFail($showtimeId);
+            $roomSession = $this->touchBookingRoomSession($showtime, Auth::user());
+
+            if (!$roomSession['allowed']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $roomSession['message'],
+                    'error' => 'booking_room_time_expired',
+                    'seatReselection' => $roomSession['seatReselection'],
+                ], 403);
+            }
+
+            if (!$roomSession['trackingId']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể xác định phiên chọn ghế.',
+                    'error' => 'seat_reselection_session_missing',
+                    'seatReselection' => $roomSession['seatReselection'],
+                ], 409);
+            }
+
+            $result = DB::transaction(function () use ($roomSession, $showtimeId, $data) {
+                $tracking = DB::table('booking_session_tracking')
+                    ->where('id', $roomSession['trackingId'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$tracking) {
+                    return [
+                        'allowed' => false,
+                        'released' => 0,
+                        'message' => 'Không thể xác định phiên chọn ghế.',
+                        'error' => 'seat_reselection_session_missing',
+                        'seatReselection' => $this->seatReselectionState(0),
+                    ];
+                }
+
+                $used = (int) ($tracking->seat_reselection_count ?? 0);
+                $currentState = $this->seatReselectionState($used);
+
+                if ($currentState['remaining'] <= 0) {
+                    return [
+                        'allowed' => false,
+                        'released' => 0,
+                        'message' => 'Bạn đã sử dụng hết 2 lần chọn lại ghế.',
+                        'error' => 'seat_reselection_limit_reached',
+                        'seatReselection' => $currentState,
+                    ];
+                }
+
+                $released = $this->releaseSeatReservations(
+                    $showtimeId,
+                    $data['seats'],
+                    Auth::id()
+                );
+
+                if ($released <= 0) {
+                    return [
+                        'allowed' => false,
+                        'released' => 0,
+                        'message' => 'Ghế giữ chỗ đã hết hạn hoặc không còn tồn tại.',
+                        'error' => 'seat_reservation_missing',
+                        'seatReselection' => $currentState,
+                    ];
+                }
+
+                $used++;
+                DB::table('booking_session_tracking')
+                    ->where('id', $tracking->id)
+                    ->update(['seat_reselection_count' => $used]);
+
+                return [
+                    'allowed' => true,
+                    'released' => $released,
+                    'message' => null,
+                    'error' => null,
+                    'seatReselection' => $this->seatReselectionState($used),
+                ];
+            });
+
+            if (!$result['allowed']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                    'error' => $result['error'],
+                    'seatReselection' => $result['seatReselection'],
+                ], 409);
+            }
+
+            $released = $result['released'];
+            $seatReselection = $result['seatReselection'];
+        } else {
+            $released = $this->releaseSeatReservations(
+                $showtimeId,
+                $data['seats'],
+                Auth::id()
+            );
+        }
+
+        $seatStatus = $this->getSeatStatusData($showtimeId, Auth::id());
         if ($released > 0) {
             $this->dispatchSeatMapChanged(
-                (int) $data['showtime_id'],
+                $showtimeId,
                 'released',
                 $seatStatus['bookedSeats'],
                 $seatStatus['reservedSeats'],
@@ -1154,7 +1303,7 @@ class BookingController extends Controller
             );
         }
 
-        return response()->json([
+        $response = [
             'success' => true,
             'released' => $released,
             'reservedSeats' => $seatStatus['reservedSeats'],
@@ -1162,7 +1311,13 @@ class BookingController extends Controller
             'serverNow' => now()->toIso8601String(),
             'reservationExpiresAt' => null,
             'remainingSeconds' => 0,
-        ]);
+        ];
+
+        if ($seatReselection !== null) {
+            $response['seatReselection'] = $seatReselection;
+        }
+
+        return response()->json($response);
     }
 
     public function extendReservedSeats(Request $request)

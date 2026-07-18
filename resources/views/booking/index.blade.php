@@ -603,6 +603,11 @@ $meta_og_description = $meta_description;
 
                         <!-- Confirm Seats Button -->
                         <div class="confirm-seats-section" style="margin: 15px 0;">
+                            <div id="reselectSeatsRemainingNotice"
+                                class="reselect-seats-remaining-notice"
+                                role="status"
+                                aria-live="polite"
+                                hidden></div>
                             <button type="button" id="confirmSeatsBtn" onclick="confirmSeats()" disabled class="btn-confirm-seats" style="width: 100%; padding: 12px; background: #ffc107; color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: all 0.3s;">
                                 <i class="fas fa-check-circle"></i> Xác nhận chọn ghế
                             </button>
@@ -629,6 +634,24 @@ $meta_og_description = $meta_description;
 
                             #reselectSeatsBtn:hover {
                                 background: #5a6268;
+                            }
+
+                            .reselect-seats-remaining-notice {
+                                margin-bottom: 8px;
+                                padding: 9px 12px;
+                                border: 1px solid rgba(255, 193, 7, 0.45);
+                                border-radius: 6px;
+                                background: rgba(255, 193, 7, 0.1);
+                                color: #ffd45c;
+                                font-size: 13px;
+                                line-height: 1.4;
+                                text-align: center;
+                            }
+
+                            .reselect-seats-remaining-notice.is-exhausted {
+                                border-color: rgba(229, 9, 20, 0.5);
+                                background: rgba(229, 9, 20, 0.12);
+                                color: #ff9ca3;
                             }
                         </style>
 

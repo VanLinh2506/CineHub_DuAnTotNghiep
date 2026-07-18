@@ -29,8 +29,67 @@ var reservationExpiresAtMs = null;
 var reservationServerOffsetMs = 0;
 var reservationTimerMode = null;
 var reservationRequestInFlight = false;
-window.selectedSeats = window.selectedSeats || [];
-window.seatsConfirmed = window.seatsConfirmed || false;
+var seatMapRequestSequence = 0;
+var bookingSelectionGeneration = 0;
+var maxSeatReselections = 2;
+var seatReselectionsUsed = 0;
+var seatReselectionsRemaining = maxSeatReselections;
+var initialMyReservedSeats = uniqueSeatList(bookingPageConfig.myReservedSeats || []);
+currentMyReservedSeats = initialMyReservedSeats.slice();
+window.selectedSeats = initialMyReservedSeats.length > 0
+    ? initialMyReservedSeats.slice()
+    : (window.selectedSeats || []);
+window.seatsConfirmed = initialMyReservedSeats.length > 0 || Boolean(window.seatsConfirmed);
+
+function updateSeatReselectionNotice() {
+    var notice = document.getElementById('reselectSeatsRemainingNotice');
+    var hasReselected = seatReselectionsUsed > 0;
+
+    if (notice) {
+        notice.hidden = !hasReselected;
+        notice.classList.toggle('is-exhausted', seatReselectionsRemaining <= 0);
+        notice.textContent = seatReselectionsRemaining > 0
+            ? 'Bạn còn ' + seatReselectionsRemaining + ' lần chọn lại ghế.'
+            : 'Bạn đã sử dụng hết 2 lần chọn lại ghế.';
+    }
+
+    var confirmBtn = document.getElementById('confirmSeatsBtn');
+    if (confirmBtn && confirmBtn.getAttribute('data-seat-action') === 'reselect') {
+        confirmBtn.disabled = seatReselectionsRemaining <= 0;
+        confirmBtn.title = seatReselectionsRemaining <= 0
+            ? 'Bạn đã sử dụng hết 2 lần chọn lại ghế.'
+            : '';
+    }
+
+    var reselectBtn = document.getElementById('reselectSeatsBtn');
+    if (reselectBtn) {
+        reselectBtn.disabled = seatReselectionsRemaining <= 0;
+        reselectBtn.title = seatReselectionsRemaining <= 0
+            ? 'Bạn đã sử dụng hết 2 lần chọn lại ghế.'
+            : '';
+    }
+}
+
+function syncSeatReselectionState(payload) {
+    var state = payload && payload.seatReselection ? payload.seatReselection : null;
+    if (!state) {
+        return;
+    }
+
+    maxSeatReselections = Math.max(1, Number(state.max || maxSeatReselections));
+    seatReselectionsUsed = Math.min(maxSeatReselections, Math.max(0, Number(state.used || 0)));
+    seatReselectionsRemaining = Math.min(
+        maxSeatReselections,
+        Math.max(0, Number(state.remaining ?? (maxSeatReselections - seatReselectionsUsed)))
+    );
+    updateSeatReselectionNotice();
+}
+
+function resetSeatReselectionState() {
+    seatReselectionsUsed = 0;
+    seatReselectionsRemaining = maxSeatReselections;
+    updateSeatReselectionNotice();
+}
 
 function updateBookingUrlState(showtimeId) {
     if (!showtimeId || !window.history || !window.URL) {
@@ -51,15 +110,130 @@ function updateBookingUrlState(showtimeId) {
     window.history.replaceState({}, '', url.toString());
 }
 
-function startServerReservationCountdown(payload) {
-    if (!payload || !payload.reservationExpiresAt || Number(payload.remainingSeconds || 0) <= 0) {
+function updateBookingUrlWithoutShowtime() {
+    if (!window.history || !window.URL) {
         return;
     }
 
+    var url = new URL(window.location.href);
+    if (currentMovieId) {
+        url.searchParams.set('movie', currentMovieId);
+    }
+
+    if (window.selectedTheaterId) {
+        url.searchParams.set('theater', window.selectedTheaterId);
+    } else {
+        url.searchParams.delete('theater');
+    }
+
+    if (window.selectedDate) {
+        url.searchParams.set('date', window.selectedDate);
+    } else {
+        url.searchParams.delete('date');
+    }
+
+    url.searchParams.delete('showtime_id');
+    window.history.replaceState({}, '', url.toString());
+}
+
+function resetSeatUiForScheduleChange(options) {
+    options = options || {};
+
+    var previousShowtimeId = currentSeatMapShowtimeId || window.selectedShowtimeId;
+    var previousHeldSeats = uniqueSeatList((currentMyReservedSeats && currentMyReservedSeats.length
+        ? currentMyReservedSeats
+        : window.selectedSeats) || []);
+
+    bookingSelectionGeneration++;
+    seatMapRequestSequence++;
+
+    if (options.releaseHeldSeats && previousShowtimeId && previousHeldSeats.length > 0 && !reservationRequestInFlight) {
+        releaseCurrentSelectionNow(previousShowtimeId, previousHeldSeats).catch(function(error) {
+            console.error('Release seats while changing schedule error:', error);
+        });
+    }
+
+    currentSeatMapShowtimeId = null;
+    currentBookedSeats = [];
+    currentReservedSeats = [];
+    currentMyReservedSeats = [];
+    currentSeatLayout = null;
+    currentSeatPrices = null;
+    window.selectedShowtimeId = null;
+    window.selectedSeats = [];
+    window.seatsConfirmed = false;
+
+    clearSeatReservationTimers();
+    resetSeatReselectionState();
+    setPostSeatSectionsVisible(false);
+
+    if (typeof window.resetSeatActionButtonUi === 'function') {
+        window.resetSeatActionButtonUi(true);
+    } else {
+        var confirmButton = document.getElementById('confirmSeatsBtn');
+        if (confirmButton) {
+            confirmButton.style.display = 'inline-block';
+            confirmButton.disabled = true;
+            confirmButton.innerHTML = '<i class="fas fa-check-circle"></i> Xác nhận chọn ghế';
+            confirmButton.setAttribute('data-seat-action', 'confirm');
+        }
+    }
+
+    var reselectButton = document.getElementById('reselectSeatsBtn');
+    if (reselectButton) {
+        reselectButton.style.display = 'none';
+    }
+
+    var paymentSection = document.getElementById('paymentSection');
+    if (paymentSection) {
+        paymentSection.style.display = 'none';
+        paymentSection.classList.remove('payment-options-open');
+        paymentSection.setAttribute('data-payment-confirmed', 'false');
+    }
+
+    updateSeatSummaryNow();
+    updateBookingSummaryFull();
+    updatePayButtonState();
+}
+
+function startServerReservationCountdown(payload) {
+    if (!payload) {
+        return;
+    }
+
+    var serverNowMs = payload.serverNow ? Date.parse(payload.serverNow) : Date.now();
+    if (Number.isNaN(serverNowMs)) {
+        serverNowMs = Date.now();
+    }
+
+    var roomRemainingSeconds = Number(payload.roomRemainingSeconds || 0);
+    var reservationRemainingSeconds = Number(payload.remainingSeconds || 0);
+    var countdownCandidates = [];
+
+    if (roomRemainingSeconds > 0) {
+        countdownCandidates.push(roomRemainingSeconds);
+    }
+    if (payload.reservationExpiresAt && reservationRemainingSeconds > 0) {
+        countdownCandidates.push(reservationRemainingSeconds);
+    }
+    if (countdownCandidates.length === 0) {
+        return;
+    }
+
+    var remainingSeconds = Math.min.apply(null, countdownCandidates);
+    var expiresAtMs = serverNowMs + (remainingSeconds * 1000);
+    var reservationExpiresAtMs = payload.reservationExpiresAt
+        ? Date.parse(payload.reservationExpiresAt)
+        : NaN;
+
+    if (!Number.isNaN(reservationExpiresAtMs)) {
+        expiresAtMs = Math.min(expiresAtMs, reservationExpiresAtMs);
+    }
+
     startReservationCountdown({
-        serverNow: payload.serverNow,
-        reservationExpiresAt: payload.reservationExpiresAt,
-        remainingSeconds: payload.remainingSeconds,
+        serverNow: new Date(serverNowMs).toISOString(),
+        reservationExpiresAt: new Date(expiresAtMs).toISOString(),
+        remainingSeconds: remainingSeconds,
         localPurchaseCountdown: true
     });
 }
@@ -192,6 +366,10 @@ window.requestUserLocation = function() {
     window.selectDate = function(dateValue) {
         console.log('Date selected:', dateValue);
 
+        resetSeatUiForScheduleChange({
+            releaseHeldSeats: true
+        });
+
         // Remove previous selection
         var dateTabs = document.querySelectorAll('.date-tab');
         for (var i = 0; i < dateTabs.length; i++) {
@@ -206,13 +384,7 @@ window.requestUserLocation = function() {
         }
 
         window.selectedDate = dateValue;
-        window.selectedShowtimeId = null;
-        currentSeatMapShowtimeId = null;
-        currentMyReservedSeats = [];
-        window.selectedSeats = [];
-        window.seatsConfirmed = false;
-        clearSeatReservationTimers();
-        setPostSeatSectionsVisible(false);
+        updateBookingUrlWithoutShowtime();
 
         var showtimeInput = document.getElementById('showtimeIdInput');
         if (showtimeInput) showtimeInput.value = '';
@@ -286,6 +458,13 @@ window.requestUserLocation = function() {
     window.selectShowtime = function(showtimeId) {
         console.log('=== SHOWTIME SELECTION ===');
         console.log('Showtime selected:', showtimeId);
+
+        var previousShowtimeId = currentSeatMapShowtimeId || window.selectedShowtimeId;
+        if (previousShowtimeId && String(previousShowtimeId) !== String(showtimeId)) {
+            resetSeatUiForScheduleChange({
+                releaseHeldSeats: true
+            });
+        }
 
         // Remove previous selection
         var showtimeBtns = document.querySelectorAll('.showtime-btn');
@@ -889,6 +1068,15 @@ window.requestUserLocation = function() {
     function doSelectTheater(theaterId) {
         console.log('Executing doSelectTheater for ID:', theaterId);
 
+        if (reservationRequestInFlight) {
+            showSeatRealtimeNotice('Đang xác nhận giữ ghế. Vui lòng chờ trong giây lát.', 'info');
+            return;
+        }
+
+        resetSeatUiForScheduleChange({
+            releaseHeldSeats: false
+        });
+
         // Remove previous selection
         var cards = document.querySelectorAll('.theater-card');
         for (var i = 0; i < cards.length; i++) {
@@ -911,13 +1099,7 @@ window.requestUserLocation = function() {
 
         window.selectedTheaterId = theaterId;
         window.selectedDate = null;
-        window.selectedShowtimeId = null;
-        currentSeatMapShowtimeId = null;
-        currentMyReservedSeats = [];
-        window.selectedSeats = [];
-        window.seatsConfirmed = false;
-        clearSeatReservationTimers();
-        setPostSeatSectionsVisible(false);
+        updateBookingUrlWithoutShowtime();
 
         // Reset other inputs
         var showtimeInput = document.getElementById('showtimeIdInput');
@@ -959,7 +1141,7 @@ window.requestUserLocation = function() {
                 var day = String(date.getDate()).padStart(2, '0');
                 var month = String(date.getMonth() + 1).padStart(2, '0');
 
-                html += '<div class="date-tab" onclick="selectDate(\'' + dateStr + '\')" data-date="' + dateStr + '">';
+                html += '<div class="date-tab" data-date="' + dateStr + '">';
                 html += '<div class="day-name">' + dayNames[dayOfWeek] + (i === 0 ? ' (Hôm nay)' : '') + '</div>';
                 html += '<div class="date-text">' + day + '/' + month + '</div>';
                 html += '</div>';
@@ -1254,25 +1436,6 @@ window.requestUserLocation = function() {
         reservationHeartbeatInterval = setInterval(renderReservationTimer, 1000);
     }
 
-    function getTicketPurchaseCountdownSeconds() {
-        var configuredSeconds = Number(bookingPageConfig.ticketPurchaseCountdownSeconds || 600);
-        return configuredSeconds > 0 ? configuredSeconds : 600;
-    }
-
-    function startTicketPurchaseCountdown(showtimeId) {
-        if (!showtimeId) {
-            return;
-        }
-
-        var seconds = getTicketPurchaseCountdownSeconds();
-        startReservationCountdown({
-            serverNow: new Date().toISOString(),
-            reservationExpiresAt: new Date(Date.now() + seconds * 1000).toISOString(),
-            remainingSeconds: seconds,
-            localPurchaseCountdown: true
-        });
-    }
-
     function syncSeatState(bookedSeats, reservedSeats) {
         currentBookedSeats = uniqueSeatList(bookedSeats || []);
         currentReservedSeats = uniqueSeatList(reservedSeats || []);
@@ -1524,13 +1687,19 @@ window.requestUserLocation = function() {
     function releaseCurrentSelectionNow(showtimeId, seats, requestOptions) {
         requestOptions = requestOptions || {};
 
+        var body = {
+            showtime_id: showtimeId,
+            seats: uniqueSeatList(seats || [])
+        };
+
+        if (requestOptions.reselection === true) {
+            body.reselection = true;
+        }
+
         return fetch(bookingPageRoutes.bookingReleaseSeats, {
             method: 'POST',
             headers: bookingSeatHeaders(),
-            body: JSON.stringify({
-                showtime_id: showtimeId,
-                seats: uniqueSeatList(seats || [])
-            }),
+            body: JSON.stringify(body),
             keepalive: requestOptions.keepalive === true
         }).then(function(response) {
             return response.json().then(function(data) {
@@ -2036,10 +2205,15 @@ function loadSeatMapNow(showtimeId, options) {
     var seatSelectionSection = document.getElementById('seatSelectionSection');
     var previousShowtimeId = currentSeatMapShowtimeId;
     var previousSeats = uniqueSeatList(window.selectedSeats || []);
-    var shouldStartPurchaseCountdown = options.startPurchaseCountdown === true;
+    var isSameShowtime = previousShowtimeId && String(previousShowtimeId) === String(showtimeId);
+    var requestSequence = ++seatMapRequestSequence;
     var shouldPreservePurchaseCountdown = options.preservePurchaseCountdown === true;
 
-    if (previousShowtimeId && previousShowtimeId !== showtimeId && previousSeats.length > 0) {
+    if (previousShowtimeId && !isSameShowtime) {
+        resetSeatReselectionState();
+    }
+
+    if (previousShowtimeId && !isSameShowtime && previousSeats.length > 0) {
         releaseCurrentSelectionNow(previousShowtimeId, previousSeats).catch(function(error) {
             console.error('Release previous seats error:', error);
         });
@@ -2050,10 +2224,12 @@ function loadSeatMapNow(showtimeId, options) {
         currentBookedSeats = [];
         currentSeatLayout = null;
         currentSeatPrices = null;
-        currentMyReservedSeats = [];
-        window.selectedSeats = [];
-        window.seatsConfirmed = false;
-        if (!shouldPreservePurchaseCountdown) {
+        if (!isSameShowtime) {
+            currentMyReservedSeats = [];
+            window.selectedSeats = [];
+            window.seatsConfirmed = false;
+        }
+        if (!shouldPreservePurchaseCountdown && !isSameShowtime) {
             clearSeatReservationTimers();
         }
 
@@ -2074,6 +2250,10 @@ function loadSeatMapNow(showtimeId, options) {
                 return response.json();
             })
             .then(function(data) {
+                if (requestSequence !== seatMapRequestSequence) {
+                    return;
+                }
+
                 if (!data || data.error) {
                     var message = data && data.message ? data.message : 'Ban khong the vao phong nay.';
                     if (seatMapContainer) {
@@ -2087,13 +2267,14 @@ function loadSeatMapNow(showtimeId, options) {
 
                 currentSeatLayout = data.layout || null;
                 currentSeatPrices = data.prices || null;
+                syncSeatReselectionState(data);
                 syncSeatState(data.bookedSeats || [], data.reservedSeats || []);
                 currentMyReservedSeats = uniqueSeatList(data.myReservedSeats || []);
+                startServerReservationCountdown(data);
 
                 if (currentMyReservedSeats.length > 0 && Number(data.remainingSeconds || 0) > 0) {
                     window.seatsConfirmed = true;
                     window.selectedSeats = currentMyReservedSeats.slice();
-                    startServerReservationCountdown(data);
 
                     var confirmButton = document.getElementById('confirmSeatsBtn');
                     if (confirmButton) {
@@ -2107,6 +2288,7 @@ function loadSeatMapNow(showtimeId, options) {
 
                     var reselectButton = document.getElementById('reselectSeatsBtn');
                     if (reselectButton) reselectButton.style.display = 'none';
+                    updateSeatReselectionNotice();
 
                     var foodLauncher = document.getElementById('foodModalLauncher');
                     if (foodLauncher) foodLauncher.style.display = 'block';
@@ -2119,6 +2301,16 @@ function loadSeatMapNow(showtimeId, options) {
 
                     var priceInfoBox = document.getElementById('priceInfoBox');
                     if (priceInfoBox) priceInfoBox.style.display = 'block';
+                } else {
+                    window.seatsConfirmed = false;
+
+                    if (typeof window.resetSeatActionButtonUi === 'function') {
+                        window.resetSeatActionButtonUi(uniqueSeatList(window.selectedSeats || []).length === 0);
+                    }
+
+                    var staleReselectButton = document.getElementById('reselectSeatsBtn');
+                    if (staleReselectButton) staleReselectButton.style.display = 'none';
+                    setPostSeatSectionsVisible(false);
                 }
 
                 if (data.screen && data.screen.name) {
@@ -2136,16 +2328,20 @@ function loadSeatMapNow(showtimeId, options) {
 
                 updateSeatSummaryNow();
                 updatePayButtonState();
-                if (shouldStartPurchaseCountdown) {
-                    startTicketPurchaseCountdown(showtimeId);
-                }
                 startSeatRealtimeSubscription(showtimeId);
             })
             .catch(function(error) {
+                if (requestSequence !== seatMapRequestSequence) {
+                    return;
+                }
+
                 console.error('Error loading seat map:', error);
-                generateDefaultSeatLayoutNow([], []);
-                if (shouldStartPurchaseCountdown) {
-                    startTicketPurchaseCountdown(showtimeId);
+                generateDefaultSeatLayoutNow([], currentMyReservedSeats);
+                if (currentMyReservedSeats.length > 0) {
+                    window.selectedSeats = currentMyReservedSeats.slice();
+                    window.seatsConfirmed = true;
+                    setPostSeatSectionsVisible(true);
+                    updateSeatReselectionNotice();
                 }
                 startSeatRealtimeSubscription(showtimeId);
             });
@@ -2356,12 +2552,15 @@ function loadSeatMapNow(showtimeId, options) {
             confirmBtn.style.background = '#ffc107';
             confirmBtn.style.color = '#000';
             confirmBtn.setAttribute('data-seat-action', 'confirm');
+            confirmBtn.title = '';
         }
 
         var reselectBtn = document.getElementById('reselectSeatsBtn');
         if (reselectBtn) {
             reselectBtn.style.display = 'none';
         }
+
+        updateSeatReselectionNotice();
     }
 
     function setSeatActionButtonAsReselect() {
@@ -2379,6 +2578,8 @@ function loadSeatMapNow(showtimeId, options) {
         if (reselectBtn) {
             reselectBtn.style.display = 'none';
         }
+
+        updateSeatReselectionNotice();
     }
 
     function isSeatActionButtonReselect() {
@@ -2456,6 +2657,7 @@ function loadSeatMapNow(showtimeId, options) {
     }
 
     function renderSeatStateFromPayload(data, preserveSelection) {
+        syncSeatReselectionState(data);
         currentSeatPrices = data.prices || currentSeatPrices;
 
         var bookedSeats = uniqueSeatList(data.bookedSeats || []);
@@ -2594,6 +2796,7 @@ function loadSeatMapNow(showtimeId, options) {
                 }
 
                 currentSeatMapShowtimeId = showtimeId;
+                startServerReservationCountdown(data);
 
                 var previousSelectedSeats = uniqueSeatList(window.selectedSeats || []);
                 var responseMyReservedSeats = uniqueSeatList(data.myReservedSeats || []);
@@ -2658,6 +2861,7 @@ function loadSeatMapNow(showtimeId, options) {
         var seatsText = document.getElementById('seatsText');
         var confirmBtn = document.getElementById('confirmSeatsBtn');
         var qty = document.getElementById('quantity');
+        var seatsTotal = document.getElementById('seatsTotal');
         var total = document.getElementById('totalPrice');
 
         if (selected.length > 0) {
@@ -2671,6 +2875,7 @@ function loadSeatMapNow(showtimeId, options) {
         if (display) display.style.display = 'none';
         if (confirmBtn) confirmBtn.disabled = true;
         if (qty) qty.textContent = '0';
+        if (seatsTotal) seatsTotal.textContent = '0 ₫';
         if (total) total.textContent = '0 ₫';
     };
 
@@ -3112,28 +3317,82 @@ function loadSeatMapNow(showtimeId, options) {
     window.reselectSeats = function() {
         var showtimeId = getCurrentSeatMapShowtimeId();
         var seatsToRelease = uniqueSeatList((currentMyReservedSeats && currentMyReservedSeats.length ? currentMyReservedSeats : window.selectedSeats) || []);
+        var requestGeneration = bookingSelectionGeneration;
 
-        window.selectedSeats = [];
-        window.seatsConfirmed = false;
-        currentMyReservedSeats = [];
-
-        showEditableSeatUi('', 'info', true);
-
-        if (showtimeId && seatsToRelease.length > 0) {
-            releaseCurrentSelectionNow(showtimeId, seatsToRelease)
-                .catch(function(error) {
-                    console.error('Release seats error:', error);
-                })
-                .finally(function() {
-                    loadSeatMapNow(showtimeId, {
-                        preservePurchaseCountdown: true
-                    });
-                });
-        } else if (showtimeId || window.selectedShowtimeId) {
-            loadSeatMapNow(showtimeId || window.selectedShowtimeId, {
-                preservePurchaseCountdown: true
-            });
+        if (reservationRequestInFlight) {
+            return false;
         }
+
+        if (seatReselectionsRemaining <= 0) {
+            updateSeatReselectionNotice();
+            showSeatRealtimeNotice('Bạn đã sử dụng hết 2 lần chọn lại ghế.', 'warning');
+            return false;
+        }
+
+        if (!showtimeId || seatsToRelease.length === 0) {
+            showSeatRealtimeNotice('Ghế giữ chỗ đã hết hạn. Vui lòng tải lại sơ đồ ghế.', 'warning');
+            refreshSeatStatusNow(showtimeId || window.selectedShowtimeId, true);
+            return false;
+        }
+
+        var confirmBtn = document.getElementById('confirmSeatsBtn');
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang mở chọn lại...';
+            confirmBtn.setAttribute('data-seat-action', 'reselection-loading');
+        }
+
+        reservationRequestInFlight = true;
+
+        releaseCurrentSelectionNow(showtimeId, seatsToRelease, {
+                reselection: true
+            })
+            .then(function(result) {
+                if (requestGeneration !== bookingSelectionGeneration) {
+                    return false;
+                }
+
+                syncSeatReselectionState(result.data || {});
+
+                if (!(result.status >= 200 && result.status < 300 && result.data && result.data.success)) {
+                    var message = result.data && result.data.message
+                        ? result.data.message
+                        : 'Không thể chọn lại ghế lúc này.';
+
+                    showConfirmedSeatUi(false);
+                    showSeatRealtimeNotice(message, 'warning');
+                    return false;
+                }
+
+                window.selectedSeats = [];
+                window.seatsConfirmed = false;
+                currentMyReservedSeats = [];
+                currentReservedSeats = uniqueSeatList(result.data.reservedSeats || []);
+
+                showEditableSeatUi('', 'info', true);
+                updateSeatReselectionNotice();
+
+                return loadSeatMapNow(showtimeId, {
+                    preservePurchaseCountdown: true
+                });
+            })
+            .catch(function(error) {
+                if (requestGeneration !== bookingSelectionGeneration) {
+                    return;
+                }
+
+                console.error('Release seats error:', error);
+                showConfirmedSeatUi(false);
+                showSeatRealtimeNotice('Không thể kết nối máy chủ để chọn lại ghế.', 'warning');
+            })
+            .finally(function() {
+                reservationRequestInFlight = false;
+                if (requestGeneration === bookingSelectionGeneration) {
+                    updatePayButtonState();
+                }
+            });
+
+        return false;
     };
 
     window.confirmSeats = function() {
@@ -3154,6 +3413,7 @@ function loadSeatMapNow(showtimeId, options) {
         }
 
         var selectedBeforeReserve = uniqueSeatList(window.selectedSeats || []);
+        var requestGeneration = bookingSelectionGeneration;
         var confirmBtn = document.getElementById('confirmSeatsBtn');
         if (confirmBtn) {
             confirmBtn.style.display = 'inline-block';
@@ -3167,6 +3427,16 @@ function loadSeatMapNow(showtimeId, options) {
 
         reserveCurrentSelectionNow(showtimeId)
             .then(function(result) {
+                if (requestGeneration !== bookingSelectionGeneration) {
+                    if (result.status >= 200 && result.status < 300 && result.data && result.data.success) {
+                        var newlyHeldSeats = firstNonEmptySeatList(result.data.myReservedSeats, result.data.lockedSeats, selectedBeforeReserve);
+                        releaseCurrentSelectionNow(showtimeId, newlyHeldSeats).catch(function(error) {
+                            console.error('Release stale seat reservation error:', error);
+                        });
+                    }
+                    return false;
+                }
+
                 if (result.status >= 200 && result.status < 300 && result.data && result.data.success) {
                     currentMyReservedSeats = firstNonEmptySeatList(result.data.myReservedSeats, result.data.lockedSeats, selectedBeforeReserve);
                     currentReservedSeats = mergeSeatLists(result.data.reservedSeats || [], currentMyReservedSeats);
@@ -3193,6 +3463,10 @@ function loadSeatMapNow(showtimeId, options) {
                 return false;
             })
             .catch(function(error) {
+                if (requestGeneration !== bookingSelectionGeneration) {
+                    return;
+                }
+
                 console.error('Reserve seats error:', error);
                 window.selectedSeats = selectedBeforeReserve.slice();
                 showEditableSeatUi('Khong the giu ghe tren server. Vui long kiem tra ket noi va thu lai.', 'warning');
@@ -3200,6 +3474,10 @@ function loadSeatMapNow(showtimeId, options) {
             })
             .finally(function() {
                 reservationRequestInFlight = false;
+                if (requestGeneration !== bookingSelectionGeneration) {
+                    return;
+                }
+
                 updatePayButtonState();
 
                 var btn = document.getElementById('confirmSeatsBtn');
@@ -3228,7 +3506,7 @@ function loadSeatMapNow(showtimeId, options) {
             date.setDate(date.getDate() + i);
             var dateValue = formatLocalDate(date);
             var selectedClass = selectedDate === dateValue ? ' selected' : '';
-            html += '<div class="date-tab' + selectedClass + '" onclick="selectDate(\'' + dateValue + '\')" data-date="' + dateValue + '">';
+            html += '<div class="date-tab' + selectedClass + '" data-date="' + dateValue + '">';
             html += '<div class="day-name">' + dayNames[date.getDay()] + (i === 0 ? ' (Hom nay)' : '') + '</div>';
             html += '<div class="date-text">' + String(date.getDate()).padStart(2, '0') + '/' + String(date.getMonth() + 1).padStart(2, '0') + '</div>';
             html += '</div>';
@@ -3251,6 +3529,13 @@ function loadSeatMapNow(showtimeId, options) {
         window.selectedDate = initialDate;
         window.selectedShowtimeId = String(initialShowtimeId);
         currentSeatMapShowtimeId = String(initialShowtimeId);
+
+        if (initialMyReservedSeats.length > 0) {
+            currentMyReservedSeats = initialMyReservedSeats.slice();
+            window.selectedSeats = initialMyReservedSeats.slice();
+            window.seatsConfirmed = true;
+            showConfirmedSeatUi(false);
+        }
 
         var theaterInput = document.getElementById('theaterIdInput');
         if (theaterInput) {
