@@ -203,17 +203,28 @@ class ProfileController extends Controller
 
         $request->validate([
             'subscription_id' => 'required|exists:subscriptions,id',
+            'movie_id' => 'nullable|exists:movies,id',
         ]);
         
         $user = Auth::user();
         $subscriptionId = $request->input('subscription_id');
 
         $subscription = Subscription::findOrFail($subscriptionId);
+        $currentSubscription = $user->subscription;
+        $currentPrice = (float) ($currentSubscription->price ?? 0);
+        $newPrice = (float) $subscription->price;
+        $movieId = $request->input('movie_id');
+
+        $redirectAfterUpgrade = function () use ($movieId) {
+            return $movieId
+                ? redirect()->route('movies.watch', ['id' => $movieId])
+                : redirect()->route('profile.index');
+        };
         
         // Kiểm tra nếu đã có gói này hoặc gói cao hơn
         if ($currentSubscription) {
             if ($newPrice <= $currentPrice) {
-                return redirect()->route('profile.index')
+                return $redirectAfterUpgrade()
                     ->with('error', 'Bạn đã có gói tương đương hoặc cao hơn!');
             }
         }
@@ -222,7 +233,7 @@ class ProfileController extends Controller
         $requiredPoints = max($newPrice - $currentPrice, 0);
 
         if ($user->points < $requiredPoints) {
-            return redirect()->route('profile.index')
+            return $redirectAfterUpgrade()
                 ->with('error', "Bạn không đủ điểm! Cần {$requiredPoints} điểm, hiện có {$user->points} điểm.");
         }
         
@@ -240,7 +251,7 @@ class ProfileController extends Controller
             'status' => 'Thành công',
         ]);
         
-        return redirect()->route('profile.index')
+        return $redirectAfterUpgrade()
             ->with('success', "Nâng cấp gói {$subscription->name} thành công! Đã trừ {$requiredPoints} điểm.");
     }
 

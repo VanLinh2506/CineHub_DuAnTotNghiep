@@ -127,6 +127,51 @@
 
 <!-- Movie Grid Sections -->
 <div class="container">
+    @if (!empty($continueWatching) && $continueWatching->isNotEmpty())
+    <section class="movies-section continue-watching-section">
+        <div class="section-header">
+            <h2 class="section-title">Tiếp tục xem</h2>
+        </div>
+        <div class="movies-grid-style-2">
+            @foreach ($continueWatching as $history)
+                @php
+                    $continueUrl = route('movies.watch', array_filter([
+                        'id' => $history->movie_id,
+                        'episode_id' => $history->episode_id,
+                    ]));
+                    $continueMinutes = max(1, (int) floor($history->last_time / 60));
+                @endphp
+                <a href="{{ $continueUrl }}" class="continue-watching-card">
+                    <img src="{{ $history->movie->thumbnail }}" alt="{{ $history->movie->title }}" loading="lazy">
+                    <span class="continue-play"><i class="fas fa-play"></i></span>
+                    <div class="continue-info">
+                        <strong>{{ $history->movie->title }}</strong>
+                        <small>
+                            @if($history->episode) Tập {{ $history->episode->episode_number }} · @endif
+                            Tiếp tục từ phút {{ $continueMinutes }}
+                        </small>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+    </section>
+    <style>
+        .continue-watching-card { position:relative; display:block; min-width:220px; aspect-ratio:16/9; overflow:hidden; border-radius:16px; color:#fff; background:#181818; }
+        .continue-watching-card img { width:100%; height:100%; object-fit:cover; }
+        .continue-watching-card::after { content:""; position:absolute; inset:35% 0 0; background:linear-gradient(transparent,rgba(0,0,0,.92)); }
+        .continue-info { position:absolute; z-index:2; left:14px; right:14px; bottom:12px; display:grid; gap:3px; }
+        .continue-info small { color:rgba(255,255,255,.78); }
+        .continue-play { position:absolute; z-index:2; inset:0; margin:auto; width:44px; height:44px; display:grid; place-items:center; border-radius:50%; background:#e50914; }
+    </style>
+    @endif
+
+    {{-- Đưa bảng Top đầu tiên lên gần đầu trang; bảng Top thứ hai vẫn giữ ở vị trí cũ. --}}
+    @if (!empty($topMoviesByCategory) && $topMoviesByCategory->isNotEmpty())
+        @foreach ($topMoviesByCategory->take(1) as $categoryName => $rankedMovies)
+            @include('components.ranking-section', compact('categoryName', 'rankedMovies'))
+        @endforeach
+    @endif
+
     @if (!empty($latestMovies))
     <section class="movies-section">
         <div class="section-header">
@@ -145,7 +190,7 @@
     <!-- Promotion Banners Section - Vertical Layout -->
     <section class="promotion-banners-section">
         <div class="promo-banners-wrapper">
-            <a href="{{ route('profile.index') }}" class="promo-banner-vertical">
+            <a href="{{ route('profile.index') }}#subscription" class="promo-banner-vertical">
                 <img src="{{ storage_url('data/img/poster/poster_nangcap.jpg') }}" alt="Nâng cấp gói VIP">
                 <div class="promo-overlay-vertical">
                     <h3 class="promo-title-vertical">Trải nghiệm ngay gói pro vip</h3>
@@ -153,7 +198,7 @@
                     <span class="promo-btn-vertical">Nâng cấp ngay</span>
                 </div>
             </a>
-            <a href="{{ route('movies.index') }}" class="promo-banner-vertical">
+            <a href="{{ route('movies.theater') }}" class="promo-banner-vertical">
                 <img src="{{ storage_url('data/img/poster/poster_datve.jpg') }}" alt="Đặt vé online">
                 <div class="promo-overlay-vertical">
                     <h3 class="promo-title-vertical">Đặt vé online</h3>
@@ -179,36 +224,103 @@
     </section>
     @endif
 
+    @include('components.upcoming-movies-strip')
+
     @if (!empty($phimBo))
     <section class="movies-section">
         <div class="section-header">
             <h2 class="section-title">Phim bộ nổi bật</h2>
             <a href="{{ route('movies.index') }}?type=phimbo" class="view-all-link">Xem tất cả</a>
         </div>
-        <!-- Style 3: Featured + Grid -->
-        <div class="movies-grid-style-3">
-            @foreach ($phimBo->take(5) as $index => $movie)
-                <div class="movie-item-style-3 @if($index === 0) featured @endif">
-                    @include('components.movie-card', ['movie' => $movie])
-                </div>
+        <div class="movies-grid-style-2 featured-series-row">
+            @foreach ($phimBo->take(8) as $movie)
+                @include('components.movie-card', ['movie' => $movie])
             @endforeach
         </div>
     </section>
     @endif
 
-    @if (!empty($topMoviesWeek))
-    <section class="movies-section">
-        <div class="section-header">
-            <h2 class="section-title">Top phim xem nhiều trong tuần</h2>
-            <a href="{{ route('movies.index') }}" class="view-all-link">Xem tất cả</a>
+    @if (!empty($topMoviesByCategory) && $topMoviesByCategory->isNotEmpty())
+        <div class="ranking-heading">
+            <span class="ranking-heading-kicker">Bảng xếp hạng CineHub</span>
+            <h2>Top phim theo từng thể loại</h2>
+            <p>Xếp hạng theo lượt xem trong tuần và điểm đánh giá.</p>
         </div>
-        <!-- Style 1: Grid 5 cột -->
-        <div class="movies-grid-style-1">
-            @foreach ($topMoviesWeek->take(5) as $movie)
-                @include('components.movie-card', ['movie' => $movie])
-            @endforeach
+
+        @foreach ($topMoviesByCategory->skip(1)->take(1) as $categoryName => $rankedMovies)
+            @include('components.ranking-section', compact('categoryName', 'rankedMovies'))
+        @endforeach
+
+        <div class="genre-heading">
+            <span>Khám phá thêm</span>
+            <h2>Mỗi thể loại, một sắc màu riêng</h2>
         </div>
-    </section>
+
+        @foreach ($topMoviesByCategory->skip(2) as $categoryName => $genreMovies)
+            @php
+                $genreLayout = ($loop->index % 3) + 1;
+                $categoryId = $genreMovies->first()->category_id;
+            @endphp
+            <section class="movies-section genre-showcase genre-layout-{{ $genreLayout }}">
+                <div class="section-header">
+                    <div>
+                        <span class="genre-label">Thể loại</span>
+                        <h2 class="section-title">{{ $categoryName }}</h2>
+                    </div>
+                    <a href="{{ route('movies.index', ['category' => $categoryId]) }}" class="view-all-link">Khám phá tất cả</a>
+                </div>
+
+                @if($genreLayout === 1)
+                    <div class="genre-cinema-row">
+                        @foreach($genreMovies->take(7) as $movie)
+                            <a href="{{ route('movies.introduce', $movie->id) }}" class="genre-cinema-card">
+                                <div class="genre-image">
+                                    @if($movie->thumbnail)<img src="{{ $movie->thumbnail }}" alt="{{ $movie->title }}" loading="lazy">
+                                    @else<div class="genre-image-empty"><i class="fas fa-film"></i></div>@endif
+                                    <span>{{ number_format($movie->rating ?? 0, 1) }} <i class="fas fa-star"></i></span>
+                                </div>
+                                <strong>{{ $movie->title }}</strong>
+                            </a>
+                        @endforeach
+                    </div>
+                @elseif($genreLayout === 2)
+                    @php($featuredGenreMovie = $genreMovies->first())
+                    <div class="genre-editorial">
+                        <a href="{{ route('movies.introduce', $featuredGenreMovie->id) }}" class="genre-editorial-featured">
+                            @if($featuredGenreMovie->banner || $featuredGenreMovie->thumbnail)
+                                <img src="{{ $featuredGenreMovie->banner ?: $featuredGenreMovie->thumbnail }}" alt="{{ $featuredGenreMovie->title }}" loading="lazy">
+                            @else
+                                <div class="genre-image-empty"><i class="fas fa-clapperboard"></i></div>
+                            @endif
+                            <div class="genre-editorial-overlay">
+                                <small>Đề xuất nổi bật</small>
+                                <h3>{{ $featuredGenreMovie->title }}</h3>
+                                <p>{{ Str::limit($featuredGenreMovie->description, 95) }}</p>
+                            </div>
+                        </a>
+                        <div class="genre-editorial-list">
+                            @foreach($genreMovies->skip(1)->take(4) as $movie)
+                                <a href="{{ route('movies.introduce', $movie->id) }}" class="genre-mini-card">
+                                    @if($movie->thumbnail)<img src="{{ $movie->thumbnail }}" alt="{{ $movie->title }}" loading="lazy">
+                                    @else<div class="genre-image-empty"><i class="fas fa-film"></i></div>@endif
+                                    <div><strong>{{ $movie->title }}</strong><small><i class="fas fa-star"></i> {{ number_format($movie->rating ?? 0, 1) }}</small></div>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    <div class="genre-compact-grid">
+                        @foreach($genreMovies->take(8) as $movie)
+                            <a href="{{ route('movies.introduce', $movie->id) }}" class="genre-compact-card">
+                                @if($movie->thumbnail)<img src="{{ $movie->thumbnail }}" alt="{{ $movie->title }}" loading="lazy">
+                                @else<div class="genre-image-empty"><i class="fas fa-film"></i></div>@endif
+                                <div><strong>{{ $movie->title }}</strong><small>{{ $categoryName }}</small></div>
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
+            </section>
+        @endforeach
     @endif
 </div>
 
@@ -302,6 +414,343 @@
         grid-column: 1;
     }
 
+    .featured-series-row > * {
+        flex: 0 0 210px;
+    }
+
+    .ranking-heading {
+        margin: 4.5rem 0 2rem;
+        padding: 2rem 2.2rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        background:
+            radial-gradient(circle at 12% 30%, rgba(229, 9, 20, 0.22), transparent 32%),
+            linear-gradient(120deg, #171717, #242124);
+        box-shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
+    }
+
+    .ranking-heading-kicker {
+        color: #ff4b57;
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+    }
+
+    .ranking-heading h2 {
+        margin: 0.45rem 0 0.4rem;
+        color: #fff;
+        font-size: clamp(1.7rem, 4vw, 2.7rem);
+        font-weight: 900;
+    }
+
+    .ranking-heading p {
+        margin: 0;
+        color: #aaa;
+    }
+
+    .ranking-section {
+        padding: 1.2rem 0 0.5rem;
+    }
+
+    .ranking-row {
+        display: flex;
+        gap: 1.15rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 0.5rem 0.25rem 1.5rem;
+        scroll-snap-type: x proximity;
+        scrollbar-width: thin;
+        scrollbar-color: #e50914 rgba(255,255,255,.08);
+    }
+
+    .ranking-row::-webkit-scrollbar { height: 7px; }
+    .ranking-row::-webkit-scrollbar-track { background: rgba(255,255,255,.08); border-radius: 20px; }
+    .ranking-row::-webkit-scrollbar-thumb { background: linear-gradient(90deg, #e50914, #ff5060); border-radius: 20px; }
+
+    .ranking-card {
+        position: relative;
+        flex: 0 0 255px;
+        min-height: 330px;
+        padding-left: 62px;
+        color: #fff;
+        text-decoration: none;
+        scroll-snap-align: start;
+        transition: transform .25s ease;
+    }
+
+    .ranking-card:hover {
+        color: #fff;
+        transform: translateY(-7px);
+    }
+
+    .ranking-number {
+        position: absolute;
+        left: 0;
+        bottom: 62px;
+        z-index: 3;
+        width: 88px;
+        color: #111;
+        font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+        font-size: 8.4rem;
+        font-style: italic;
+        line-height: .78;
+        text-align: center;
+        letter-spacing: -0.09em;
+        -webkit-text-stroke: 3px rgba(255,255,255,.92);
+        filter: drop-shadow(7px 8px 0 rgba(229,9,20,.62));
+        user-select: none;
+    }
+
+    .ranking-poster {
+        position: relative;
+        z-index: 2;
+        height: 280px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,.13);
+        border-radius: 18px;
+        background: #202020;
+        box-shadow: 0 18px 35px rgba(0,0,0,.42);
+    }
+
+    .ranking-poster img,
+    .ranking-poster-empty {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform .35s ease;
+    }
+
+    .ranking-card:hover .ranking-poster img { transform: scale(1.06); }
+
+    .ranking-poster-empty {
+        display: grid;
+        place-items: center;
+        color: rgba(255,255,255,.35);
+        font-size: 3.2rem;
+        background: linear-gradient(145deg, #33272a, #151515 65%);
+    }
+
+    .ranking-rating {
+        position: absolute;
+        right: 9px;
+        bottom: 9px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: rgba(229,9,20,.94);
+        font-size: .74rem;
+        font-weight: 800;
+        box-shadow: 0 5px 15px rgba(0,0,0,.35);
+    }
+
+    .ranking-rating i { color: #ffd84d; }
+
+    .ranking-info {
+        position: relative;
+        z-index: 4;
+        padding: 0.8rem 0.25rem 0;
+    }
+
+    .ranking-info strong {
+        display: block;
+        overflow: hidden;
+        color: #fff;
+        font-size: .92rem;
+        line-height: 1.3;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ranking-info small {
+        display: block;
+        margin-top: .3rem;
+        color: #8e8e8e;
+        font-size: .72rem;
+    }
+
+    .genre-heading {
+        margin: 5rem 0 2.5rem;
+        text-align: center;
+    }
+
+    .genre-heading span,
+    .genre-label {
+        color: #ff4b57;
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .15em;
+        text-transform: uppercase;
+    }
+
+    .genre-heading h2 {
+        margin: .45rem 0 0;
+        color: #fff;
+        font-size: clamp(1.6rem, 3.5vw, 2.35rem);
+        font-weight: 850;
+    }
+
+    .genre-showcase {
+        position: relative;
+        padding: 1.7rem;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 22px;
+        background: linear-gradient(145deg, rgba(35,35,35,.94), rgba(19,19,19,.97));
+        box-shadow: 0 20px 45px rgba(0,0,0,.24);
+    }
+
+    .genre-showcase::before {
+        content: '';
+        position: absolute;
+        inset: 0 auto auto 0;
+        width: 160px;
+        height: 3px;
+        background: linear-gradient(90deg, #e50914, transparent);
+    }
+
+    .genre-showcase .section-header { position: relative; z-index: 2; }
+
+    .genre-cinema-row {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        padding: .25rem .1rem 1rem;
+        scroll-snap-type: x proximity;
+    }
+
+    .genre-cinema-card {
+        flex: 0 0 175px;
+        color: #fff;
+        text-decoration: none;
+        scroll-snap-align: start;
+    }
+
+    .genre-image {
+        position: relative;
+        height: 245px;
+        overflow: hidden;
+        border-radius: 15px;
+        background: #222;
+        box-shadow: 0 13px 25px rgba(0,0,0,.32);
+    }
+
+    .genre-image img,
+    .genre-image-empty {
+        width: 100%; height: 100%; object-fit: cover;
+    }
+
+    .genre-image-empty {
+        display: grid;
+        place-items: center;
+        color: rgba(255,255,255,.28);
+        font-size: 2.4rem;
+        background: linear-gradient(145deg, #40272c, #171717);
+    }
+
+    .genre-image > span {
+        position: absolute;
+        right: 8px; bottom: 8px;
+        padding: 4px 8px;
+        border-radius: 20px;
+        background: rgba(0,0,0,.78);
+        color: #fff;
+        font-size: .72rem;
+        font-weight: 800;
+    }
+
+    .genre-image > span i,
+    .genre-mini-card small i { color: #ffc928; }
+
+    .genre-cinema-card > strong {
+        display: block;
+        margin-top: .75rem;
+        overflow: hidden;
+        font-size: .86rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .genre-editorial {
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(280px, .8fr);
+        gap: 1.1rem;
+    }
+
+    .genre-editorial-featured {
+        position: relative;
+        min-height: 410px;
+        overflow: hidden;
+        border-radius: 18px;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .genre-editorial-featured > img,
+    .genre-editorial-featured > .genre-image-empty {
+        width: 100%; height: 100%; object-fit: cover;
+        position: absolute; inset: 0;
+    }
+
+    .genre-editorial-overlay {
+        position: absolute;
+        inset: auto 0 0;
+        padding: 5rem 1.7rem 1.6rem;
+        background: linear-gradient(transparent, rgba(0,0,0,.96));
+    }
+
+    .genre-editorial-overlay small { color: #ff5361; font-weight: 800; }
+    .genre-editorial-overlay h3 { margin: .3rem 0 .45rem; font-size: 1.65rem; }
+    .genre-editorial-overlay p { margin: 0; color: #c8c8c8; font-size: .84rem; }
+
+    .genre-editorial-list {
+        display: grid;
+        grid-template-rows: repeat(4, 1fr);
+        gap: .7rem;
+    }
+
+    .genre-mini-card {
+        display: grid;
+        grid-template-columns: 74px minmax(0, 1fr);
+        gap: .85rem;
+        min-height: 88px;
+        padding: .55rem;
+        border-radius: 13px;
+        background: rgba(255,255,255,.055);
+        color: #fff;
+        text-decoration: none;
+        transition: background .2s, transform .2s;
+    }
+
+    .genre-mini-card:hover { color: #fff; background: rgba(229,9,20,.16); transform: translateX(4px); }
+    .genre-mini-card img, .genre-mini-card .genre-image-empty { width: 74px; height: 76px; border-radius: 9px; object-fit: cover; }
+    .genre-mini-card > div:last-child { align-self: center; min-width: 0; }
+    .genre-mini-card strong { display: block; overflow: hidden; font-size: .83rem; text-overflow: ellipsis; white-space: nowrap; }
+    .genre-mini-card small { display: block; margin-top: .4rem; color: #aaa; }
+
+    .genre-compact-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: .9rem;
+    }
+
+    .genre-compact-card {
+        display: grid;
+        grid-template-columns: 92px minmax(0,1fr);
+        min-height: 125px;
+        overflow: hidden;
+        border-radius: 14px;
+        background: rgba(255,255,255,.055);
+        color: #fff;
+        text-decoration: none;
+        transition: transform .22s, background .22s;
+    }
+
+    .genre-compact-card:hover { color: #fff; transform: translateY(-4px); background: rgba(255,255,255,.1); }
+    .genre-compact-card img, .genre-compact-card > .genre-image-empty { width: 92px; height: 125px; object-fit: cover; }
+    .genre-compact-card > div:last-child { align-self: center; min-width: 0; padding: .8rem; }
+    .genre-compact-card strong { display: block; overflow: hidden; font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
+    .genre-compact-card small { display: block; margin-top: .4rem; color: #888; font-size: .7rem; }
+
     /* Promotion Banners - Vertical */
     .promotion-banners-section {
         margin: 3rem 0;
@@ -320,7 +769,7 @@
         display: block;
         border-radius: 12px;
         overflow: hidden;
-        height: 550px;
+        height: 700px;
         text-decoration: none;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
@@ -417,6 +866,10 @@
             grid-row: 1 / 2;
             grid-column: 1 / 3;
         }
+
+        .genre-editorial { grid-template-columns: 1fr; }
+        .genre-editorial-list { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; }
+        .genre-compact-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
 
     @media (max-width: 768px) {
@@ -431,7 +884,7 @@
         }
 
         .promo-banner-vertical {
-            height: 450px;
+            height: 600px;
         }
 
         .movies-grid-style-1 {
@@ -442,6 +895,17 @@
         .movies-grid-style-2 > * {
             flex: 0 0 160px;
         }
+
+        .featured-series-row > * { flex-basis: 170px; }
+        .ranking-heading { padding: 1.5rem; border-radius: 18px; }
+        .ranking-card { flex-basis: 210px; min-height: 285px; padding-left: 48px; }
+        .ranking-poster { height: 235px; }
+        .ranking-number { width: 70px; bottom: 59px; font-size: 6.6rem; }
+        .genre-showcase { padding: 1.15rem; border-radius: 17px; }
+        .genre-cinema-card { flex-basis: 145px; }
+        .genre-image { height: 205px; }
+        .genre-editorial-featured { min-height: 330px; }
+        .genre-editorial-list, .genre-compact-grid { grid-template-columns: 1fr; }
 
         .movies-grid-style-3 {
             grid-template-columns: 1fr;

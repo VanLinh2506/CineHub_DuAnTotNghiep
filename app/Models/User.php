@@ -110,6 +110,11 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class, 'user_id');
     }
 
+    public function theaterContracts()
+    {
+        return $this->hasMany(TheaterContract::class, 'representative_user_id');
+    }
+
     // Helper methods
     public function addPoints($points)
     {

@@ -314,7 +314,7 @@
                 </label>
 
                 <select class="form-select" id="type" name="type"
-                    onchange="toggleSeriesSection(); toggleDurationField();">
+                    onchange="toggleSeriesSection(); toggleDurationField(); toggleOnlineSchedule();">
 
                     <option value="phimle" {{ ($movie['type'] ?? 'phimle') == 'phimle' ? 'selected' : '' }}>
                         Phim lẻ
@@ -333,7 +333,7 @@
                 </label>
 
                 <select class="form-select" id="status" name="status"
-                    onchange="toggleTheaterSection(); toggleDurationField();">
+                    onchange="toggleTheaterSection(); toggleDurationField(); toggleOnlineSchedule();">
 
                     <option value="Sắp chiếu" {{ $movie['status'] == 'Sắp chiếu' ? 'selected' : '' }}>
                         Sắp chiếu
@@ -348,6 +348,15 @@
                     </option>
 
                 </select>
+            </div>
+
+            <div class="col-md-6 mb-3" id="onlineScheduleSection"
+                style="display: {{ (($movie['type'] ?? 'phimle') === 'phimle' && $movie['status'] === 'Sắp chiếu') ? 'block' : 'none' }};">
+                <label for="publish_date" class="form-label">Ngày bắt đầu chiếu online <span class="text-danger">*</span></label>
+                <input type="datetime-local" class="form-control" id="publish_date" name="publish_date"
+                    value="{{ old('publish_date', !empty($movie['publish_date']) ? \Carbon\Carbon::parse($movie['publish_date'])->format('Y-m-d\TH:i') : '') }}">
+                <input type="hidden" name="scheduled_status" value="Chiếu online">
+                <small class="text-muted">Đến ngày này phim tự chuyển sang Chiếu online.</small>
             </div>
 
             {{-- Thời lượng chỉ hiện cho phim lẻ chiếu rạp --}}
@@ -1084,6 +1093,17 @@
             }
         }
 
+        function toggleOnlineSchedule() {
+            const visible = document.getElementById('type').value === 'phimle'
+                && document.getElementById('status').value === 'Sắp chiếu';
+            const section = document.getElementById('onlineScheduleSection');
+            const input = document.getElementById('publish_date');
+            if (section) section.style.display = visible ? 'block' : 'none';
+            if (input) input.required = visible;
+            const videoSection = document.getElementById('videoSection');
+            if (videoSection && visible) videoSection.style.display = 'none';
+        }
+
         // Hiện/ẩn khu vực phim bộ
         function toggleSeriesSection() {
             const type = document.getElementById('type').value;
@@ -1315,6 +1335,7 @@
             toggleTheaterSection();
             toggleSeriesSection();
             toggleDurationField();
+            toggleOnlineSchedule();
             syncEpisodeCounters();
         });
     </script>

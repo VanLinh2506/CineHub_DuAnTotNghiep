@@ -8,12 +8,103 @@ use App\Models\Review;
 use App\Models\Comment;
 use App\Models\WatchHistory;
 use App\Models\Episode;
+use App\Models\Subscription;
+use App\Models\MovieViewEvent;
+use App\Models\MovieInterest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class MovieController extends Controller
 {
+    public function searchSuggestions(Request $request)
+    {
+        $keyword = trim((string) $request->input('q', ''));
+        $history = collect($request->input('history', []))
+            ->filter(fn ($item) => is_string($item) && trim($item) !== '')
+            ->map(fn ($item) => mb_substr(trim($item), 0, 80))
+            ->unique()
+            ->take(6)
+            ->values();
+
+        $query = Movie::query()
+            ->where('status', 'Chiếu online')
+            ->withCount(['viewEvents as watch_history_count']);
+
+        if ($keyword !== '') {
+            $normalizedMatchIds = $this->normalizedMovieMatchIds($keyword);
+            $query->where(function ($movieQuery) use ($keyword, $normalizedMatchIds) {
+                $movieQuery->where('title', 'LIKE', "%{$keyword}%")
+                    ->orWhere('director', 'LIKE', "%{$keyword}%")
+                    ->orWhereHas('category', fn ($categoryQuery) =>
+                        $categoryQuery->where('name', 'LIKE', "%{$keyword}%")
+                    );
+
+                if ($normalizedMatchIds !== []) {
+                    $movieQuery->orWhereIn('id', $normalizedMatchIds);
+                }
+            });
+        } elseif ($history->isNotEmpty()) {
+            $historyMatchIds = $history
+                ->flatMap(fn ($term) => $this->normalizedMovieMatchIds($term))
+                ->unique()
+                ->values()
+                ->all();
+
+            $query->where(function ($movieQuery) use ($history, $historyMatchIds) {
+                foreach ($history as $term) {
+                    $movieQuery->orWhere('title', 'LIKE', "%{$term}%");
+                }
+
+                if ($historyMatchIds !== []) {
+                    $movieQuery->orWhereIn('id', $historyMatchIds);
+                }
+            });
+        }
+
+        $movies = $query
+            ->orderByDesc('watch_history_count')
+            ->orderByDesc('rating')
+            ->limit(15)
+            ->get()
+            ->map(function (Movie $movie) use ($keyword, $history) {
+                $normalizedTitle = $this->normalizeSearchText($movie->title);
+                $score = 0;
+
+                if ($keyword !== '' && str_contains($normalizedTitle, $this->normalizeSearchText($keyword))) {
+                    $score += 200;
+                }
+
+                foreach ($history as $index => $term) {
+                    if (str_contains($normalizedTitle, $this->normalizeSearchText($term))) {
+                        $score += 100 - ($index * 10);
+                    }
+                }
+
+                return [
+                    'id' => $movie->id,
+                    'title' => $movie->title,
+                    'thumbnail' => $movie->thumbnail,
+                    'rating' => number_format((float) ($movie->rating ?? 0), 1),
+                    'year' => optional($movie->publish_date)->format('Y'),
+                    'level' => $movie->level ?? 'Free',
+                    'url' => route('movies.introduce', $movie->id),
+                    '_score' => $score,
+                    '_views' => (int) $movie->watch_history_count,
+                ];
+            })
+            ->sortByDesc(fn ($movie) => [$movie['_score'], $movie['_views'], (float) $movie['rating']])
+            ->take(3)
+            ->values()
+            ->map(function ($movie) {
+                unset($movie['_score'], $movie['_views']);
+                return $movie;
+            });
+
+        return response()->json(['movies' => $movies]);
+    }
+
     public function index(Request $request)
     {
         $search = trim($request->input('search', ''));
@@ -23,15 +114,28 @@ class MovieController extends Controller
         $type = $request->input('type');
         $minRating = $request->input('min_rating');
 
-        $query = Movie::with(['category', 'categories']);
+        $query = Movie::with(['category', 'categories'])
+            ->withCount(['episodes as episode_count']);
 
         // Search
         if ($search) {
-            $query->where(function ($q) use ($search) {
+            $normalizedMatchIds = $this->normalizedMovieMatchIds($search);
+            $query->where(function ($q) use ($search, $normalizedMatchIds) {
                 $q->where('title', 'LIKE', "%{$search}%")
                     ->orWhere('director', 'LIKE', "%{$search}%")
                     ->orWhere('actors', 'LIKE', "%{$search}%")
-                    ->orWhere('description', 'LIKE', "%{$search}%");
+                    ->orWhere('description', 'LIKE', "%{$search}%")
+                    ->orWhere('country', 'LIKE', "%{$search}%")
+                    ->orWhereHas('category', function ($categoryQuery) use ($search) {
+                        $categoryQuery->where('name', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('categories', function ($categoryQuery) use ($search) {
+                        $categoryQuery->where('categories.name', 'LIKE', "%{$search}%");
+                    });
+
+                if ($normalizedMatchIds !== []) {
+                    $q->orWhereIn('movies.id', $normalizedMatchIds);
+                }
             });
         }
 
@@ -45,11 +149,9 @@ class MovieController extends Controller
             });
         }
 
-        if ($status) {
-            $query->where('status', $status);
-        } else {
-            $query->where('status', '!=', 'Chiếu rạp');
-        }
+        // Kho xem online tuyệt đối không lấy phim chỉ dành cho rạp.
+        // Chỉ chấp nhận trạng thái online thay vì dùng so sánh loại trừ dễ lọt dữ liệu lỗi.
+        $query->where('status', 'Chiếu online');
 
         if ($country) {
             $query->where('country', $country);
@@ -64,14 +166,7 @@ class MovieController extends Controller
         }
 
         // Pagination
-        $movies = $query->orderBy('created_at', 'desc')->paginate(12);
-
-        // Add episode count for phim bộ
-        $movies->each(function ($movie) {
-            if ($movie->type === 'phimbo') {
-                $movie->episode_count = $movie->episodes()->count();
-            }
-        });
+        $movies = $query->orderBy('created_at', 'desc')->paginate(12)->withQueryString();
 
         $categories = Category::orderBy('name')->get();
         $countries = Movie::select('country')
@@ -89,6 +184,7 @@ class MovieController extends Controller
                 ->pluck('movie_id')
                 ->toArray();
         }
+        $watchProgressByMovie = $this->watchProgressByMovie();
 
         return view('movie.index', compact(
             'movies',
@@ -100,7 +196,8 @@ class MovieController extends Controller
             'country',
             'type',
             'minRating',
-            'favorites'
+            'favorites',
+            'watchProgressByMovie'
         ));
     }
 
@@ -119,8 +216,10 @@ class MovieController extends Controller
      */
     public function online(Request $request)
     {
-        $query = Movie::with('category')
-            ->where('status', '!=', 'Chiếu rạp')
+        $query = Movie::with(['category', 'categories'])
+            ->withCount(['episodes as episode_count'])
+            ->where('status', 'Chiếu online')
+            ->where('status_admin', 'published')
             ->orderBy('created_at', 'desc');
 
         $movies = $query->paginate(12);
@@ -128,6 +227,7 @@ class MovieController extends Controller
         $categories = Category::orderBy('name')->get();
         $countries = collect();
         $favorites = [];
+        $watchProgressByMovie = $this->watchProgressByMovie();
 
         // Missing variables for view
         $search = '';
@@ -147,24 +247,44 @@ class MovieController extends Controller
             'status',
             'country',
             'type',
-            'minRating'
+            'minRating',
+            'watchProgressByMovie'
         ));
     }
 
     /**
-     * Show phim lẻ (single movies)
+     * Show phim láº» (single movies)
      */
     public function phimLe(Request $request)
     {
-        $query = Movie::with('category')
+        $query = Movie::with(['category', 'categories'])
+            ->withCount(['episodes as episode_count'])
             ->where('type', 'phimle')
+            ->where('status', 'Chiếu online')
+            ->where('status_admin', 'published')
             ->orderBy('created_at', 'desc');
 
         $movies = $query->paginate(12);
 
+        $upcomingMovies = Movie::with(['category', 'categories'])
+            ->withCount('interests')
+            ->where('type', 'phimle')
+            ->where('status', 'Sắp chiếu')
+            ->where('scheduled_status', 'Chiếu online')
+            ->where('publish_date', '>', now())
+            ->where('status_admin', 'published')
+            ->orderByDesc('interests_count')
+            ->orderBy('publish_date')
+            ->limit(8)
+            ->get();
+        $interestedMovieIds = Auth::check()
+            ? MovieInterest::where('user_id', Auth::id())->pluck('movie_id')->all()
+            : [];
+
         $categories = Category::orderBy('name')->get();
         $countries = collect();
         $favorites = [];
+        $watchProgressByMovie = $this->watchProgressByMovie();
 
         // Missing variables for view
         $search = '';
@@ -184,29 +304,90 @@ class MovieController extends Controller
             'status',
             'country',
             'type',
-            'minRating'
+            'minRating',
+            'watchProgressByMovie',
+            'upcomingMovies',
+            'interestedMovieIds'
         ));
     }
 
     /**
-     * Show phim bộ (series)
+     * Show phim bá»™ (series)
      */
     public function phimBo(Request $request)
     {
-        $query = Movie::with('category')
+        $query = Movie::with(['category', 'categories'])
+            ->withCount(['episodes as episode_count'])
             ->where('type', 'phimbo')
-            ->orderBy('created_at', 'desc');
+            ->where('status', 'Chiếu online')
+            ->where('status_admin', 'published');
+
+        $continueWatchingSeries = collect();
+        if (Auth::check()) {
+            $viewCounts = MovieViewEvent::query()
+                ->where('user_id', Auth::id())
+                ->where('created_at', '>=', now()->subYear())
+                ->selectRaw('movie_id, COUNT(*) as views_count')
+                ->groupBy('movie_id')
+                ->orderByDesc('views_count')
+                ->get();
+
+            $frequentMovieIds = $viewCounts->pluck('movie_id')->map(fn ($id) => (int) $id)->all();
+            if ($frequentMovieIds) {
+                $movieOrder = collect($frequentMovieIds)
+                    ->map(fn ($movieId, $index) => 'WHEN ' . $movieId . ' THEN ' . $index)
+                    ->implode(' ');
+                $query->orderByRaw("CASE movies.id {$movieOrder} ELSE 999999 END");
+
+                $preferredCategoryIds = Movie::with('categories:id')
+                    ->whereIn('id', $frequentMovieIds)
+                    ->get()
+                    ->flatMap(function (Movie $movie) use ($viewCounts) {
+                        $weight = (int) ($viewCounts->firstWhere('movie_id', $movie->id)?->views_count ?? 1);
+                        $categoryIds = $movie->categories->pluck('id');
+                        if ($categoryIds->isEmpty() && $movie->category_id) {
+                            $categoryIds = collect([$movie->category_id]);
+                        }
+                        return $categoryIds->map(fn ($categoryId) => ['id' => (int) $categoryId, 'weight' => $weight]);
+                    })
+                    ->groupBy('id')
+                    ->map(fn ($items) => $items->sum('weight'))
+                    ->sortDesc()
+                    ->keys()
+                    ->values();
+
+                if ($preferredCategoryIds->isNotEmpty()) {
+                    $categoryOrder = $preferredCategoryIds
+                        ->map(fn ($categoryId, $index) => 'WHEN ' . (int) $categoryId . ' THEN ' . $index)
+                        ->implode(' ');
+                    $query->orderByRaw("CASE movies.category_id {$categoryOrder} ELSE 999999 END");
+                }
+            }
+
+            $continueWatchingSeries = WatchHistory::with([
+                    'movie' => fn ($movieQuery) => $movieQuery->withCount('episodes'),
+                    'episode',
+                ])
+                ->where('user_id', Auth::id())
+                ->where('last_time', '>', 0)
+                ->where('playback_updated_at', '>=', now()->subDays(30))
+                ->whereHas('movie', fn ($movieQuery) => $movieQuery
+                    ->where('type', 'phimbo')
+                    ->where('status', 'Chiếu online')
+                    ->where('status_admin', 'published'))
+                ->latest('playback_updated_at')
+                ->limit(8)
+                ->get();
+        }
+
+        $query->orderByDesc('rating')->orderByDesc('created_at');
 
         $movies = $query->paginate(12);
-
-        // Add episode count
-        $movies->each(function ($movie) {
-            $movie->episode_count = $movie->episodes()->count();
-        });
 
         $categories = Category::orderBy('name')->get();
         $countries = collect();
         $favorites = [];
+        $watchProgressByMovie = $this->watchProgressByMovie();
 
         // Missing variables for view
         $search = '';
@@ -226,7 +407,9 @@ class MovieController extends Controller
             'status',
             'country',
             'type',
-            'minRating'
+            'minRating',
+            'watchProgressByMovie',
+            'continueWatchingSeries'
         ));
     }
 
@@ -251,7 +434,7 @@ class MovieController extends Controller
             [
                 'key' => 'mot-phim',
                 'title' => 'Mọt phim',
-                'description' => 'Danh sách dành cho người xem nghiền phim và thích phim hot.',
+                'description' => 'Danh sách dành cho người xem nghiền phim và thích phim nổi bật.',
                 'image' => asset('storage/data/img/motphim.jpg'),
             ],
         ];
@@ -273,8 +456,9 @@ class MovieController extends Controller
         abort_unless(isset($audienceLabels[$audience]), 404);
 
         $query = Movie::with(['category', 'categories'])
+            ->withCount(['episodes as episode_count'])
             ->where('status_admin', 'published')
-            ->where('status', '!=', 'Chiếu rạp');
+            ->where('status', 'Chiếu online');
 
         $this->applyAudienceFilter($query, $audience);
         $this->prioritizeWatchedMovies($query);
@@ -283,12 +467,6 @@ class MovieController extends Controller
             ->orderByDesc('rating')
             ->orderByDesc('created_at')
             ->paginate(12);
-
-        $movies->each(function ($movie) {
-            if ($movie->type === 'phimbo') {
-                $movie->episode_count = $movie->episodes()->count();
-            }
-        });
 
         $categories = Category::orderBy('name')->get();
         $countries = Movie::select('country')
@@ -305,6 +483,7 @@ class MovieController extends Controller
                 ->pluck('movie_id')
                 ->toArray();
         }
+        $watchProgressByMovie = $this->watchProgressByMovie();
 
         $search = '';
         $categoryId = null;
@@ -326,7 +505,8 @@ class MovieController extends Controller
             'type',
             'minRating',
             'audience',
-            'audienceTitle'
+            'audienceTitle',
+            'watchProgressByMovie'
         ));
     }
 
@@ -337,7 +517,10 @@ class MovieController extends Controller
     {
         $category = Category::findOrFail($id);
 
-        $query = Movie::with('category')
+        $query = Movie::with(['category', 'categories'])
+            ->withCount(['episodes as episode_count'])
+            ->where('status', 'Chiếu online')
+            ->where('status_admin', 'published')
             ->where(function ($q) use ($id) {
                 $q->where('category_id', $id)
                     ->orWhereHas('categories', function ($categoryQuery) use ($id) {
@@ -351,6 +534,7 @@ class MovieController extends Controller
         $categories = Category::orderBy('name')->get();
         $countries = collect();
         $favorites = [];
+        $watchProgressByMovie = $this->watchProgressByMovie();
 
         // Missing variables for view
         $search = '';
@@ -371,8 +555,80 @@ class MovieController extends Controller
             'status',
             'country',
             'type',
-            'minRating'
+            'minRating',
+            'watchProgressByMovie'
         ));
+    }
+
+    public function upcoming(Request $request)
+    {
+        $movies = Movie::with(['category', 'categories'])
+            ->withCount(['episodes as episode_count', 'interests'])
+            ->where('type', 'phimle')
+            ->where('status', 'Sắp chiếu')
+            ->where('scheduled_status', 'Chiếu online')
+            ->where('publish_date', '>', now())
+            ->where('status_admin', 'published')
+            ->orderByDesc('interests_count')
+            ->orderBy('publish_date')
+            ->paginate(12);
+
+        $categories = Category::orderBy('name')->get();
+        $countries = collect();
+        $favorites = [];
+        $interestedMovieIds = Auth::check()
+            ? MovieInterest::where('user_id', Auth::id())->pluck('movie_id')->all()
+            : [];
+        $watchProgressByMovie = collect();
+        $search = '';
+        $categoryId = null;
+        $status = 'Sắp chiếu';
+        $country = null;
+        $type = 'phimle';
+        $minRating = null;
+        $isUpcoming = true;
+
+        return view('movie.index', compact(
+            'movies', 'categories', 'countries', 'favorites', 'interestedMovieIds',
+            'watchProgressByMovie', 'search', 'categoryId', 'status', 'country',
+            'type', 'minRating', 'isUpcoming'
+        ));
+    }
+
+    public function markInterested($id)
+    {
+        $movie = Movie::where('type', 'phimle')
+            ->where('status', 'Sắp chiếu')
+            ->where('scheduled_status', 'Chiếu online')
+            ->where('publish_date', '>', now())
+            ->findOrFail($id);
+
+        $interest = MovieInterest::firstOrCreate([
+            'user_id' => Auth::id(),
+            'movie_id' => $movie->id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'created' => $interest->wasRecentlyCreated,
+            'count' => $movie->interests()->count(),
+        ]);
+    }
+
+    private function watchProgressByMovie()
+    {
+        if (!Auth::check()) {
+            return collect();
+        }
+
+        return MovieViewEvent::with('episode')
+            ->where('user_id', Auth::id())
+            ->whereNotNull('episode_id')
+            ->get()
+            ->filter(fn ($event) => $event->episode)
+            ->sortByDesc(fn ($event) => (int) $event->episode->episode_number)
+            ->unique('movie_id')
+            ->keyBy('movie_id');
     }
 
     /**
@@ -393,9 +649,16 @@ class MovieController extends Controller
             $q->orderBy('episode_number');
         }])->findOrFail($id);
 
+        if ($movie->status === 'Sắp chiếu' &&
+            $movie->scheduled_status === 'Chiếu online' &&
+            $movie->publish_date?->isFuture()) {
+            return redirect()->route('movies.introduce', $movie->id)
+                ->with('info', 'Phim sẽ bắt đầu chiếu vào ' . $movie->publish_date->format('d/m/Y H:i') . '.');
+        }
+
         // Check login
         if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để xem phim!');
+            return redirect()->route('login')->with('error', 'Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ xem phim!');
         }
 
         $user = Auth::user();
@@ -403,26 +666,28 @@ class MovieController extends Controller
         // Check access level
         $movieLevel = $movie->level ?? 'Free';
         if (!$this->checkMovieAccess($user, $movieLevel)) {
-            $subscriptionName = $user->subscription->name ?? 'Free';
-            return redirect()->route('movies.index')
-                ->with('error', "Phim này yêu cầu gói {$movieLevel}. Gói hiện tại của bạn: {$subscriptionName}");
+            return redirect()->route('movies.introduce', $movie->id)
+                ->with('showUpgradeModal', true);
         }
 
-        // Save watch history
-        WatchHistory::updateOrCreate(
-            ['user_id' => $user->id, 'movie_id' => $movie->id],
-            ['created_at' => now(), 'updated_at' => now()]
+        $watchHistory = WatchHistory::firstOrCreate(
+            ['user_id' => $user->id, 'movie_id' => $movie->id]
         );
 
-        // Get episode if phim bộ
+        // Get episode if phim bá»™
         $currentEpisode = null;
         $episodeId = $request->input('episode_id');
 
         if ($movie->isPhimBo() && $movie->episodes->isNotEmpty()) {
             if ($episodeId) {
                 $currentEpisode = $movie->episodes->firstWhere('id', $episodeId);
+            } elseif ($watchHistory->episode_id &&
+                (!$watchHistory->episode_updated_at || $watchHistory->episode_updated_at->gte(now()->subYear()))) {
+                $currentEpisode = $movie->episodes->firstWhere('id', $watchHistory->episode_id);
+                if ($currentEpisode) {
+                    return redirect()->route('movies.watch', ['id' => $movie->id, 'episode_id' => $currentEpisode->id]);
+                }
             } else {
-                // Auto redirect to first episode with video
                 $firstEpisode = $movie->episodes->first(function ($ep) {
                     return !empty($ep->video_url);
                 });
@@ -435,6 +700,42 @@ class MovieController extends Controller
                 }
             }
         }
+
+        $resumeSeconds = 0;
+        if ($watchHistory->playback_updated_at &&
+            $watchHistory->playback_updated_at->gte(now()->subDays(30)) &&
+            (!$currentEpisode || (int) $watchHistory->episode_id === (int) $currentEpisode->id)) {
+            $resumeSeconds = max(0, (int) $watchHistory->last_time);
+        }
+
+        if ($currentEpisode && (int) $watchHistory->episode_id !== (int) $currentEpisode->id) {
+            $resumeSeconds = 0;
+            $watchHistory->last_time = 0;
+            $watchHistory->playback_updated_at = null;
+        }
+        if ($currentEpisode) {
+            $watchHistory->episode_id = $currentEpisode->id;
+            $watchHistory->episode_updated_at = now();
+            $watchHistory->save();
+        }
+
+        // Every successful visit to a concrete movie/episode watch page is a
+        // separate view. WatchHistory remains unique per user for favorites
+        // and resume data, while this event table powers popularity rankings.
+        MovieViewEvent::create([
+            'movie_id' => $movie->id,
+            'user_id' => $user->id,
+            'episode_id' => $currentEpisode?->id,
+            'created_at' => now(),
+        ]);
+
+        $watchedEpisodeIds = MovieViewEvent::where('user_id', $user->id)
+            ->where('movie_id', $movie->id)
+            ->whereNotNull('episode_id')
+            ->distinct()
+            ->pluck('episode_id')
+            ->map(fn ($episodeId) => (int) $episodeId)
+            ->all();
 
         // Reviews and Comments
         $reviews = $movie->reviews()
@@ -481,12 +782,42 @@ class MovieController extends Controller
             'userHasRated',
             'userRating',
             'relatedMovies',
-            'isAdmin'
+            'isAdmin',
+            'resumeSeconds',
+            'watchedEpisodeIds'
         ));
     }
 
+    public function saveProgress(Request $request, $id)
+    {
+        $data = $request->validate([
+            'seconds' => ['required', 'integer', 'min:0', 'max:86400'],
+            'episode_id' => ['nullable', 'integer'],
+        ]);
+
+        $movie = Movie::findOrFail($id);
+        $episodeId = $data['episode_id'] ?? null;
+        if ($episodeId && !Episode::where('id', $episodeId)->where('movie_id', $movie->id)->exists()) {
+            return response()->json(['message' => 'Tập phim không hợp lệ.'], 422);
+        }
+
+        $history = WatchHistory::firstOrCreate([
+            'user_id' => Auth::id(),
+            'movie_id' => $movie->id,
+        ]);
+        $history->last_time = $data['seconds'];
+        $history->playback_updated_at = now();
+        if ($episodeId) {
+            $history->episode_id = $episodeId;
+            $history->episode_updated_at = now();
+        }
+        $history->save();
+
+        return response()->json(['saved' => true]);
+    }
+
     /**
-     * Watch episode (for phim bộ)
+     * Watch episode (for phim bá»™)
      */
     public function watchEpisode($movieId, $episodeNumber)
     {
@@ -508,12 +839,12 @@ class MovieController extends Controller
     public function toggleFavorite(Request $request)
     {
         if (!Auth::check()) {
-            return response()->json(['success' => false, 'error' => 'Vui lòng đăng nhập']);
+            return response()->json(['success' => false, 'error' => 'Vui lÃ²ng Ä‘Äƒng nháº­p']);
         }
 
         $movieId = $request->input('movie_id');
         if (!$movieId) {
-            return response()->json(['success' => false, 'error' => 'Thiếu thông tin phim']);
+            return response()->json(['success' => false, 'error' => 'Thiáº¿u thÃ´ng tin phim']);
         }
 
         $watchHistory = WatchHistory::firstOrCreate(
@@ -526,7 +857,7 @@ class MovieController extends Controller
         return response()->json([
             'success' => true,
             'favorite' => $watchHistory->favorite,
-            'message' => $watchHistory->favorite ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích'
+            'message' => $watchHistory->favorite ? 'ÄÃ£ thÃªm vÃ o yÃªu thÃ­ch' : 'ÄÃ£ xÃ³a khá»i yÃªu thÃ­ch'
         ]);
     }
 
@@ -541,6 +872,62 @@ class MovieController extends Controller
         }
         return $distribution;
     }
+
+    /**
+     * MySQL does not consistently treat composed and decomposed Vietnamese
+     * characters as equal. Build a small normalized index so visually
+     * identical searches such as "phàm" and "phàm" still match.
+     */
+    private function normalizedMovieMatchIds(string $keyword): array
+    {
+        $needle = $this->normalizeSearchText($keyword);
+        if ($needle === '') {
+            return [];
+        }
+
+        return Movie::with(['category:id,name', 'categories:id,name'])
+            ->get(['id', 'title', 'director', 'actors', 'country', 'category_id'])
+            ->filter(function (Movie $movie) use ($needle) {
+                $categoryNames = $movie->categories->pluck('name')->all();
+                if ($movie->category?->name) {
+                    $categoryNames[] = $movie->category->name;
+                }
+
+                $searchableText = implode(' ', array_filter([
+                    $movie->title,
+                    $movie->director,
+                    $movie->actors,
+                    $movie->country,
+                    implode(' ', $categoryNames),
+                ]));
+
+                return str_contains($this->normalizeSearchText($searchableText), $needle);
+            })
+            ->pluck('id')
+            ->all();
+    }
+
+    private function normalizeSearchText(?string $value): string
+    {
+        $value = mb_strtolower(trim((string) $value), 'UTF-8');
+
+        if (class_exists(\Normalizer::class)) {
+            $value = \Normalizer::normalize($value, \Normalizer::FORM_D) ?: $value;
+        }
+
+        $value = preg_replace('/\p{Mn}+/u', '', $value) ?? $value;
+        $value = Str::ascii($value, 'vi');
+
+        return trim(preg_replace('/\s+/', ' ', $value) ?? $value);
+    }
+
+    private const LEVEL_HIERARCHY = [
+        'Free' => 0,
+        'Basic' => 1,
+        'Silver' => 2,
+        'Gold' => 3,
+        'Premium' => 4,
+    ];
 
     private function checkMovieAccess($user, $movieLevel)
     {
@@ -561,16 +948,8 @@ class MovieController extends Controller
             return false;
         }
 
-        $levelHierarchy = [
-            'Free' => 0,
-            'Basic' => 1,
-            'Silver' => 2,
-            'Gold' => 3,
-            'Premium' => 4
-        ];
-
-        $userLevel = $levelHierarchy[$subscriptionName] ?? 0;
-        $requiredLevel = $levelHierarchy[$movieLevel] ?? 0;
+        $userLevel = self::LEVEL_HIERARCHY[$subscriptionName] ?? 0;
+        $requiredLevel = self::LEVEL_HIERARCHY[$movieLevel] ?? 0;
 
         return $userLevel >= $requiredLevel;
     }
@@ -582,23 +961,49 @@ class MovieController extends Controller
         }
 
         if ($audience === 'tre-em') {
+            $familyComedyTitles = [
+                'Home Alone (1990)',
+                'Mrs. Doubtfire (1993)',
+                'Groundhog Day (1993)',
+            ];
+
+            $query
+                ->where(function ($ratingQuery) {
+                    $ratingQuery->whereNull('age_rating')
+                        ->orWhereNotIn('age_rating', ['T16', 'T18', 'C16', 'C18', 'R', 'NC-17', 'TV-MA']);
+                })
+                ->where(function ($q) use ($familyComedyTitles) {
+                    $q->where('category_id', 5)
+                        ->orWhereHas('categories', fn ($categoryQuery) => $categoryQuery->where('categories.id', 5))
+                        ->orWhere(function ($comedyQuery) use ($familyComedyTitles) {
+                            $comedyQuery->whereIn('title', $familyComedyTitles)
+                                ->where(function ($categoryScope) {
+                                    $categoryScope
+                                        ->where('category_id', 3)
+                                        ->orWhereHas('categories', fn ($categoryQuery) => $categoryQuery->where('categories.id', 3));
+                                });
+                        });
+                });
+
+            return;
+
             $query->where(function ($q) {
                 $q->whereIn('age_rating', ['G', 'PG', 'P', 'K'])
                     ->orWhereHas('category', function ($categoryQuery) {
-                        $categoryQuery->where('name', 'LIKE', '%hoạt hình%')
-                            ->orWhere('name', 'LIKE', '%thiếu nhi%')
-                            ->orWhere('name', 'LIKE', '%gia đình%')
-                            ->orWhere('name', 'LIKE', '%trẻ em%');
+                        $categoryQuery->where('name', 'LIKE', '%hoáº¡t hÃ¬nh%')
+                            ->orWhere('name', 'LIKE', '%thiáº¿u nhi%')
+                            ->orWhere('name', 'LIKE', '%gia Ä‘Ã¬nh%')
+                            ->orWhere('name', 'LIKE', '%tráº» em%');
                     })
                     ->orWhereHas('categories', function ($categoryQuery) {
-                        $categoryQuery->where('name', 'LIKE', '%hoạt hình%')
-                            ->orWhere('name', 'LIKE', '%thiếu nhi%')
-                            ->orWhere('name', 'LIKE', '%gia đình%')
-                            ->orWhere('name', 'LIKE', '%trẻ em%');
+                        $categoryQuery->where('name', 'LIKE', '%hoáº¡t hÃ¬nh%')
+                            ->orWhere('name', 'LIKE', '%thiáº¿u nhi%')
+                            ->orWhere('name', 'LIKE', '%gia Ä‘Ã¬nh%')
+                            ->orWhere('name', 'LIKE', '%tráº» em%');
                     })
-                    ->orWhere('title', 'LIKE', '%thiếu nhi%')
-                    ->orWhere('description', 'LIKE', '%thiếu nhi%')
-                    ->orWhere('description', 'LIKE', '%trẻ em%');
+                    ->orWhere('title', 'LIKE', '%thiáº¿u nhi%')
+                    ->orWhere('description', 'LIKE', '%thiáº¿u nhi%')
+                    ->orWhere('description', 'LIKE', '%tráº» em%');
             });
 
             return;
@@ -608,19 +1013,19 @@ class MovieController extends Controller
             $query->where(function ($q) {
                 $q->where('type', 'phimbo')
                     ->orWhereHas('category', function ($categoryQuery) {
-                        $categoryQuery->where('name', 'LIKE', '%tình cảm%')
-                            ->orWhere('name', 'LIKE', '%tâm lý%')
-                            ->orWhere('name', 'LIKE', '%lãng mạn%')
-                            ->orWhere('name', 'LIKE', '%gia đình%');
+                        $categoryQuery->where('name', 'LIKE', '%tÃ¬nh cáº£m%')
+                            ->orWhere('name', 'LIKE', '%tÃ¢m lÃ½%')
+                            ->orWhere('name', 'LIKE', '%lÃ£ng máº¡n%')
+                            ->orWhere('name', 'LIKE', '%gia Ä‘Ã¬nh%');
                     })
                     ->orWhereHas('categories', function ($categoryQuery) {
-                        $categoryQuery->where('name', 'LIKE', '%tình cảm%')
-                            ->orWhere('name', 'LIKE', '%tâm lý%')
-                            ->orWhere('name', 'LIKE', '%lãng mạn%')
-                            ->orWhere('name', 'LIKE', '%gia đình%');
+                        $categoryQuery->where('name', 'LIKE', '%tÃ¬nh cáº£m%')
+                            ->orWhere('name', 'LIKE', '%tÃ¢m lÃ½%')
+                            ->orWhere('name', 'LIKE', '%lÃ£ng máº¡n%')
+                            ->orWhere('name', 'LIKE', '%gia Ä‘Ã¬nh%');
                     })
-                    ->orWhere('description', 'LIKE', '%tình cảm%')
-                    ->orWhere('description', 'LIKE', '%lãng mạn%');
+                    ->orWhere('description', 'LIKE', '%tÃ¬nh cáº£m%')
+                    ->orWhere('description', 'LIKE', '%lÃ£ng máº¡n%');
             });
         }
     }
@@ -651,22 +1056,68 @@ class MovieController extends Controller
 
     public function introduce($id)
     {
-        $movie = Movie::with(['category', 'categories', 'episodes', 'reviews.user'])->findOrFail($id);
+        $movie = Movie::with(['category', 'categories', 'episodes', 'reviews.user'])
+            ->withCount('interests')
+            ->findOrFail($id);
 
-        // Lấy danh sách phim liên quan cùng category
+        // Láº¥y danh sÃ¡ch phim liÃªn quan cÃ¹ng category
         $relatedMovies = Movie::where('category_id', $movie->category_id)
             ->where('id', '!=', $id)
             ->where('status_admin', 'published')
             ->limit(6)
             ->get();
 
-        // Thống kê đánh giá
+        // Thá»‘ng kÃª Ä‘Ã¡nh giÃ¡
         $ratingStats = [
             'average' => $movie->reviews->avg('rating') ?? 0,
             'count' => $movie->reviews->count(),
             'distribution' => $this->getRatingDistribution($movie->reviews)
         ];
 
-        return view('movie.introduce', compact('movie', 'relatedMovies', 'ratingStats'));
+        $showUpgradeModal = session('showUpgradeModal', false);
+        $eligibleSubscriptions = collect();
+        $subscriptionName = 'Free';
+        $user = Auth::user();
+        $isInterested = $user
+            ? MovieInterest::where('user_id', $user->id)->where('movie_id', $movie->id)->exists()
+            : false;
+        $resumeEpisodeNumber = 1;
+
+        if ($user && $movie->isPhimBo()) {
+            $watchProgress = WatchHistory::with('episode')
+                ->where('user_id', $user->id)
+                ->where('movie_id', $movie->id)
+                ->whereNotNull('episode_id')
+                ->where('episode_updated_at', '>=', now()->subYear())
+                ->first();
+
+            if ($watchProgress?->episode &&
+                (int) $watchProgress->episode->movie_id === (int) $movie->id) {
+                $resumeEpisodeNumber = (int) $watchProgress->episode->episode_number;
+            }
+        }
+
+        if ($showUpgradeModal && $user) {
+            $subscriptionName = $user->subscription->name ?? 'Free';
+            $requiredLevel = self::LEVEL_HIERARCHY[$movie->level ?? 'Free'] ?? 0;
+            $eligibleSubscriptions = Subscription::orderBy('price')
+                ->get()
+                ->filter(function (Subscription $subscription) use ($requiredLevel) {
+                    return (self::LEVEL_HIERARCHY[$subscription->name] ?? 0) >= $requiredLevel;
+                })
+                ->values();
+        }
+
+        return view('movie.introduce', compact(
+            'movie',
+            'relatedMovies',
+            'ratingStats',
+            'showUpgradeModal',
+            'eligibleSubscriptions',
+            'subscriptionName',
+            'user',
+            'isInterested',
+            'resumeEpisodeNumber'
+        ));
     }
 }

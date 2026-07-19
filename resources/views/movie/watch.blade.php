@@ -109,7 +109,7 @@ if (!empty($episodes)) {
                 }
 
                 $fullTrailerUrl = null;
-                if (!empty($movie['trailer_url'])) {
+                if (($movie['type'] ?? 'phimle') !== 'phimbo' && !empty($movie['trailer_url'])) {
                     $fullTrailerUrl = $movie['trailer_url'];
                     if (strpos($movie['trailer_url'], 'http') !== 0) {
                         $fullTrailerUrl = $baseUrl . '/' . ltrim($movie['trailer_url'], '/');
@@ -169,8 +169,11 @@ if (!empty($episodes)) {
                 @if(isset($episodes) && !empty($episodes))
                     <div class="episodes-list">
                         @foreach($episodes as $episode)
+                            @php
+                                $isWatchedEpisode = in_array((int) $episode['id'], $watchedEpisodeIds ?? [], true);
+                            @endphp
                             <a href="{{ route('movies.watch', ['id' => $movie['id'], 'episode_id' => $episode['id']]) }}"
-                               class="episode-item {{ (isset($currentEpisode) && $currentEpisode && $currentEpisode['id'] == $episode['id']) ? 'active' : '' }} {{ empty($episode['video_url']) ? 'episode-no-video' : '' }}"
+                               class="episode-item {{ $isWatchedEpisode ? 'watched' : '' }} {{ (isset($currentEpisode) && $currentEpisode && $currentEpisode['id'] == $episode['id']) ? 'active' : '' }} {{ empty($episode['video_url']) ? 'episode-no-video' : '' }}"
                                title="{{ $episode['title'] ?? 'Tập ' . $episode['episode_number'] }}">
                                 <div class="episode-number">{{ $episode['episode_number'] }}</div>
                             </a>
@@ -242,7 +245,7 @@ if (!empty($episodes)) {
                         <div class="user-rating-info" style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
                             <p style="margin: 0; color: #d4af37;">
                                 <i class="fas fa-check-circle"></i> Bạn đã đánh giá phim này:
-                                <strong>{{ $userRating }} sao</strong>
+                                <strong>{{ $userRating }}/10 ({{ number_format($userRating / 2, 1) }}/5 sao)</strong>
                             </p>
                         </div>
                     @else
@@ -253,15 +256,10 @@ if (!empty($episodes)) {
                                 <label>Đánh giá của bạn:</label>
                                 <div class="star-rating" id="starRating">
                                     <input type="hidden" name="rating" id="ratingValue" value="" required>
-                                    <span class="star" data-value="1"><i class="far fa-star"></i></span>
                                     <span class="star" data-value="2"><i class="far fa-star"></i></span>
-                                    <span class="star" data-value="3"><i class="far fa-star"></i></span>
                                     <span class="star" data-value="4"><i class="far fa-star"></i></span>
-                                    <span class="star" data-value="5"><i class="far fa-star"></i></span>
                                     <span class="star" data-value="6"><i class="far fa-star"></i></span>
-                                    <span class="star" data-value="7"><i class="far fa-star"></i></span>
                                     <span class="star" data-value="8"><i class="far fa-star"></i></span>
-                                    <span class="star" data-value="9"><i class="far fa-star"></i></span>
                                     <span class="star" data-value="10"><i class="far fa-star"></i></span>
                                     <span class="rating-text" id="ratingText">Chọn số sao</span>
                                 </div>
@@ -294,18 +292,16 @@ if (!empty($episodes)) {
                                         <div>
                                             <strong style="color: #fff;">{{ $review['user_name'] ?? ($review['user']['name'] ?? 'Anonymous') }}</strong>
                                             <span style="margin-left: 10px; color: #ffc107;">
-                                                @php
-                                                    $reviewRating = $review['rating'] ?? 0;
-                                                    $fullStars = floor($reviewRating);
-                                                    $starScale = min(10, $fullStars);
-                                                @endphp
-                                                @for($i = 0; $i < $starScale; $i++)
-                                                    <i class="fas fa-star" style="font-size:0.8em;"></i>
+                                                @for($i = 1; $i <= 5; $i++)
+                                                    @if(($review['rating'] ?? 0) >= $i * 2)
+                                                        <i class="fas fa-star"></i>
+                                                    @elseif(($review['rating'] ?? 0) >= ($i * 2) - 1)
+                                                        <i class="fas fa-star-half-alt"></i>
+                                                    @else
+                                                        <i class="far fa-star"></i>
+                                                    @endif
                                                 @endfor
-                                                @for($i = $starScale; $i < 10; $i++)
-                                                    <i class="far fa-star" style="font-size:0.8em; opacity:0.3;"></i>
-                                                @endfor
-                                                <span style="margin-left:6px; font-weight:600;">{{ $reviewRating }}/10</span>
+                                                <small style="color: #aaa; margin-left: 5px;">{{ $review['rating'] ?? 0 }}/10</small>
                                             </span>
                                         </div>
                                         <span style="color: #888; font-size: 0.85rem;">{{ isset($review['created_at']) ? date('d/m/Y', strtotime($review['created_at'])) : '' }}</span>
@@ -552,6 +548,51 @@ if (!empty($episodes)) {
 </style>
 
 <script>
+// Restore the last playback position and persist it every 10 seconds.
+document.addEventListener('DOMContentLoaded', function () {
+    const player = document.getElementById('videoPlayer');
+    if (!player) return;
+
+    const resumeSeconds = {{ (int) ($resumeSeconds ?? 0) }};
+    const progressUrl = @json(route('movies.progress', $movie['id']));
+    const episodeId = @json($currentEpisode['id'] ?? null);
+    let lastSavedSecond = -1;
+
+    player.addEventListener('loadedmetadata', function () {
+        if (resumeSeconds >= 10 && resumeSeconds < player.duration - 10) {
+            player.currentTime = resumeSeconds;
+        }
+    }, { once: true });
+
+    function savePlaybackProgress(force, overrideSeconds) {
+        if (!Number.isFinite(player.currentTime)) return;
+        const seconds = overrideSeconds === undefined
+            ? Math.max(0, Math.floor(player.currentTime))
+            : Math.max(0, Math.floor(overrideSeconds));
+        if (!force && (seconds === lastSavedSecond || player.paused)) return;
+        lastSavedSecond = seconds;
+
+        fetch(progressUrl, {
+            method: 'POST',
+            keepalive: !!force,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': @json(csrf_token()),
+            },
+            body: JSON.stringify({ seconds: seconds, episode_id: episodeId }),
+        }).catch(function () {});
+    }
+
+    const progressTimer = setInterval(function () { savePlaybackProgress(false); }, 10000);
+    player.addEventListener('pause', function () { savePlaybackProgress(true); });
+    player.addEventListener('ended', function () { savePlaybackProgress(true, 0); });
+    window.addEventListener('pagehide', function () {
+        clearInterval(progressTimer);
+        savePlaybackProgress(true);
+    });
+});
+
 // Star Rating functionality
 document.addEventListener('DOMContentLoaded', function() {
     const starRating = document.getElementById('starRating');
@@ -562,16 +603,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const submitBtn = document.getElementById('submitReview');
 
         const ratingTexts = {
-            1: 'Rất tệ (1/10)',
-            2: 'Tệ (2/10)',
-            3: 'Tệ vừa (3/10)',
-            4: 'Dưới trung bình (4/10)',
-            5: 'Trung bình (5/10)',
-            6: 'Khá (6/10)',
-            7: 'Hay (7/10)',
-            8: 'Rất hay (8/10)',
-            9: 'Xuất sắc (9/10)',
-            10: 'Tuyệt vời! (10/10)'
+            2: '1/5 sao · 2/10 - Rất tệ',
+            4: '2/5 sao · 4/10 - Tệ',
+            6: '3/5 sao · 6/10 - Bình thường',
+            8: '4/5 sao · 8/10 - Hay',
+            10: '5/5 sao · 10/10 - Rất hay'
         };
 
         stars.forEach(star => {

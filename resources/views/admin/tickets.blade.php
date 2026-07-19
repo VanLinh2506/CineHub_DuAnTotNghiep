@@ -55,8 +55,7 @@
     </div>
 
     <!-- Filters -->
-    <form method="GET" class="mb-4">
-        <input type="hidden" name="route" value="admin/tickets">
+    <form method="GET" action="{{ route('admin.tickets.index') }}" class="mb-4">
         <div class="stat-card">
             <div class="row g-3">
                 <div class="col-md-4">
@@ -84,7 +83,7 @@
                     </button>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
-                    <a href="{{ url('?route=admin/tickets') }}" class="btn btn-outline-secondary w-100">
+                    <a href="{{ route('admin.tickets.index') }}" class="btn btn-outline-secondary w-100">
                         <i class="fas fa-redo"></i> Xóa bộ lọc
                     </a>
                 </div>
@@ -202,30 +201,30 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (empty($tickets))
+                    @if ($tickets->isEmpty())
                         <tr>
                             <td colspan="10" class="text-center text-muted">Không có vé nào</td>
                         </tr>
                     @else
                         @foreach ($tickets as $ticket)
                             <tr>
-                                <td>{{ $ticket['id'] }}</td>
+                                <td>{{ $ticket->id }}</td>
                                 <td>
-                                    <code>{{ $ticket['ticket_code'] ?? 'N/A' }}</code>
+                                    <code>{{ $ticket->bookingPending?->booking_code ?: 'VE-' . str_pad((string) $ticket->id, 6, '0', STR_PAD_LEFT) }}</code>
                                 </td>
-                                <td>{{ $ticket['user_name'] ?? 'N/A' }}</td>
-                                <td>{{ $ticket['movie_title'] ?? 'N/A' }}</td>
-                                <td>{{ $ticket['screen_name'] ?? 'N/A' }}</td>
-                                <td>{{ $ticket['seat'] ?? 'N/A' }}</td>
-                                <td>{{ number_format($ticket['price'] ?? 0) }}₫</td>
+                                <td>{{ $ticket->user?->name ?? $ticket->bookingPending?->customer_name ?? $ticket->bookingPending?->customer_email ?? 'Không xác định' }}</td>
+                                <td>{{ $ticket->showtime?->movie?->title ?? 'Không xác định' }}</td>
+                                <td>{{ $ticket->showtime?->screen?->screen_name ?? 'Không xác định' }}</td>
+                                <td>{{ $ticket->seat ?? 'N/A' }}</td>
+                                <td>{{ number_format((float) ($ticket->price ?? 0)) }}₫</td>
                                 <td>
-                                    <span class="badge bg-{{ ($ticket['status'] ?? '') === 'Đã đặt' ? 'success' : 'danger' }}">
-                                        {{ $ticket['status'] ?? 'N/A' }}
+                                    <span class="badge bg-{{ $ticket->status === 'Đã đặt' ? 'success' : 'danger' }}">
+                                        {{ $ticket->status ?? 'N/A' }}
                                     </span>
                                 </td>
-                                <td>{{ \Carbon\Carbon::parse($ticket['created_at'])->format('d/m/Y H:i') }}</td>
+                                <td>{{ optional($ticket->created_at)->format('d/m/Y H:i') }}</td>
                                 <td>
-                                    <a href="{{ url('?route=admin/tickets/view&id=' . $ticket['id']) }}" class="btn btn-sm btn-outline-info">
+                                    <a href="{{ route('admin.tickets.show', $ticket) }}" class="btn btn-sm btn-outline-info">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </td>
@@ -235,6 +234,7 @@
                 </tbody>
             </table>
         </div>
+        <div class="mt-3">{{ $tickets->withQueryString()->links() }}</div>
     </div>
 </div>
 @endsection

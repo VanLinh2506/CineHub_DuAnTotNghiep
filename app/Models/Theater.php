@@ -9,6 +9,8 @@ class Theater extends Model
 {
     use HasFactory;
 
+    public const UPDATED_AT = null;
+
     protected $fillable = [
         'name',
         'location',
@@ -35,6 +37,11 @@ class Theater extends Model
     public function showtimes()
     {
         return $this->hasMany(Showtime::class);
+    }
+
+    public function contracts()
+    {
+        return $this->hasMany(TheaterContract::class);
     }
 
     // Scopes

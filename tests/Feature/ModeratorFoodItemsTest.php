@@ -6,6 +6,7 @@ use App\Models\FoodItem;
 use App\Models\Theater;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ModeratorFoodItemsTest extends TestCase
@@ -14,6 +15,9 @@ class ModeratorFoodItemsTest extends TestCase
 
     public function test_moderator_can_open_create_page_and_list_images_with_storage_urls(): void
     {
+        Storage::fake('public');
+        Storage::disk('public')->put('food_items/popcorn.jpg', 'fake image');
+
         $theater = Theater::factory()->create();
         $moderator = User::factory()->create([
             'role' => 'moderator',
@@ -38,7 +42,7 @@ class ModeratorFoodItemsTest extends TestCase
         $listResponse = $this->get('/moderator/food-items?type=snack');
         $listResponse->assertOk();
         $listResponse->assertViewHas('foodItems', function ($items) {
-            return isset($items[0]['image']) && $items[0]['image'] === asset('storage/food_items/popcorn.png');
+            return isset($items[0]['image']) && $items[0]['image'] === storage_url('food_items/popcorn.jpg');
         });
     }
 }

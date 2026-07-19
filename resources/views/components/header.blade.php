@@ -31,13 +31,19 @@
             </div>
             
             <div class="search-bar">
-                <form method="GET" action="{{ route('home') }}" class="search-form-inline">
-                    <input type="hidden" name="route" value="movie/index">
-                    <input type="text" name="search" id="search-input-header" class="search-input" placeholder="Tìm kiếm phim...">
+                <form method="GET" action="{{ route('search') }}" class="search-form-inline" data-movie-search>
+                    <input type="text" name="search" id="search-input-header" class="search-input" value="{{ request('search') }}" placeholder="Tìm kiếm phim..." autocomplete="off" aria-expanded="false" aria-controls="headerSearchDropdown">
                     <button type="submit" class="search-btn">
                         <i class="fas fa-search"></i>
                     </button>
                 </form>
+                <div class="header-search-dropdown" id="headerSearchDropdown" hidden>
+                    <div class="search-history-block" id="headerSearchHistory"></div>
+                    <div class="search-suggestion-block">
+                        <div class="search-dropdown-title"><span>Phim gợi ý</span><i class="fas fa-sparkles"></i></div>
+                        <div id="headerMovieSuggestions" class="header-movie-suggestions"></div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -112,6 +118,43 @@
         </div>
     </div>
 </header>
+
+<style>
+    .header-desktop .header-left { position:relative; z-index:3; transition: flex-basis .28s ease; }
+    .header-desktop .header-left.search-expanded { flex-basis: 520px; }
+    .header-desktop .nav-new { position:relative; z-index:1; transition:filter .25s ease, opacity .25s ease, transform .25s ease; }
+    .header-desktop .search-bar { flex: 0 0 170px; width: 170px; max-width: 170px; transition: width .28s ease, max-width .28s ease, flex-basis .28s ease, transform .25s ease; z-index: 4; }
+    .header-desktop .search-bar.search-active { flex-basis: 390px; width: 390px; max-width: 390px; z-index:20; transform:translateY(-3px); }
+    .header-desktop .search-bar.search-active .search-input { background: rgba(21,22,27,.96); border-color: rgba(255,255,255,.35); box-shadow: 0 12px 35px rgba(0,0,0,.3); }
+    .header-desktop.search-mode .nav-new { filter:blur(4px); opacity:.24; transform:scale(.985); pointer-events:none; user-select:none; }
+    .header-search-dropdown { position:absolute; top:calc(100% + 10px); left:0; width:100%; padding:12px; border:1px solid rgba(255,255,255,.12); border-radius:17px; color:#fff; background:rgba(17,18,23,.97); box-shadow:0 22px 60px rgba(0,0,0,.55); backdrop-filter:blur(18px); }
+    .header-search-dropdown[hidden] { display:none; }
+    .search-dropdown-title { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; color:#aaa; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .search-dropdown-title i { color:#ff4d5a; }
+    .search-history-block:empty { display:none; }
+    .search-history-block:not(:empty) { padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,.08); }
+    .search-history-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .search-history-head span { color:#aaa; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .search-history-clear { padding:0; border:0; color:#ff6873; background:none; font-size:.72rem; cursor:pointer; }
+    .search-history-list { display:flex; flex-wrap:wrap; gap:6px; }
+    .search-history-item { max-width:100%; padding:6px 9px; border:1px solid rgba(255,255,255,.1); border-radius:999px; color:#ddd; background:rgba(255,255,255,.06); font-size:.78rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+    .search-history-item:hover { color:#fff; border-color:rgba(229,9,20,.55); background:rgba(229,9,20,.16); }
+    .header-movie-suggestions { display:grid; gap:6px; }
+    .header-movie-suggestion { display:grid; grid-template-columns:42px minmax(0,1fr) auto; gap:10px; align-items:center; padding:7px; border-radius:11px; color:#fff; text-decoration:none; transition:background .18s ease, transform .18s ease; }
+    .header-movie-suggestion:hover { color:#fff; background:rgba(255,255,255,.08); transform:translateX(2px); }
+    .header-movie-poster { width:42px; height:58px; object-fit:cover; border-radius:8px; background:#292a30; }
+    .header-movie-poster-empty { width:42px; height:58px; display:grid; place-items:center; border-radius:8px; color:#777; background:#292a30; }
+    .header-movie-info { min-width:0; }
+    .header-movie-title { display:block; overflow:hidden; color:#fff; font-size:.84rem; font-weight:750; text-overflow:ellipsis; white-space:nowrap; }
+    .header-movie-meta { display:flex; gap:7px; margin-top:4px; color:#999; font-size:.7rem; }
+    .header-movie-meta i { color:#ffc43d; }
+    .header-movie-level { padding:4px 7px; border-radius:999px; color:#ff7b85; background:rgba(229,9,20,.13); font-size:.67rem; font-weight:800; }
+    .header-search-state { padding:12px 7px; color:#8f9096; text-align:center; font-size:.8rem; }
+    @media (max-width:1200px) {
+        .header-desktop .header-left.search-expanded { flex-basis:430px; }
+        .header-desktop .search-bar.search-active { flex-basis:320px; width:320px; max-width:320px; }
+    }
+</style>
 
 <!-- Mobile Header (Top Bar) -->
 <header class="header-mobile">
@@ -189,9 +232,8 @@
     @endif
     
     <div class="mobile-menu-search">
-        <form method="GET" action="{{ route('movies.index') }}">
-            <input type="hidden" name="route" value="movie/index">
-            <input type="text" name="search" placeholder="Tìm kiếm phim..." class="mobile-search-input">
+        <form method="GET" action="{{ route('search') }}" data-movie-search>
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Tìm kiếm phim..." class="mobile-search-input">
             <button type="submit" class="mobile-search-btn">
                 <i class="fas fa-search"></i>
             </button>
@@ -877,9 +919,15 @@ function handleLogin(event) {
         const contentType = response.headers.get('content-type') || '';
         const data = contentType.includes('application/json') ? await response.json() : {};
 
+        if (response.status === 419) {
+            const csrfError = new Error('Phiên đăng nhập đã được làm mới. Vui lòng đăng nhập lại.');
+            csrfError.isCsrfMismatch = true;
+            throw csrfError;
+        }
+
         if (!response.ok) {
             const firstError = data.errors ? Object.values(data.errors)[0]?.[0] : null;
-            throw new Error(firstError || data.message || 'Khong the dang nhap. Vui long kiem tra lai thong tin.');
+            throw new Error(firstError || data.error || data.message || 'Không thể đăng nhập. Vui lòng kiểm tra lại thông tin.');
         }
 
         return data;
@@ -895,7 +943,12 @@ function handleLogin(event) {
         }
     })
     .catch(error => {
-        errorDiv.textContent = 'Có lỗi xảy ra. Vui lòng thử lại!';
+        if (error.isCsrfMismatch) {
+            window.location.reload();
+            return;
+        }
+
+        errorDiv.textContent = error.message || 'Có lỗi xảy ra. Vui lòng thử lại!';
         errorDiv.style.display = 'block';
         submitBtn.disabled = false;
         submitBtn.textContent = 'Đăng nhập';
@@ -954,6 +1007,219 @@ function handleRegister(event) {
 
 // Close modal when clicking outside
 document.addEventListener('DOMContentLoaded', function() {
+    const searchHistoryKey = 'cinehub_search_history';
+    const readSearchHistory = function() {
+        try {
+            const history = JSON.parse(localStorage.getItem(searchHistoryKey) || '[]');
+            return Array.isArray(history) ? history.filter(item => typeof item === 'string').slice(0, 6) : [];
+        } catch (error) {
+            return [];
+        }
+    };
+    const saveSearchKeyword = function(keyword) {
+        const normalized = String(keyword || '').trim();
+        if (!normalized) return;
+
+        const history = readSearchHistory().filter(item => item.toLocaleLowerCase('vi') !== normalized.toLocaleLowerCase('vi'));
+        history.unshift(normalized);
+        try {
+            localStorage.setItem(searchHistoryKey, JSON.stringify(history.slice(0, 6)));
+        } catch (error) {
+            // Search still works when browser storage is unavailable.
+        }
+    };
+
+    // Keep header search independent from other page scripts. This also avoids
+    // stale query parameters and always opens the canonical search URL.
+    document.querySelectorAll('form[data-movie-search]').forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            const input = form.querySelector('input[name="search"]');
+            const keyword = input ? input.value.trim() : '';
+
+            event.preventDefault();
+
+            if (!keyword) {
+                if (input) input.focus();
+                return;
+            }
+
+            saveSearchKeyword(keyword);
+            window.location.assign(@json(route('search')) + '?search=' + encodeURIComponent(keyword));
+        });
+    });
+
+    const searchBar = document.querySelector('.header-desktop .search-bar');
+    const searchInput = document.getElementById('search-input-header');
+    const searchDropdown = document.getElementById('headerSearchDropdown');
+    const historyContainer = document.getElementById('headerSearchHistory');
+    const movieContainer = document.getElementById('headerMovieSuggestions');
+
+    if (searchBar && searchInput && searchDropdown && historyContainer && movieContainer) {
+        const headerLeft = searchBar.closest('.header-left');
+        let searchTimer = null;
+        let activeRequest = null;
+
+        const setSearchOpen = function(open) {
+            searchBar.classList.toggle('search-active', open);
+            headerLeft?.classList.toggle('search-expanded', open);
+            searchBar.closest('.header-desktop')?.classList.toggle('search-mode', open);
+            searchDropdown.hidden = !open;
+            searchInput.setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+
+        const goToSearch = function(keyword) {
+            const value = String(keyword || '').trim();
+            if (!value) return;
+            saveSearchKeyword(value);
+            window.location.assign(@json(route('search')) + '?search=' + encodeURIComponent(value));
+        };
+
+        const renderHistory = function(keyword = '') {
+            const normalized = keyword.toLocaleLowerCase('vi');
+            const history = readSearchHistory()
+                .filter(item => !normalized || item.toLocaleLowerCase('vi').includes(normalized))
+                .slice(0, 5);
+
+            historyContainer.replaceChildren();
+            if (!history.length) return;
+
+            const head = document.createElement('div');
+            head.className = 'search-history-head';
+            const title = document.createElement('span');
+            title.textContent = 'Tìm kiếm gần đây';
+            const clear = document.createElement('button');
+            clear.type = 'button';
+            clear.className = 'search-history-clear';
+            clear.textContent = 'Xóa';
+            clear.addEventListener('click', function() {
+                try { localStorage.removeItem(searchHistoryKey); } catch (error) {}
+                renderHistory(searchInput.value.trim());
+                loadMovieSuggestions(searchInput.value.trim());
+            });
+            head.append(title, clear);
+
+            const list = document.createElement('div');
+            list.className = 'search-history-list';
+            history.forEach(function(item) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'search-history-item';
+                button.textContent = item;
+                button.title = item;
+                button.addEventListener('click', () => goToSearch(item));
+                list.appendChild(button);
+            });
+            historyContainer.append(head, list);
+        };
+
+        const renderMovies = function(movies) {
+            movieContainer.replaceChildren();
+            if (!movies.length) {
+                const empty = document.createElement('div');
+                empty.className = 'header-search-state';
+                empty.textContent = 'Chưa tìm thấy phim phù hợp';
+                movieContainer.appendChild(empty);
+                return;
+            }
+
+            movies.forEach(function(movie) {
+                const link = document.createElement('a');
+                link.className = 'header-movie-suggestion';
+                link.href = movie.url;
+                link.addEventListener('click', () => saveSearchKeyword(searchInput.value.trim() || movie.title));
+
+                if (movie.thumbnail) {
+                    const image = document.createElement('img');
+                    image.className = 'header-movie-poster';
+                    image.src = movie.thumbnail;
+                    image.alt = movie.title;
+                    image.loading = 'lazy';
+                    link.appendChild(image);
+                } else {
+                    const imageFallback = document.createElement('div');
+                    imageFallback.className = 'header-movie-poster-empty';
+                    imageFallback.innerHTML = '<i class="fas fa-film"></i>';
+                    link.appendChild(imageFallback);
+                }
+
+                const info = document.createElement('div');
+                info.className = 'header-movie-info';
+                const title = document.createElement('span');
+                title.className = 'header-movie-title';
+                title.textContent = movie.title;
+                const meta = document.createElement('span');
+                meta.className = 'header-movie-meta';
+                const rating = document.createElement('span');
+                rating.innerHTML = '<i class="fas fa-star"></i> ' + movie.rating;
+                meta.appendChild(rating);
+                if (movie.year) {
+                    const year = document.createElement('span');
+                    year.textContent = movie.year;
+                    meta.appendChild(year);
+                }
+                info.append(title, meta);
+
+                const level = document.createElement('span');
+                level.className = 'header-movie-level';
+                level.textContent = movie.level;
+                link.append(info, level);
+                movieContainer.appendChild(link);
+            });
+        };
+
+        const loadMovieSuggestions = function(keyword = '') {
+            if (activeRequest) activeRequest.abort();
+            activeRequest = new AbortController();
+
+            movieContainer.innerHTML = '<div class="header-search-state"><i class="fas fa-spinner fa-spin"></i> Đang tìm phim...</div>';
+            const params = new URLSearchParams();
+            if (keyword) params.set('q', keyword);
+            readSearchHistory().forEach(item => params.append('history[]', item));
+
+            fetch(@json(route('search.suggestions', [], false)) + '?' + params.toString(), {
+                headers: { 'Accept': 'application/json' },
+                signal: activeRequest.signal
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Suggestion request failed');
+                    return response.json();
+                })
+                .then(data => renderMovies(Array.isArray(data.movies) ? data.movies : []))
+                .catch(error => {
+                    if (error.name === 'AbortError') return;
+                    movieContainer.innerHTML = '<div class="header-search-state">Không thể tải gợi ý lúc này</div>';
+                });
+        };
+
+        const refreshSearchDropdown = function() {
+            const keyword = searchInput.value.trim();
+            renderHistory(keyword);
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => loadMovieSuggestions(keyword), 220);
+        };
+
+        searchInput.addEventListener('focus', function() {
+            setSearchOpen(true);
+            refreshSearchDropdown();
+        });
+        searchInput.addEventListener('input', function() {
+            setSearchOpen(true);
+            refreshSearchDropdown();
+        });
+        searchInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                setSearchOpen(false);
+                searchInput.blur();
+            }
+        });
+        document.addEventListener('click', function(event) {
+            if (!searchBar.contains(event.target)) setSearchOpen(false);
+        });
+
+        const initialSearch = @json(trim((string) request('search', '')));
+        if (initialSearch) saveSearchKeyword(initialSearch);
+    }
+
     const modal = document.getElementById('authModal');
     if (modal) {
         modal.addEventListener('click', function(e) {
@@ -991,5 +1257,13 @@ document.addEventListener('DOMContentLoaded', function() {
             openAuthModal('register');
         }, 300);
     @endif
+});
+
+// Browsers can restore the login modal from back/forward cache with an old
+// CSRF token after visiting the OTP page. Always request a fresh form/session.
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
 });
 </script>

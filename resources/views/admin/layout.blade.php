@@ -419,6 +419,12 @@
             <li><a href="{{ route('admin.theaters.index') }}" class="{{ request()->routeIs('admin.theaters*') ? 'active' : '' }}">
                 <i class="fas fa-building"></i> Quản lý rạp
             </a></li>
+
+            @if(Auth::user()->isAdmin())
+            <li><a href="{{ route('admin.contracts.index') }}" class="{{ request()->routeIs('admin.contracts*') ? 'active' : '' }}">
+                <i class="fas fa-file-contract"></i> Hợp đồng rạp
+            </a></li>
+            @endif
             
             <li><a href="{{ route('admin.tickets.index') }}" class="{{ request()->routeIs('admin.tickets*') ? 'active' : '' }}">
                 <i class="fas fa-ticket-alt"></i> Hỗ trợ khách hàng

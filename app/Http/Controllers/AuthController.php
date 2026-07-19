@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\LoginSessionReplaced;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
 
@@ -71,22 +73,24 @@ class AuthController extends Controller
                 
                 // Kiểm tra xem user có phải admin không
                 $isAdmin = ($user->role === 'admin' || $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists());
-                
-                if ($isAdmin) {
-                    // Nếu là Admin, đăng nhập trực tiếp không cần OTP
+
+                // Every account is limited to one concurrent login. Only ask
+                // for OTP when another active session must be replaced.
+                if (!$this->hasReachedLoginSessionLimit($user, $request)) {
                     Auth::login($user, $remember);
                     $request->session()->regenerate();
-                    
-                    $redirectUrl = route('admin.index');
-                    
+
+                    $redirectUrl = $isAdmin ? route('admin.index') : route('home');
+
                     if ($request->ajax()) {
                         return response()->json([
                             'success' => true,
-                            'redirect' => $redirectUrl
+                            'redirect' => $redirectUrl,
                         ]);
                     }
-                    
-                    return redirect()->intended($redirectUrl)->with('success', 'Đăng nhập thành công với quyền Admin!');
+
+                    return redirect()->intended($redirectUrl)
+                        ->with('success', 'Đăng nhập thành công!');
                 }
                 
                 // Sinh OTP ngẫu nhiên 6 chữ số
@@ -448,6 +452,7 @@ class AuthController extends Controller
             }
 
             Auth::login($user, $remember);
+            $this->removeExcessLoginSessions($user, $request);
             
             // Xóa session OTP
             session()->forget(['login_user_id', 'login_otp', 'login_otp_expires_at', 'login_remember']);
@@ -467,7 +472,9 @@ class AuthController extends Controller
                 $redirectUrl = route('counter.index');
             }
 
-            return redirect()->intended($redirectUrl)->with('success', 'Đăng nhập thành công!');
+            // Do not use intended() here: guest middleware may have stored the
+            // OTP page itself as the intended URL, causing a redirect loop.
+            return redirect($redirectUrl)->with('success', 'Đăng nhập thành công!');
         } catch (\Exception $e) {
             return back()->withErrors(['otp' => 'Đã xảy ra lỗi khi đăng nhập: ' . $e->getMessage()]);
         }
@@ -531,5 +538,59 @@ class AuthController extends Controller
             }
             return back()->withErrors(['otp' => 'Gửi lại mã OTP thất bại: ' . $e->getMessage()]);
         }
+    }
+
+    /** Every account can have one active login session at a time. */
+    private function maxLoginSessions(User $user): int
+    {
+        return 1;
+    }
+
+    private function hasReachedLoginSessionLimit(User $user, Request $request): bool
+    {
+        if (config('session.driver') !== 'database') {
+            return false;
+        }
+
+        $activeSince = now()->subMinutes((int) config('session.lifetime', 120))->timestamp;
+
+        $activeSessions = DB::table(config('session.table', 'sessions'))
+            ->where('user_id', $user->id)
+            ->where('id', '!=', $request->session()->getId())
+            ->where('last_activity', '>=', $activeSince)
+            ->count();
+
+        return $activeSessions >= $this->maxLoginSessions($user);
+    }
+
+    /** Remove the oldest sessions after OTP authorizes replacing a device. */
+    private function removeExcessLoginSessions(User $user, Request $request): void
+    {
+        if (config('session.driver') !== 'database') {
+            return;
+        }
+
+        $sessionsToKeep = max(0, $this->maxLoginSessions($user) - 1);
+        $table = config('session.table', 'sessions');
+        $query = DB::table($table)
+            ->where('user_id', $user->id)
+            ->where('id', '!=', $request->session()->getId());
+
+        if ((clone $query)->exists()) {
+            try {
+                event(new LoginSessionReplaced($user->id));
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
+
+        $keepIds = (clone $query)
+            ->orderByDesc('last_activity')
+            ->limit($sessionsToKeep)
+            ->pluck('id');
+
+        $query
+            ->when($keepIds->isNotEmpty(), fn ($builder) => $builder->whereNotIn('id', $keepIds))
+            ->delete();
     }
 }

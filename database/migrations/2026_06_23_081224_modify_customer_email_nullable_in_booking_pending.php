@@ -16,6 +16,10 @@ return new class extends Migration
             return;
         }
 
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         // Modify customer_email to be nullable
         DB::statement('ALTER TABLE `booking_pending` MODIFY `customer_email` VARCHAR(255) NULL');
     }
@@ -26,6 +30,10 @@ return new class extends Migration
     public function down(): void
     {
         if (!Schema::hasTable('booking_pending') || !Schema::hasColumn('booking_pending', 'customer_email')) {
+            return;
+        }
+
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
             return;
         }
 

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\{
     HomeController,
     AuthController,
@@ -10,6 +11,7 @@ use App\Http\Controllers\{
     NotificationController,
     ReviewController,
     AdminController,
+    TheaterContractController,
     ModeratorController,
     CounterStaffController,
     NewsController
@@ -23,7 +25,8 @@ use App\Http\Controllers\{
 
 // Home
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/search', [HomeController::class, 'search'])->name('search');
+Route::get('/search', [MovieController::class, 'index'])->name('search');
+Route::get('/search/suggestions', [MovieController::class, 'searchSuggestions'])->name('search.suggestions');
 
 // ==================== AUTH ROUTES ====================
 Route::middleware('guest')->group(function () {
@@ -60,6 +63,7 @@ Route::prefix('movies')->name('movies.')->group(function () {
     Route::get('/online', [MovieController::class, 'online'])->middleware('auth')->name('online');
     Route::get('/phim-le', [MovieController::class, 'phimLe'])->name('phimle');
     Route::get('/phim-bo', [MovieController::class, 'phimBo'])->name('phimbo');
+    Route::get('/sap-chieu', [MovieController::class, 'upcoming'])->name('upcoming');
     Route::get('/kho-phim', [MovieController::class, 'libraryChooser'])->name('library.index');
     Route::get('/kho-phim/{audience}', [MovieController::class, 'library'])->name('library');
     Route::get('/category/{id}', [MovieController::class, 'category'])->name('category');
@@ -69,7 +73,9 @@ Route::prefix('movies')->name('movies.')->group(function () {
     // Routes require authentication
     Route::middleware('auth')->group(function () {
         Route::post('/toggle-favorite', [MovieController::class, 'toggleFavorite'])->name('toggleFavorite');
+        Route::post('/{id}/interest', [MovieController::class, 'markInterested'])->name('interest');
         Route::get('/{id}/watch', [MovieController::class, 'watch'])->name('watch');
+        Route::post('/{id}/progress', [MovieController::class, 'saveProgress'])->name('progress');
         Route::get('/{movieId}/episode/{episodeNumber}', [MovieController::class, 'watchEpisode'])->name('watchEpisode');
     });
 });
@@ -185,6 +191,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::delete('/{id}', [AdminController::class, 'theatersDelete'])->name('destroy');
     });
 
+    // Theater Contracts Management
+    Route::prefix('contracts')->name('contracts.')->group(function () {
+        Route::get('/', [TheaterContractController::class, 'index'])->name('index');
+        Route::get('/create', [TheaterContractController::class, 'create'])->name('create');
+        Route::post('/extract-pdf', [TheaterContractController::class, 'extractPdf'])->name('extract-pdf');
+        Route::post('/', [TheaterContractController::class, 'store'])->name('store');
+        Route::get('/{contract}', [TheaterContractController::class, 'show'])->name('show');
+        Route::post('/{contract}/renew', [TheaterContractController::class, 'renew'])->name('renew');
+        Route::get('/{contract}/download', [TheaterContractController::class, 'download'])->name('download');
+    });
+
     // Categories Management
     Route::prefix('categories')->name('categories.')->group(function () {
         Route::get('/', [AdminController::class, 'categories'])->name('index');
@@ -197,6 +214,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::prefix('tickets')->name('tickets.')->group(function () {
         Route::get('/', [AdminController::class, 'tickets'])->name('index');
         Route::post('/update-movie', [AdminController::class, 'ticketsUpdateMovie'])->name('updateMovie');
+        Route::get('/{ticket}', [AdminController::class, 'ticketShow'])->name('show');
     });
 
     // Food Items Management
@@ -216,6 +234,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 // ==================== MODERATOR ROUTES ====================
 Route::middleware(['auth', 'moderator'])->prefix('moderator')->name('moderator.')->group(function () {
     Route::get('/', [ModeratorController::class, 'index'])->name('index');
+    Route::get('/contracts', [ModeratorController::class, 'contracts'])->name('contracts.index');
+    Route::get('/contracts/{contract}/download', [ModeratorController::class, 'contractDownload'])->name('contracts.download');
 
     // Showtimes Management
     Route::prefix('showtimes')->name('showtimes.')->group(function () {
@@ -343,3 +363,9 @@ Route::get('/test/create-booking', function () {
 
     return 'Created booking: ' . $futureBooking->id . ' - Go to <a href="/booking/history">/booking/history</a> to see it';
 });
+Route::post('/ai-chat', [AiChatController::class, 'chat'])
+    ->middleware('throttle:20,1')
+    ->name('ai.chat');
+Route::get('/ai-chat/history', [AiChatController::class, 'history'])
+    ->middleware('auth')
+    ->name('ai.history');

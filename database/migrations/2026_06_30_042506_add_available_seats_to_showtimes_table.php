@@ -23,12 +23,16 @@ return new class extends Migration
             return;
         }
 
-        // Backfill any null values; this is safe on both old and new schemas.
+        // Backfill any null values; this query works in both MySQL and SQLite tests.
         DB::statement('
-            UPDATE showtimes 
-            JOIN theater_screens ON showtimes.screen_id = theater_screens.id 
-            SET showtimes.available_seats = theater_screens.total_seats
-            WHERE showtimes.available_seats IS NULL
+            UPDATE showtimes
+            SET available_seats = (
+                SELECT theater_screens.total_seats
+                FROM theater_screens
+                WHERE theater_screens.id = showtimes.screen_id
+            )
+            WHERE available_seats IS NULL
+                AND screen_id IS NOT NULL
         ');
     }
 

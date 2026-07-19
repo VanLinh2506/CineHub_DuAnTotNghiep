@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Movie;
+use App\Models\Category;
+use App\Models\WatchHistory;
+use App\Models\MovieInterest;
+use App\Models\MovieViewEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -12,8 +16,10 @@ class HomeController extends Controller
     {
         $user = auth()->user();
         
-        // Slider phim nổi bật
+        // Banner trang chủ: chọn ngẫu nhiên trong nhóm phim có nhiều lượt xem.
+        // Nếu chưa có lịch sử xem, rating và ngày tạo sẽ làm tiêu chí dự phòng.
         $sliderMovies = Movie::with(['category', 'categories'])
+            ->withCount(['viewEvents as watch_history_count'])
             ->where('status', 'Chiếu online')
             ->where('status_admin', 'published')
             ->where(function($query) {
@@ -24,22 +30,27 @@ class HomeController extends Controller
                             ->where('thumbnail', '!=', '');
                       });
             })
-            ->orderByRaw('CASE WHEN banner IS NOT NULL AND banner != "" THEN 1 ELSE 2 END')
-            ->orderBy('rating', 'desc')
-            ->inRandomOrder()
-            ->limit(5)
-            ->get();
+            ->orderByDesc('watch_history_count')
+            ->orderByDesc('rating')
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get()
+            ->shuffle()
+            ->take(5)
+            ->values();
         
         // Nếu không đủ 5 phim, lấy thêm
         if ($sliderMovies->count() < 5) {
             $existingIds = $sliderMovies->pluck('id')->toArray();
             $additionalMovies = Movie::with(['category', 'categories'])
-                ->where('status', '!=', 'Chiếu rạp')
+                ->withCount(['viewEvents as watch_history_count'])
+                ->where('status', 'Chiếu online')
                 ->where('status_admin', 'published')
                 ->whereNotNull('thumbnail')
                 ->where('thumbnail', '!=', '')
                 ->whereNotIn('id', $existingIds ?: [0])
-                ->orderBy('rating', 'desc')
+                ->orderByDesc('watch_history_count')
+                ->orderByDesc('rating')
                 ->inRandomOrder()
                 ->limit(5 - $sliderMovies->count())
                 ->get();
@@ -53,7 +64,7 @@ class HomeController extends Controller
                 $query->where('type', 'phimle')
                       ->orWhereNull('type');
             })
-            ->where('status', '!=', 'Chiếu rạp')
+            ->where('status', 'Chiếu online')
             ->where('status_admin', 'published')
             ->orderBy('rating', 'desc')
             ->orderBy('created_at', 'desc')
@@ -64,7 +75,7 @@ class HomeController extends Controller
         $phimBo = Movie::with(['category', 'categories'])
             ->withCount('episodes')
             ->where('type', 'phimbo')
-            ->where('status', '!=', 'Chiếu rạp')
+            ->where('status', 'Chiếu online')
             ->where('status_admin', 'published')
             ->orderBy('rating', 'desc')
             ->orderBy('created_at', 'desc')
@@ -74,7 +85,7 @@ class HomeController extends Controller
         // Phim mới nhất
         $latestMovies = Movie::with(['category', 'categories'])
             ->withCount('episodes')
-            ->where('status', '!=', 'Chiếu rạp')
+            ->where('status', 'Chiếu online')
             ->where('status_admin', 'published')
             ->orderBy('created_at', 'desc')
             ->limit(12)
@@ -82,24 +93,89 @@ class HomeController extends Controller
         
         // Top phim xem nhiều trong tuần
         $topMoviesWeek = Movie::with(['category', 'categories'])
-            ->withCount(['episodes', 'watchHistory' => function($query) {
-                $query->where('created_at', '>=', now()->subDays(7));
-            }])
-            ->where('status', '!=', 'Chiếu rạp')
+            ->withCount([
+                'episodes',
+                'viewEvents as watch_history_count' => function($query) {
+                    $query->where('created_at', '>=', now()->subDays(7));
+                },
+            ])
+            ->where('status', 'Chiếu online')
             ->where('status_admin', 'published')
             ->orderBy('watch_history_count', 'desc')
             ->orderBy('rating', 'desc')
             ->limit(10)
             ->get();
+
+        $upcomingMovies = Movie::with(['category', 'categories'])
+            ->withCount('interests')
+            ->where('type', 'phimle')
+            ->where('status', 'Sắp chiếu')
+            ->where('scheduled_status', 'Chiếu online')
+            ->where('publish_date', '>', now())
+            ->where('status_admin', 'published')
+            ->orderByDesc('interests_count')
+            ->orderBy('publish_date')
+            ->limit(6)
+            ->get();
+
+        // Ranking rows by genre. Weekly views are the primary signal; rating
+        // keeps useful ordering while test catalogs do not have watch data.
+        $topMoviesByCategory = Category::query()
+            // Randomize category order on every request. The view uses the
+            // first two non-empty categories for its two ranking sections.
+            ->inRandomOrder()
+            ->get()
+            ->mapWithKeys(function (Category $category) {
+                $movies = Movie::with(['category', 'categories'])
+                    ->withCount(['viewEvents as watch_history_count' => function ($query) {
+                        $query->where('created_at', '>=', now()->subDays(7));
+                    }])
+                    ->where('status_admin', 'published')
+                    ->where('status', 'Chiếu online')
+                    ->where(function ($query) use ($category) {
+                        $query->where('category_id', $category->id)
+                            ->orWhereHas('categories', function ($categoryQuery) use ($category) {
+                                $categoryQuery->where('categories.id', $category->id);
+                            });
+                    })
+                    ->orderByDesc('watch_history_count')
+                    ->orderByDesc('rating')
+                    ->limit(10)
+                    ->get();
+
+                return $movies->isEmpty() ? [] : [$category->name => $movies];
+            });
         
         // Lấy danh sách favorites nếu đã đăng nhập
         $favorites = [];
+        $watchProgressByMovie = collect();
+        $continueWatching = collect();
+        $interestedMovieIds = [];
         if ($user) {
             $favorites = DB::table('watch_history')
                 ->where('user_id', $user->id)
                 ->where('favorite', 1)
                 ->pluck('movie_id')
                 ->toArray();
+
+            $watchProgressByMovie = MovieViewEvent::with('episode')
+                ->where('user_id', $user->id)
+                ->whereNotNull('episode_id')
+                ->get()
+                ->filter(fn ($event) => $event->episode)
+                ->sortByDesc(fn ($event) => (int) $event->episode->episode_number)
+                ->unique('movie_id')
+                ->keyBy('movie_id');
+
+            $continueWatching = WatchHistory::with(['movie.category', 'episode'])
+                ->where('user_id', $user->id)
+                ->where('last_time', '>', 0)
+                ->where('playback_updated_at', '>=', now()->subDays(30))
+                ->latest('playback_updated_at')
+                ->limit(8)
+                ->get()
+                ->filter(fn ($history) => $history->movie);
+            $interestedMovieIds = MovieInterest::where('user_id', $user->id)->pluck('movie_id')->all();
         }
         
         return view('home.index', compact(
@@ -108,8 +184,13 @@ class HomeController extends Controller
             'phimLe',
             'phimBo',
             'topMoviesWeek',
+            'topMoviesByCategory',
             'user',
-            'favorites'
+            'favorites',
+            'watchProgressByMovie',
+            'continueWatching',
+            'upcomingMovies',
+            'interestedMovieIds'
         ));
     }
 }

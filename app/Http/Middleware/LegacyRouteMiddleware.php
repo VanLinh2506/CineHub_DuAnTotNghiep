@@ -155,12 +155,14 @@ class LegacyRouteMiddleware
             // Tìm Laravel route tương ứng
             if (isset($this->routeMap[$legacyRoute])) {
                 $newRoute = $this->routeMap[$legacyRoute];
+                $usedParams = ['route'];
                 
                 // Thay thế parameters động
                 foreach ($request->except('route') as $key => $value) {
                     $placeholder = '{' . $key . '}';
                     if (str_contains($newRoute, $placeholder)) {
                         $newRoute = str_replace($placeholder, $value, $newRoute);
+                        $usedParams[] = $key;
                     }
                 }
                 
@@ -168,8 +170,8 @@ class LegacyRouteMiddleware
                 $newRoute = preg_replace('/\{[a-zA-Z0-9_]+\}/', '', $newRoute);
                 $newRoute = str_replace('//', '/', $newRoute); // Clean double slashes
                 
-                // Preserve query parameters (except 'route')
-                $queryParams = $request->except('route');
+                // Preserve query parameters that were not consumed by path placeholders.
+                $queryParams = $request->except($usedParams);
                 if (!empty($queryParams)) {
                     $newRoute .= '?' . http_build_query($queryParams);
                 }

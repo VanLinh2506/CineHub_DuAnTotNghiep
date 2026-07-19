@@ -84,7 +84,8 @@
                                     data-screen-id="{{ $showtime['screen_id'] }}"
                                     data-show-date="{{ $showtime['show_date'] }}"
                                     data-show-time="{{ date('H:i', strtotime($showtime['show_time'])) }}"
-                                    data-price="{{ $showtime['price'] }}">
+                                    data-price="{{ $showtime['price'] }}"
+                                    data-contract-price-type="{{ $showtime['contract_price_type'] ?? 'bestseller' }}">
                                 <i class="fas fa-edit"></i> Sửa
                             </button>
                             <a href="?route=moderator/showtimesDelete&id={{ $showtime['id'] }}"
@@ -150,8 +151,17 @@
                         </div>
                     </div>
                     <div class="mb-3">
+                        <label for="contract_price_type" class="form-label">Nhóm giá hợp đồng <span class="text-danger">*</span></label>
+                        <select name="contract_price_type" id="contract_price_type" class="form-select" required>
+                            <option value="bestseller">Phim bán chạy</option>
+                            <option value="new_release">Phim mới phát hành</option>
+                            <option value="hot_movie">Phim hot</option>
+                        </select>
+                        <small id="contractPriceHelp" class="text-muted">Chọn ngày chiếu để áp dụng hợp đồng.</small>
+                    </div>
+                    <div class="mb-3">
                         <label for="price" class="form-label">Giá vé (VNĐ) <span class="text-danger">*</span></label>
-                        <input type="number" name="price" id="price" class="form-control" min="0" required>
+                        <input type="number" name="price" id="price" class="form-control" min="0" step="1000" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -203,6 +213,14 @@
                     <div class="mb-3">
                         <label for="edit_show_time" class="form-label">Giờ chiếu <span class="text-danger">*</span></label>
                         <input type="time" name="show_time" id="edit_show_time" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_contract_price_type" class="form-label">Nhóm giá hợp đồng <span class="text-danger">*</span></label>
+                        <select name="contract_price_type" id="edit_contract_price_type" class="form-select" required>
+                            <option value="bestseller">Phim bán chạy</option>
+                            <option value="new_release">Phim mới phát hành</option>
+                            <option value="hot_movie">Phim hot</option>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="edit_price" class="form-label">Giá vé (VNĐ) <span class="text-danger">*</span></label>
@@ -290,6 +308,39 @@
 
 @push('scripts')
 <script>
+const contractPrices = @json($contractPrices);
+
+function applyContractPrice() {
+    const date = document.getElementById('show_date')?.value;
+    const type = document.getElementById('contract_price_type')?.value || 'bestseller';
+    const priceInput = document.getElementById('price');
+    const help = document.getElementById('contractPriceHelp');
+    if (!date || !priceInput || !help) return;
+
+    const contract = contractPrices.find(item => date >= item.start_date && date <= item.end_date);
+    if (!contract) {
+        priceInput.value = '';
+        help.className = 'text-danger';
+        help.textContent = 'Ngày này không có hợp đồng còn thời hạn.';
+        return;
+    }
+
+    const ranges = {
+        bestseller: [contract.bestseller_price_min, contract.bestseller_price_max],
+        new_release: [contract.new_release_price_min, contract.new_release_price_max],
+        hot_movie: [contract.hot_movie_price_min, contract.hot_movie_price_max],
+    };
+    const [minimum, maximum] = (ranges[type] || ranges.bestseller).map(Number);
+    priceInput.min = minimum;
+    priceInput.max = maximum;
+    priceInput.value = minimum;
+    help.className = 'text-success';
+    help.textContent = `${contract.contract_code}: ${minimum.toLocaleString('vi-VN')} - ${maximum.toLocaleString('vi-VN')} VNĐ/vé`;
+}
+
+document.getElementById('show_date')?.addEventListener('change', applyContractPrice);
+document.getElementById('contract_price_type')?.addEventListener('change', applyContractPrice);
+
 document.addEventListener('DOMContentLoaded', function() {
     // Edit showtime modal
     const editShowtimeModal = document.getElementById('editShowtimeModal');
@@ -301,6 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
             editShowtimeModal.querySelector('#edit_screen_id').value = button.getAttribute('data-screen-id');
             editShowtimeModal.querySelector('#edit_show_date').value = button.getAttribute('data-show-date');
             editShowtimeModal.querySelector('#edit_show_time').value = button.getAttribute('data-show-time');
+            editShowtimeModal.querySelector('#edit_contract_price_type').value = button.getAttribute('data-contract-price-type') || 'bestseller';
             editShowtimeModal.querySelector('#edit_price').value = button.getAttribute('data-price');
         });
     }

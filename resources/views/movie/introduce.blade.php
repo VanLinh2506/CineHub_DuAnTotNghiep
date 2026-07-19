@@ -618,7 +618,7 @@ $bgImage = !empty($movie->banner) ? $movie->banner : $movie->thumbnail;
                             <span class="intro-tag tag-type">
                                 {{ ($movie->type ?? 'phimle') === 'phimbo' ? 'Phim bộ' : 'Phim lẻ' }}
                             </span>
-                            @if ($movie->level && $movie->level !== 'Free')
+                            @if ($movie->status !== 'Chiếu rạp' && $movie->level && $movie->level !== 'Free')
                             <span class="intro-tag tag-level">{{ $movie->level }}</span>
                             @endif
                         </div>
@@ -640,9 +640,22 @@ $bgImage = !empty($movie->banner) ? $movie->banner : $movie->thumbnail;
                         @endif
 
                         <div class="intro-actions">
-                            @if ($movie->isPhimBo())
-                            <a href="{{ route('movies.watchEpisode', [$movie->id, 1]) }}" class="btn-intro-watch">
-                                <i class="fas fa-play"></i> Xem ngay
+                            @if ($movie->status === 'Sắp chiếu' && $movie->scheduled_status === 'Chiếu online' && $movie->publish_date?->isFuture())
+                                @auth
+                                <button type="button" class="btn-intro-watch" id="introInterestButton"
+                                    data-url="{{ route('movies.interest', $movie->id) }}" {{ $isInterested ? 'disabled' : '' }}>
+                                    <i class="{{ $isInterested ? 'fas' : 'far' }} fa-bell"></i>
+                                    <span>{{ $isInterested ? 'Đã quan tâm' : 'Quan tâm' }}</span>
+                                    (<b>{{ (int) $movie->interests_count }}</b>)
+                                </button>
+                                @else
+                                <a href="{{ route('login') }}" class="btn-intro-watch"><i class="far fa-bell"></i> Quan tâm</a>
+                                @endauth
+                                <span class="intro-tag tag-year"><i class="far fa-calendar-alt"></i> {{ $movie->publish_date->format('d/m/Y H:i') }}</span>
+                            @elseif ($movie->isPhimBo())
+                            <a href="{{ route('movies.watchEpisode', [$movie->id, $resumeEpisodeNumber ?? 1]) }}" class="btn-intro-watch">
+                                <i class="fas fa-play"></i>
+                                {{ ($resumeEpisodeNumber ?? 1) > 1 ? 'Xem tiếp tập ' . $resumeEpisodeNumber : 'Xem ngay' }}
                             </a>
                             @else
                             <a href="{{ route('movies.watch', $movie->id) }}" class="btn-intro-watch">
@@ -650,7 +663,7 @@ $bgImage = !empty($movie->banner) ? $movie->banner : $movie->thumbnail;
                             </a>
                             @endif
 
-                            @if ($movie->hasTrailer())
+                            @if ($movie->isPhimLe() && $movie->hasTrailer())
                             <a href="{{ $movie->trailer_url_full }}" target="_blank" class="btn-intro-fav">
                                 <i class="fas fa-video"></i> Trailer
                             </a>
@@ -723,7 +736,7 @@ $bgImage = !empty($movie->banner) ? $movie->banner : $movie->thumbnail;
             @endif
 
             <!-- Trailer -->
-            @if ($movie->hasTrailer())
+            @if ($movie->isPhimLe() && $movie->hasTrailer())
             <h2 class="intro-section-title">Trailer</h2>
             <div class="intro-trailer">
                 <video controls preload="metadata" poster="{{ $movie->thumbnail }}">
@@ -832,4 +845,38 @@ $bgImage = !empty($movie->banner) ? $movie->banner : $movie->thumbnail;
     </section>
     @endif
 </div>
+
+@if($showUpgradeModal && $user)
+    @include('movie.access-denied', [
+        'movieLevel' => $movie->level ?? 'Free',
+        'subscriptionName' => $subscriptionName,
+        'eligibleSubscriptions' => $eligibleSubscriptions,
+        'user' => $user,
+    ])
+@endif
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const button = document.getElementById('introInterestButton');
+    if (!button || button.disabled) return;
+
+    button.addEventListener('click', function () {
+        button.disabled = true;
+        fetch(button.dataset.url, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': @json(csrf_token()) }
+        })
+        .then(response => response.ok ? response.json() : Promise.reject())
+        .then(data => {
+            button.querySelector('i').className = 'fas fa-bell';
+            button.querySelector('span').textContent = 'Đã quan tâm';
+            button.querySelector('b').textContent = data.count;
+        })
+        .catch(() => {
+            button.disabled = false;
+            alert('Không thể lưu quan tâm lúc này.');
+        });
+    });
+});
+</script>
+
 @endsection
