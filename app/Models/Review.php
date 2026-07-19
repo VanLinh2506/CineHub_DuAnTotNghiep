@@ -9,6 +9,8 @@ class Review extends Model
 {
     use HasFactory;
 
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'user_id',
         'movie_id',

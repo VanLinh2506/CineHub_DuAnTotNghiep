@@ -249,6 +249,11 @@ $baseUrl = UrlHelper::getBaseUrl();
                                     <span class="star" data-value="3"><i class="far fa-star"></i></span>
                                     <span class="star" data-value="4"><i class="far fa-star"></i></span>
                                     <span class="star" data-value="5"><i class="far fa-star"></i></span>
+                                    <span class="star" data-value="6"><i class="far fa-star"></i></span>
+                                    <span class="star" data-value="7"><i class="far fa-star"></i></span>
+                                    <span class="star" data-value="8"><i class="far fa-star"></i></span>
+                                    <span class="star" data-value="9"><i class="far fa-star"></i></span>
+                                    <span class="star" data-value="10"><i class="far fa-star"></i></span>
                                     <span class="rating-text" id="ratingText">Chọn số sao</span>
                                 </div>
                             </div>
@@ -286,9 +291,17 @@ $baseUrl = UrlHelper::getBaseUrl();
                                             <strong
                                                 style="color: #fff;"><?php echo htmlspecialchars($review['user_name']); ?></strong>
                                             <span style="margin-left: 10px; color: #ffc107;">
-                                                <?php for ($i = 0; $i < $review['rating']; $i++): ?>
-                                                    <i class="fas fa-star"></i>
+                                                <?php
+                                                    $reviewRating = $review['rating'] ?? 0;
+                                                    $starScale = min(10, (int)floor($reviewRating));
+                                                ?>
+                                                <?php for ($i = 0; $i < $starScale; $i++): ?>
+                                                    <i class="fas fa-star" style="font-size:0.8em;"></i>
                                                 <?php endfor; ?>
+                                                <?php for ($i = $starScale; $i < 10; $i++): ?>
+                                                    <i class="far fa-star" style="font-size:0.8em; opacity:0.3;"></i>
+                                                <?php endfor; ?>
+                                                <span style="margin-left:6px; font-weight:600;"><?php echo $reviewRating; ?>/10</span>
                                             </span>
                                         </div>
                                         <span
@@ -627,11 +640,16 @@ $baseUrl = UrlHelper::getBaseUrl();
             const submitBtn = document.getElementById('submitReview');
 
             const ratingTexts = {
-                1: 'Rất tệ',
-                2: 'Tệ',
-                3: 'Bình thường',
-                4: 'Hay',
-                5: 'Rất hay'
+                1: 'Rất tệ (1/10)',
+                2: 'Tệ (2/10)',
+                3: 'Tệ vừa (3/10)',
+                4: 'Dưới trung bình (4/10)',
+                5: 'Trung bình (5/10)',
+                6: 'Khá (6/10)',
+                7: 'Hay (7/10)',
+                8: 'Rất hay (8/10)',
+                9: 'Xuất sắc (9/10)',
+                10: 'Tuyệt vời! (10/10)'
             };
 
             stars.forEach(star => {
@@ -662,8 +680,8 @@ $baseUrl = UrlHelper::getBaseUrl();
 
             function highlightStars(value) {
                 stars.forEach(s => {
-                    const starValue = s.dataset.value;
-                    if (starValue <= value) {
+                    const starValue = parseInt(s.dataset.value);
+                    if (starValue <= parseInt(value)) {
                         s.classList.add('active');
                         s.querySelector('i').className = 'fas fa-star';
                     } else {
