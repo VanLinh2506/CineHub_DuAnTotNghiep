@@ -58,6 +58,8 @@
     <div class="col-md-3"><label class="form-label">Phim bán chạy - đến</label><input type="number" name="bestseller_price_max" class="form-control" min="0" step="1000" required value="{{ old('bestseller_price_max', $contract->bestseller_price_max ?? 100000) }}"></div>
     <div class="col-md-3"><label class="form-label">Phim mới phát hành - từ</label><input type="number" name="new_release_price_min" class="form-control" min="0" step="1000" required value="{{ old('new_release_price_min', $contract->new_release_price_min ?? 100000) }}"></div>
     <div class="col-md-3"><label class="form-label">Phim mới phát hành - đến</label><input type="number" name="new_release_price_max" class="form-control" min="0" step="1000" required value="{{ old('new_release_price_max', $contract->new_release_price_max ?? 120000) }}"></div>
+    <div class="col-md-3"><label class="form-label">Phim hot - từ</label><input type="number" name="hot_movie_price_min" class="form-control" min="0" step="1000" required value="{{ old('hot_movie_price_min', $contract->hot_movie_price_min ?? 120000) }}"></div>
+    <div class="col-md-3"><label class="form-label">Phim hot - đến</label><input type="number" name="hot_movie_price_max" class="form-control" min="0" step="1000" required value="{{ old('hot_movie_price_max', $contract->hot_movie_price_max ?? 150000) }}"></div>
     <div class="col-md-6"><label class="form-label">Chữ ký Super Admin</label><input type="text" name="super_admin_signature" class="form-control" value="{{ old('super_admin_signature', auth()->user()->name) }}"></div>
     <div class="col-md-6"><label class="form-label">Chữ ký Đại diện rạp</label><input type="text" name="representative_signature" class="form-control" value="{{ old('representative_signature', $contract->representative->name ?? '') }}"></div>
 
@@ -70,6 +72,7 @@
         </div>
         <button type="button" class="btn btn-sm btn-outline-primary" onclick="addPermissionRow()"><i class="fas fa-plus"></i> Thêm quyền</button>
     </div>
+    <div class="col-12"><label class="form-label">Điều khoản của hai bên</label><textarea name="party_terms" rows="5" class="form-control">{{ old('party_terms', $contract->party_terms ?? $partyTerms ?? '') }}</textarea></div>
     <div class="col-12"><label class="form-label">Điều khoản tự động thu hồi quyền khi hết hạn</label><textarea name="auto_revoke_terms" rows="4" class="form-control">{{ old('auto_revoke_terms', $terms) }}</textarea></div>
     <div class="col-12 d-flex justify-content-end"><button class="btn btn-primary"><i class="fas {{ $actionIcon }}"></i> {{ $submitLabel }}</button></div>
 </div>

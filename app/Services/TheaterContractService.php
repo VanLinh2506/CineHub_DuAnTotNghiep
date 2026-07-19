@@ -29,8 +29,11 @@ class TheaterContractService
                 'bestseller_price_max' => $data['bestseller_price_max'] ?? 100000,
                 'new_release_price_min' => $data['new_release_price_min'] ?? 100000,
                 'new_release_price_max' => $data['new_release_price_max'] ?? 120000,
+                'hot_movie_price_min' => $data['hot_movie_price_min'] ?? 120000,
+                'hot_movie_price_max' => $data['hot_movie_price_max'] ?? 150000,
                 'admin_permissions' => $data['admin_permissions'] ?? $this->defaultPermissions(),
                 'auto_revoke_terms' => $data['auto_revoke_terms'] ?? $this->defaultAutoRevokeTerms(),
+                'party_terms' => $data['party_terms'] ?? $this->defaultPartyTerms(),
                 'super_admin_signature' => $data['super_admin_signature'] ?? null,
                 'representative_signature' => $data['representative_signature'] ?? null,
                 'status' => $this->initialStatus($data['start_date'], $data['end_date']),
@@ -167,6 +170,11 @@ class TheaterContractService
     public function defaultAutoRevokeTerms(): string
     {
         return 'Khi hợp đồng hết hiệu lực, hệ thống CineHub tự động thu hồi quyền Admin rạp của Đại diện rạp và chuyển tài khoản về Người dùng nếu Super Admin chưa gia hạn hợp đồng mới còn hiệu lực.';
+    }
+
+    public function defaultPartyTerms(): string
+    {
+        return "Bên CineHub có trách nhiệm cung cấp hệ thống quản lý, phân quyền, bảo vệ dữ liệu và giữ hạ tầng vận hành ổn định.\nBên rạp có trách nhiệm cập nhật thông tin rạp, phòng chiếu, lịch chiếu, giá vé và nhân sự đúng thực tế.\nGiá vé phim hot được phép tăng theo nhu cầu thị trường nhưng phải nằm trong khoảng giá phim hot của hợp đồng và không được chênh quá 20.000 VNĐ so với cùng phim, cùng ngày chiếu tại rạp khác trên CineHub.";
     }
 
     private function generateContractCode(): string

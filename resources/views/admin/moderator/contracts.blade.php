@@ -15,7 +15,7 @@
                 <tr>
                     <td><strong>{{ $contract->contract_code }}</strong></td>
                     <td>{{ $contract->start_date->format('d/m/Y') }} – {{ $contract->end_date->format('d/m/Y') }}</td>
-                    <td><small>Phim bán chạy: <strong>{{ number_format($contract->bestseller_price_min) }}–{{ number_format($contract->bestseller_price_max) }}</strong><br>Phim mới: <strong>{{ number_format($contract->new_release_price_min) }}–{{ number_format($contract->new_release_price_max) }}</strong> VNĐ</small></td>
+                    <td><small>Phim bán chạy: <strong>{{ number_format($contract->bestseller_price_min) }}–{{ number_format($contract->bestseller_price_max) }}</strong><br>Phim mới: <strong>{{ number_format($contract->new_release_price_min) }}–{{ number_format($contract->new_release_price_max) }}</strong><br>Phim hot: <strong>{{ number_format($contract->hot_movie_price_min) }}–{{ number_format($contract->hot_movie_price_max) }}</strong> VNĐ</small></td>
                     <td>{{ $contract->representative->name ?? 'N/A' }}<br><small class="text-muted">{{ $contract->representative->email ?? '' }}</small></td>
                     <td><span class="badge bg-{{ $colors[$contract->status] ?? 'secondary' }}">{{ $labels[$contract->status] ?? $contract->status }}</span></td>
                     <td class="text-end"><a class="btn btn-sm btn-outline-danger" href="{{ route('moderator.contracts.download', $contract) }}"><i class="fas fa-file-pdf"></i> Tải PDF</a></td>

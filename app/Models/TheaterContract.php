@@ -13,6 +13,10 @@ class TheaterContract extends Model
     public const STATUS_ACTIVE = 'active';
     public const STATUS_EXPIRED = 'expired';
     public const STATUS_RENEWED = 'renewed';
+    public const PRICE_TYPE_BESTSELLER = 'bestseller';
+    public const PRICE_TYPE_NEW_RELEASE = 'new_release';
+    public const PRICE_TYPE_HOT_MOVIE = 'hot_movie';
+    public const HOT_MOVIE_INTER_THEATER_PRICE_GAP = 20000;
 
     protected $fillable = [
         'contract_code',
@@ -26,8 +30,11 @@ class TheaterContract extends Model
         'bestseller_price_max',
         'new_release_price_min',
         'new_release_price_max',
+        'hot_movie_price_min',
+        'hot_movie_price_max',
         'admin_permissions',
         'auto_revoke_terms',
+        'party_terms',
         'super_admin_signature',
         'representative_signature',
         'pdf_path',
@@ -48,6 +55,8 @@ class TheaterContract extends Model
         'bestseller_price_max' => 'integer',
         'new_release_price_min' => 'integer',
         'new_release_price_max' => 'integer',
+        'hot_movie_price_min' => 'integer',
+        'hot_movie_price_max' => 'integer',
     ];
 
     public function theater()
@@ -84,8 +93,10 @@ class TheaterContract extends Model
 
     public function listedPriceRange(string $type): array
     {
-        return $type === 'new_release'
-            ? [(int) $this->new_release_price_min, (int) $this->new_release_price_max]
-            : [(int) $this->bestseller_price_min, (int) $this->bestseller_price_max];
+        return match ($type) {
+            self::PRICE_TYPE_NEW_RELEASE => [(int) $this->new_release_price_min, (int) $this->new_release_price_max],
+            self::PRICE_TYPE_HOT_MOVIE => [(int) $this->hot_movie_price_min, (int) $this->hot_movie_price_max],
+            default => [(int) $this->bestseller_price_min, (int) $this->bestseller_price_max],
+        };
     }
 }

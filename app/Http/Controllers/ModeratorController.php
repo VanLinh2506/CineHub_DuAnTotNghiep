@@ -275,7 +275,7 @@ class ModeratorController extends Controller
         $contractPrices = TheaterContract::where('theater_id', $this->theaterId)
             ->whereIn('status', [TheaterContract::STATUS_ACTIVE, TheaterContract::STATUS_PENDING])
             ->orderBy('start_date')
-            ->get(['id', 'contract_code', 'start_date', 'end_date', 'bestseller_price_min', 'bestseller_price_max', 'new_release_price_min', 'new_release_price_max']);
+            ->get(['id', 'contract_code', 'start_date', 'end_date', 'bestseller_price_min', 'bestseller_price_max', 'new_release_price_min', 'new_release_price_max', 'hot_movie_price_min', 'hot_movie_price_max']);
         
         return view('admin.moderator.showtimes', compact('theater', 'showtimes', 'movies', 'screens', 'date', 'contractPrices'));
     }
@@ -297,27 +297,16 @@ class ModeratorController extends Controller
             'show_date' => 'required|date',
             'show_time' => 'required',
             'price' => 'required|numeric|min:0',
-            'contract_price_type' => 'required|in:bestseller,new_release',
+            'contract_price_type' => 'required|in:bestseller,new_release,hot_movie',
         ]);
 
-        $contract = TheaterContract::where('theater_id', $this->theaterId)
-            ->whereIn('status', [TheaterContract::STATUS_ACTIVE, TheaterContract::STATUS_PENDING])
-            ->whereDate('start_date', '<=', $request->show_date)
-            ->whereDate('end_date', '>=', $request->show_date)
-            ->orderByDesc('start_date')
-            ->first();
-
-        if (!$contract) {
-            return back()->withInput()->withErrors(['show_date' => 'Ngày chiếu không nằm trong thời hạn hợp đồng của rạp.']);
-        }
-
-        [$minimumPrice, $maximumPrice] = $contract->listedPriceRange($request->contract_price_type);
         $showtimePrice = (int) $request->price;
-        if ($showtimePrice < $minimumPrice || $showtimePrice > $maximumPrice) {
-            return back()->withInput()->withErrors([
-                'price' => 'Giá suất chiếu phải từ ' . number_format($minimumPrice) . ' đến ' . number_format($maximumPrice) . ' VNĐ theo hợp đồng ' . $contract->contract_code . '.',
-            ]);
-        }
+        $contract = $this->validateShowtimeContractPrice(
+            $request->show_date,
+            $request->movie_id,
+            $request->contract_price_type,
+            $showtimePrice
+        );
         
         // Kiểm tra screen thuộc theater
         $screen = Screen::where('id', $request->screen_id)
@@ -388,9 +377,35 @@ class ModeratorController extends Controller
             'show_date' => 'required|date',
             'show_time' => 'required',
             'price' => 'required|numeric|min:0',
+            'contract_price_type' => 'nullable|in:bestseller,new_release,hot_movie',
         ]);
+
+        Screen::where('id', $request->screen_id)
+            ->where('theater_id', $this->theaterId)
+            ->firstOrFail();
+
+        $contractPriceType = $request->input(
+            'contract_price_type',
+            $showtime->contract_price_type ?: TheaterContract::PRICE_TYPE_BESTSELLER
+        );
+        $showtimePrice = (int) $request->price;
+        $contract = $this->validateShowtimeContractPrice(
+            $request->show_date,
+            $request->movie_id,
+            $contractPriceType,
+            $showtimePrice,
+            $showtime->id
+        );
         
-        $showtime->update($request->only(['movie_id', 'screen_id', 'show_date', 'show_time', 'price']));
+        $showtime->update([
+            'movie_id' => $request->movie_id,
+            'screen_id' => $request->screen_id,
+            'show_date' => $request->show_date,
+            'show_time' => $request->show_time,
+            'price' => $showtimePrice,
+            'contract_price_type' => $contractPriceType,
+            'theater_contract_id' => $contract->id,
+        ]);
         
         return redirect()->route('moderator.showtimes')
             ->with('success', 'Cập nhật lịch chiếu thành công!');
@@ -892,6 +907,54 @@ class ModeratorController extends Controller
         ));
     }
     
+    private function validateShowtimeContractPrice(string $showDate, int $movieId, string $priceType, int $price, ?int $ignoreShowtimeId = null): TheaterContract
+    {
+        $contract = TheaterContract::where('theater_id', $this->theaterId)
+            ->whereIn('status', [TheaterContract::STATUS_ACTIVE, TheaterContract::STATUS_PENDING])
+            ->whereDate('start_date', '<=', $showDate)
+            ->whereDate('end_date', '>=', $showDate)
+            ->orderByDesc('start_date')
+            ->first();
+
+        if (!$contract) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'show_date' => 'Ngày chiếu không nằm trong thời hạn hợp đồng của rạp.',
+            ]);
+        }
+
+        [$minimumPrice, $maximumPrice] = $contract->listedPriceRange($priceType);
+        if ($price < $minimumPrice || $price > $maximumPrice) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'price' => 'Giá suất chiếu phải từ ' . number_format($minimumPrice) . ' đến ' . number_format($maximumPrice) . ' VNĐ theo hợp đồng ' . $contract->contract_code . '.',
+            ]);
+        }
+
+        if ($priceType === TheaterContract::PRICE_TYPE_HOT_MOVIE) {
+            $query = Showtime::where('movie_id', $movieId)
+                ->whereDate('show_date', $showDate)
+                ->where('contract_price_type', TheaterContract::PRICE_TYPE_HOT_MOVIE)
+                ->where('theater_id', '!=', $this->theaterId);
+
+            if ($ignoreShowtimeId) {
+                $query->where('id', '!=', $ignoreShowtimeId);
+            }
+
+            $referencePrices = $query->pluck('price')->map(fn ($value) => (int) $value);
+            if ($referencePrices->isNotEmpty()) {
+                $lowestAllowed = $referencePrices->min() - TheaterContract::HOT_MOVIE_INTER_THEATER_PRICE_GAP;
+                $highestAllowed = $referencePrices->max() + TheaterContract::HOT_MOVIE_INTER_THEATER_PRICE_GAP;
+
+                if ($price < $lowestAllowed || $price > $highestAllowed) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'price' => 'Giá phim hot không được chênh quá ' . number_format(TheaterContract::HOT_MOVIE_INTER_THEATER_PRICE_GAP) . ' VNĐ so với cùng phim, cùng ngày chiếu ở rạp khác.',
+                    ]);
+                }
+            }
+        }
+
+        return $contract;
+    }
+
     // Helper methods
     private function isModerator($user)
     {

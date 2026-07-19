@@ -43,6 +43,10 @@
                 <p><strong>Super Admin:</strong> {{ $contract->superAdmin->name ?? 'N/A' }}</p>
                 <p><strong>Phim bán chạy:</strong> {{ number_format($contract->bestseller_price_min) }} - {{ number_format($contract->bestseller_price_max) }} VNĐ/vé</p>
                 <p><strong>Phim mới phát hành:</strong> {{ number_format($contract->new_release_price_min) }} - {{ number_format($contract->new_release_price_max) }} VNĐ/vé</p>
+                <p><strong>Phim hot:</strong> {{ number_format($contract->hot_movie_price_min) }} - {{ number_format($contract->hot_movie_price_max) }} VNĐ/vé</p>
+                @if($contract->party_terms)
+                    <p><strong>Điều khoản hai bên:</strong><br>{!! nl2br(e($contract->party_terms)) !!}</p>
+                @endif
                 @if($contract->revoked_at)
                     <p><strong>Ngày thu hồi:</strong> {{ $contract->revoked_at->format('d/m/Y H:i') }}</p>
                 @endif
@@ -62,6 +66,7 @@
                         'users' => \App\Models\User::where('id', $contract->representative_user_id)->get(),
                         'permissions' => old('admin_permissions', $contract->admin_permissions ?: []),
                         'terms' => old('auto_revoke_terms', $contract->auto_revoke_terms),
+                        'partyTerms' => old('party_terms', $contract->party_terms),
                     ])
                 </form>
             </div>
