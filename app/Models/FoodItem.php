@@ -43,4 +43,9 @@ class FoodItem extends Model
     {
         return $query->where('type', $type);
     }
+
+    public function theater()
+    {
+        return $this->belongsTo(Theater::class);
+    }
 }

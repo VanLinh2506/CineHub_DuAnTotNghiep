@@ -499,8 +499,15 @@ class BookingController extends Controller
                 ->get();
         }
         
-        // Get food items
-        $foodItems = FoodItem::where('is_active', true)->get();
+        // Each theater owns its own food/drink catalog.
+        $foodItems = collect();
+        if ($selectedTheater) {
+            $foodItems = FoodItem::where('theater_id', $selectedTheater)
+                ->where('is_active', true)
+                ->orderBy('type')
+                ->orderBy('name')
+                ->get();
+        }
         
         // Calculate prices
         $basePrice = 90000;
@@ -1551,7 +1558,10 @@ class BookingController extends Controller
             
             foreach ($foodItems as $foodId => $quantity) {
                 if ($quantity > 0) {
-                    $food = FoodItem::find($foodId);
+                    $food = FoodItem::where('id', $foodId)
+                        ->where('theater_id', $showtime->theater_id)
+                        ->where('is_active', true)
+                        ->first();
                     if ($food) {
                         $foodTotal += $food->price * $quantity;
                         $filteredFoodItems[$foodId] = $quantity;

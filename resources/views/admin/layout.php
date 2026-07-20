@@ -694,9 +694,6 @@
             <li><a href="?route=admin/tickets" class="<?php echo ($current_page ?? '') === 'tickets' ? 'active' : ''; ?>">
                 <i class="fas fa-ticket-alt"></i> Quản lý vé
             </a></li>
-            <li><a href="?route=admin/foodItems" class="<?php echo ($current_page ?? '') === 'food_items' ? 'active' : ''; ?>">
-                <i class="fas fa-utensils"></i> Combo & Đồ ăn
-            </a></li>
             <?php endif; ?>
             <li><a href="?route=admin/analytics" class="<?php echo ($current_page ?? '') === 'analytics' ? 'active' : ''; ?>">
                 <i class="fas fa-chart-line"></i> Analytics & Báo cáo
