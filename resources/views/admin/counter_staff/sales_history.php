@@ -4,6 +4,9 @@ if (!class_exists('UrlHelper')) {
     require_once __DIR__ . '/../../../core/UrlHelper.php';
 }
 $baseUrl = UrlHelper::getBaseUrl();
+$total_pages = $total_pages ?? (is_object($sales ?? null) && method_exists($sales, 'lastPage') ? $sales->lastPage() : 1);
+$page = $page ?? (is_object($sales ?? null) && method_exists($sales, 'currentPage') ? $sales->currentPage() : 1);
+$total = $total ?? (is_object($sales ?? null) && method_exists($sales, 'total') ? $sales->total() : count($sales ?? []));
 ?>
 
 <div class="sales-history-container">

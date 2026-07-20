@@ -131,11 +131,13 @@ class LegacyRouteMiddleware
         // ==================== COUNTER STAFF ====================
         'counterStaff/dashboard' => '/counter',
         'counterStaff/scanQR' => '/counter/scan',
-        'counterStaff/sellTicket' => '/counter',
-        'counterStaff/printTickets' => '/counter/bookings',
-        'counterStaff/showtimes' => '/counter',
-        'counterStaff/salesHistory' => '/counter/bookings',
-        'counterStaff/scannedTickets' => '/counter/bookings',
+        'counterStaff/sellTicket' => '/counter/sell',
+        'counterStaff/printTickets' => '/counter/print',
+        'counterStaff/showtimes' => '/counter/showtimes',
+        'counterStaff/salesHistory' => '/counter/sales',
+        'counterStaff/scannedTickets' => '/counter/scanned',
+        'counterStaff/verifyTicket' => '/counter/verify-ticket',
+        'counterStaff/processSale' => '/counter/process-sale',
         
         // ==================== NEWS ====================
         'news/index' => '/news',

@@ -9,8 +9,7 @@
                 <h5 class="mb-0" style="color: #333; font-weight: 600;">
                     <i class="fas fa-calendar-alt text-primary me-2"></i>Lịch chiếu phim
                 </h5>
-                <form method="GET" class="d-flex gap-2">
-                    <input type="hidden" name="route" value="counterStaff/showtimes">
+                <form method="GET" action="{{ route('counter.showtimes') }}" class="d-flex gap-2">
                     <input type="date" name="date" value="{{ $date }}" class="form-control" style="width: 200px;" onchange="this.form.submit()">
                 </form>
             </div>

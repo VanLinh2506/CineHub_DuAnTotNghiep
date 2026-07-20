@@ -7,27 +7,39 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .staff-sidebar { min-height: 100vh; background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%); padding: 0; position: fixed; width: 250px; left: 0; top: 0; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
-        .staff-main { margin-left: 250px; padding: 20px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
-        .staff-header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #fff; padding: 15px 30px; box-shadow: 0 4px 15px rgba(79,172,254,0.3); margin-bottom: 20px; border-radius: 12px; }
+        .staff-sidebar { min-height: 100vh; background: linear-gradient(180deg, #4a3567 0%, #2d1f3d 100%); padding: 0; position: fixed; width: 250px; left: 0; top: 0; z-index: 1000; box-shadow: 2px 0 15px rgba(0,0,0,0.1); }
+        .staff-main { margin-left: 250px; padding: 20px; background: #f5f6fa; min-height: 100vh; }
+        .staff-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 15px 30px; box-shadow: 0 4px 15px rgba(102,126,234,0.25); margin-bottom: 20px; border-radius: 12px; }
         .staff-header h4, .staff-header small { color: #fff !important; }
-        .sidebar-brand { padding: 20px; color: #fff; font-size: 1.5rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); }
+        .sidebar-brand { padding: 20px; color: #fff; font-size: 1.5rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); }
         .sidebar-menu { list-style: none; padding: 0; margin: 0; }
         .sidebar-menu li { border-bottom: 1px solid rgba(255,255,255,0.1); }
         .sidebar-menu a { display: flex; align-items: center; padding: 15px 20px; color: rgba(255,255,255,0.9); text-decoration: none; transition: all 0.3s ease; position: relative; }
         .sidebar-menu a::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: #fff; transform: scaleY(0); transition: transform 0.3s ease; }
-        .sidebar-menu a:hover, .sidebar-menu a.active { background: rgba(255,255,255,0.2); color: #fff; padding-left: 25px; box-shadow: inset 0 0 10px rgba(255,255,255,0.1); }
+        .sidebar-menu a:hover, .sidebar-menu a.active { background: rgba(255,255,255,0.15); color: #fff; padding-left: 25px; box-shadow: inset 0 0 10px rgba(255,255,255,0.08); }
         .sidebar-menu a.active::before, .sidebar-menu a:hover::before { transform: scaleY(1); }
         .sidebar-menu a i { width: 25px; margin-right: 10px; }
         .stat-card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; color: #333 !important; }
         .stat-card * { color: #333; }
         .staff-main { color: #333; }
         .staff-main > h4, .staff-main > h5, .staff-main > h6 { color: #333 !important; }
+        .bg-primary, .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border: none; }
+        .bg-success, .btn-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important; border: none; }
+        .bg-info, .btn-info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important; border: none; }
+        .bg-warning, .btn-warning { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important; border: none; }
+        .bg-danger, .btn-danger { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important; border: none; }
+        .btn { border-radius: 8px; font-weight: 500; transition: all 0.3s ease; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .text-primary { color: #667eea !important; }
+        .text-success { color: #11998e !important; }
+        .text-info { color: #4facfe !important; }
+        .text-warning { color: #fa709a !important; }
+        .text-danger { color: #f5576c !important; }
         @media screen and (max-width: 768px) {
             .staff-sidebar { position: fixed; left: -250px; transition: left 0.3s ease; z-index: 9999; }
             .staff-sidebar.active { left: 0; }
             .staff-main { margin-left: 0; padding: 15px; padding-top: 70px; }
-            .mobile-menu-toggle { display: block !important; position: fixed; top: 15px; left: 15px; z-index: 10000; background: #1a1a2e; border: none; color: #fff; padding: 10px 15px; border-radius: 8px; font-size: 1.2rem; }
+            .mobile-menu-toggle { display: block !important; position: fixed; top: 15px; left: 15px; z-index: 10000; background: #4a3567; border: none; color: #fff; padding: 10px 15px; border-radius: 8px; font-size: 1.2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
             .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998; }
             .sidebar-overlay.active { display: block; }
         }

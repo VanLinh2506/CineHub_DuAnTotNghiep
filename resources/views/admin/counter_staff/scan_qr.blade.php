@@ -105,9 +105,12 @@ function verifyTicket(code) {
     }
     document.getElementById('scanResult').innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Đang xử lý...</div>';
     document.getElementById('ticketInfo').style.display = 'none';
-    fetch('?route=counterStaff/verifyTicket', {
+    fetch('{{ route("counter.verifyTicket") }}', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
         body: new URLSearchParams({ booking_id: booking_id || '', booking_code: booking_code || '' })
     })
     .then(r => r.json())

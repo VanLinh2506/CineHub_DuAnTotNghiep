@@ -308,6 +308,7 @@ Route::middleware(['auth', 'counter_staff'])->prefix('counter')->name('counter.'
     Route::get('/sell', [CounterStaffController::class, 'sellTicket'])->name('sell');
     Route::post('/process-sale', [CounterStaffController::class, 'processSale'])->name('processSale');
     Route::get('/sales', [CounterStaffController::class, 'salesHistory'])->name('sales');
+    Route::get('/print', [CounterStaffController::class, 'printTickets'])->name('print');
 
     // Showtimes
     Route::get('/showtimes', [CounterStaffController::class, 'showtimes'])->name('showtimes');

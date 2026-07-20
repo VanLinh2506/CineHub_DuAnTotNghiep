@@ -25,7 +25,7 @@
                             <div class="details">
                                 <h4>{{ $st->movie->title }}</h4>
                                 <p><i class="fas fa-clock"></i> {{ date('H:i', strtotime($st->show_time)) }}</p>
-                                <p><i class="fas fa-tv"></i> {{ $st->screen->name }}</p>
+                                <p><i class="fas fa-tv"></i> {{ $st->screen->screen_name ?? 'N/A' }}</p>
                                 <p><i class="fas fa-chair"></i> Còn {{ $st->available_seats }} ghế</p>
                             </div>
                         </div>

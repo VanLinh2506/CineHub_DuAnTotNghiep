@@ -11,6 +11,7 @@ use App\Models\SeatReservation;
 use App\Models\Screen;
 use App\Models\Movie;
 use App\Models\Transaction;
+use App\Services\QrCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -89,6 +90,11 @@ class CounterStaffController extends Controller
     {
         $bookingId = $request->input('booking_id');
         $bookingCode = $request->input('booking_code');
+
+        if (!$bookingId && is_string($bookingCode) && str_starts_with($bookingCode, 'BOOKING-')) {
+            $parts = explode('-', $bookingCode, 3);
+            $bookingId = $parts[1] ?? null;
+        }
         
         if (!$bookingId && !$bookingCode) {
             return response()->json(['success' => false, 'message' => 'Thiếu thông tin booking']);
@@ -138,8 +144,25 @@ class CounterStaffController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Đã xác nhận {$updatedCount} vé đã được lấy",
-            'booking' => $booking,
-            'tickets' => $tickets,
+            'booking' => [
+                'id' => $booking->id,
+                'booking_code' => $booking->qr_code,
+                'customer_name' => $booking->customer_name,
+                'customer_phone' => $booking->customer_phone,
+            ],
+            'tickets' => $tickets->map(function ($ticket) {
+                return [
+                    'id' => $ticket->id,
+                    'seat' => $ticket->seat,
+                    'seat_type' => $ticket->seat_type,
+                    'is_picked_up' => (bool) $ticket->is_picked_up,
+                    'user_name' => $ticket->user->name ?? 'Khach le',
+                    'movie_title' => $ticket->showtime->movie->title ?? 'N/A',
+                    'show_date' => $ticket->showtime->show_date ?? null,
+                    'show_time' => $ticket->showtime->show_time ?? null,
+                    'screen_name' => $ticket->showtime->screen->screen_name ?? 'N/A',
+                ];
+            })->values(),
             'updated_count' => $updatedCount,
         ]);
     }
@@ -302,11 +325,19 @@ class CounterStaffController extends Controller
             ->whereIn('seat', $seats)
             ->pluck('seat')
             ->toArray();
+
+        $reservedSeats = SeatReservation::where('showtime_id', $showtimeId)
+            ->active()
+            ->whereIn('seat', $seats)
+            ->pluck('seat')
+            ->toArray();
+
+        $unavailableSeats = array_unique(array_merge($existingSeats, $reservedSeats));
         
-        if (!empty($existingSeats)) {
+        if (!empty($unavailableSeats)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Ghế ' . implode(', ', $existingSeats) . ' đã được đặt'
+                'message' => 'Ghế ' . implode(', ', $unavailableSeats) . ' đã được đặt'
             ]);
         }
         
@@ -422,6 +453,37 @@ class CounterStaffController extends Controller
             ->first();
         
         return view('admin.counter_staff.sales_history', compact('sales', 'todayStats', 'date', 'search'));
+    }
+
+    public function printTickets(Request $request, QrCodeService $qrCodeService)
+    {
+        $booking = Booking::with(['showtime.screen.theater', 'tickets.showtime.movie', 'tickets.showtime.screen'])
+            ->where('id', $request->input('booking_id'))
+            ->whereHas('showtime.screen', function ($query) {
+                $query->where('theater_id', Auth::user()->theater_id);
+            })
+            ->firstOrFail();
+
+        $tickets = $booking->tickets->map(function ($ticket) use ($qrCodeService) {
+            return [
+                'id' => $ticket->id,
+                'movie_title' => $ticket->showtime->movie->title ?? 'N/A',
+                'screen_name' => $ticket->showtime->screen->screen_name ?? 'N/A',
+                'show_date' => $ticket->showtime->show_date ?? null,
+                'show_time' => $ticket->showtime->show_time ?? null,
+                'seat' => $ticket->seat,
+                'seat_type' => $ticket->seat_type,
+                'price' => $ticket->price,
+                'qr_code' => $ticket->qr_code,
+                'qr_image' => $qrCodeService->generateTicketQr($ticket->id, $ticket->seat, $ticket->qr_code),
+            ];
+        });
+
+        return view('admin.counter_staff.print_tickets', [
+            'booking' => $booking,
+            'tickets' => $tickets,
+            'theater' => $booking->showtime->screen->theater,
+        ]);
     }
     
     // Helper methods

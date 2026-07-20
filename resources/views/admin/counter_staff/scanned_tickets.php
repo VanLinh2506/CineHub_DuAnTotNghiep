@@ -2,8 +2,7 @@
     <h5 class="mb-4"><i class="fas fa-ticket-alt"></i> Vé đã quét hôm nay</h5>
     
     <div class="mb-3">
-        <form method="GET" class="d-flex gap-2">
-            <input type="hidden" name="route" value="counterStaff/scannedTickets">
+        <form method="GET" action="/counter/scanned" class="d-flex gap-2">
             <input type="date" name="date" class="form-control" value="<?php echo htmlspecialchars($date); ?>" style="max-width: 200px;">
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-search"></i> Xem
@@ -11,7 +10,7 @@
         </form>
     </div>
     
-    <?php if (empty($tickets)): ?>
+    <?php if ($tickets->isEmpty()): ?>
         <div class="alert alert-info">
             <i class="fas fa-info-circle"></i> Chưa có vé nào được quét trong ngày này.
         </div>
@@ -32,32 +31,23 @@
                 <tbody>
                     <?php foreach ($tickets as $ticket): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($ticket['booking_code'] ?? 'N/A'); ?></td>
-                            <td><?php echo htmlspecialchars($ticket['user_name']); ?></td>
-                            <td><?php echo htmlspecialchars($ticket['movie_title']); ?></td>
-                            <td><?php echo date('d/m/Y H:i', strtotime($ticket['show_date'] . ' ' . $ticket['show_time'])); ?></td>
-                            <td><?php echo htmlspecialchars($ticket['screen_name']); ?></td>
-                            <td><?php echo htmlspecialchars($ticket['seat']); ?></td>
-                            <td><?php echo date('d/m/Y H:i:s', strtotime($ticket['picked_up_at'])); ?></td>
+                            <td><?php echo htmlspecialchars($ticket->bookingPending->qr_code ?? $ticket->bookingPending->id ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($ticket->user->name ?? 'Khách lẻ'); ?></td>
+                            <td><?php echo htmlspecialchars($ticket->showtime->movie->title ?? 'N/A'); ?></td>
+                            <td><?php echo $ticket->showtime && $ticket->showtime->show_date ? date('d/m/Y H:i', strtotime($ticket->showtime->show_date . ' ' . $ticket->showtime->show_time)) : 'N/A'; ?></td>
+                            <td><?php echo htmlspecialchars($ticket->showtime->screen->screen_name ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($ticket->seat); ?></td>
+                            <td><?php echo $ticket->picked_up_at ? date('d/m/Y H:i:s', strtotime($ticket->picked_up_at)) : 'N/A'; ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
         
-        <?php if ($total_pages > 1): ?>
-            <nav>
-                <ul class="pagination justify-content-center">
-                    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                        <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
-                            <a class="page-link" href="?route=counterStaff/scannedTickets&page=<?php echo $i; ?>&date=<?php echo urlencode($date); ?>">
-                                <?php echo $i; ?>
-                            </a>
-                        </li>
-                    <?php endfor; ?>
-                </ul>
-            </nav>
+        <?php if ($tickets->hasPages()): ?>
+            <div class="d-flex justify-content-center">
+                <?php echo $tickets->appends(['date' => $date])->links(); ?>
+            </div>
         <?php endif; ?>
     <?php endif; ?>
 </div>
-

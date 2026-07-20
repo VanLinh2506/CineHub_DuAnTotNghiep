@@ -77,7 +77,7 @@
                             <div class="showtime-info">
                                 <span>{{ date('d/m', strtotime($sale->showtime->show_date)) }}</span>
                                 <span>{{ date('H:i', strtotime($sale->showtime->show_time)) }}</span>
-                                <small>{{ $sale->showtime->screen->name }}</small>
+                                <small>{{ $sale->showtime->screen->screen_name ?? 'N/A' }}</small>
                             </div>
                         </td>
                         <td>
@@ -93,7 +93,7 @@
                         </td>
                         <td><span class="price">{{ number_format($sale->price) }} đ</span></td>
                         <td>
-                            <a href="{{ route('counter.index') }}/print?booking_id={{ $sale->booking_pending_id }}" target="_blank" class="btn btn-sm btn-print">
+                            <a href="{{ route('counter.print', ['booking_id' => $sale->booking_pending_id]) }}" target="_blank" class="btn btn-sm btn-print">
                                 <i class="fas fa-print"></i>
                             </a>
                         </td>

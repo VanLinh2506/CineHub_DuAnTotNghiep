@@ -55,15 +55,15 @@
             <div class="ticket-body">
                 <div class="movie-title">{{ $ticket['movie_title'] }}</div>
                 <div class="customer-info">
-                    <strong>Khách hàng:</strong> {{ $booking['customer_name'] ?? 'Khách lẻ' }}
-                    @if(!empty($booking['customer_phone']))
-                    <br>SĐT: {{ $booking['customer_phone'] }}
+                    <strong>Khách hàng:</strong> {{ $booking->customer_name ?? 'Khách lẻ' }}
+                    @if(!empty($booking->customer_phone))
+                    <br>SĐT: {{ $booking->customer_phone }}
                     @endif
                 </div>
                 <div class="ticket-info">
                     <div class="info-item">
                         <div class="label">Rạp</div>
-                        <div class="value">{{ $theater['name'] }}</div>
+                        <div class="value">{{ $theater->name ?? 'N/A' }}</div>
                     </div>
                     <div class="info-item">
                         <div class="label">Phòng chiếu</div>
@@ -89,7 +89,7 @@
                     <div class="price-tag">{{ number_format($ticket['price']) }} đ</div>
                 </div>
                 <div class="qr-code">
-                    <img src="{{ route('counterStaff.ticketQR', ['ticket_id' => $ticket['id']]) }}" alt="QR Code">
+                    <img src="{{ $ticket['qr_image'] }}" alt="QR Code">
                     <p>Mã vé: {{ $ticket['qr_code'] }}</p>
                 </div>
             </div>

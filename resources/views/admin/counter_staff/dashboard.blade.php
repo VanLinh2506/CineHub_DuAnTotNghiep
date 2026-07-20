@@ -155,7 +155,7 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>{{ $showtime->screen->name }}</td>
+                                            <td>{{ $showtime->screen->screen_name ?? 'N/A' }}</td>
                                             <td>
                                                 @php
                                                     $bookedCount = $showtime->tickets()->where('status', 'Đã đặt')->count();
@@ -204,15 +204,15 @@
 }
 
 .bg-gradient-success {
-    background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 }
 
 .bg-gradient-info {
-    background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
 
 .bg-gradient-warning {
-    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
 }
 
 .card {
