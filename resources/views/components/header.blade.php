@@ -480,6 +480,21 @@
                 <div class="form-group-glass">
                     <input type="password" name="confirm_password" required placeholder="Xác nhận mật khẩu" class="input-glass">
                 </div>
+
+                {{-- Checkbox đồng ý điều khoản --}}
+                <div id="modalTosCheckGroup" style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px 14px;margin-bottom:4px;">
+                    <input type="checkbox" id="modal_agree_tos" name="agree_tos" value="1"
+                           style="width:17px;height:17px;flex-shrink:0;margin-top:2px;cursor:pointer;accent-color:#e50914;">
+                    <label for="modal_agree_tos" style="color:rgba(255,255,255,0.75);font-size:13px;line-height:1.6;cursor:pointer;">
+                        Tôi đã đọc và đồng ý với
+                        <a href="#" id="modalOpenTos" style="color:#ff6b75;font-weight:600;text-decoration:none;">Điều khoản dịch vụ</a>
+                        của CineHub
+                    </label>
+                </div>
+                <div id="modalTosError" style="display:none;color:#ff6b6b;font-size:12px;padding-left:4px;margin-bottom:8px;">
+                    <i class="fas fa-exclamation-circle"></i> Vui lòng đồng ý với Điều khoản dịch vụ
+                </div>
+
                 <button type="submit" class="btn-glass btn-primary-glass">Đăng ký</button>
             </form>
 
@@ -842,6 +857,30 @@ function openAuthModal(tab) {
     }
 }
 
+// Link điều khoản trong form đăng ký modal
+document.addEventListener('DOMContentLoaded', function() {
+    const modalOpenTos = document.getElementById('modalOpenTos');
+    const tosCheckbox  = document.getElementById('modal_agree_tos');
+    const tosError     = document.getElementById('modalTosError');
+    const tosGroup     = document.getElementById('modalTosCheckGroup');
+
+    if (modalOpenTos) {
+        modalOpenTos.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.open('{{ route('terms') }}', '_blank');
+        });
+    }
+
+    if (tosCheckbox) {
+        tosCheckbox.addEventListener('change', function() {
+            if (this.checked && tosError) {
+                tosError.style.display = 'none';
+                if (tosGroup) tosGroup.style.borderColor = 'rgba(229,9,20,0.4)';
+            }
+        });
+    }
+});
+
 function closeAuthModal() {
     const modal = document.getElementById('authModal');
     if (modal) {
@@ -962,7 +1001,19 @@ function handleRegister(event) {
     const formData = new FormData(form);
     const errorDiv = document.getElementById('registerError');
     const submitBtn = form.querySelector('button[type="submit"]');
-    
+
+    // Validate checkbox điều khoản
+    const tosCheckbox = document.getElementById('modal_agree_tos');
+    const tosError = document.getElementById('modalTosError');
+    const tosGroup = document.getElementById('modalTosCheckGroup');
+    if (tosCheckbox && !tosCheckbox.checked) {
+        tosError.style.display = 'block';
+        tosGroup.style.borderColor = 'rgba(229,9,20,0.6)';
+        return;
+    }
+    if (tosError) tosError.style.display = 'none';
+    if (tosGroup) tosGroup.style.borderColor = 'rgba(255,255,255,0.1)';
+
     // Disable button
     submitBtn.disabled = true;
     submitBtn.textContent = 'Đang đăng ký...';

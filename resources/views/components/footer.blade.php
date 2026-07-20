@@ -53,7 +53,7 @@
                 <h3 class="footer-title">Hỗ trợ</h3>
                 <ul class="footer-links">
                     <li><a href="#">Câu hỏi thường gặp</a></li>
-                    <li><a href="#">Điều khoản sử dụng</a></li>
+                    <li><a href="{{ route('terms') }}">Điều khoản dịch vụ</a></li>
                     <li><a href="#">Chính sách bảo mật</a></li>
                     <li><a href="#">Liên hệ</a></li>
                     <li><a href="{{ route('movies.theater') }}">Đặt vé xem phim</a></li>

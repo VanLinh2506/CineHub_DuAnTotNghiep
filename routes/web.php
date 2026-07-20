@@ -313,6 +313,11 @@ Route::middleware(['auth', 'counter_staff'])->prefix('counter')->name('counter.'
     Route::get('/showtimes', [CounterStaffController::class, 'showtimes'])->name('showtimes');
 });
 
+// ==================== STATIC PAGES ====================
+Route::get('/terms-of-service', function () {
+    return view('terms.index');
+})->name('terms');
+
 // ==================== NEWS ROUTES ====================
 Route::prefix('news')->name('news.')->group(function () {
     Route::get('/', [NewsController::class, 'index'])->name('index');
