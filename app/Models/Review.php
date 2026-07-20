@@ -17,11 +17,13 @@ class Review extends Model
         'rating',
         'comment',
         'is_pinned',
+        'is_hidden',
     ];
 
     protected $casts = [
         'rating' => 'integer',
         'is_pinned' => 'boolean',
+        'is_hidden' => 'boolean',
     ];
 
     // Relationships

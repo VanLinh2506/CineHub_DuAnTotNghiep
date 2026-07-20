@@ -472,6 +472,162 @@
             text-decoration: underline;
         }
 
+        /* Checkbox điều khoản */
+        .tos-check-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: rgba(255,255,255,0.03);
+            border: 1.5px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 4px;
+            transition: border-color 0.3s;
+        }
+        .tos-check-group:has(input:checked) {
+            border-color: rgba(138, 43, 226, 0.5);
+            background: rgba(138, 43, 226, 0.06);
+        }
+        .tos-check-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: #8a2be2;
+        }
+        .tos-check-group label {
+            color: rgba(255,255,255,0.75);
+            font-size: 13px;
+            line-height: 1.6;
+            cursor: pointer;
+        }
+        .tos-check-group label a {
+            color: #a855f7;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .tos-check-group label a:hover {
+            color: #e50914;
+            text-decoration: underline;
+        }
+        .tos-error {
+            color: #ff6b6b;
+            font-size: 12px;
+            padding-left: 4px;
+            display: none;
+        }
+        .tos-error.show { display: block; }
+
+        /* Modal điều khoản */
+        .tos-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .tos-modal-overlay.open {
+            display: flex;
+        }
+        .tos-modal {
+            background: #1a1a2e;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 640px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            animation: modalIn 0.3s ease-out;
+        }
+        @keyframes modalIn {
+            from { opacity:0; transform: scale(0.9) translateY(20px); }
+            to   { opacity:1; transform: scale(1) translateY(0); }
+        }
+        .tos-modal-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .tos-modal-header h3 {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .tos-modal-close {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .tos-modal-close:hover { color: #fff; }
+        .tos-modal-body {
+            padding: 20px 24px;
+            overflow-y: auto;
+            flex: 1;
+            color: #ccc;
+            font-size: 0.88rem;
+            line-height: 1.7;
+        }
+        .tos-modal-body h4 {
+            color: #fff;
+            font-size: 0.95rem;
+            margin: 1.2rem 0 0.5rem;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .tos-modal-body h4:first-child { margin-top: 0; }
+        .tos-modal-body ul { padding-left: 1.3rem; margin: 0.4rem 0; }
+        .tos-modal-body li { margin-bottom: 4px; }
+        .tos-modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn-tos-decline {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            color: #aaa;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-tos-decline:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .btn-tos-accept {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #8a2be2, #6a1bb2);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-tos-accept:hover {
+            background: linear-gradient(135deg, #a855f7, #8a2be2);
+            transform: translateY(-1px);
+        }
+        .tos-read-note {
+            font-size: 11px;
+            color: #aaa;
+            margin-right: auto;
+            align-self: center;
+        }
+
         @media (max-width: 576px) {
             .register-container {
                 padding: 30px 25px 25px;
@@ -607,15 +763,23 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-register">
+            {{-- Checkbox đồng ý điều khoản --}}
+            <div class="tos-check-group" id="tosCheckGroup">
+                <input type="checkbox" id="agree_tos" name="agree_tos" value="1"
+                       {{ old('agree_tos') ? 'checked' : '' }}>
+                <label for="agree_tos">
+                    Tôi đã đọc và đồng ý với
+                    <a href="#" id="openTosModal">Điều khoản dịch vụ</a>
+                    của CineHub. Bắt buộc phải đồng ý để tạo tài khoản.
+                </label>
+            </div>
+            <div class="tos-error {{ $errors->has('agree_tos') ? 'show' : '' }}" id="tosError">
+                <i class="fas fa-exclamation-circle"></i> Vui lòng đọc và đồng ý với Điều khoản dịch vụ trước khi đăng ký.
+            </div>
+
+            <button type="submit" class="btn-register" id="registerBtn">
                 Đăng ký
             </button>
-
-            <div class="terms">
-                Bằng việc đăng ký, bạn đồng ý với 
-                <a href="#">Điều khoản dịch vụ</a> và 
-                <a href="#">Chính sách bảo mật</a> của chúng tôi
-            </div>
         </form>
 
         <div class="divider">
@@ -637,5 +801,160 @@
             Đã có tài khoản? <a href="{{ route('login') }}">Đăng nhập ngay</a>
         </div>
     </div>
+
+    {{-- Modal Điều khoản dịch vụ --}}
+    <div class="tos-modal-overlay" id="tosModalOverlay">
+        <div class="tos-modal">
+            <div class="tos-modal-header">
+                <h3><i class="fas fa-file-contract" style="color:#e50914;margin-right:8px;"></i> Điều khoản dịch vụ CineHub</h3>
+                <button class="tos-modal-close" id="closeTosModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="tos-modal-body" id="tosScrollBody">
+                <h4>1. Giới thiệu</h4>
+                <p>CineHub là nền tảng xem phim trực tuyến và đặt vé rạp tại Việt Nam. Bằng việc đăng ký, bạn xác nhận đồng ý ràng buộc với toàn bộ điều khoản dưới đây.</p>
+
+                <h4>2. Tài khoản người dùng</h4>
+                <ul>
+                    <li>Cung cấp thông tin đăng ký trung thực, chính xác.</li>
+                    <li>Tự chịu trách nhiệm bảo mật mật khẩu tài khoản.</li>
+                    <li>Mỗi cá nhân chỉ được tạo một tài khoản duy nhất.</li>
+                    <li>CineHub có quyền khóa tài khoản vi phạm điều khoản.</li>
+                </ul>
+
+                <h4>3. Phân loại nội dung theo độ tuổi</h4>
+                <ul>
+                    <li><strong>P:</strong> Mọi lứa tuổi. <strong>T13:</strong> Từ 13 tuổi trở lên.</li>
+                    <li><strong>T16:</strong> Từ 16 tuổi trở lên. <strong>T18:</strong> Từ 18 tuổi trở lên.</li>
+                    <li>Bạn tự chịu trách nhiệm cung cấp ngày sinh chính xác. CineHub không chịu trách nhiệm nếu bạn khai sai độ tuổi.</li>
+                </ul>
+
+                <h4>4. Gói đăng ký (Subscription)</h4>
+                <ul>
+                    <li>Phí đăng ký được thanh toán trước và không hoàn lại sau khi kích hoạt.</li>
+                    <li>CineHub thông báo thay đổi giá trước tối thiểu 30 ngày qua email.</li>
+                    <li>Vi phạm điều khoản có thể dẫn đến chấm dứt gói đăng ký không hoàn tiền.</li>
+                </ul>
+
+                <h4>5. Đặt vé rạp & Hoàn tiền</h4>
+                <ul>
+                    <li>Được hủy và hoàn tiền nếu hủy trước ít nhất 2 giờ so với giờ chiếu và vé chưa sử dụng.</li>
+                    <li>Vé đã quét mã QR (đã vào rạp) không thể hủy.</li>
+                    <li>Thời gian hoàn tiền tối đa 7 ngày làm việc.</li>
+                </ul>
+
+                <h4>6. Bình luận & Đánh giá</h4>
+                <ul>
+                    <li>Nghiêm cấm nội dung thù địch, spam, vi phạm bản quyền, khiêu dâm.</li>
+                    <li>Vi phạm lần đầu: cảnh cáo. Lần 2: khóa bình luận 7 ngày. Lần 3: khóa tài khoản vĩnh viễn.</li>
+                    <li>Bạn tự chịu trách nhiệm pháp lý về nội dung đăng tải.</li>
+                </ul>
+
+                <h4>7. Thanh toán</h4>
+                <p>CineHub chấp nhận thanh toán qua VNPay và điểm CineHub (Points). Mọi tranh chấp cần phản ánh trong 30 ngày.</p>
+
+                <h4>8. Quyền sở hữu trí tuệ</h4>
+                <p>Nghiêm cấm sao chép, phân phối hoặc khai thác nội dung trên CineHub khi chưa có sự cho phép bằng văn bản.</p>
+
+                <h4>9. Giới hạn trách nhiệm</h4>
+                <p>CineHub không chịu trách nhiệm về thiệt hại gián tiếp, mất dữ liệu hoặc nội dung do người dùng tạo ra.</p>
+
+                <h4>10. Luật áp dụng</h4>
+                <p>Điều khoản được điều chỉnh theo pháp luật Việt Nam. Tranh chấp được giải quyết tại Tòa án nhân dân có thẩm quyền tại Việt Nam.</p>
+
+                <p style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.1);color:#888;font-size:0.82rem;">
+                    <i class="fas fa-info-circle"></i> Để xem đầy đủ,
+                    <a href="{{ route('terms') }}" target="_blank" style="color:#a855f7;">mở trang Điều khoản dịch vụ</a>.
+                    Phiên bản 1.0 · Hiệu lực từ 01/01/2025
+                </p>
+            </div>
+            <div class="tos-modal-footer">
+                <span class="tos-read-note" id="tosReadNote">
+                    <i class="fas fa-arrow-down" style="color:#ffc107;"></i> Vui lòng cuộn xuống để đọc hết
+                </span>
+                <button class="btn-tos-decline" id="tosDeclineBtn">Không đồng ý</button>
+                <button class="btn-tos-accept" id="tosAcceptBtn">Đồng ý & Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const overlay    = document.getElementById('tosModalOverlay');
+        const openLink   = document.getElementById('openTosModal');
+        const closeBtn   = document.getElementById('closeTosModal');
+        const declineBtn = document.getElementById('tosDeclineBtn');
+        const acceptBtn  = document.getElementById('tosAcceptBtn');
+        const checkbox   = document.getElementById('agree_tos');
+        const tosError   = document.getElementById('tosError');
+        const scrollBody = document.getElementById('tosScrollBody');
+        const readNote   = document.getElementById('tosReadNote');
+        const form       = document.querySelector('form[action="{{ route('register') }}"]');
+
+        // Mở modal khi click link điều khoản
+        openLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            overlay.classList.add('open');
+            checkScrolled();
+        });
+
+        // Đóng modal
+        closeBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) closeModal();
+        });
+
+        function closeModal() {
+            overlay.classList.remove('open');
+        }
+
+        // Theo dõi cuộn để biết đã đọc chưa
+        let hasScrolled = false;
+        function checkScrolled() {
+            const el = scrollBody;
+            if (el.scrollHeight - el.scrollTop <= el.clientHeight + 50) {
+                hasScrolled = true;
+                readNote.innerHTML = '<i class="fas fa-check" style="color:#51cf66;"></i> Đã đọc hết';
+            }
+        }
+        scrollBody.addEventListener('scroll', checkScrolled);
+
+        // Từ chối
+        declineBtn.addEventListener('click', function() {
+            checkbox.checked = false;
+            closeModal();
+        });
+
+        // Đồng ý
+        acceptBtn.addEventListener('click', function() {
+            checkbox.checked = true;
+            tosError.classList.remove('show');
+            closeModal();
+        });
+
+        // Khi checkbox thay đổi thủ công
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                tosError.classList.remove('show');
+            }
+        });
+
+        // Validate trước khi submit
+        form.addEventListener('submit', function(e) {
+            if (!checkbox.checked) {
+                e.preventDefault();
+                tosError.classList.add('show');
+                checkbox.closest('.tos-check-group').style.borderColor = 'rgba(229,9,20,0.6)';
+                checkbox.closest('.tos-check-group').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+
+        // Reset border khi tick
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                this.closest('.tos-check-group').style.borderColor = 'rgba(138,43,226,0.5)';
+            }
+        });
+    })();
+    </script>
 </body>
 </html>

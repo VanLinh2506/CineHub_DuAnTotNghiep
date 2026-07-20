@@ -134,6 +134,10 @@
                         </li>
 
                         <li>
+                            <a href="{{ route('terms') }}">Điều khoản dịch vụ</a>
+                        </li>
+
+                        <li>
                             <a href="#">Chính sách bảo mật</a>
                         </li>
 

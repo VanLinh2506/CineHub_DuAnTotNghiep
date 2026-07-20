@@ -151,6 +151,7 @@ class AuthController extends Controller
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required|min:6',
                 'confirm_password' => 'required|same:password',
+                'agree_tos' => 'accepted',
             ], [
                 'name.required' => 'Họ và tên là bắt buộc.',
                 'email.required' => 'Email là bắt buộc.',
@@ -160,6 +161,7 @@ class AuthController extends Controller
                 'password.min' => 'Mật khẩu phải từ 6 ký tự trở lên.',
                 'confirm_password.required' => 'Xác nhận mật khẩu là bắt buộc.',
                 'confirm_password.same' => 'Xác nhận mật khẩu không khớp.',
+                'agree_tos.accepted' => 'Bạn phải đồng ý với Điều khoản dịch vụ để đăng ký.',
             ]);
             
             // Tạo OTP ngẫu nhiên 6 chữ số

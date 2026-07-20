@@ -740,14 +740,18 @@ class MovieController extends Controller
         // Reviews and Comments
         $reviews = $movie->reviews()
             ->with('user')
+            ->where('is_hidden', false)
             ->orderByDesc('is_pinned')
             ->orderByDesc('created_at')
             ->limit(10)
             ->get();
 
         $comments = $movie->comments()
-            ->with(['user', 'replies.user'])
+            ->with(['user', 'replies' => function ($q) {
+                $q->where('is_hidden', false)->with('user');
+            }])
             ->whereNull('parent_id')
+            ->where('is_hidden', false)
             ->orderByDesc('created_at')
             ->limit(50)
             ->get();
