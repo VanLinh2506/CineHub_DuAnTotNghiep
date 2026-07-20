@@ -53,7 +53,7 @@ class VNPayService
             'vnp_Command' => 'pay',
             'vnp_CreateDate' => $paymentTime->format('YmdHis'),
             'vnp_CurrCode' => 'VND',
-            'vnp_IpAddr' => $clientIp,
+            'vnp_IpAddr' => $this->normalizeClientIp($clientIp),
             'vnp_Locale' => 'vn',
             'vnp_OrderInfo' => $orderInfo,
             'vnp_OrderType' => 'other',
@@ -81,15 +81,20 @@ class VNPayService
             return false;
         }
 
-        $vnpSecureHash = $request->input('vnp_SecureHash');
-        $params = $request->except(['vnp_SecureHash', 'vnp_SecureHashType']);
+        $vnpSecureHash = (string) $request->input('vnp_SecureHash', '');
+        $params = array_filter(
+            $request->query(),
+            static fn ($value, $key) => str_starts_with((string) $key, 'vnp_')
+                && !in_array($key, ['vnp_SecureHash', 'vnp_SecureHashType'], true),
+            ARRAY_FILTER_USE_BOTH
+        );
 
         ksort($params);
 
         $hashData = http_build_query($params);
         $expectedHash = hash_hmac('sha512', $hashData, $this->hashSecret);
 
-        return hash_equals($expectedHash, $vnpSecureHash ?? '');
+        return $vnpSecureHash !== '' && hash_equals($expectedHash, $vnpSecureHash);
     }
 
     public function isPaymentSuccess(Request $request): bool
@@ -115,5 +120,19 @@ class VNPayService
         if ($this->tmnCode === '' || $this->hashSecret === '') {
             throw new RuntimeException('VNPay is not configured. Please set VNPAY_TMN_CODE and VNPAY_HASH_SECRET.');
         }
+    }
+
+    private function normalizeClientIp(string $clientIp): string
+    {
+        $clientIp = trim($clientIp);
+
+        // VNPay expects an IPv4 address. XAMPP commonly reports localhost as ::1.
+        if ($clientIp === '::1' || $clientIp === '' || filter_var($clientIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            return '127.0.0.1';
+        }
+
+        return filter_var($clientIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)
+            ? $clientIp
+            : '127.0.0.1';
     }
 }

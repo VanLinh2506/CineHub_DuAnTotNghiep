@@ -19,13 +19,14 @@
         <div class="tickets-grid">
             @foreach ($bookings as $booking)
                 @php
+                    $isPending = $booking->status === 'pending';
                     $showtime = $booking->showtime;
                     $movie = $showtime->movie ?? null;
                     $theater = $showtime->theater ?? null;
                     $screen = $showtime->screen ?? null;
                     $tickets = $booking->tickets;
-                    $seats = $tickets->pluck('seat')->toArray();
-                    $totalPrice = $tickets->sum('price');
+                    $seats = $isPending ? ($booking->seats ?? []) : $tickets->pluck('seat')->toArray();
+                    $totalPrice = $isPending ? (float) $booking->total_amount : $tickets->sum('price');
                     
                     $showDateTime = null;
                     $isExpired = false;
@@ -53,13 +54,15 @@
                 <div class="ticket-card">
                     <div class="ticket-header">
                         <h3 class="ticket-movie-title">{{ $movie->title ?? 'N/A' }}</h3>
-                        <span class="ticket-status completed">Đã đặt</span>
+                        <span class="ticket-status {{ $isPending ? 'pending' : 'completed' }}">
+                            {{ $isPending ? 'Chờ thanh toán' : 'Đã đặt' }}
+                        </span>
                     </div>
                     
                     <div class="ticket-body">
                         <div class="ticket-info-row">
                             <span class="label">Mã booking:</span>
-                            <span class="value code">{{ $booking->qr_code }}</span>
+                            <span class="value code">{{ $booking->qr_code ?: ('#' . $booking->id) }}</span>
                         </div>
                         <div class="ticket-info-row">
                             <span class="label">Rạp:</span>
@@ -87,7 +90,14 @@
                         </div>
                     </div>
                     
-                    @if ($qrShowing && !$isExpired)
+                    @if ($isPending)
+                        <div class="pending-payment">
+                            <p><i class="fas fa-clock"></i> Ghế được giữ thêm <strong class="payment-countdown" data-expires-at="{{ $booking->expires_at?->toIso8601String() }}">--:--</strong></p>
+                            <a href="{{ route('booking.payment', $booking->id) }}" class="btn btn-warning">
+                                <i class="fas fa-credit-card"></i> Tiếp tục thanh toán VNPay
+                            </a>
+                        </div>
+                    @elseif ($qrShowing && !$isExpired)
                         <div class="ticket-qr">
                             <img src="{{ qr_code_data_uri($booking->qr_code ?: ('BOOKING-' . $booking->id), 200) }}" alt="QR Booking">
                             <div class="qr-info">
@@ -304,6 +314,16 @@
         font-size: 0.95rem;
         font-weight: 500;
     }
+
+    .pending-payment {
+        padding: 1.25rem;
+        border-top: 1px solid rgba(255, 193, 7, 0.25);
+        background: rgba(255, 193, 7, 0.08);
+        text-align: center;
+    }
+
+    .pending-payment p { color: #ffd649; margin: 0 0 0.85rem; }
+    .pending-payment .btn { justify-content: center; width: 100%; font-weight: 700; }
     
     .code {
         font-family: 'Courier New', monospace;
@@ -375,4 +395,29 @@
         }
     }
 </style>
+<script>
+document.querySelectorAll('.payment-countdown').forEach(function (element) {
+    const expiresAt = new Date(element.dataset.expiresAt).getTime();
+    const button = element.closest('.pending-payment').querySelector('a');
+
+    function updateCountdown() {
+        const remaining = Math.max(0, expiresAt - Date.now());
+        const totalSeconds = Math.floor(remaining / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = String(totalSeconds % 60).padStart(2, '0');
+        element.textContent = `${minutes}:${seconds}`;
+
+        if (remaining <= 0) {
+            button.removeAttribute('href');
+            button.classList.add('disabled');
+            button.textContent = 'Đã hết thời gian giữ ghế';
+            return;
+        }
+
+        setTimeout(updateCountdown, 1000);
+    }
+
+    updateCountdown();
+});
+</script>
 @endsection

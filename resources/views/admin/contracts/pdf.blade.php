@@ -148,7 +148,13 @@
     <table class="info-table">
         <tr><td>Phim bán chạy</td><td>{{ number_format($contract->bestseller_price_min) }} - {{ number_format($contract->bestseller_price_max) }} VNĐ/vé</td></tr>
         <tr><td>Phim mới phát hành</td><td>{{ number_format($contract->new_release_price_min) }} - {{ number_format($contract->new_release_price_max) }} VNĐ/vé</td></tr>
+        <tr><td>Phim hot</td><td>{{ number_format($contract->hot_movie_price_min) }} - {{ number_format($contract->hot_movie_price_max) }} VNĐ/vé</td></tr>
     </table>
+
+    <div class="section-title">Điều khoản của hai bên</div>
+    <div class="terms">
+        {!! nl2br(e($contract->party_terms)) !!}
+    </div>
 
     <div class="section-title">Quyền của Admin rạp</div>
     <ul>

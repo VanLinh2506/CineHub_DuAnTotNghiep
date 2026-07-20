@@ -30,6 +30,7 @@ class Movie extends Model
         'scheduled_status',
         'status_admin',
         'type',
+        'projection_format',
         'level',
         'total_episodes',
         'language',
@@ -118,6 +119,13 @@ class Movie extends Model
     public function isPhimLe()
     {
         return in_array($this->type, ['phimle', 'phim lẻ', null]);
+    }
+
+    public function canPlayInScreen(Screen|string $screen): bool
+    {
+        $screenType = $screen instanceof Screen ? $screen->screen_type : $screen;
+
+        return ($this->projection_format ?? '2D') === $screenType;
     }
 
     // URL Accessors for storage files

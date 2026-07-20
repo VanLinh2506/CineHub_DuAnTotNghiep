@@ -84,7 +84,8 @@
                                     data-screen-id="{{ $showtime['screen_id'] }}"
                                     data-show-date="{{ $showtime['show_date'] }}"
                                     data-show-time="{{ date('H:i', strtotime($showtime['show_time'])) }}"
-                                    data-price="{{ $showtime['price'] }}">
+                                    data-price="{{ $showtime['price'] }}"
+                                    data-contract-price-type="{{ $showtime['contract_price_type'] ?? 'bestseller' }}">
                                 <i class="fas fa-edit"></i> Sửa
                             </button>
                             <a href="?route=moderator/showtimesDelete&id={{ $showtime['id'] }}"
@@ -117,8 +118,8 @@
                         <select name="movie_id" id="movie_id" class="form-select" required>
                             <option value="">Chọn phim</option>
                             @foreach($movies as $movie)
-                                <option value="{{ $movie['id'] }}" data-duration="{{ $movie['duration'] ?? 120 }}">
-                                    {{ $movie['title'] }}
+                                <option value="{{ $movie['id'] }}" data-duration="{{ $movie['duration'] ?? 120 }}" data-format="{{ $movie['projection_format'] ?? '2D' }}">
+                                    {{ $movie['title'] }} — {{ $movie['projection_format'] ?? '2D' }}
                                 </option>
                             @endforeach
                         </select>
@@ -131,7 +132,7 @@
                         <select name="screen_id" id="screen_id" class="form-select" required>
                             <option value="">Chọn phòng</option>
                             @foreach($screens as $screen)
-                                <option value="{{ $screen['id'] }}">
+                                <option value="{{ $screen['id'] }}" data-format="{{ $screen['screen_type'] }}">
                                     {{ $screen['screen_name'] }} ({{ $screen['total_seats'] }} ghế, {{ $screen['screen_type'] }})
                                 </option>
                             @endforeach
@@ -154,6 +155,7 @@
                         <select name="contract_price_type" id="contract_price_type" class="form-select" required>
                             <option value="bestseller">Phim bán chạy</option>
                             <option value="new_release">Phim mới phát hành</option>
+                            <option value="hot_movie">Phim hot</option>
                         </select>
                         <small id="contractPriceHelp" class="text-muted">Chọn ngày chiếu để áp dụng hợp đồng.</small>
                     </div>
@@ -189,7 +191,7 @@
                         <select name="movie_id" id="edit_movie_id" class="form-select" required>
                             <option value="">Chọn phim</option>
                             @foreach($movies as $movie)
-                                <option value="{{ $movie['id'] }}">{{ $movie['title'] }}</option>
+                                <option value="{{ $movie['id'] }}" data-format="{{ $movie['projection_format'] ?? '2D' }}">{{ $movie['title'] }} — {{ $movie['projection_format'] ?? '2D' }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -198,7 +200,7 @@
                         <select name="screen_id" id="edit_screen_id" class="form-select" required>
                             <option value="">Chọn phòng</option>
                             @foreach($screens as $screen)
-                                <option value="{{ $screen['id'] }}">
+                                <option value="{{ $screen['id'] }}" data-format="{{ $screen['screen_type'] }}">
                                     {{ $screen['screen_name'] }} ({{ $screen['total_seats'] }} ghế, {{ $screen['screen_type'] }})
                                 </option>
                             @endforeach
@@ -211,6 +213,14 @@
                     <div class="mb-3">
                         <label for="edit_show_time" class="form-label">Giờ chiếu <span class="text-danger">*</span></label>
                         <input type="time" name="show_time" id="edit_show_time" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_contract_price_type" class="form-label">Nhóm giá hợp đồng <span class="text-danger">*</span></label>
+                        <select name="contract_price_type" id="edit_contract_price_type" class="form-select" required>
+                            <option value="bestseller">Phim bán chạy</option>
+                            <option value="new_release">Phim mới phát hành</option>
+                            <option value="hot_movie">Phim hot</option>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="edit_price" class="form-label">Giá vé (VNĐ) <span class="text-danger">*</span></label>
@@ -315,8 +325,12 @@ function applyContractPrice() {
         return;
     }
 
-    const minimum = Number(type === 'new_release' ? contract.new_release_price_min : contract.bestseller_price_min);
-    const maximum = Number(type === 'new_release' ? contract.new_release_price_max : contract.bestseller_price_max);
+    const ranges = {
+        bestseller: [contract.bestseller_price_min, contract.bestseller_price_max],
+        new_release: [contract.new_release_price_min, contract.new_release_price_max],
+        hot_movie: [contract.hot_movie_price_min, contract.hot_movie_price_max],
+    };
+    const [minimum, maximum] = (ranges[type] || ranges.bestseller).map(Number);
     priceInput.min = minimum;
     priceInput.max = maximum;
     priceInput.value = minimum;
@@ -338,6 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
             editShowtimeModal.querySelector('#edit_screen_id').value = button.getAttribute('data-screen-id');
             editShowtimeModal.querySelector('#edit_show_date').value = button.getAttribute('data-show-date');
             editShowtimeModal.querySelector('#edit_show_time').value = button.getAttribute('data-show-time');
+            editShowtimeModal.querySelector('#edit_contract_price_type').value = button.getAttribute('data-contract-price-type') || 'bestseller';
             editShowtimeModal.querySelector('#edit_price').value = button.getAttribute('data-price');
         });
     }
@@ -546,5 +561,35 @@ function updateSeatPreviewShowtimes() {
     html += `<div style="margin-top:10px;text-align:center;font-weight:bold;color:#28a745;">Tổng số ghế: ${totalSeats} ghế</div>`;
     preview.innerHTML = html;
 }
+</script>
+<script>
+function filterScreensByMovie(movieSelectId, screenSelectId) {
+    const movieSelect = document.getElementById(movieSelectId);
+    const screenSelect = document.getElementById(screenSelectId);
+    if (!movieSelect || !screenSelect) return;
+
+    const applyFilter = () => {
+        const format = movieSelect.options[movieSelect.selectedIndex]?.dataset.format || '';
+        let selectedStillValid = !screenSelect.value;
+
+        Array.from(screenSelect.options).forEach(option => {
+            if (!option.value) return;
+            const compatible = !format || option.dataset.format === format;
+            option.hidden = !compatible;
+            option.disabled = !compatible;
+            if (compatible && option.selected) selectedStillValid = true;
+        });
+
+        if (!selectedStillValid) screenSelect.value = '';
+    };
+
+    movieSelect.addEventListener('change', applyFilter);
+    applyFilter();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    filterScreensByMovie('movie_id', 'screen_id');
+    filterScreensByMovie('edit_movie_id', 'edit_screen_id');
+});
 </script>
 @endpush

@@ -9,6 +9,8 @@ class CommentLike extends Model
 {
     use HasFactory;
 
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'comment_id',
         'user_id',

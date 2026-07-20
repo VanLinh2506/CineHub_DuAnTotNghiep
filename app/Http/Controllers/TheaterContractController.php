@@ -57,6 +57,7 @@ class TheaterContractController extends Controller
             'theaters' => Theater::where('is_active', 1)->orderBy('name')->get(),
             'permissions' => $this->contracts->defaultPermissions(),
             'terms' => $this->contracts->defaultAutoRevokeTerms(),
+            'partyTerms' => $this->contracts->defaultPartyTerms(),
         ]);
     }
 
@@ -145,9 +146,12 @@ class TheaterContractController extends Controller
             'bestseller_price_max' => ['required', 'integer', 'gte:bestseller_price_min'],
             'new_release_price_min' => ['required', 'integer', 'min:0'],
             'new_release_price_max' => ['required', 'integer', 'gte:new_release_price_min'],
+            'hot_movie_price_min' => ['required', 'integer', 'min:0'],
+            'hot_movie_price_max' => ['required', 'integer', 'gte:hot_movie_price_min'],
             'admin_permissions' => ['nullable', 'array'],
             'admin_permissions.*' => ['nullable', 'string', 'max:255'],
             'auto_revoke_terms' => ['nullable', 'string'],
+            'party_terms' => ['nullable', 'string'],
             'super_admin_signature' => ['nullable', 'string', 'max:255'],
             'representative_signature' => ['nullable', 'string', 'max:255'],
             'contract_code' => ['nullable', 'string', 'max:50', Rule::unique('theater_contracts', 'contract_code')],

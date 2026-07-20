@@ -638,8 +638,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function highlightStars(value) {
             stars.forEach(s => {
-                const starValue = s.dataset.value;
-                if (starValue <= value) {
+                const starValue = parseInt(s.dataset.value);
+                if (starValue <= parseInt(value)) {
                     s.classList.add('active');
                     s.querySelector('i').className = 'fas fa-star';
                 } else {

@@ -104,6 +104,17 @@
 
                 {{-- Trạng thái --}}
                 <div class="col-md-3 mb-3">
+                    <label for="projection_format" class="form-label">Định dạng chiếu</label>
+                    <select class="form-select" id="projection_format" name="projection_format">
+                        <option value="2D" @selected(old('projection_format', '2D') === '2D')>2D</option>
+                        <option value="3D" @selected(old('projection_format') === '3D')>3D</option>
+                        <option value="4DX" @selected(old('projection_format') === '4DX')>4D / 4DX</option>
+                    </select>
+                    <small class="text-muted">Phim chiếu rạp chỉ được xếp vào phòng cùng định dạng.</small>
+                </div>
+
+                {{-- Trạng thái --}}
+                <div class="col-md-3 mb-3">
                     <label for="status" class="form-label">
                         Trạng thái
                     </label>

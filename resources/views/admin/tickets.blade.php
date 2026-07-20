@@ -47,7 +47,7 @@
                     <i class="fas fa-money-bill-wave"></i>
                 </div>
                 <div class="stat-info">
-                    <div class="stat-label">Doanh thu</div>
+                    <div class="stat-label">Hoa hồng nền tảng (5%)</div>
                     <div class="stat-value">{{ number_format($overallStats['total_revenue'] ?? 0) }}₫</div>
                 </div>
             </div>
