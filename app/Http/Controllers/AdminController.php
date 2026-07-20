@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{User, Movie, Category, Theater, Ticket, Transaction, Showtime, Screen, FoodItem, Episode, Booking, Notification};
+use App\Models\{User, Movie, Category, Theater, Ticket, Transaction, Showtime, Screen, FoodItem, Episode, Booking, Notification, MovieViewEvent};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Hash, Storage, Log};
 use Illuminate\Support\Str;
@@ -10,6 +10,8 @@ use Carbon\Carbon;
 
 class AdminController extends Controller
 {
+    private const THEATER_COMMISSION_RATE = 0.05;
+
     // Middleware is handled by routes - no need for constructor middleware
 
     protected function checkIsAdmin()
@@ -28,34 +30,65 @@ class AdminController extends Controller
             'total_users' => User::count(),
             'total_movies' => Movie::count(),
             'total_tickets' => Ticket::count(),
-            'total_revenue' => Transaction::where('status', 'Thành công')->sum('amount') ?? 0,
-            'today_revenue' => Transaction::where('status', 'Thành công')->whereDate('created_at', today())->sum('amount') ?? 0,
-            'week_revenue' => Transaction::where('status', 'Thành công')->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->sum('amount') ?? 0,
-            'month_revenue' => Transaction::where('status', 'Thành công')->whereMonth('created_at', now()->month)->sum('amount') ?? 0,
+            'total_views' => MovieViewEvent::count(),
+            'total_showtimes' => Showtime::count(),
+            'upcoming_showtimes' => Showtime::where(function ($query) {
+                $query->whereDate('show_date', '>', today())
+                    ->orWhere(function ($today) {
+                        $today->whereDate('show_date', today())
+                            ->whereTime('show_time', '>=', now()->format('H:i:s'));
+                    });
+            })->count(),
+            'total_revenue' => $this->adminRevenue(),
+            'today_revenue' => $this->adminRevenue(today()->startOfDay(), today()->endOfDay()),
+            'week_revenue' => $this->adminRevenue(now()->startOfWeek(), now()->endOfWeek()),
+            'month_revenue' => $this->adminRevenue(now()->startOfMonth(), now()->endOfMonth()),
             'active_users_today' => User::whereDate('updated_at', today())->count(),
-            'pending_tickets' => 0, // Placeholder
         ];
 
-        $revenueByDay = Transaction::where('status', 'Thành công')
-            ->where('created_at', '>=', now()->subDays(6))
-            ->selectRaw('DATE(created_at) as date, SUM(amount) as revenue, COUNT(*) as transaction_count')
-            ->groupBy('date')
-            ->orderBy('date')
+        $revenueByDay = $this->adminRevenueByDay(now()->subDays(6)->startOfDay(), now()->endOfDay());
+
+        $topMovies = Movie::withCount('viewEvents')
+            ->orderByDesc('view_events_count')
+            ->limit(5)
+            ->get(['id', 'title'])
+            ->map(fn (Movie $movie) => [
+                'title' => $movie->title,
+                'view_count' => $movie->view_events_count,
+            ]);
+
+        $upcomingShowtimes = Showtime::with(['movie:id,title,projection_format', 'theater:id,name', 'screen:id,screen_name,screen_type'])
+            ->where(function ($query) {
+                $query->whereDate('show_date', '>', today())
+                    ->orWhere(function ($today) {
+                        $today->whereDate('show_date', today())
+                            ->whereTime('show_time', '>=', now()->format('H:i:s'));
+                    });
+            })
+            ->orderBy('show_date')
+            ->orderBy('show_time')
+            ->limit(10)
             ->get();
 
-        try {
-            $topMovies = Movie::join('watch_history', 'movies.id', '=', 'watch_history.movie_id')
-                ->selectRaw('movies.title, COUNT(watch_history.id) as view_count')
-                ->groupBy('movies.id', 'movies.title')
-                ->orderByDesc('view_count')
-                ->limit(5)
-                ->get()
-                ->toArray();
-        } catch (\Exception $e) {
-            $topMovies = [];
-        }
+        $theaterRevenues = Theater::query()
+            ->leftJoin('showtimes', 'theaters.id', '=', 'showtimes.theater_id')
+            ->leftJoin('tickets', function ($join) {
+                $join->on('showtimes.id', '=', 'tickets.showtime_id')
+                    ->where('tickets.status', '=', 'Đã đặt');
+            })
+            ->selectRaw('theaters.id, theaters.name, COUNT(tickets.id) as tickets_sold, COALESCE(SUM(tickets.price), 0) as gross_revenue')
+            ->groupBy('theaters.id', 'theaters.name')
+            ->orderByDesc('gross_revenue')
+            ->get()
+            ->map(function ($theater) {
+                $theater->platform_commission = (float) $theater->gross_revenue * self::THEATER_COMMISSION_RATE;
+                $theater->theater_revenue = (float) $theater->gross_revenue - $theater->platform_commission;
+                return $theater;
+            });
 
-        return view('admin.dashboard', compact('stats', 'revenueByDay', 'topMovies'));
+        return view('admin.dashboard', compact(
+            'stats', 'revenueByDay', 'topMovies', 'upcomingShowtimes', 'theaterRevenues'
+        ));
     }
 
     // Users Management
@@ -200,6 +233,7 @@ class AdminController extends Controller
             'level' => 'nullable|in:Free,Basic,Silver,Gold,Premium',
             'duration' => 'nullable|integer',
             'type' => 'required|in:phimle,phimbo',
+            'projection_format' => 'nullable|in:2D,3D,4DX',
             'status' => 'nullable|string',
             'scheduled_status' => 'nullable|in:Chiếu online',
             'publish_date' => 'nullable|date',
@@ -208,7 +242,8 @@ class AdminController extends Controller
             'trailer_file' => 'nullable|mimes:mp4,avi,mov,mkv,webm|max:102400',
         ]);
 
-        $data = $request->only(['title', 'level', 'duration', 'description', 'director', 'actors', 'status', 'scheduled_status', 'publish_date', 'type', 'country', 'language', 'age_rating']);
+        $data = $request->only(['title', 'level', 'duration', 'description', 'director', 'actors', 'status', 'scheduled_status', 'publish_date', 'type', 'projection_format', 'country', 'language', 'age_rating']);
+        $data['projection_format'] = $data['projection_format'] ?? '2D';
         $categoryIds = $this->normalizedCategoryIds($request);
         $data['category_id'] = $categoryIds[0] ?? null;
 
@@ -306,9 +341,11 @@ class AdminController extends Controller
             'category_ids.*' => 'exists:categories,id',
             'scheduled_status' => 'nullable|in:Chiếu online',
             'publish_date' => 'nullable|date',
+            'projection_format' => 'nullable|in:2D,3D,4DX',
         ]);
 
-        $data = $request->only(['title', 'level', 'duration', 'description', 'director', 'actors', 'status', 'scheduled_status', 'publish_date', 'type', 'country', 'language', 'age_rating', 'status_admin']);
+        $data = $request->only(['title', 'level', 'duration', 'description', 'director', 'actors', 'status', 'scheduled_status', 'publish_date', 'type', 'projection_format', 'country', 'language', 'age_rating', 'status_admin']);
+        $data['projection_format'] = $data['projection_format'] ?? '2D';
         $categoryIds = $this->normalizedCategoryIds($request);
         $data['category_id'] = $categoryIds[0] ?? null;
 
@@ -618,6 +655,7 @@ class AdminController extends Controller
         foreach ($theaterIds as $theaterId) {
             $screens = Screen::where('theater_id', $theaterId)
                 ->where('is_active', 1)
+                ->where('screen_type', $movie->projection_format ?? '2D')
                 ->limit($request->number_of_screens ?? 1)
                 ->get();
 
@@ -803,19 +841,19 @@ class AdminController extends Controller
         }
 
         // Get revenue data grouped by date
-        $revenueData = Transaction::where('status', 'Thành công')
-            ->whereBetween('created_at', [$start, $end])
-            ->selectRaw('DATE(created_at) as period, SUM(amount) as revenue, COUNT(*) as transaction_count')
-            ->groupBy('period')
-            ->orderBy('period')
-            ->get();
+        $revenueData = $this->adminRevenueByDay($start, $end)
+            ->map(fn ($row) => (object) [
+                'period' => $row->date,
+                'revenue' => $row->revenue,
+                'transaction_count' => $row->transaction_count,
+            ]);
         
         // Safely get top movies by revenue with error handling
         try {
             $topMoviesByRevenue = Ticket::whereBetween('tickets.created_at', [$start, $end])
                 ->join('showtimes', 'tickets.showtime_id', '=', 'showtimes.id')
                 ->join('movies', 'showtimes.movie_id', '=', 'movies.id')
-                ->selectRaw('movies.id, movies.title, movies.type, SUM(tickets.price) as revenue, COUNT(tickets.id) as ticket_count')
+                ->selectRaw('movies.id, movies.title, movies.type, SUM(tickets.price) * 0.05 as revenue, COUNT(tickets.id) as ticket_count')
                 ->groupBy('movies.id', 'movies.title', 'movies.type')
                 ->orderByDesc('revenue')
                 ->limit(10)
@@ -826,9 +864,7 @@ class AdminController extends Controller
         }
 
         $summaryStats = [
-            'total_revenue' => Transaction::where('status', 'Thành công')
-                ->whereBetween('created_at', [$start, $end])
-                ->sum('amount') ?? 0,
+            'total_revenue' => $this->adminRevenue($start, $end),
             'total_transactions' => Transaction::where('status', 'Thành công')
                 ->whereBetween('created_at', [$start, $end])
                 ->count(),
@@ -839,27 +875,45 @@ class AdminController extends Controller
         return view('admin.analytics', compact('revenueData', 'topMoviesByRevenue', 'summaryStats', 'period'));
     }
 
-    protected function getRevenueData($period)
+    private function adminRevenue(?Carbon $start = null, ?Carbon $end = null): float
     {
-        $query = Transaction::where('status', 'Thành công');
+        $ticketQuery = Ticket::where('status', 'Đã đặt');
+        $subscriptionQuery = Transaction::where('status', 'Thành công')
+            ->where('type', 'subscription');
 
-        return match($period) {
-            'day' => $query->where('created_at', '>=', now()->subDays(30))
-                ->selectRaw('DATE(created_at) as period, SUM(amount) as revenue, COUNT(*) as transaction_count')
-                ->groupBy('period')
-                ->orderBy('period')
-                ->get(),
-            'week' => $query->where('created_at', '>=', now()->subWeeks(12))
-                ->selectRaw('YEARWEEK(created_at) as period, SUM(amount) as revenue, COUNT(*) as transaction_count')
-                ->groupBy('period')
-                ->orderBy('period')
-                ->get(),
-            default => $query->where('created_at', '>=', now()->subMonths(12))
-                ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as period, SUM(amount) as revenue, COUNT(*) as transaction_count')
-                ->groupBy('period')
-                ->orderBy('period')
-                ->get(),
-        };
+        if ($start && $end) {
+            $ticketQuery->whereBetween('created_at', [$start, $end]);
+            $subscriptionQuery->whereBetween('created_at', [$start, $end]);
+        }
+
+        return ((float) $ticketQuery->sum('price') * self::THEATER_COMMISSION_RATE)
+            + (float) $subscriptionQuery->sum('amount');
+    }
+
+    private function adminRevenueByDay(Carbon $start, Carbon $end)
+    {
+        $tickets = Ticket::where('status', 'Đã đặt')
+            ->whereBetween('created_at', [$start, $end])
+            ->selectRaw('DATE(created_at) as date, SUM(price) * 0.05 as revenue, COUNT(*) as transaction_count')
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
+        $subscriptions = Transaction::where('status', 'Thành công')
+            ->where('type', 'subscription')
+            ->whereBetween('created_at', [$start, $end])
+            ->selectRaw('DATE(created_at) as date, SUM(amount) as revenue, COUNT(*) as transaction_count')
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
+        return $tickets->keys()->merge($subscriptions->keys())->unique()->sort()->map(function ($date) use ($tickets, $subscriptions) {
+            return (object) [
+                'date' => $date,
+                'revenue' => (float) ($tickets->get($date)?->revenue ?? 0) + (float) ($subscriptions->get($date)?->revenue ?? 0),
+                'transaction_count' => (int) ($tickets->get($date)?->transaction_count ?? 0) + (int) ($subscriptions->get($date)?->transaction_count ?? 0),
+            ];
+        })->values();
     }
 
     // Tickets Management
@@ -900,7 +954,7 @@ class AdminController extends Controller
             'total_tickets' => Ticket::count(),
             'tickets_sold' => Ticket::where('status', 'Đã đặt')->count(),
             'tickets_cancelled' => Ticket::where('status', 'Đã hủy')->count(),
-            'total_revenue' => Ticket::where('status', 'Đã đặt')->sum('price'),
+            'total_revenue' => Ticket::where('status', 'Đã đặt')->sum('price') * self::THEATER_COMMISSION_RATE,
         ];
 
         $status = $request->input('status');

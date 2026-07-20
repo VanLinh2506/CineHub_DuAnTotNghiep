@@ -37,7 +37,7 @@
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="stat-label">Tổng doanh thu</div>
+                        <div class="stat-label">Doanh thu nền tảng (5% vé + gói)</div>
                         <div class="stat-value text-primary">{{ number_format($summaryStats['total_revenue'] ?? 0) }}đ</div>
                     </div>
                     <div class="stat-icon bg-primary">

@@ -309,6 +309,99 @@ class BookingSeatReservationTest extends TestCase
             ->assertSee('myReservedSeats: ["A1","A2"]', false);
     }
 
+    public function test_pending_vnpay_booking_is_shown_in_my_tickets_and_can_be_resumed(): void
+    {
+        $this->withoutMiddleware(VerifyCsrfToken::class);
+        config([
+            'services.vnpay.url' => 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+            'services.vnpay.tmn_code' => 'TESTCODE',
+            'services.vnpay.hash_secret' => 'test-secret',
+            'services.vnpay.return_url' => 'http://localhost/payment/vnpay/callback',
+        ]);
+
+        $user = User::factory()->create();
+        $showtime = $this->createShowtime();
+        $this->actingAs($user);
+
+        $this->postJson('/booking/seats/reserve', [
+            'showtime_id' => $showtime->id,
+            'seats' => ['A1', 'A2'],
+        ])->assertOk();
+
+        $booking = Booking::create([
+            'user_id' => $user->id,
+            'showtime_id' => $showtime->id,
+            'seats' => ['A1', 'A2'],
+            'food_items' => [],
+            'customer_email' => $user->email,
+            'total_amount' => 180000,
+            'vnp_txn_ref' => 'BKG-ABANDONED',
+            'status' => 'pending',
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        $this->get(route('booking.my-tickets'))
+            ->assertOk()
+            ->assertSee('Chờ thanh toán')
+            ->assertSee('Tiếp tục thanh toán VNPay')
+            ->assertSee(route('booking.payment', $booking->id), false);
+
+        $response = $this->get(route('booking.payment', $booking->id));
+
+        $response->assertRedirectContains('sandbox.vnpayment.vn/paymentv2/vpcpay.html');
+        $this->assertNotSame('BKG-ABANDONED', $booking->fresh()->vnp_txn_ref);
+        $this->assertSame($booking->id, session('pending_booking_id'));
+    }
+
+    public function test_expired_pending_booking_cannot_be_resumed(): void
+    {
+        $user = User::factory()->create();
+        $showtime = $this->createShowtime();
+        $booking = Booking::create([
+            'user_id' => $user->id,
+            'showtime_id' => $showtime->id,
+            'seats' => ['A1'],
+            'food_items' => [],
+            'customer_email' => $user->email,
+            'total_amount' => 90000,
+            'vnp_txn_ref' => 'BKG-EXPIRED',
+            'status' => 'pending',
+            'expires_at' => now()->subSecond(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('booking.payment', $booking->id))
+            ->assertRedirect(route('booking.index', ['showtime_id' => $showtime->id]))
+            ->assertSessionHas('error', 'Thời gian giữ ghế đã hết. Vui lòng chọn lại ghế.');
+
+        $this->assertDatabaseHas('booking_pending', [
+            'id' => $booking->id,
+            'status' => 'cancelled',
+        ]);
+    }
+
+    public function test_user_cannot_resume_another_users_booking(): void
+    {
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $showtime = $this->createShowtime();
+        $booking = Booking::create([
+            'user_id' => $owner->id,
+            'showtime_id' => $showtime->id,
+            'seats' => ['A1'],
+            'food_items' => [],
+            'customer_email' => $owner->email,
+            'total_amount' => 90000,
+            'vnp_txn_ref' => 'BKG-PRIVATE',
+            'status' => 'pending',
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        $this->actingAs($otherUser)
+            ->get(route('booking.payment', $booking->id))
+            ->assertNotFound();
+    }
+
     private function createShowtime(): Showtime
     {
         $category = Category::create([

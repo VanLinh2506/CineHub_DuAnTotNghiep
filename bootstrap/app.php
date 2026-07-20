@@ -13,6 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            \App\Http\Middleware\PublishScheduledMovies::class,
+        ]);
+
         // Legacy route middleware để tương thích với PHP cũ
         $middleware->append(\App\Http\Middleware\LegacyRouteMiddleware::class);
         

@@ -56,7 +56,7 @@
             <div class="stat-card animated-card" data-delay="300">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="stat-label">Tổng doanh thu</div>
+                        <div class="stat-label">Doanh thu nền tảng</div>
                         <div class="stat-value text-warning revenue-counter" data-target="{{ $stats['total_revenue'] ?? 0 }}">0₫</div>
                     </div>
                     <div class="stat-icon bg-warning">
@@ -74,7 +74,7 @@
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="stat-card animated-card revenue-card" data-delay="400">
-                <div class="stat-label">Doanh thu hôm nay</div>
+                <div class="stat-label">Doanh thu nền tảng hôm nay</div>
                 <div class="stat-value text-success revenue-counter" data-target="{{ $stats['today_revenue'] ?? 0 }}">0₫</div>
                 <div class="stat-trend">
                     <i class="fas fa-arrow-up text-success"></i>
@@ -84,7 +84,7 @@
         </div>
         <div class="col-md-4">
             <div class="stat-card animated-card revenue-card" data-delay="500">
-                <div class="stat-label">Doanh thu tuần này</div>
+                <div class="stat-label">Doanh thu nền tảng tuần này</div>
                 <div class="stat-value text-info revenue-counter" data-target="{{ $stats['week_revenue'] ?? 0 }}">0₫</div>
                 <div class="stat-trend">
                     <i class="fas fa-chart-line text-info"></i>
@@ -94,7 +94,7 @@
         </div>
         <div class="col-md-4">
             <div class="stat-card animated-card revenue-card" data-delay="600">
-                <div class="stat-label">Doanh thu tháng này</div>
+                <div class="stat-label">Doanh thu nền tảng tháng này</div>
                 <div class="stat-value text-primary revenue-counter" data-target="{{ $stats['month_revenue'] ?? 0 }}">0₫</div>
                 <div class="stat-trend">
                     <i class="fas fa-calendar-alt text-primary"></i>
@@ -130,12 +130,16 @@
                     <i class="fas fa-bolt text-warning me-2"></i>Thống kê nhanh
                 </h6>
                 <div class="mb-3">
-                    <small class="text-muted d-block mb-1">Người dùng hoạt động hôm nay</small>
-                    <div class="fw-bold text-primary fs-4 counter" data-target="{{ $stats['active_users_today'] ?? 0 }}">0</div>
+                    <small class="text-muted d-block mb-1">Tổng lượt xem online</small>
+                    <div class="fw-bold text-primary fs-4 counter" data-target="{{ $stats['total_views'] ?? 0 }}">0</div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted d-block mb-1">Tổng suất chiếu</small>
+                    <div class="fw-bold text-info fs-4 counter" data-target="{{ $stats['total_showtimes'] ?? 0 }}">0</div>
                 </div>
                 <div>
-                    <small class="text-muted d-block mb-1">Ticket hỗ trợ chờ xử lý</small>
-                    <div class="fw-bold text-warning fs-4 counter" data-target="{{ $stats['pending_tickets'] ?? 0 }}">0</div>
+                    <small class="text-muted d-block mb-1">Suất chiếu sắp tới</small>
+                    <div class="fw-bold text-warning fs-4 counter" data-target="{{ $stats['upcoming_showtimes'] ?? 0 }}">0</div>
                 </div>
             </div>
             
@@ -143,7 +147,7 @@
                 <h6 class="mb-3" style="color: #333; font-weight: 600;">
                     <i class="fas fa-trophy text-warning me-2"></i>Top phim xem nhiều
                 </h6>
-                @if (empty($topMovies))
+                @if ($topMovies->isEmpty())
                     <p class="text-muted">Chưa có dữ liệu</p>
                 @else
                     <ul class="list-unstyled mb-0">
@@ -185,21 +189,60 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if (empty($upcomingShowtimes))
+                            @if ($upcomingShowtimes->isEmpty())
                                 <tr>
                                     <td colspan="5" class="text-center text-muted">Không có suất chiếu sắp tới</td>
                                 </tr>
                             @else
                                 @foreach ($upcomingShowtimes as $index => $showtime)
                                     <tr class="table-row-animated" style="animation-delay: {{ $index * 50 }}ms;">
-                                        <td><strong>{{ $showtime['movie_title'] }}</strong></td>
-                                        <td>{{ $showtime['theater_name'] }}</td>
+                                        <td><strong>{{ $showtime->movie?->title ?? 'N/A' }}</strong> <span class="badge bg-secondary">{{ $showtime->movie?->projection_format ?? '2D' }}</span></td>
+                                        <td>{{ $showtime->theater?->name ?? 'N/A' }} — {{ $showtime->screen?->screen_name ?? 'N/A' }}</td>
                                         <td>{{ \Carbon\Carbon::parse($showtime['show_date'])->format('d/m/Y') }}</td>
                                         <td><span class="badge bg-primary">{{ \Carbon\Carbon::parse($showtime['show_time'])->format('H:i') }}</span></td>
                                         <td class="text-success fw-bold">{{ number_format($showtime['price']) }}₫</td>
                                     </tr>
                                 @endforeach
                             @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="stat-card animated-card" data-delay="1100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0" style="color:#333;font-weight:600;">
+                        <i class="fas fa-building text-primary me-2"></i>Doanh thu phim chiếu rạp theo rạp
+                    </h5>
+                    <small class="text-muted">Nền tảng nhận 5% doanh thu vé</small>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Rạp</th>
+                                <th class="text-end">Vé đã bán</th>
+                                <th class="text-end">Doanh thu vé gộp</th>
+                                <th class="text-end">Phần của rạp (95%)</th>
+                                <th class="text-end">Nền tảng (5%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($theaterRevenues as $theaterRevenue)
+                                <tr>
+                                    <td><strong>{{ $theaterRevenue->name }}</strong></td>
+                                    <td class="text-end">{{ number_format($theaterRevenue->tickets_sold) }}</td>
+                                    <td class="text-end fw-bold">{{ number_format($theaterRevenue->gross_revenue) }}₫</td>
+                                    <td class="text-end text-success">{{ number_format($theaterRevenue->theater_revenue) }}₫</td>
+                                    <td class="text-end text-primary fw-bold">{{ number_format($theaterRevenue->platform_commission) }}₫</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="text-center text-muted">Chưa có dữ liệu doanh thu rạp</td></tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

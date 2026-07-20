@@ -350,6 +350,16 @@
                 </select>
             </div>
 
+            <div class="col-md-3 mb-3">
+                <label for="projection_format" class="form-label">Định dạng chiếu</label>
+                <select class="form-select" id="projection_format" name="projection_format">
+                    @foreach(['2D' => '2D', '3D' => '3D', '4DX' => '4D / 4DX'] as $value => $label)
+                        <option value="{{ $value }}" @selected(old('projection_format', $movie['projection_format'] ?? '2D') === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <small class="text-muted">Chỉ được xếp vào phòng cùng định dạng.</small>
+            </div>
+
             <div class="col-md-6 mb-3" id="onlineScheduleSection"
                 style="display: {{ (($movie['type'] ?? 'phimle') === 'phimle' && $movie['status'] === 'Sắp chiếu') ? 'block' : 'none' }};">
                 <label for="publish_date" class="form-label">Ngày bắt đầu chiếu online <span class="text-danger">*</span></label>

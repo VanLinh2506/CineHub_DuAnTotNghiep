@@ -118,8 +118,8 @@
                         <select name="movie_id" id="movie_id" class="form-select" required>
                             <option value="">Chọn phim</option>
                             @foreach($movies as $movie)
-                                <option value="{{ $movie['id'] }}" data-duration="{{ $movie['duration'] ?? 120 }}">
-                                    {{ $movie['title'] }}
+                                <option value="{{ $movie['id'] }}" data-duration="{{ $movie['duration'] ?? 120 }}" data-format="{{ $movie['projection_format'] ?? '2D' }}">
+                                    {{ $movie['title'] }} — {{ $movie['projection_format'] ?? '2D' }}
                                 </option>
                             @endforeach
                         </select>
@@ -132,7 +132,7 @@
                         <select name="screen_id" id="screen_id" class="form-select" required>
                             <option value="">Chọn phòng</option>
                             @foreach($screens as $screen)
-                                <option value="{{ $screen['id'] }}">
+                                <option value="{{ $screen['id'] }}" data-format="{{ $screen['screen_type'] }}">
                                     {{ $screen['screen_name'] }} ({{ $screen['total_seats'] }} ghế, {{ $screen['screen_type'] }})
                                 </option>
                             @endforeach
@@ -191,7 +191,7 @@
                         <select name="movie_id" id="edit_movie_id" class="form-select" required>
                             <option value="">Chọn phim</option>
                             @foreach($movies as $movie)
-                                <option value="{{ $movie['id'] }}">{{ $movie['title'] }}</option>
+                                <option value="{{ $movie['id'] }}" data-format="{{ $movie['projection_format'] ?? '2D' }}">{{ $movie['title'] }} — {{ $movie['projection_format'] ?? '2D' }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -200,7 +200,7 @@
                         <select name="screen_id" id="edit_screen_id" class="form-select" required>
                             <option value="">Chọn phòng</option>
                             @foreach($screens as $screen)
-                                <option value="{{ $screen['id'] }}">
+                                <option value="{{ $screen['id'] }}" data-format="{{ $screen['screen_type'] }}">
                                     {{ $screen['screen_name'] }} ({{ $screen['total_seats'] }} ghế, {{ $screen['screen_type'] }})
                                 </option>
                             @endforeach
@@ -561,5 +561,35 @@ function updateSeatPreviewShowtimes() {
     html += `<div style="margin-top:10px;text-align:center;font-weight:bold;color:#28a745;">Tổng số ghế: ${totalSeats} ghế</div>`;
     preview.innerHTML = html;
 }
+</script>
+<script>
+function filterScreensByMovie(movieSelectId, screenSelectId) {
+    const movieSelect = document.getElementById(movieSelectId);
+    const screenSelect = document.getElementById(screenSelectId);
+    if (!movieSelect || !screenSelect) return;
+
+    const applyFilter = () => {
+        const format = movieSelect.options[movieSelect.selectedIndex]?.dataset.format || '';
+        let selectedStillValid = !screenSelect.value;
+
+        Array.from(screenSelect.options).forEach(option => {
+            if (!option.value) return;
+            const compatible = !format || option.dataset.format === format;
+            option.hidden = !compatible;
+            option.disabled = !compatible;
+            if (compatible && option.selected) selectedStillValid = true;
+        });
+
+        if (!selectedStillValid) screenSelect.value = '';
+    };
+
+    movieSelect.addEventListener('change', applyFilter);
+    applyFilter();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    filterScreensByMovie('movie_id', 'screen_id');
+    filterScreensByMovie('edit_movie_id', 'edit_screen_id');
+});
 </script>
 @endpush

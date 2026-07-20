@@ -315,6 +315,11 @@ class ModeratorController extends Controller
         
         // Lấy thông tin phim để biết thời lượng
         $movie = Movie::findOrFail($request->movie_id);
+        if (!$movie->canPlayInScreen($screen)) {
+            return redirect()->back()->withInput()->with('error',
+                "Phim {$movie->projection_format} chỉ được xếp vào phòng {$movie->projection_format}."
+            );
+        }
         $movieDuration = $movie->duration ?? 120; // Mặc định 120 phút nếu không có
         
         // Tính thời gian kết thúc (thời lượng phim + 15 phút dọn dẹp)
@@ -380,9 +385,16 @@ class ModeratorController extends Controller
             'contract_price_type' => 'nullable|in:bestseller,new_release,hot_movie',
         ]);
 
-        Screen::where('id', $request->screen_id)
+        $screen = Screen::where('id', $request->screen_id)
             ->where('theater_id', $this->theaterId)
             ->firstOrFail();
+
+        $movie = Movie::findOrFail($request->movie_id);
+        if (!$movie->canPlayInScreen($screen)) {
+            return redirect()->back()->withInput()->with('error',
+                "Phim {$movie->projection_format} chỉ được xếp vào phòng {$movie->projection_format}."
+            );
+        }
 
         $contractPriceType = $request->input(
             'contract_price_type',

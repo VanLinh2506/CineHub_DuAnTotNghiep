@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Movie;
+use App\Services\ScheduledMoviePublisher;
 use Illuminate\Console\Command;
 
 class UpdateMovieStatus extends Command
@@ -10,17 +10,9 @@ class UpdateMovieStatus extends Command
     protected $signature = 'movies:update-status';
     protected $description = 'Publish scheduled online movies when their start date arrives';
 
-    public function handle(): int
+    public function handle(ScheduledMoviePublisher $publisher): int
     {
-        $updated = Movie::where('type', 'phimle')
-            ->where('status', 'Sắp chiếu')
-            ->where('scheduled_status', 'Chiếu online')
-            ->whereNotNull('publish_date')
-            ->where('publish_date', '<=', now())
-            ->update([
-                'status' => 'Chiếu online',
-                'scheduled_status' => null,
-            ]);
+        $updated = $publisher->publishDue();
 
         $this->info("Published {$updated} scheduled online movie(s).");
 

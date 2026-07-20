@@ -2313,14 +2313,91 @@ class BookingController extends Controller
             return redirect()->route('login');
         }
         
-        // Get all bookings for this user (completed bookings only)
+        // Include active VNPay bookings so users can resume payment after
+        // leaving the payment gateway.
         $bookings = Booking::with(['showtime.movie', 'showtime.theater', 'showtime.screen', 'tickets'])
             ->where('user_id', Auth::id())
-            ->where('status', 'completed')
+            ->where(function ($query) {
+                $query->where('status', 'completed')
+                    ->orWhere(function ($pending) {
+                        $pending->where('status', 'pending')
+                            ->where('expires_at', '>', now());
+                    });
+            })
             ->orderByDesc('created_at')
             ->paginate(20);
         
         return view('booking.my-tickets', compact('bookings'));
+    }
+
+    /**
+     * Resume an unfinished VNPay booking while its seats are still reserved.
+     */
+    public function payment(Request $request, $bookingId)
+    {
+        $booking = Booking::with('showtime.movie')
+            ->whereKey($bookingId)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        if ($booking->status === 'completed') {
+            return redirect()->route('booking.confirmation', $booking->id);
+        }
+
+        if ($booking->status !== 'pending') {
+            return redirect()->route('booking.my-tickets')
+                ->with('error', 'Giao dịch này không còn ở trạng thái chờ thanh toán.');
+        }
+
+        $seats = $booking->seats ?? [];
+        $reservationCount = SeatReservation::query()
+            ->where('showtime_id', $booking->showtime_id)
+            ->where('user_id', $booking->user_id)
+            ->whereIn('seat', $seats)
+            ->active()
+            ->count();
+
+        if (!$booking->expires_at || $booking->expires_at->lte(now()) || $reservationCount !== count($seats)) {
+            $booking->update(['status' => 'cancelled']);
+
+            return redirect()->route('booking.index', ['showtime_id' => $booking->showtime_id])
+                ->with('error', 'Thời gian giữ ghế đã hết. Vui lòng chọn lại ghế.');
+        }
+
+        if (!$this->isVnpayConfigured()) {
+            return redirect()->route('booking.my-tickets')
+                ->with('error', 'VNPay chưa được cấu hình.');
+        }
+
+        // A fresh transaction reference avoids reusing an abandoned VNPay order.
+        $booking->update([
+            'vnp_txn_ref' => 'BKG' . $booking->id . '_' . now()->format('YmdHis') . '_' . Str::lower(Str::random(4)),
+        ]);
+
+        try {
+            $paymentUrl = $this->vnpay->createBookingPaymentUrl(
+                $booking->fresh(),
+                'Thanh toan ve xem phim ' . ($booking->showtime?->movie?->title ?? $booking->id),
+                config('services.vnpay.return_url') ?: route('payment.vnpay.callback'),
+                $request->ip()
+            );
+        } catch (\Throwable $e) {
+            Log::error('Resume VNPay payment failed', [
+                'booking_id' => $booking->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('booking.my-tickets')
+                ->with('error', 'Không thể tạo lại liên kết VNPay. Vui lòng thử lại.');
+        }
+
+        session([
+            'pending_booking_id' => $booking->id,
+            'showtime_id' => $booking->showtime_id,
+            'last_payment_url' => $paymentUrl,
+        ]);
+
+        return redirect()->away($paymentUrl);
     }
     
     /**
