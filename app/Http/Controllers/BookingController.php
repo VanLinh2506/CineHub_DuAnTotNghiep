@@ -421,7 +421,7 @@ class BookingController extends Controller
         
         // Get only movies with upcoming showtimes (phim đang chiếu = phim có suất chiếu trong tương lai)
         $allMovies = Movie::whereHas('showtimes', function($query) {
-                $query->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'));
+                $this->whereUpcomingShowtime($query);
             })
             ->orderBy('title')
             ->get();
@@ -473,7 +473,9 @@ class BookingController extends Controller
             
             $theaters = Theater::whereHas('showtimes', function($q) use ($selectedMovieId) {
                     $q->where('movie_id', $selectedMovieId)
-                      ->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'));
+                      ->where(function ($timeQuery) {
+                          $this->whereUpcomingShowtime($timeQuery);
+                      });
                 })
                 ->select('theaters.*')
                 ->when($userLat && $userLng, function($query) use ($userLat, $userLng) {
@@ -494,7 +496,9 @@ class BookingController extends Controller
                 ->where('movie_id', $selectedMovieId)
                 ->where('theater_id', $selectedTheater)
                 ->where('show_date', $selectedDate)
-                ->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'))
+                ->where(function ($timeQuery) {
+                    $this->whereUpcomingShowtime($timeQuery);
+                })
                 ->orderBy('show_time')
                 ->get();
         }
@@ -1388,7 +1392,9 @@ class BookingController extends Controller
             ->where('movie_id', $movieId)
             ->where('theater_id', $theaterId)
             ->where('show_date', $date)
-            ->where(DB::raw("CONCAT(show_date, ' ', show_time)"), '>=', now()->format('Y-m-d H:i:s'))
+            ->where(function ($timeQuery) {
+                $this->whereUpcomingShowtime($timeQuery);
+            })
             ->orderBy('show_time')
             ->get();
         
@@ -2544,6 +2550,19 @@ class BookingController extends Controller
             'is_read' => 0,
             'created_at' => now(),
         ]);
+    }
+
+    private function whereUpcomingShowtime($query)
+    {
+        $now = now();
+
+        return $query->where(function ($dateQuery) use ($now) {
+            $dateQuery->where('show_date', '>', $now->toDateString())
+                ->orWhere(function ($sameDayQuery) use ($now) {
+                    $sameDayQuery->where('show_date', $now->toDateString())
+                        ->where('show_time', '>=', $now->format('H:i:s'));
+                });
+        });
     }
     
     // Helper methods

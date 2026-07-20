@@ -78,8 +78,6 @@ class UpdateViewRoutes extends Command
         'url("/?route=admin/categories")' => 'route("admin.categories.index")',
         "url('/?route=admin/theaters')" => "route('admin.theaters.index')",
         'url("/?route=admin/theaters")' => 'route("admin.theaters.index")',
-        "url('/?route=admin/foodItems')" => "route('admin.foodItems.index')",
-        'url("/?route=admin/foodItems")' => 'route("admin.foodItems.index")',
         "url('/?route=admin/tickets')" => "route('admin.tickets.index')",
         'url("/?route=admin/tickets")' => 'route("admin.tickets.index")',
         "url('/?route=admin/logs')" => "route('admin.logs')",

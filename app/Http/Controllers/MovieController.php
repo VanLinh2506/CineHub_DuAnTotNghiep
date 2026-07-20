@@ -29,7 +29,7 @@ class MovieController extends Controller
             ->values();
 
         $query = Movie::query()
-            ->where('status', 'Chiếu online')
+            ->whereIn('status', Movie::onlineStatuses())
             ->withCount(['viewEvents as watch_history_count']);
 
         if ($keyword !== '') {
@@ -151,7 +151,7 @@ class MovieController extends Controller
 
         // Kho xem online tuyệt đối không lấy phim chỉ dành cho rạp.
         // Chỉ chấp nhận trạng thái online thay vì dùng so sánh loại trừ dễ lọt dữ liệu lỗi.
-        $query->where('status', 'Chiếu online');
+        $query->whereIn('status', Movie::onlineStatuses());
 
         if ($country) {
             $query->where('country', $country);
@@ -218,7 +218,7 @@ class MovieController extends Controller
     {
         $query = Movie::with(['category', 'categories'])
             ->withCount(['episodes as episode_count'])
-            ->where('status', 'Chiếu online')
+            ->whereIn('status', Movie::onlineStatuses())
             ->where('status_admin', 'published')
             ->orderBy('created_at', 'desc');
 
@@ -260,7 +260,7 @@ class MovieController extends Controller
         $query = Movie::with(['category', 'categories'])
             ->withCount(['episodes as episode_count'])
             ->where('type', 'phimle')
-            ->where('status', 'Chiếu online')
+            ->whereIn('status', Movie::onlineStatuses())
             ->where('status_admin', 'published')
             ->orderBy('created_at', 'desc');
 
@@ -319,7 +319,7 @@ class MovieController extends Controller
         $query = Movie::with(['category', 'categories'])
             ->withCount(['episodes as episode_count'])
             ->where('type', 'phimbo')
-            ->where('status', 'Chiếu online')
+            ->whereIn('status', Movie::onlineStatuses())
             ->where('status_admin', 'published');
 
         $continueWatchingSeries = collect();
@@ -373,7 +373,7 @@ class MovieController extends Controller
                 ->where('playback_updated_at', '>=', now()->subDays(30))
                 ->whereHas('movie', fn ($movieQuery) => $movieQuery
                     ->where('type', 'phimbo')
-                    ->where('status', 'Chiếu online')
+                    ->whereIn('status', Movie::onlineStatuses())
                     ->where('status_admin', 'published'))
                 ->latest('playback_updated_at')
                 ->limit(8)
@@ -458,7 +458,7 @@ class MovieController extends Controller
         $query = Movie::with(['category', 'categories'])
             ->withCount(['episodes as episode_count'])
             ->where('status_admin', 'published')
-            ->where('status', 'Chiếu online');
+            ->whereIn('status', Movie::onlineStatuses());
 
         $this->applyAudienceFilter($query, $audience);
         $this->prioritizeWatchedMovies($query);
@@ -519,7 +519,7 @@ class MovieController extends Controller
 
         $query = Movie::with(['category', 'categories'])
             ->withCount(['episodes as episode_count'])
-            ->where('status', 'Chiếu online')
+            ->whereIn('status', Movie::onlineStatuses())
             ->where('status_admin', 'published')
             ->where(function ($q) use ($id) {
                 $q->where('category_id', $id)

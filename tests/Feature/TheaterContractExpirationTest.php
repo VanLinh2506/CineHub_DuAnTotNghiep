@@ -5,56 +5,13 @@ namespace Tests\Feature;
 use App\Models\Theater;
 use App\Models\TheaterContract;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class TheaterContractExpirationTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-        Schema::create('theaters', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->boolean('is_active')->default(true);
-            $table->timestamp('created_at')->nullable();
-        });
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('password');
-            $table->string('role')->default('user');
-            $table->unsignedBigInteger('theater_id')->nullable();
-            $table->string('status')->default('active');
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
-        Schema::create('theater_contracts', function (Blueprint $table) {
-            $table->id();
-            $table->string('contract_code')->unique();
-            $table->unsignedBigInteger('theater_id');
-            $table->unsignedBigInteger('representative_user_id');
-            $table->unsignedBigInteger('super_admin_id')->nullable();
-            $table->unsignedBigInteger('renewed_from_id')->nullable();
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->json('admin_permissions')->nullable();
-            $table->text('auto_revoke_terms')->nullable();
-            $table->string('super_admin_signature')->nullable();
-            $table->string('representative_signature')->nullable();
-            $table->string('pdf_path')->nullable();
-            $table->string('source_pdf_path')->nullable();
-            $table->longText('extracted_text')->nullable();
-            $table->string('status')->default('pending');
-            $table->timestamp('activated_at')->nullable();
-            $table->timestamp('revoked_at')->nullable();
-            $table->timestamps();
-        });
-    }
+    use RefreshDatabase;
 
     public function test_expired_contract_revokes_theater_admin_role(): void
     {

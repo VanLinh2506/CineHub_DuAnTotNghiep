@@ -10,6 +10,9 @@ class Movie extends Model
     use HasFactory;
 
     const UPDATED_AT = null;
+    public const STATUS_ONLINE = 'Chiếu online';
+    public const STATUS_ONLINE_LEGACY = 'Online';
+    public const STATUS_THEATER = 'Chiếu rạp';
 
     protected $fillable = [
         'title',
@@ -90,14 +93,19 @@ class Movie extends Model
     }
 
     // Scopes
+    public static function onlineStatuses(): array
+    {
+        return [self::STATUS_ONLINE, self::STATUS_ONLINE_LEGACY];
+    }
+
     public function scopeOnline($query)
     {
-        return $query->where('status', 'Chiếu online');
+        return $query->whereIn('status', self::onlineStatuses());
     }
 
     public function scopeTheater($query)
     {
-        return $query->where('status', 'Chiếu rạp');
+        return $query->where('status', self::STATUS_THEATER);
     }
 
     public function scopePublished($query)
