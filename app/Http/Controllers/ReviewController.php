@@ -13,6 +13,20 @@ use Illuminate\Support\Facades\Log;
 class ReviewController extends Controller
 {
     /**
+     * Đồng bộ rating trung bình lên bảng movies sau mỗi thay đổi review
+     */
+    private function syncMovieRating(int $movieId): void
+    {
+        $avg = Review::where('movie_id', $movieId)
+            ->where('is_hidden', false)
+            ->avg('rating');
+
+        Movie::where('id', $movieId)->update([
+            'rating' => $avg ? round($avg, 1) : null,
+        ]);
+    }
+
+    /**
      * Tạo bình luận mới 
      */
     public function comment(Request $request)
@@ -115,7 +129,7 @@ class ReviewController extends Controller
     }
     
     /**
-     * Xóa bình luận (chỉ admin)
+     * Ẩn bình luận (chỉ admin) — không xóa hẳn khỏi DB
      */
     public function deleteComment(Request $request, $id)
     {
@@ -130,9 +144,9 @@ class ReviewController extends Controller
         $comment = Comment::findOrFail($id);
         $movieId = $comment->movie_id;
         
-        $comment->delete();
+        $comment->update(['is_hidden' => true]);
         
-        return redirect()->route('movies.watch', $movieId)->with('success', 'Đã xóa bình luận thành công!');
+        return redirect()->route('movies.watch', $movieId)->with('success', 'Đã ẩn bình luận thành công!');
     }
     
     /**
@@ -160,7 +174,9 @@ class ReviewController extends Controller
             'rating' => $rating,
             'comment' => $comment,
         ]);
-        
+
+        $this->syncMovieRating($movieId);
+
         return redirect()->route('movies.watch', $movieId)->with('success', 'Đánh giá của bạn đã được gửi!');
     }
     
@@ -178,6 +194,8 @@ class ReviewController extends Controller
             'comment' => trim($request->input('comment', '')),
         ]);
 
+        $this->syncMovieRating($review->movie_id);
+
         return redirect()->route('movies.watch', $review->movie_id)->with('success', 'Da cap nhat danh gia.');
     }
 
@@ -190,7 +208,7 @@ class ReviewController extends Controller
     }
 
     /**
-     * Xóa đánh giá (chỉ admin)
+     * Ẩn đánh giá (chỉ admin) — không xóa hẳn khỏi DB
      */
     public function delete(Request $request, $id)
     {
@@ -205,9 +223,10 @@ class ReviewController extends Controller
         $review = Review::findOrFail($id);
         $movieId = $review->movie_id;
         
-        $review->delete();
+        $review->update(['is_hidden' => true]);
+        $this->syncMovieRating($movieId);
         
-        return redirect()->route('movies.watch', $movieId)->with('success', 'Đã xóa bình luận thành công!');
+        return redirect()->route('movies.watch', $movieId)->with('success', 'Đã ẩn đánh giá thành công!');
     }
     
     /**

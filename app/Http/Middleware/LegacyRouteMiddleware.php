@@ -80,11 +80,6 @@ class LegacyRouteMiddleware
         'admin/rooms' => '/admin/theaters',
         'admin/seats' => '/admin/theaters',
         'admin/showtimes' => '/moderator/showtimes',
-        'admin/foodItems' => '/admin/food-items',
-        'admin/foodItemsCreate' => '/admin/food-items/create',
-        'admin/foodItemsEdit' => '/admin/food-items/{id}/edit',
-        'admin/foodItemsUpdate' => '/admin/food-items/{id}',
-        'admin/foodItemsDelete' => '/admin/food-items/{id}',
         'admin/bookings' => '/admin/tickets',
         'admin/transactions' => '/admin/tickets',
         'admin/reviews' => '/admin/movies',
@@ -104,8 +99,6 @@ class LegacyRouteMiddleware
         'admin/movies/update' => '/admin/movies/{id}',
         'admin/createTheater' => '/admin/theaters/create',
         'admin/editTheater' => '/admin/theaters/{id}/edit',
-        'admin/createFoodItem' => '/admin/food-items/create',
-        'admin/editFoodItem' => '/admin/food-items/{id}/edit',
         
         // ==================== MODERATOR ====================
         'moderator/dashboard' => '/moderator',

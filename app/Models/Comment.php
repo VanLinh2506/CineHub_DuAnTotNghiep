@@ -17,11 +17,13 @@ class Comment extends Model
         'status',
         'likes',
         'dislikes',
+        'is_hidden',
     ];
 
     protected $casts = [
         'likes' => 'integer',
         'dislikes' => 'integer',
+        'is_hidden' => 'boolean',
     ];
 
     // Relationships

@@ -217,16 +217,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/{ticket}', [AdminController::class, 'ticketShow'])->name('show');
     });
 
-    // Food Items Management
-    Route::prefix('food-items')->name('foodItems.')->group(function () {
-        Route::get('/', [AdminController::class, 'foodItems'])->name('index');
-        Route::get('/create', [AdminController::class, 'foodItemsCreate'])->name('create');
-        Route::post('/', [AdminController::class, 'foodItemsStore'])->name('store');
-        Route::get('/{id}/edit', [AdminController::class, 'foodItemsEdit'])->name('edit');
-        Route::put('/{id}', [AdminController::class, 'foodItemsUpdate'])->name('update');
-        Route::delete('/{id}', [AdminController::class, 'foodItemsDelete'])->name('destroy');
-    });
-
     // Logs
     Route::get('/logs', [AdminController::class, 'logs'])->name('logs');
 });
@@ -313,6 +303,11 @@ Route::middleware(['auth', 'counter_staff'])->prefix('counter')->name('counter.'
     // Showtimes
     Route::get('/showtimes', [CounterStaffController::class, 'showtimes'])->name('showtimes');
 });
+
+// ==================== STATIC PAGES ====================
+Route::get('/terms-of-service', function () {
+    return view('terms.index');
+})->name('terms');
 
 // ==================== NEWS ROUTES ====================
 Route::prefix('news')->name('news.')->group(function () {

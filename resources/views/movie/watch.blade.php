@@ -245,7 +245,7 @@ if (!empty($episodes)) {
                         <div class="user-rating-info" style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
                             <p style="margin: 0; color: #d4af37;">
                                 <i class="fas fa-check-circle"></i> Bạn đã đánh giá phim này:
-                                <strong>{{ $userRating }}/10 ({{ number_format($userRating / 2, 1) }}/5 sao)</strong>
+                                <strong>{{ $userRating }}/10</strong>
                             </p>
                         </div>
                     @else
@@ -256,11 +256,9 @@ if (!empty($episodes)) {
                                 <label>Đánh giá của bạn:</label>
                                 <div class="star-rating" id="starRating">
                                     <input type="hidden" name="rating" id="ratingValue" value="" required>
-                                    <span class="star" data-value="2"><i class="far fa-star"></i></span>
-                                    <span class="star" data-value="4"><i class="far fa-star"></i></span>
-                                    <span class="star" data-value="6"><i class="far fa-star"></i></span>
-                                    <span class="star" data-value="8"><i class="far fa-star"></i></span>
-                                    <span class="star" data-value="10"><i class="far fa-star"></i></span>
+                                    @for($s = 1; $s <= 10; $s++)
+                                        <span class="star" data-value="{{ $s }}"><i class="far fa-star"></i></span>
+                                    @endfor
                                     <span class="rating-text" id="ratingText">Chọn số sao</span>
                                 </div>
                             </div>
@@ -291,12 +289,10 @@ if (!empty($episodes)) {
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                                         <div>
                                             <strong style="color: #fff;">{{ $review['user_name'] ?? ($review['user']['name'] ?? 'Anonymous') }}</strong>
-                                            <span style="margin-left: 10px; color: #ffc107;">
-                                                @for($i = 1; $i <= 5; $i++)
-                                                    @if(($review['rating'] ?? 0) >= $i * 2)
+                                            <span style="margin-left: 10px; color: #ffc107;" class="review-stars">
+                                                @for($i = 1; $i <= 10; $i++)
+                                                    @if(($review['rating'] ?? 0) >= $i)
                                                         <i class="fas fa-star"></i>
-                                                    @elseif(($review['rating'] ?? 0) >= ($i * 2) - 1)
-                                                        <i class="fas fa-star-half-alt"></i>
                                                     @else
                                                         <i class="far fa-star"></i>
                                                     @endif
@@ -308,6 +304,17 @@ if (!empty($episodes)) {
                                     </div>
                                     @if(isset($review['comment']) && $review['comment'])
                                         <p style="margin: 0; color: #ccc;">{{ nl2br(htmlspecialchars($review['comment'])) }}</p>
+                                    @endif
+                                    @if(isset($isAdmin) && $isAdmin)
+                                        <div style="margin-top: 10px;">
+                                            <form method="POST" action="{{ route('reviews.destroy', $review['id']) }}" onsubmit="return confirm('Ẩn đánh giá này?')" style="display:inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" style="background: none; border: none; color: #888; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; transition: all 0.3s;" onmouseover="this.style.background='rgba(244,67,54,0.2)';this.style.color='#f44336'" onmouseout="this.style.background='none';this.style.color='#888'">
+                                                    <i class="fas fa-eye-slash"></i> Ẩn
+                                                </button>
+                                            </form>
+                                        </div>
                                     @endif
                                 </div>
                             </div>
@@ -391,11 +398,11 @@ if (!empty($episodes)) {
                                                 </button>
                                             @endif
                                             @if(isset($isAdmin) && $isAdmin)
-                                                <form method="POST" action="{{ route('comments.destroy', $comment['id']) }}" onsubmit="return confirm('Bạn có chắc muốn xóa bình luận này?')" style="margin: 0;">
+                                                <form method="POST" action="{{ route('comments.destroy', $comment['id']) }}" onsubmit="return confirm('Bạn có chắc muốn ẩn bình luận này?')" style="margin: 0;">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" style="background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; transition: all 0.3s;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#888'">
-                                                        <i class="fas fa-trash"></i> Xóa
+                                                        <i class="fas fa-eye-slash"></i> Ẩn
                                                     </button>
                                                 </form>
                                             @endif
@@ -460,11 +467,11 @@ if (!empty($episodes)) {
                                                             <i class="far fa-thumbs-down"></i> <span id="dislikes-{{ $reply['id'] ?? 0 }}">{{ $reply['dislikes'] ?? 0 }}</span>
                                                         </button>
                                                         @if(isset($isAdmin) && $isAdmin)
-                                                            <form method="POST" action="{{ route('comments.destroy', $reply['id']) }}" onsubmit="return confirm('Bạn có chắc muốn xóa trả lời này?')" style="margin: 0;">
+                                                            <form method="POST" action="{{ route('comments.destroy', $reply['id']) }}" onsubmit="return confirm('Bạn có chắc muốn ẩn trả lời này?')" style="margin: 0;">
                                                                 @csrf
                                                                 @method('DELETE')
                                                                 <button type="submit" style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; padding: 3px 8px; border-radius: 15px; transition: all 0.3s;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#666'">
-                                                                    <i class="fas fa-trash"></i> Xóa
+                                                                    <i class="fas fa-eye-slash"></i> Ẩn
                                                                 </button>
                                                             </form>
                                                         @endif
@@ -516,11 +523,12 @@ if (!empty($episodes)) {
 .star-rating {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 3px;
     margin-top: 10px;
+    flex-wrap: wrap;
 }
 .star-rating .star {
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     cursor: pointer;
     color: #444;
     transition: all 0.2s;
@@ -535,6 +543,10 @@ if (!empty($episodes)) {
 }
 .star-rating .star.active i {
     font-weight: 900;
+}
+/* Stars hiển thị trong review list */
+.review-stars i {
+    font-size: 0.75rem;
 }
 .rating-text {
     margin-left: 15px;
@@ -603,11 +615,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const submitBtn = document.getElementById('submitReview');
 
         const ratingTexts = {
-            2: '1/5 sao · 2/10 - Rất tệ',
-            4: '2/5 sao · 4/10 - Tệ',
-            6: '3/5 sao · 6/10 - Bình thường',
-            8: '4/5 sao · 8/10 - Hay',
-            10: '5/5 sao · 10/10 - Rất hay'
+            1: '1/10 - Rất tệ',
+            2: '2/10 - Tệ',
+            3: '3/10 - Kém',
+            4: '4/10 - Dưới trung bình',
+            5: '5/10 - Bình thường',
+            6: '6/10 - Khá',
+            7: '7/10 - Hay',
+            8: '8/10 - Rất hay',
+            9: '9/10 - Xuất sắc',
+            10: '10/10 - Tuyệt vời'
         };
 
         stars.forEach(star => {

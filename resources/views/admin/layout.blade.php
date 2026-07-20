@@ -430,10 +430,6 @@
                 <i class="fas fa-ticket-alt"></i> Hỗ trợ khách hàng
             </a></li>
             
-            <li><a href="{{ route('admin.foodItems.index') }}" class="{{ request()->routeIs('admin.foodItems*') ? 'active' : '' }}">
-                <i class="fas fa-utensils"></i> Đồ ăn & Combo
-            </a></li>
-            
             <li><a href="{{ route('admin.analytics') }}" class="{{ request()->routeIs('admin.analytics') ? 'active' : '' }}">
                 <i class="fas fa-chart-line"></i> Analytics & Báo cáo
             </a></li>
