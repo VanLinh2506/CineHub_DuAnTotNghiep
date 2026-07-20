@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{User, Movie, Category, Theater, Ticket, Transaction, Showtime, Screen, FoodItem, Episode, Booking, Notification, MovieViewEvent};
+use App\Models\{User, Movie, Category, Theater, Ticket, Transaction, Showtime, Screen, Episode, Booking, Notification, MovieViewEvent};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Hash, Storage, Log};
 use Illuminate\Support\Str;
@@ -980,90 +980,6 @@ class AdminController extends Controller
         ]);
 
         return view('admin.tickets.view', compact('ticket'));
-    }
-
-    // Food Items Management
-    public function foodItems()
-    {
-        $user = Auth::user();
-        
-        $query = FoodItem::query();
-
-        if ($user->role === 'moderator' && $user->theater_id) {
-            $query->where('theater_id', $user->theater_id);
-        }
-
-        $foodItems = $query->orderBy('name')->get();
-
-        return view('admin.food_items', compact('foodItems'));
-    }
-
-    public function foodItemsCreate()
-    {
-        return view('admin.food_items.create');
-    }
-
-    public function foodItemsEdit($id)
-    {
-        $foodItem = FoodItem::findOrFail($id);
-        return view('admin.food_items.edit', compact('foodItem'));
-    }
-
-    public function foodItemsStore(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'type' => 'required|in:combo,drink,snack',
-            'image' => 'nullable|image|max:5120',
-        ]);
-
-        $data = $request->only(['name', 'description', 'price', 'type']);
-        $data['is_active'] = $request->has('is_active') ? 1 : 0;
-
-        if (Auth::user()->role === 'moderator' && Auth::user()->theater_id) {
-            $data['theater_id'] = Auth::user()->theater_id;
-        }
-
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('food', 'public');
-        }
-
-        FoodItem::create($data);
-
-        return redirect()->route('admin.foodItems.index')->with('success', 'Thêm combo/đồ ăn thành công!');
-    }
-
-    public function foodItemsUpdate(Request $request, $id)
-    {
-        $foodItem = FoodItem::findOrFail($id);
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-        ]);
-
-        $data = $request->only(['name', 'description', 'price', 'type']);
-        $data['is_active'] = $request->has('is_active') ? 1 : 0;
-
-        if ($request->hasFile('image')) {
-            if ($foodItem->image) Storage::disk('public')->delete($foodItem->image);
-            $data['image'] = $request->file('image')->store('food', 'public');
-        }
-
-        $foodItem->update($data);
-
-        return redirect()->route('admin.foodItems.index')->with('success', 'Cập nhật combo/đồ ăn thành công!');
-    }
-
-    public function foodItemsDelete($id)
-    {
-        $foodItem = FoodItem::findOrFail($id);
-        
-        if ($foodItem->image) Storage::disk('public')->delete($foodItem->image);
-        $foodItem->delete();
-
-        return redirect()->route('admin.foodItems.index')->with('success', 'Xóa combo/đồ ăn thành công!');
     }
 
     // Categories Management
