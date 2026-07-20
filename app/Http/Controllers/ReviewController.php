@@ -6,6 +6,9 @@ use App\Models\Review;
 use App\Models\Comment;
 use App\Models\CommentLike;
 use App\Models\Movie;
+use App\Models\ModerationAppeal;
+use App\Models\ModerationLog;
+use App\Services\ContentModerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -56,7 +59,20 @@ class ReviewController extends Controller
             'parent_id' => $parentId,
             'content' => $content,
         ]);
-        
+
+        // ── Kiểm duyệt AI (async-safe: lỗi không block user) ─────────
+        try {
+            $moderation = app(ContentModerationService::class)
+                ->moderateComment($comment->id, $content, Auth::id());
+
+            if ($moderation->is_violation && $moderation->action !== ModerationLog::ACTION_ALLOW) {
+                return redirect()->route('movies.watch', $movieId)
+                    ->with('moderation_warning', $moderation->reason_to_user);
+            }
+        } catch (\Throwable $e) {
+            Log::error('[ReviewController] Moderation failed: ' . $e->getMessage());
+        }
+
         // Gửi thông báo nếu là reply
         if ($parentId) {
             $parentComment = Comment::find($parentId);
@@ -229,6 +245,102 @@ class ReviewController extends Controller
         return redirect()->route('movies.watch', $movieId)->with('success', 'Đã ẩn đánh giá thành công!');
     }
     
+    /**
+     * Gửi kháng nghị khi user cho rằng bị phạt oan
+     */
+    public function appeal(Request $request, int $logId)
+    {
+        $user = Auth::user();
+
+        $log = ModerationLog::where('id', $logId)
+            ->where('user_id', $user->id)
+            ->where('is_violation', true)
+            ->firstOrFail();
+
+        // Giới hạn 2 lần kháng nghị / 1 vi phạm
+        $existingCount = ModerationAppeal::where('moderation_log_id', $logId)
+            ->where('user_id', $user->id)
+            ->count();
+
+        if ($existingCount >= 2) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Bạn đã gửi kháng nghị tối đa 2 lần cho vi phạm này.'], 422);
+            }
+            return back()->with('error', 'Bạn đã gửi kháng nghị tối đa 2 lần cho vi phạm này.');
+        }
+
+        // Không gửi kháng nghị nếu đã có appeal đang pending
+        if (ModerationAppeal::where('moderation_log_id', $logId)->where('status', 'pending')->exists()) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Kháng nghị của bạn đang được xem xét.'], 422);
+            }
+            return back()->with('error', 'Kháng nghị của bạn đang được xem xét, vui lòng chờ kết quả.');
+        }
+
+        $request->validate([
+            'appeal_reason' => 'required|string|min:10|max:1000',
+        ], [
+            'appeal_reason.required' => 'Vui lòng nhập lý do kháng nghị.',
+            'appeal_reason.min'      => 'Lý do kháng nghị phải ít nhất 10 ký tự.',
+        ]);
+
+        ModerationAppeal::create([
+            'moderation_log_id' => $logId,
+            'user_id'           => $user->id,
+            'appeal_reason'     => $request->input('appeal_reason'),
+            'status'            => ModerationAppeal::STATUS_PENDING,
+            'attempt_number'    => $existingCount + 1,
+        ]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Kháng nghị đã được gửi. Chúng tôi sẽ xem xét trong 48 giờ.']);
+        }
+
+        return back()->with('success', 'Kháng nghị đã được gửi thành công. Chúng tôi sẽ xem xét trong 48 giờ làm việc.');
+    }
+
+    /**
+     * Admin xử lý kháng nghị (approved / rejected)
+     */
+    public function resolveAppeal(Request $request, int $appealId)
+    {
+        $admin = Auth::user();
+        if (!$admin || !$admin->isAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Không có quyền truy cập.'], 403);
+        }
+
+        $request->validate([
+            'status'     => 'required|in:approved,rejected',
+            'admin_note' => 'nullable|string|max:500',
+        ]);
+
+        $appeal = ModerationAppeal::with('moderationLog')->findOrFail($appealId);
+        $appeal->update([
+            'status'      => $request->input('status'),
+            'reviewed_by' => $admin->id,
+            'admin_note'  => $request->input('admin_note'),
+            'reviewed_at' => now(),
+        ]);
+
+        // Nếu chấp thuận kháng nghị → khôi phục comment + bỏ ban
+        if ($request->input('status') === 'approved') {
+            $log = $appeal->moderationLog;
+
+            if ($log->target_type === 'comment') {
+                Comment::where('id', $log->target_id)->update(['is_hidden' => false]);
+            }
+
+            // Khôi phục tài khoản nếu bị ban
+            if (in_array($log->action, [ModerationLog::ACTION_TEMP_BAN, ModerationLog::ACTION_PERMANENT_BAN], true)) {
+                \App\Models\User::where('id', $log->user_id)->update(['is_active' => true]);
+            }
+
+            $log->update(['is_violation' => false, 'action' => ModerationLog::ACTION_ALLOW]);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Đã xử lý kháng nghị.']);
+    }
+
     /**
      * Ghim đánh giá (chỉ admin)
      */

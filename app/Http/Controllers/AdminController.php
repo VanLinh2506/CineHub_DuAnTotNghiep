@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{User, Movie, Category, Theater, Ticket, Transaction, Showtime, Screen, FoodItem, Episode, Booking, Notification, MovieViewEvent};
+use App\Models\{User, Movie, Category, Theater, Ticket, Transaction, Showtime, Screen, FoodItem, Episode, Booking, Notification, MovieViewEvent, BannedWord};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Hash, Storage, Log};
 use Illuminate\Support\Str;
@@ -1147,5 +1147,74 @@ class AdminController extends Controller
         $logs = $query->orderByDesc('admin_logs.created_at')->paginate(50);
 
         return view('admin.logs', compact('logs'));
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // QUẢN LÝ TỪ CẤM (Banned Words)
+    // ─────────────────────────────────────────────────────────────────
+
+    public function bannedWords(Request $request)
+    {
+        $query = BannedWord::orderByDesc('created_at');
+
+        if ($request->filled('search')) {
+            $query->where('word', 'like', '%' . $request->input('search') . '%');
+        }
+        if ($request->filled('match_type')) {
+            $query->where('match_type', $request->input('match_type'));
+        }
+        if ($request->filled('action')) {
+            $query->where('action', $request->input('action'));
+        }
+
+        $bannedWords = $query->paginate(30)->withQueryString();
+
+        return view('admin.banned-words', compact('bannedWords'));
+    }
+
+    public function bannedWordsStore(Request $request)
+    {
+        $data = $request->validate([
+            'word'            => 'required|string|max:255',
+            'match_type'      => 'required|in:exact,contains,regex',
+            'action'          => 'required|in:DELETE_COMMENT,TEMP_BAN,PERMANENT_BAN',
+            'violated_clause' => 'nullable|string|max:255',
+            'reason_to_user'  => 'nullable|string|max:500',
+            'note'            => 'nullable|string|max:255',
+        ]);
+
+        // Kiểm tra regex hợp lệ nếu match_type = regex
+        if ($data['match_type'] === 'regex') {
+            if (@preg_match($data['word'], '') === false) {
+                return back()->withErrors(['word' => 'Pattern regex không hợp lệ.'])->withInput();
+            }
+        }
+
+        BannedWord::create(array_merge($data, [
+            'violated_clause' => $data['violated_clause'] ?? 'Điều 6.1a - Ngôn từ vi phạm',
+            'reason_to_user'  => $data['reason_to_user']  ?? 'Bình luận chứa ngôn từ vi phạm Điều khoản dịch vụ CineHub.',
+            'is_active'       => true,
+            'created_by'      => Auth::id(),
+        ]));
+
+        return back()->with('success', 'Đã thêm từ cấm thành công!');
+    }
+
+    public function bannedWordsToggle(Request $request, int $id)
+    {
+        $bw = BannedWord::findOrFail($id);
+        $bw->update(['is_active' => !$bw->is_active]);
+
+        $status = $bw->is_active ? 'kích hoạt' : 'tắt';
+        return back()->with('success', "Đã {$status} từ cấm \"{$bw->word}\".");
+    }
+
+    public function bannedWordsDelete(int $id)
+    {
+        $bw = BannedWord::findOrFail($id);
+        $word = $bw->word;
+        $bw->delete();
+
+        return back()->with('success', "Đã xóa từ cấm \"{$word}\".");
     }
 }

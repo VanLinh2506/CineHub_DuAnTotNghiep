@@ -153,6 +153,12 @@ Route::middleware('auth')->prefix('comments')->name('comments.')->group(function
     Route::delete('/{id}', [ReviewController::class, 'deleteComment'])->name('destroy');
 });
 
+// ==================== MODERATION APPEALS ====================
+Route::middleware('auth')->prefix('moderation')->name('moderation.')->group(function () {
+    Route::post('/appeals/{logId}', [ReviewController::class, 'appeal'])->name('appeal');
+    Route::post('/appeals/{appealId}/resolve', [ReviewController::class, 'resolveAppeal'])->name('appeal.resolve');
+});
+
 // ==================== ADMIN ROUTES ====================
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard

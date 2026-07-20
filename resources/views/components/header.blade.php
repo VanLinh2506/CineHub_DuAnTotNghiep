@@ -395,6 +395,14 @@
     </script>
 @endif
 
+@if (session('moderation_warning'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showAlertModal('warning', @json(session('moderation_warning')));
+        });
+    </script>
+@endif
+
 @if (session('error'))
     <div class="alert-modal alert-error-modal" id="alertModal">
         <div class="alert-modal-content">
