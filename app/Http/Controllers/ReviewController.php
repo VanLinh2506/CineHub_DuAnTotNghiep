@@ -6,12 +6,34 @@ use App\Models\Review;
 use App\Models\Comment;
 use App\Models\CommentLike;
 use App\Models\Movie;
+use App\Models\Notification;
+use App\Services\CommentModerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class ReviewController extends Controller
 {
+    public function __construct(private readonly CommentModerationService $moderation)
+    {
+    }
+
+    private function commentBanResponse(Request $request)
+    {
+        $user = $request->user();
+        if (!$user || !$user->isCommentBanned()) {
+            return null;
+        }
+
+        $message = 'Bạn đang bị tạm khóa quyền bình luận đến '
+            .$user->comment_banned_until->format('H:i d/m/Y')
+            .' do vi phạm Điều khoản dịch vụ.';
+
+        return $request->expectsJson()
+            ? response()->json(['success' => false, 'message' => $message], 403)
+            : redirect()->back()->with('error', $message);
+    }
+
     /**
      * Đồng bộ rating trung bình lên bảng movies sau mỗi thay đổi review
      */
@@ -33,6 +55,10 @@ class ReviewController extends Controller
     {
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập');
+        }
+
+        if ($response = $this->commentBanResponse($request)) {
+            return $response;
         }
         
         $request->validate([
@@ -56,6 +82,12 @@ class ReviewController extends Controller
             'parent_id' => $parentId,
             'content' => $content,
         ]);
+
+        if ($reason = $this->moderation->detectViolation($content)) {
+            $this->moderation->hideAndWarn($comment, null, $reason);
+            return redirect()->route('movies.watch', $movieId)
+                ->with('error', 'Bình luận đã tự động bị ẩn: '.$reason.'. Vi phạm lần thứ 4 trong 7 ngày sẽ bị khóa bình luận 7 ngày.');
+        }
         
         // Gửi thông báo nếu là reply
         if ($parentId) {
@@ -64,8 +96,14 @@ class ReviewController extends Controller
                 $movie = Movie::find($movieId);
                 $movieTitle = $movie ? $movie->title : 'Phim';
                 
-                // Notification helper (nếu có)
-                // NotificationHelper::notifyCommentReply($parentComment->user_id, Auth::id(), $movieTitle, $movieId);
+                Notification::create([
+                    'user_id' => $parentComment->user_id,
+                    'type' => 'comment_reply',
+                    'title' => 'Có người trả lời bình luận của bạn',
+                    'message' => Auth::user()->name.' đã trả lời bình luận của bạn trong phim “'.$movieTitle.'”: '.\Illuminate\Support\Str::limit($content, 180),
+                    'link' => route('movies.watch', ['id' => $movieId]).'#comment-'.$comment->id,
+                    'is_read' => false,
+                ]);
             }
         }
         
@@ -144,7 +182,12 @@ class ReviewController extends Controller
         $comment = Comment::findOrFail($id);
         $movieId = $comment->movie_id;
         
-        $comment->update(['is_hidden' => true]);
+        $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $reason = trim($request->input('reason', '')) ?: 'Nội dung không phù hợp với tiêu chuẩn cộng đồng';
+        $this->moderation->hideAndWarn($comment, $user, $reason);
         
         return redirect()->route('movies.watch', $movieId)->with('success', 'Đã ẩn bình luận thành công!');
     }
@@ -157,6 +200,10 @@ class ReviewController extends Controller
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập');
         }
+
+        if ($response = $this->commentBanResponse($request)) {
+            return $response;
+        }
         
         $request->validate([
             'movie_id' => 'required|exists:movies,id',
@@ -168,12 +215,16 @@ class ReviewController extends Controller
         $rating = $request->input('rating');
         $comment = trim($request->input('comment', ''));
         
-        Review::create([
+        $review = Review::create([
             'user_id' => Auth::id(),
             'movie_id' => $movieId,
             'rating' => $rating,
             'comment' => $comment,
         ]);
+
+        if ($reason = $this->moderation->detectViolation($comment)) {
+            $this->moderation->hideAndWarn($review, null, $reason);
+        }
 
         $this->syncMovieRating($movieId);
 
@@ -182,6 +233,10 @@ class ReviewController extends Controller
     
     public function update(Request $request, $id)
     {
+        if ($response = $this->commentBanResponse($request)) {
+            return $response;
+        }
+
         $review = Review::where('user_id', Auth::id())->findOrFail($id);
 
         $request->validate([
@@ -193,6 +248,10 @@ class ReviewController extends Controller
             'rating' => $request->input('rating'),
             'comment' => trim($request->input('comment', '')),
         ]);
+
+        if (!$review->is_hidden && ($reason = $this->moderation->detectViolation($review->comment))) {
+            $this->moderation->hideAndWarn($review, null, $reason);
+        }
 
         $this->syncMovieRating($review->movie_id);
 
@@ -223,7 +282,12 @@ class ReviewController extends Controller
         $review = Review::findOrFail($id);
         $movieId = $review->movie_id;
         
-        $review->update(['is_hidden' => true]);
+        $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $reason = trim($request->input('reason', '')) ?: 'Nội dung không phù hợp với tiêu chuẩn cộng đồng';
+        $this->moderation->hideAndWarn($review, $user, $reason);
         $this->syncMovieRating($movieId);
         
         return redirect()->route('movies.watch', $movieId)->with('success', 'Đã ẩn đánh giá thành công!');

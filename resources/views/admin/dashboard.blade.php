@@ -251,6 +251,27 @@
     </div>
 </div>
 
+<div class="card mt-4">
+    <div class="card-header"><strong>Chi tiết nguồn doanh thu nền tảng</strong></div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Nguồn</th><th>Gói / Rạp</th><th class="text-end">Giao dịch</th><th class="text-end">Doanh thu nền tảng</th></tr></thead>
+            <tbody>
+            @forelse($platformRevenueSources as $source)
+                <tr>
+                    <td>{{ $source->source_type === 'ticket' ? 'Hoa hồng vé (5%)' : 'Gói thành viên' }}</td>
+                    <td>{{ $source->source_name }}</td>
+                    <td class="text-end">{{ number_format($source->transaction_count) }}</td>
+                    <td class="text-end fw-bold">{{ number_format($source->revenue) }}₫</td>
+                </tr>
+            @empty
+                <tr><td colspan="4" class="text-center text-muted">Chưa có doanh thu.</td></tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <style>
     @keyframes fadeInUp {
         from {

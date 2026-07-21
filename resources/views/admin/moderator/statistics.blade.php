@@ -38,15 +38,21 @@
         <h6><i class="fas fa-chart-line"></i> Thống kê rạp</h6>
     </div>
 
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="chart-container mb-0"><small class="text-muted">Doanh thu vé</small><h4 class="mt-2 mb-0">{{ number_format($revenueSummary['tickets'] ?? 0) }}₫</h4></div></div>
+        <div class="col-md-4"><div class="chart-container mb-0"><small class="text-muted">Doanh thu nước / combo</small><h4 class="mt-2 mb-0 text-info">{{ number_format($revenueSummary['food'] ?? 0) }}₫</h4></div></div>
+        <div class="col-md-4"><div class="chart-container mb-0"><small class="text-muted">Tổng doanh thu đối soát</small><h4 class="mt-2 mb-0 text-success">{{ number_format($revenueSummary['total'] ?? 0) }}₫</h4></div></div>
+    </div>
+
     <!-- Doanh thu theo phim -->
     <div class="chart-container">
-        <div class="chart-title"><i class="fas fa-film"></i><span>Doanh thu theo phim</span></div>
+        <div class="chart-title"><i class="fas fa-film"></i><span>Doanh thu theo phim (vé + nước/combo)</span></div>
         <div class="chart-wrapper"><canvas id="revenueByMovieChart"></canvas></div>
     </div>
 
     <!-- Doanh thu theo ngày -->
     <div class="chart-container">
-        <div class="chart-title"><i class="fas fa-calendar-alt"></i><span>Doanh thu theo ngày (30 ngày gần nhất)</span></div>
+        <div class="chart-title"><i class="fas fa-calendar-alt"></i><span>Doanh thu theo ngày (vé + nước/combo, 30 ngày gần nhất)</span></div>
         <div class="chart-wrapper"><canvas id="revenueByDateChart"></canvas></div>
     </div>
 
@@ -56,7 +62,7 @@
         <div class="table-responsive">
             <table class="stats-table">
                 <thead>
-                    <tr><th style="width:80px;">Hạng</th><th>Phim</th><th class="text-end">Doanh thu</th><th class="text-end">Số vé bán</th><th class="text-end">Giá vé TB</th></tr>
+                    <tr><th style="width:80px;">Hạng</th><th>Phim</th><th class="text-end">Tổng doanh thu</th><th class="text-end">Số vé bán</th><th class="text-end">Doanh thu TB/vé</th></tr>
                 </thead>
                 <tbody>
                     @if(empty($revenueByMovie))

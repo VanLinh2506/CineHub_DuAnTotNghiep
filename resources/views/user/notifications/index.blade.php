@@ -70,9 +70,23 @@
                                                             $iconColor = '#dc3545';
                                                             break;
                                                         case 'booking':
+                                                        case 'booking_success':
+                                                        case 'showtime_reminder':
                                                             $iconClass = 'fa-ticket-alt';
                                                             $iconColor = '#e50914';
                                                             break;
+                                                        case 'comment_reply':
+                                                            $iconClass = 'fa-reply'; $iconColor = '#17a2b8'; break;
+                                                        case 'comment_warning':
+                                                        case 'comment_ban':
+                                                            $iconClass = 'fa-comment-slash'; $iconColor = '#ffc107'; break;
+                                                        case 'deposit_success':
+                                                            $iconClass = 'fa-coins'; $iconColor = '#28a745'; break;
+                                                        case 'subscription_success':
+                                                        case 'subscription_renewed':
+                                                            $iconClass = 'fa-crown'; $iconColor = '#9b59b6'; break;
+                                                        case 'subscription_stopped':
+                                                            $iconClass = 'fa-exclamation-circle'; $iconColor = '#dc3545'; break;
                                                     }
                                                 @endphp
                                                 <i class="fas {{ $iconClass }}" style="color: {{ $iconColor }}; margin-right: 10px; font-size: 1.2rem;"></i>

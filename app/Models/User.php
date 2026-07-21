@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -20,6 +21,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'name_changed_at',
         'email',
         'password',
         'phone',
@@ -27,6 +29,8 @@ class User extends Authenticatable
         'email_verified_at',
         'email_verified',
         'subscription_id',
+        'subscription_expires_at',
+        'subscription_auto_renew',
         'role',
         'avatar',
         'birthdate',
@@ -36,7 +40,11 @@ class User extends Authenticatable
         'points',
         'theater_id',
         'is_active',
+        'ban_reason',
+        'banned_at',
+        'banned_by',
         'status',
+        'comment_banned_until',
     ];
 
     /**
@@ -66,6 +74,12 @@ class User extends Authenticatable
             'newsletter' => 'boolean',
             'notifications_enabled' => 'boolean',
             'points' => 'integer',
+            'subscription_expires_at' => 'datetime',
+            'subscription_auto_renew' => 'boolean',
+            'birthdate' => 'date',
+            'name_changed_at' => 'datetime',
+            'comment_banned_until' => 'datetime',
+            'banned_at' => 'datetime',
         ];
     }
 
@@ -110,6 +124,17 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class, 'user_id');
     }
 
+    public function commentViolations()
+    {
+        return $this->hasMany(CommentViolation::class);
+    }
+
+    public function isCommentBanned(): bool
+    {
+        return $this->comment_banned_until !== null
+            && $this->comment_banned_until->isFuture();
+    }
+
     public function theaterContracts()
     {
         return $this->hasMany(TheaterContract::class, 'representative_user_id');
@@ -134,10 +159,23 @@ class User extends Authenticatable
     // URL Accessor for avatar
     public function getAvatarUrlAttribute()
     {
-        if (!empty($this->attributes['avatar'])) {
-            return storage_url($this->attributes['avatar']);
+        $avatar = $this->attributes['avatar'] ?? null;
+        if (!empty($avatar)) {
+            if (str_starts_with($avatar, 'http://') || str_starts_with($avatar, 'https://')) {
+                return $avatar;
+            }
+
+            $path = normalize_storage_path($avatar);
+            $convertedPath = old_to_new_path($path);
+            if (Storage::disk('public')->exists($path)) {
+                return storage_url($path);
+            }
+            if ($convertedPath !== $path && Storage::disk('public')->exists($convertedPath)) {
+                return storage_url($convertedPath);
+            }
         }
-        return asset('images/default-avatar.png');
+
+        return asset('images/default-avatar.svg');
     }
 
     // Check roles

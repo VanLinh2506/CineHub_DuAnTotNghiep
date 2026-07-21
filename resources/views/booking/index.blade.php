@@ -720,7 +720,11 @@ $meta_og_description = $meta_description;
                                         </div>
                                         @endforeach
                                         @else
-                                        <p class="text-muted" style="text-align: center; grid-column: 1 / -1;">Không có combo đồ ăn nào</p>
+                                        <div style="text-align:center;grid-column:1/-1;padding:22px;color:#aaa;">
+                                            <i class="fas fa-store-slash" style="font-size:28px;margin-bottom:10px;"></i>
+                                            <p style="margin:0;">Rạp <strong style="color:#fff;">{{ $theaterInfo->name ?? optional($theaters->firstWhere('id', (int) $selectedTheater))->name ?? 'đã chọn' }}</strong> hiện chưa có combo.</p>
+                                            <small>Combo được quản lý riêng theo từng rạp.</small>
+                                        </div>
                                         @endif
                                     </div>
                                 </div>
@@ -1266,6 +1270,129 @@ $meta_og_description = $meta_description;
         font-size: 1.5rem;
     }
 
+    /* Unified dark booking controls. Several cards previously mixed white
+       inline backgrounds with dark-page text, producing poor contrast. */
+    .booking-form-container .form-group {
+        padding-top: 0.25rem;
+    }
+
+    .booking-form-container .form-label {
+        color: #d8dbe2;
+        font-size: 1rem;
+        font-weight: 650;
+        letter-spacing: 0.01em;
+    }
+
+    .booking-form-container .form-label > i {
+        width: 1.2rem;
+        color: #ef4444;
+        text-align: center;
+    }
+
+    .booking-form-container .theaters-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+    }
+
+    .booking-form-container .theater-card {
+        min-height: 132px;
+        padding: 18px !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 14px !important;
+        background: #222327 !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    }
+
+    .booking-form-container .theater-card:hover {
+        border-color: rgba(239, 68, 68, 0.75) !important;
+        background: #27282d !important;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+    }
+
+    .booking-form-container .theater-card.selected {
+        border-color: #22c55e !important;
+        background: linear-gradient(145deg, rgba(34, 197, 94, 0.13), rgba(34, 197, 94, 0.045)) !important;
+        box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.12), 0 10px 26px rgba(0, 0, 0, 0.2);
+    }
+
+    .booking-form-container .theater-card h5 {
+        padding-right: 28px;
+        color: #f8fafc !important;
+        font-size: 1rem !important;
+    }
+
+    .booking-form-container .theater-card p {
+        color: #a9adb7 !important;
+        line-height: 1.45;
+    }
+
+    .booking-form-container .theater-card .theater-distance {
+        color: #4ade80 !important;
+        font-weight: 600;
+    }
+
+    .booking-form-container .theater-check {
+        top: 12px !important;
+        right: 12px !important;
+        width: 26px !important;
+        height: 26px !important;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+
+    .booking-form-container .dates-tabs {
+        gap: 8px !important;
+        padding: 2px 2px 12px !important;
+        scrollbar-width: thin;
+        scrollbar-color: #50525a transparent;
+    }
+
+    .booking-form-container .dates-tabs .date-tab {
+        min-width: 104px;
+        padding: 13px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 12px;
+        background: #242529;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .booking-form-container .dates-tabs .date-tab:hover {
+        border-color: rgba(239, 68, 68, 0.75);
+        background: #2b2c31;
+        transform: translateY(-2px);
+    }
+
+    .booking-form-container .dates-tabs .date-tab.selected {
+        border-color: #ef4444;
+        background: linear-gradient(145deg, rgba(239, 68, 68, 0.24), rgba(239, 68, 68, 0.09));
+        box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.12);
+    }
+
+    .booking-form-container .dates-tabs .date-tab .day-name {
+        color: #9ca3af;
+        letter-spacing: 0.035em;
+    }
+
+    .booking-form-container .dates-tabs .date-tab .date-text {
+        color: #f8fafc;
+        font-size: 1.05rem;
+    }
+
+    .booking-form-container .btn-confirm-seats {
+        min-height: 52px;
+        border-radius: 10px !important;
+        background: #f5b800 !important;
+        box-shadow: 0 8px 20px rgba(245, 184, 0, 0.14);
+    }
+
+    .booking-form-container .btn-confirm-seats:disabled {
+        color: #7f8490 !important;
+        background: #292a2f !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow: none;
+        opacity: 1;
+    }
+
     .form-group {
         margin-bottom: 1.5rem;
     }
@@ -1468,18 +1595,19 @@ $meta_og_description = $meta_description;
     }
 
     .price-summary {
-        background: rgba(229, 9, 20, 0.1);
-        border: 1px solid rgba(229, 9, 20, 0.3);
-        padding: 1rem;
-        border-radius: 6px;
+        background: linear-gradient(145deg, #222327, #1e1f23);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.15rem 1.25rem;
+        border-radius: 12px;
         margin-bottom: 1.5rem;
     }
 
     .price-row {
         display: flex;
         justify-content: space-between;
-        color: #ccc;
-        margin-bottom: 0.5rem;
+        gap: 1rem;
+        color: #c9cbd2;
+        margin-bottom: 0.65rem;
     }
 
     .price-row.total {

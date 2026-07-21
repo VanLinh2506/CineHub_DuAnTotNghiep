@@ -68,15 +68,16 @@ Route::prefix('movies')->name('movies.')->group(function () {
     Route::get('/kho-phim/{audience}', [MovieController::class, 'library'])->name('library');
     Route::get('/category/{id}', [MovieController::class, 'category'])->name('category');
     Route::get('/{id}', [MovieController::class, 'show'])->name('show');
-    Route::get('/{id}/introduce', [MovieController::class, 'introduce'])->name('introduce');
+    Route::get('/{id}/introduce', [MovieController::class, 'introduce'])->middleware('movie.age')->name('introduce');
 
     // Routes require authentication
     Route::middleware('auth')->group(function () {
         Route::post('/toggle-favorite', [MovieController::class, 'toggleFavorite'])->name('toggleFavorite');
         Route::post('/{id}/interest', [MovieController::class, 'markInterested'])->name('interest');
-        Route::get('/{id}/watch', [MovieController::class, 'watch'])->name('watch');
+        Route::delete('/{id}/interest', [MovieController::class, 'removeInterest'])->name('interest.remove');
+        Route::get('/{id}/watch', [MovieController::class, 'watch'])->middleware('movie.age')->name('watch');
         Route::post('/{id}/progress', [MovieController::class, 'saveProgress'])->name('progress');
-        Route::get('/{movieId}/episode/{episodeNumber}', [MovieController::class, 'watchEpisode'])->name('watchEpisode');
+        Route::get('/{movieId}/episode/{episodeNumber}', [MovieController::class, 'watchEpisode'])->middleware('movie.age')->name('watchEpisode');
     });
 });
 
@@ -87,14 +88,14 @@ Route::middleware('auth')->prefix('booking')->name('booking.')->group(function (
     Route::get('/', [BookingController::class, 'index'])->name('index');
 
     // Booking process
-    Route::post('/process', [BookingController::class, 'processBooking'])->name('processBooking');
+    Route::post('/process', [BookingController::class, 'processBooking'])->middleware('movie.age')->name('processBooking');
     Route::post('/seats/reserve', [BookingController::class, 'reserveSeats'])->name('reservations.reserve');
     Route::post('/seats/release', [BookingController::class, 'releaseReservedSeats'])->name('reservations.release');
     Route::post('/seats/extend', [BookingController::class, 'extendReservedSeats'])->name('reservations.extend');
-    Route::get('/showtime/{showtimeId}', [BookingController::class, 'selectSeats'])->name('selectSeats');
+    Route::get('/showtime/{showtimeId}', [BookingController::class, 'selectSeats'])->middleware('movie.age')->name('selectSeats');
     Route::get('/history', [BookingController::class, 'myTickets'])->name('history');
     Route::get('/my-tickets', [BookingController::class, 'myTickets'])->name('my-tickets');
-    Route::post('/create', [BookingController::class, 'create'])->name('create');
+    Route::post('/create', [BookingController::class, 'create'])->middleware('movie.age')->name('create');
     Route::get('/{bookingId}/payment', [BookingController::class, 'payment'])->name('payment');
     Route::get('/{bookingId}/confirmation', [BookingController::class, 'confirmation'])->name('confirmation');
     Route::post('/{bookingId}/cancel', [BookingController::class, 'cancel'])->name('cancel');
@@ -232,6 +233,7 @@ Route::middleware(['auth', 'moderator'])->prefix('moderator')->name('moderator.'
         Route::get('/', [ModeratorController::class, 'showtimes'])->name('index');
         Route::get('/create', [ModeratorController::class, 'showtimesCreate'])->name('create');
         Route::post('/', [ModeratorController::class, 'showtimesStore'])->name('store');
+        Route::post('/bulk', [ModeratorController::class, 'showtimesBulkStore'])->name('bulk-store');
         Route::get('/{id}/edit', [ModeratorController::class, 'showtimesEdit'])->name('edit');
         Route::put('/{id}', [ModeratorController::class, 'showtimesUpdate'])->name('update');
         Route::delete('/{id}', [ModeratorController::class, 'showtimesDelete'])->name('destroy');

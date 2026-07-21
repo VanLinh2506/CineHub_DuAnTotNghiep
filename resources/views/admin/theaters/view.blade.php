@@ -3,7 +3,18 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h5>Thông tin rạp chiếu</h5>
-    <a href="?route=admin/theaters" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    <a href="{{ route('admin.theaters.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+</div>
+
+<div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span><i class="fas fa-eye me-2"></i>Admin tối cao chỉ có quyền xem thông tin rạp.</span>
+    @if($contract)
+        <a href="{{ route('admin.contracts.show', $contract) }}" class="btn btn-sm btn-primary">
+            <i class="fas fa-file-contract me-1"></i>Xem toàn bộ hợp đồng
+        </a>
+    @else
+        <span class="badge bg-warning text-dark">Rạp chưa có hợp đồng</span>
+    @endif
 </div>
 
 <div class="row">
@@ -47,13 +58,18 @@
 
     <div class="col-md-4">
         <div class="stat-card">
-            <h6 class="mb-4">Admin của rạp</h6>
+            <h6 class="mb-4">Thông tin theo hợp đồng</h6>
+            @if($contract)
+                <p><strong>Mã hợp đồng:</strong></p><p>{{ $contract->contract_code }}</p>
+                <p><strong>Thời hạn:</strong></p>
+                <p>{{ $contract->start_date->format('d/m/Y') }} – {{ $contract->end_date->format('d/m/Y') }}</p>
+                <p><strong>Trạng thái:</strong></p><p><span class="badge bg-info">{{ strtoupper($contract->status) }}</span></p>
+            @endif
             @if($moderator)
-                <p><strong>Tên:</strong></p><p>{{ $moderator['name'] }}</p>
-                <p><strong>Email:</strong></p><p>{{ $moderator['email'] }}</p>
-                <p><strong>Ngày tạo:</strong></p><p>{{ date('d/m/Y H:i', strtotime($moderator['created_at'])) }}</p>
+                <p><strong>Đại diện rạp:</strong></p><p>{{ $contract?->representative?->name ?? $moderator['name'] }}</p>
+                <p><strong>Email:</strong></p><p>{{ $contract?->representative?->email ?? $moderator['email'] }}</p>
             @else
-                <p class="text-muted">Chưa có admin được gán cho rạp này</p>
+                <p class="text-muted">Chưa có đại diện rạp trong hợp đồng.</p>
             @endif
         </div>
     </div>

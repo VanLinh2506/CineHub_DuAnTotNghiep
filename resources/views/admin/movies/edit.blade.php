@@ -350,14 +350,15 @@
                 </select>
             </div>
 
-            <div class="col-md-3 mb-3">
-                <label for="projection_format" class="form-label">Định dạng chiếu</label>
+            <div class="col-md-3 mb-3" id="projectionFormatSection"
+                style="display: {{ $movie['status'] === 'Chiếu rạp' ? 'block' : 'none' }};">
+                <label for="projection_format" class="form-label">Định dạng phòng chiếu</label>
                 <select class="form-select" id="projection_format" name="projection_format">
                     @foreach(['2D' => '2D', '3D' => '3D', '4DX' => '4D / 4DX'] as $value => $label)
                         <option value="{{ $value }}" @selected(old('projection_format', $movie['projection_format'] ?? '2D') === $value)>{{ $label }}</option>
                     @endforeach
                 </select>
-                <small class="text-muted">Chỉ được xếp vào phòng cùng định dạng.</small>
+                <small class="text-muted">Chỉ áp dụng cho phim chiếu rạp.</small>
             </div>
 
             <div class="col-md-6 mb-3" id="onlineScheduleSection"
@@ -403,8 +404,9 @@
                     Đạo diễn
                 </label>
 
-                <input type="text" class="form-control" id="director" name="director"
+                <input type="text" class="form-control" id="director" name="director" list="director-options" autocomplete="off"
                     value="{{ old('director', $movie['director'] ?? '') }}">
+                <datalist id="director-options">@foreach($directorSuggestions as $name)<option value="{{ $name }}">@endforeach</datalist>
             </div>
 
             <div class="col-md-6 mb-3">
@@ -412,8 +414,9 @@
                     Diễn viên
                 </label>
 
-                <input type="text" class="form-control" id="actors" name="actors"
+                <input type="text" class="form-control" id="actors" name="actors" list="actor-options" autocomplete="off"
                     value="{{ old('actors', $movie['actors'] ?? '') }}" placeholder="VD: Diễn viên 1, Diễn viên 2">
+                <datalist id="actor-options">@foreach($actorSuggestions as $name)<option value="{{ $name }}">@endforeach</datalist>
             </div>
 
             <div class="col-md-6 mb-3">
@@ -421,10 +424,8 @@
                     Quốc gia
                 </label>
 
-                <select class="form-select js-country-select" id="country" name="country"
-                    data-current="{{ old('country', $movie['country'] ?? '') }}">
-                    <option value="">Đang tải danh sách quốc gia...</option>
-                </select>
+                <input type="text" class="form-control" id="country" name="country" value="{{ old('country', $movie['country'] ?? '') }}" list="country-options" autocomplete="off" placeholder="Nhập hoặc tìm quốc gia">
+                <datalist id="country-options" data-current="{{ old('country', $movie['country'] ?? '') }}"></datalist>
             </div>
 
             <div class="col-md-6 mb-3">
@@ -432,10 +433,8 @@
                     Ngôn ngữ
                 </label>
 
-                <select class="form-select js-language-select" id="language" name="language"
-                    data-current="{{ old('language', $movie['language'] ?? '') }}">
-                    <option value="">Đang tải danh sách ngôn ngữ...</option>
-                </select>
+                <input type="text" class="form-control" id="language" name="language" value="{{ old('language', $movie['language'] ?? '') }}" list="language-options" autocomplete="off" placeholder="Nhập hoặc tìm ngôn ngữ">
+                <datalist id="language-options" data-current="{{ old('language', $movie['language'] ?? '') }}"></datalist>
             </div>
 
             <div class="col-md-12 mb-3">
@@ -952,8 +951,8 @@
         }
 
         async function loadCountryLanguageSelects() {
-            const countrySelect = document.getElementById('country');
-            const languageSelect = document.getElementById('language');
+            const countrySelect = document.getElementById('country-options');
+            const languageSelect = document.getElementById('language-options');
             const currentCountry = countrySelect?.dataset.current || '';
             const currentLanguage = languageSelect?.dataset.current || '';
 
@@ -1337,6 +1336,11 @@
         // Placeholder cho lịch chiếu
         function toggleTheaterSection() {
             // Lịch chiếu rạp được quản lý bởi moderator
+            const isTheater = document.getElementById('status').value === 'Chiếu rạp';
+            const section = document.getElementById('projectionFormatSection');
+            const input = document.getElementById('projection_format');
+            if (section) section.style.display = isTheater ? 'block' : 'none';
+            if (input) input.disabled = !isTheater;
         }
 
         // Init

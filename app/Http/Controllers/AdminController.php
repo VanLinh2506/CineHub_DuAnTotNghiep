@@ -47,6 +47,7 @@ class AdminController extends Controller
         ];
 
         $revenueByDay = $this->adminRevenueByDay(now()->subDays(6)->startOfDay(), now()->endOfDay());
+        $platformRevenueSources = $this->platformRevenueSources();
 
         $topMovies = Movie::withCount('viewEvents')
             ->orderByDesc('view_events_count')
@@ -87,7 +88,7 @@ class AdminController extends Controller
             });
 
         return view('admin.dashboard', compact(
-            'stats', 'revenueByDay', 'topMovies', 'upcomingShowtimes', 'theaterRevenues'
+            'stats', 'revenueByDay', 'topMovies', 'upcomingShowtimes', 'theaterRevenues', 'platformRevenueSources'
         ));
     }
 
@@ -137,6 +138,11 @@ class AdminController extends Controller
         };
 
         $targetUser->update(['points' => $newPoints]);
+        \App\Models\Notification::create([
+            'user_id' => $targetUser->id, 'type' => 'account_balance_changed', 'title' => 'Số dư xu đã được quản trị viên cập nhật',
+            'message' => 'Số dư thay đổi từ '.number_format($currentPoints).' xu thành '.number_format($newPoints).' xu. Thao tác: '.match($request->action) { 'add' => 'cộng xu', 'subtract' => 'trừ xu', default => 'đặt số dư' }.'.',
+            'link' => route('profile.index').'#wallet', 'is_read' => false,
+        ]);
 
         return redirect()->route('admin.users.index')->with('success', "Đã cập nhật điểm thành công! Điểm hiện tại: " . number_format($newPoints));
     }
@@ -157,9 +163,15 @@ class AdminController extends Controller
         }
 
         $targetUser = User::findOrFail($request->user_id);
+        $oldRole = $targetUser->role;
         $targetUser->update([
             'role' => $request->role,
             'theater_id' => $request->role === 'moderator' ? $request->theater_id : null
+        ]);
+        \App\Models\Notification::create([
+            'user_id' => $targetUser->id, 'type' => 'account_role_changed', 'title' => 'Vai trò tài khoản đã thay đổi',
+            'message' => 'Quản trị viên đã thay đổi vai trò của bạn từ '.$oldRole.' thành '.$request->role.'.',
+            'link' => route('profile.index'), 'is_read' => false,
         ]);
 
         return redirect()->route('admin.users.index')->with('success', 'Cập nhật vai trò thành công!');
@@ -172,7 +184,8 @@ class AdminController extends Controller
 
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'is_active' => 'required|boolean'
+            'is_active' => 'required|boolean',
+            'reason' => 'required_if:is_active,0|nullable|string|min:10|max:1000',
         ]);
 
         if ($request->user_id == Auth::id()) {
@@ -180,10 +193,29 @@ class AdminController extends Controller
         }
 
         $targetUser = User::findOrFail($request->user_id);
+        $isUnlocking = $request->boolean('is_active');
         $targetUser->update([
-            'is_active' => $request->is_active,
-            'status' => $request->is_active ? 'active' : 'banned'
+            'is_active' => $isUnlocking,
+            'status' => $isUnlocking ? 'active' : 'banned',
+            'ban_reason' => $isUnlocking ? null : trim($request->reason),
+            'banned_at' => $isUnlocking ? null : now(),
+            'banned_by' => $isUnlocking ? null : Auth::id(),
         ]);
+
+        \App\Models\Notification::create([
+            'user_id' => $targetUser->id,
+            'type' => $isUnlocking ? 'account_unlocked' : 'account_banned',
+            'title' => $isUnlocking ? 'Tài khoản đã được mở khóa' : 'Tài khoản đã bị khóa',
+            'message' => $isUnlocking
+                ? 'Quyền truy cập tài khoản của bạn đã được khôi phục.'
+                : 'Lý do: '.trim($request->reason),
+            'link' => route('terms'),
+            'is_read' => false,
+        ]);
+
+        if (!$isUnlocking && config('session.driver') === 'database') {
+            DB::table(config('session.table', 'sessions'))->where('user_id', $targetUser->id)->delete();
+        }
 
         $statusText = $request->is_active ? 'mở khóa' : 'khóa';
         return redirect()->route('admin.users.index')->with('success', ucfirst($statusText) . ' tài khoản thành công!');
@@ -221,7 +253,8 @@ class AdminController extends Controller
     {
         $categories = Category::all();
         $theaters = Theater::where('is_active', 1)->orderBy('name')->get();
-        return view('admin.movies.create', compact('categories', 'theaters'));
+        [$directorSuggestions, $actorSuggestions] = $this->moviePeopleSuggestions();
+        return view('admin.movies.create', compact('categories', 'theaters', 'directorSuggestions', 'actorSuggestions'));
     }
 
     public function moviesStore(Request $request)
@@ -243,13 +276,15 @@ class AdminController extends Controller
         ]);
 
         $data = $request->only(['title', 'level', 'duration', 'description', 'director', 'actors', 'status', 'scheduled_status', 'publish_date', 'type', 'projection_format', 'country', 'language', 'age_rating']);
-        $data['projection_format'] = $data['projection_format'] ?? '2D';
         $categoryIds = $this->normalizedCategoryIds($request);
         $data['category_id'] = $categoryIds[0] ?? null;
 
         if ($request->type === 'phimbo' && $data['status'] === 'Chiếu rạp') {
             $data['status'] = 'Chiếu online';
         }
+        $data['projection_format'] = $data['status'] === 'Chiếu rạp'
+            ? ($data['projection_format'] ?? '2D')
+            : null;
         if ($data['status'] === 'Chiếu rạp') {
             // Subscription levels only control online playback. Cinema access
             // is handled by tickets/showtimes, so a theater movie is always Free.
@@ -257,13 +292,13 @@ class AdminController extends Controller
         }
         if ($data['status'] === 'Sắp chiếu' && $data['type'] === 'phimle') {
             $request->validate([
-                'scheduled_status' => 'required|in:Chiếu online',
                 'publish_date' => 'required|date|after:now',
             ]);
+            $data['scheduled_status'] = 'Chiếu online';
         } else {
             $data['scheduled_status'] = null;
+            $data['publish_date'] = null;
         }
-        $data['rating'] = 0;
         $data['status_admin'] = $request->status_admin ?? 'draft';
 
         // Handle file uploads
@@ -327,8 +362,21 @@ class AdminController extends Controller
         $showtimes = Showtime::where('movie_id', $id)->with('theater', 'screen')->get();
         $episodes = $movie->episodes->sortBy('episode_number')->values();
         $movieCategories = $movie->categories;
+        [$directorSuggestions, $actorSuggestions] = $this->moviePeopleSuggestions();
 
-        return view('admin.movies.edit', compact('movie', 'categories', 'theaters', 'showtimes', 'episodes', 'movieCategories'));
+        return view('admin.movies.edit', compact('movie', 'categories', 'theaters', 'showtimes', 'episodes', 'movieCategories', 'directorSuggestions', 'actorSuggestions'));
+    }
+
+    private function moviePeopleSuggestions(): array
+    {
+        $directors = Movie::query()->whereNotNull('director')->pluck('director')
+            ->flatMap(fn ($value) => preg_split('/\s*,\s*/', $value, -1, PREG_SPLIT_NO_EMPTY))
+            ->unique()->sort()->values();
+        $actors = Movie::query()->whereNotNull('actors')->pluck('actors')
+            ->flatMap(fn ($value) => preg_split('/\s*,\s*/', $value, -1, PREG_SPLIT_NO_EMPTY))
+            ->unique()->sort()->values();
+
+        return [$directors, $actors];
     }
 
     public function moviesUpdate(Request $request, $id)
@@ -345,23 +393,26 @@ class AdminController extends Controller
         ]);
 
         $data = $request->only(['title', 'level', 'duration', 'description', 'director', 'actors', 'status', 'scheduled_status', 'publish_date', 'type', 'projection_format', 'country', 'language', 'age_rating', 'status_admin']);
-        $data['projection_format'] = $data['projection_format'] ?? '2D';
         $categoryIds = $this->normalizedCategoryIds($request);
         $data['category_id'] = $categoryIds[0] ?? null;
 
         if ($request->type === 'phimbo' && $data['status'] === 'Chiếu rạp') {
             $data['status'] = 'Chiếu online';
         }
+        $data['projection_format'] = $data['status'] === 'Chiếu rạp'
+            ? ($data['projection_format'] ?? '2D')
+            : null;
         if ($data['status'] === 'Chiếu rạp') {
             $data['level'] = 'Free';
         }
         if ($data['status'] === 'Sắp chiếu' && $data['type'] === 'phimle') {
             $request->validate([
-                'scheduled_status' => 'required|in:Chiếu online',
-                'publish_date' => 'required|date',
+                'publish_date' => 'required|date|after:now',
             ]);
+            $data['scheduled_status'] = 'Chiếu online';
         } else {
             $data['scheduled_status'] = null;
+            $data['publish_date'] = null;
         }
 
         // Handle file uploads
@@ -682,7 +733,9 @@ class AdminController extends Controller
     {
         $user = Auth::user();
         
-        $query = Theater::query();
+        $query = Theater::with(['contracts' => function ($contracts) {
+            $contracts->with('representative')->latest('id');
+        }]);
         
         // Moderators can only see their theater
         if ($user->role === 'moderator' && $user->theater_id) {
@@ -696,6 +749,8 @@ class AdminController extends Controller
 
     public function theatersCreate()
     {
+        abort(403, 'Admin tối cao chỉ được xem thông tin rạp. Thông tin rạp được quản lý qua hợp đồng.');
+
         $user = $this->checkIsAdmin();
         if ($user instanceof \Illuminate\Http\RedirectResponse) return $user;
 
@@ -704,6 +759,8 @@ class AdminController extends Controller
 
     public function theatersStore(Request $request)
     {
+        abort(403, 'Admin tối cao không được tạo rạp trực tiếp. Vui lòng quản lý thông tin qua hợp đồng.');
+
         $user = $this->checkIsAdmin();
         if ($user instanceof \Illuminate\Http\RedirectResponse) return $user;
 
@@ -730,7 +787,9 @@ class AdminController extends Controller
     public function theatersShow($id)
     {
         $user = Auth::user();
-        $theater = Theater::findOrFail($id);
+        $theater = Theater::with(['contracts' => function ($contracts) {
+            $contracts->with('representative')->latest('id');
+        }])->findOrFail($id);
 
         if ($user->role === 'moderator' && $user->theater_id != $id) {
             return redirect()->route('admin.theaters.index')->with('error', 'Bạn không có quyền xem rạp này!');
@@ -749,11 +808,15 @@ class AdminController extends Controller
             ->orderBy('screen_name')
             ->get();
 
-        return view('admin.theaters.view', compact('theater', 'moderator', 'screens'));
+        $contract = $theater->contracts->first();
+
+        return view('admin.theaters.view', compact('theater', 'moderator', 'screens', 'contract'));
     }
 
     public function theatersEdit($id)
     {
+        abort(403, 'Admin tối cao chỉ được xem thông tin rạp. Thông tin rạp được quản lý qua hợp đồng.');
+
         $user = Auth::user();
         $theater = Theater::findOrFail($id);
 
@@ -767,6 +830,8 @@ class AdminController extends Controller
 
     public function theatersUpdate(Request $request, $id)
     {
+        abort(403, 'Admin tối cao không được sửa trực tiếp thông tin rạp.');
+
         $user = Auth::user();
         $theater = Theater::findOrFail($id);
 
@@ -794,6 +859,8 @@ class AdminController extends Controller
 
     public function theatersDelete($id)
     {
+        abort(403, 'Admin tối cao không được xóa rạp trực tiếp.');
+
         $theater = Theater::findOrFail($id);
         if ($theater->image) Storage::disk('public')->delete($theater->image);
         $theater->delete();
@@ -871,8 +938,31 @@ class AdminController extends Controller
             'total_tickets' => Ticket::whereBetween('created_at', [$start, $end])->count(),
             'avg_ticket_price' => Ticket::whereBetween('created_at', [$start, $end])->avg('price') ?? 0,
         ];
+        $platformRevenueSources = $this->platformRevenueSources($start, $end);
 
-        return view('admin.analytics', compact('revenueData', 'topMoviesByRevenue', 'summaryStats', 'period'));
+        return view('admin.analytics', compact('revenueData', 'topMoviesByRevenue', 'summaryStats', 'period', 'platformRevenueSources'));
+    }
+
+    private function platformRevenueSources(?Carbon $start = null, ?Carbon $end = null)
+    {
+        $tickets = DB::table('tickets')
+            ->join('showtimes', 'showtimes.id', '=', 'tickets.showtime_id')
+            ->join('theaters', 'theaters.id', '=', 'showtimes.theater_id')
+            ->where('tickets.status', 'Đã đặt')
+            ->when($start && $end, fn ($query) => $query->whereBetween('tickets.created_at', [$start, $end]))
+            ->groupBy('theaters.id', 'theaters.name')
+            ->selectRaw("'ticket' as source_type, theaters.name as source_name, COUNT(*) as transaction_count, SUM(tickets.price) * 0.05 as revenue")
+            ->get();
+
+        $subscriptions = DB::table('transactions')
+            ->leftJoin('subscriptions', 'subscriptions.id', '=', 'transactions.related_id')
+            ->where('transactions.type', 'subscription')->where('transactions.status', 'Thành công')
+            ->when($start && $end, fn ($query) => $query->whereBetween('transactions.created_at', [$start, $end]))
+            ->groupBy('subscriptions.id', 'subscriptions.name', 'transactions.method')
+            ->selectRaw("'subscription' as source_type, CONCAT(COALESCE(subscriptions.name, 'Gói đã xóa'), ' · ', COALESCE(transactions.method, 'Không rõ')) as source_name, COUNT(*) as transaction_count, SUM(transactions.amount) as revenue")
+            ->get();
+
+        return $tickets->concat($subscriptions)->sortByDesc('revenue')->values();
     }
 
     private function adminRevenue(?Carbon $start = null, ?Carbon $end = null): float

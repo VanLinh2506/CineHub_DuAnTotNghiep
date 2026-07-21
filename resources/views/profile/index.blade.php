@@ -5,11 +5,13 @@
     $title = 'Hồ Sơ';
     $isAdmin = $user ? $user->isAdmin() : false;
     $isModerator = $user ? $user->isModerator() : false;
+    $nextNameChangeAt = $user?->name_changed_at?->copy()->addDays(15);
+    $canChangeName = !$nextNameChangeAt || $nextNameChangeAt->isPast();
 @endphp
 
 @section('content')
 <div class="profile-luxury-container">
-    <div class="row">
+    <div class="row g-4 align-items-start">
         <!-- Sidebar -->
         <div class="col-lg-3">
             <div class="profile-luxury-sidebar">
@@ -40,6 +42,11 @@
                     <a href="#personal-info" class="profile-nav-item active" onclick="switchProfileTab('personal-info', event)">
                         <i class="fas fa-user-circle"></i>
                         <span>Thông tin cá nhân</span>
+                    </a>
+                    <a href="#interests" class="profile-nav-item profile-nav-interest" onclick="switchProfileTab('interests', event)">
+                        <i class="fas fa-bell"></i>
+                        <span>Phim tôi quan tâm</span>
+                        <b class="interest-nav-count">{{ ($interestedMovies ?? collect())->count() }}</b>
                     </a>
                     <a href="#wallet" class="profile-nav-item" onclick="switchProfileTab('wallet', event)">
                         <i class="fas fa-wallet"></i>
@@ -106,9 +113,13 @@
             <div id="personal-info" class="profile-section active">
                 <div class="section-header">
                     <h2>Thông tin cá nhân</h2>
-                    <button class="btn-edit" onclick="toggleEditMode('personal')">
-                        <i class="fas fa-edit"></i>
-                    </button>
+                    <div class="profile-header-actions">
+                        <a href="#interests" class="interest-shortcut" onclick="switchProfileTab('interests', event)">
+                            <i class="fas fa-bell"></i> Phim quan tâm
+                            <b>{{ ($interestedMovies ?? collect())->count() }}</b>
+                        </a>
+                        <button class="btn-edit" onclick="toggleEditMode('personal')"><i class="fas fa-edit"></i></button>
+                    </div>
                 </div>
                 
                 <form id="personalForm" method="POST" action="{{ route('profile.update') }}" class="profile-form">
@@ -117,7 +128,14 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Họ và tên</label>
-                            <input type="text" name="name" value="{{ $user ? $user->name : '' }}" placeholder="Nhập họ và tên" class="form-control" disabled>
+                            <input type="text" name="name" value="{{ $user ? $user->name : '' }}" placeholder="Nhập họ và tên" class="form-control" disabled data-profile-locked="{{ $canChangeName ? 'false' : 'true' }}">
+                            @unless($canChangeName)<input type="hidden" name="name" value="{{ $user->name }}">@endunless
+                            @if($canChangeName)
+                                <small class="profile-field-note">Bạn có thể đổi tên ngay. Sau khi lưu phải chờ 15 ngày cho lần tiếp theo.</small>
+                            @else
+                                <small class="profile-field-note locked"><i class="fas fa-clock"></i> Có thể đổi lại sau {{ $nextNameChangeAt->format('H:i d/m/Y') }}.</small>
+                            @endif
+                            @error('name')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>
                         <div class="form-group">
                             <label>Email</label>
@@ -128,23 +146,46 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Số điện thoại</label>
-                            <input type="tel" name="phone" value="{{ $user ? $user->phone ?? '' : '' }}" placeholder="Nhập số điện thoại" class="form-control" disabled>
+                            <div class="address-input-group">
+                                <input type="tel" id="profilePhone" name="phone" value="{{ $user ? $user->phone ?? '' : '' }}" placeholder="Nhập số điện thoại" class="form-control" maxlength="20" autocomplete="tel" disabled>
+                                <button type="button" class="location-button" onclick="enablePersonalField('profilePhone')">
+                                    <i class="fas fa-pen"></i><span>Thay đổi</span>
+                                </button>
+                            </div>
+                            <small class="profile-field-note">Số điện thoại có thể thay đổi bất kỳ lúc nào.</small>
                         </div>
                         <div class="form-group">
                             <label>Ngày sinh</label>
-                            <input type="date" name="birth_date" value="{{ $user && $user->birthdate ? date('Y-m-d', strtotime($user->birthdate)) : '' }}" class="form-control" disabled>
+                            <input type="date" name="birthdate" value="{{ $user && $user->birthdate ? date('Y-m-d', strtotime($user->birthdate)) : '' }}" class="form-control" max="{{ now()->toDateString() }}" @disabled($user && $user->birthdate) data-profile-locked="{{ $user && $user->birthdate ? 'true' : 'false' }}">
+                            @if($user && $user->birthdate)
+                                <small class="text-muted"><i class="fas fa-lock"></i> Ngày sinh đã được xác nhận và không thể thay đổi.</small>
+                            @else
+                                <small class="text-warning">Vui lòng kiểm tra kỹ. Ngày sinh chỉ được xác nhận một lần.</small>
+                                <button type="submit" class="confirm-age-button">
+                                    <i class="fas fa-check-circle"></i> Xác nhận ngày sinh
+                                </button>
+                            @endif
+                            @error('birthdate')<small class="text-danger">{{ $message }}</small>@enderror
                         </div>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-group full-width">
                             <label>Địa chỉ</label>
-                            <input type="text" name="address" value="{{ $user ? $user->address ?? '' : '' }}" placeholder="Nhập địa chỉ" class="form-control" disabled>
+                            <div class="address-input-group">
+                                <input type="text" id="profileAddress" name="address" value="{{ $user ? $user->address ?? '' : '' }}" placeholder="Nhập địa chỉ hoặc lấy vị trí hiện tại" class="form-control" autocomplete="street-address" disabled>
+                                <button type="button" class="location-button" id="locationButton" onclick="fillCurrentAddress()">
+                                    <i class="fas fa-location-crosshairs"></i><span>Lấy tự động</span>
+                                </button>
+                            </div>
+                            <small class="profile-field-note" id="locationStatus">Trình duyệt sẽ xin quyền truy cập vị trí khi bạn sử dụng tính năng này.</small>
                         </div>
                     </div>
                     
-                    <div class="form-actions">
-                        <button type="submit" class="btn-primary" style="display: none;">Lưu thay đổi</button>
+                    <div class="form-actions {{ !$user->birthdate ? 'is-visible' : '' }}">
+                        <button type="submit" class="btn-primary" style="display: {{ !$user->birthdate ? 'inline-flex' : 'none' }}; align-items:center; gap:.5rem;">
+                            <i class="fas fa-save"></i> {{ !$user->birthdate ? 'Xác nhận thông tin' : 'Lưu thay đổi' }}
+                        </button>
                         <button type="button" class="btn-secondary" onclick="cancelEdit('personal')" style="display: none;">Hủy</button>
                     </div>
                 </form>
@@ -245,6 +286,45 @@
                 </form>
             </div>
             
+            <!-- Interested upcoming movies -->
+            <div id="interests" class="profile-section" style="display: none;">
+                <div class="section-header">
+                    <div>
+                        <h2>Phim sắp chiếu tôi quan tâm</h2>
+                        <small class="profile-field-note">Danh sách phim bạn muốn nhận thông tin khi bắt đầu phát hành.</small>
+                    </div>
+                </div>
+
+                <div class="interest-movie-grid">
+                    @forelse($interestedMovies as $movie)
+                        <article class="interest-movie-card">
+                            <a href="{{ route('movies.introduce', $movie->id) }}" class="interest-poster">
+                                @if($movie->thumbnail)
+                                    <img src="{{ $movie->thumbnail }}" alt="{{ $movie->title }}" loading="lazy">
+                                @else
+                                    <span><i class="fas fa-film"></i></span>
+                                @endif
+                            </a>
+                            <div class="interest-movie-info">
+                                <h3><a href="{{ route('movies.introduce', $movie->id) }}">{{ $movie->title }}</a></h3>
+                                <p><i class="far fa-calendar-alt"></i> {{ $movie->publish_date?->format('H:i d/m/Y') ?? 'Đang cập nhật' }}</p>
+                                <form method="POST" action="{{ route('movies.interest.remove', $movie->id) }}" onsubmit="return confirm('Bỏ quan tâm phim này?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="remove-interest-button"><i class="fas fa-bell-slash"></i> Bỏ quan tâm</button>
+                                </form>
+                            </div>
+                        </article>
+                    @empty
+                        <div class="empty-interest-state">
+                            <i class="far fa-bell"></i>
+                            <h3>Chưa có phim quan tâm</h3>
+                            <p>Đánh dấu phim sắp chiếu để chúng xuất hiện tại đây.</p>
+                            <a href="{{ route('movies.upcoming') }}">Khám phá phim sắp chiếu</a>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
             <!-- Subscription Section -->
             <div id="subscription" class="profile-section" style="display: none;">
                 <div class="section-header">
@@ -254,6 +334,10 @@
                 <div class="subscription-info">
                     @if ($user && $user->subscription)
                         <p><strong>Gói hiện tại:</strong> {{ $user->subscription->name }}</p>
+                        @if($user->subscription_expires_at)
+                            <p><strong>Hết hạn:</strong> {{ $user->subscription_expires_at->format('H:i d/m/Y') }}</p>
+                            <p><strong>Tự động gia hạn:</strong> {{ $user->subscription_auto_renew ? 'Đang bật' : 'Đã tắt' }}</p>
+                        @endif
                     @else
                         <p>Bạn chưa có gói dịch vụ nào. Hãy chọn một gói để tận hưởng các lợi ích.</p>
                     @endif
@@ -276,7 +360,8 @@
                             @if(!$isCurrent && !$isDowngrade)
                                 <p class="plan-upgrade-cost-clean">Phí nâng cấp: {{ number_format($upgradeCost, 0, ',', '.') }} điểm</p>
                             @endif
-                            <p class="plan-price">{{ number_format((float) $package->price, 0, ',', '.') }} điểm</p>
+                            <p class="plan-price">{{ number_format((float) $package->price, 0, ',', '.') }} xu</p>
+                            <p>{{ ($package->duration_months ?? 1) >= 12 ? 'Thanh toán theo năm' : 'Thanh toán theo tháng' }}</p>
                             @if($package->description)
                                 <p>{{ $package->description }}</p>
                             @endif
@@ -393,28 +478,29 @@
     }
 
     .profile-luxury-container {
-        max-width: 1400px;
+        max-width: 1540px;
         margin: 0 auto;
-        padding: 2rem 1rem;
+        padding: 6.5rem 1.5rem 3rem;
     }
     
     .profile-luxury-sidebar {
         background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-        border-radius: 24px;
-        padding: 3rem 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 1.5rem;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         position: sticky;
-        top: 2rem;
+        top: 5.5rem;
         height: fit-content;
-        max-height: calc(100vh - 4rem);
+        max-height: calc(100vh - 7rem);
         overflow-y: auto;
     }
     
     .profile-avatar-wrapper {
         position: relative;
-        width: 160px;
-        height: 160px;
-        margin: 0 auto 2rem;
+        width: 112px;
+        height: 112px;
+        margin: 0 auto 1.25rem;
         cursor: pointer;
     }
     
@@ -467,9 +553,9 @@
     
     .profile-user-info {
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1.25rem;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        padding-bottom: 2rem;
+        padding-bottom: 1.25rem;
     }
     
     .profile-user-name {
@@ -506,6 +592,57 @@
         background: rgba(229, 9, 20, 0.2);
         color: #e50914;
     }
+    .interest-nav-count {
+        margin-left: auto;
+        min-width: 22px;
+        padding: 2px 6px;
+        border-radius: 999px;
+        color: #fff;
+        background: #e50914;
+        text-align: center;
+        font-size: .72rem;
+    }
+    .profile-nav-interest {
+        border: 1px solid rgba(229,9,20,.28);
+        background: rgba(229,9,20,.08);
+    }
+    .profile-header-actions { display:flex; align-items:center; gap:.65rem; }
+    .interest-shortcut {
+        display:inline-flex; align-items:center; gap:.45rem; border:1px solid rgba(229,9,20,.4);
+        border-radius:9px; padding:.5rem .75rem; color:#ff9ca2; background:rgba(229,9,20,.1);
+        text-decoration:none; font-size:.82rem; font-weight:650;
+    }
+    .interest-shortcut b { display:grid; place-items:center; min-width:20px; height:20px; border-radius:999px; color:#fff; background:#e50914; font-size:.7rem; }
+
+    .interest-movie-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+    .interest-movie-card {
+        display: grid;
+        grid-template-columns: 96px minmax(0, 1fr);
+        gap: 1rem;
+        padding: .9rem;
+        border: 1px solid rgba(255,255,255,.09);
+        border-radius: 14px;
+        background: #202228;
+    }
+    .interest-poster { display: block; height: 138px; overflow: hidden; border-radius: 10px; background:#292b31; }
+    .interest-poster img { width:100%; height:100%; object-fit:cover; }
+    .interest-poster span { display:grid; place-items:center; height:100%; color:#777; font-size:1.8rem; }
+    .interest-movie-info { min-width:0; display:flex; flex-direction:column; align-items:flex-start; }
+    .interest-movie-info h3 { margin:0 0 .55rem; font-size:1rem; line-height:1.35; }
+    .interest-movie-info h3 a { color:#fff; text-decoration:none; }
+    .interest-movie-info p { margin:0 0 auto; color:#f5b942; font-size:.82rem; }
+    .remove-interest-button {
+        border:1px solid rgba(229,9,20,.5); border-radius:8px; padding:.45rem .7rem;
+        color:#ff8d94; background:rgba(229,9,20,.1); cursor:pointer; font-size:.78rem;
+    }
+    .empty-interest-state { grid-column:1/-1; padding:3rem 1rem; text-align:center; color:#9ca3af; }
+    .empty-interest-state > i { font-size:2.5rem; color:#e50914; margin-bottom:1rem; }
+    .empty-interest-state h3 { color:#fff; font-size:1.1rem; }
+    .empty-interest-state a { display:inline-block; margin-top:.75rem; color:#fff; background:#e50914; padding:.65rem 1rem; border-radius:9px; text-decoration:none; }
     
     .profile-logout-btn {
         width: 100%;
@@ -528,9 +665,10 @@
     }
     
     .profile-section {
-        background: #1a1a1a;
-        border-radius: 12px;
-        padding: 2rem;
+        background: linear-gradient(145deg, #17191d, #121316);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 18px;
+        padding: 1.75rem;
         margin-bottom: 2rem;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
@@ -572,12 +710,14 @@
         display: flex;
         flex-direction: column;
         gap: 1rem;
+        max-width: none;
+        width: 100%;
     }
     
     .form-row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.25rem;
     }
     
     .form-row.full-width {
@@ -601,10 +741,11 @@
     }
     
     .form-control {
-        padding: 0.75rem 1rem;
-        background: #2d2d2d;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 6px;
+        min-height: 48px;
+        padding: 0.8rem 1rem;
+        background: #24262c;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 10px;
         color: #fff;
         font-size: 0.95rem;
         transition: all 0.3s;
@@ -617,10 +758,76 @@
     }
     
     .form-control:disabled {
-        background: #1f1f1f;
-        color: #999;
+        background: #1d1f24;
+        border-color: rgba(255,255,255,.08);
+        color: #b8bbc4;
+        opacity: 1;
         cursor: not-allowed;
     }
+
+    .profile-field-note {
+        display: block;
+        margin-top: .45rem;
+        color: #9ca3af;
+        font-size: .8rem;
+        line-height: 1.4;
+    }
+    .profile-field-note.locked { color: #f5b942; }
+    .confirm-age-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        width: fit-content;
+        margin-top: .65rem;
+        border: 0;
+        border-radius: 9px;
+        padding: .65rem 1rem;
+        color: #fff;
+        background: #e50914;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .form-actions {
+        position: sticky;
+        bottom: 1rem;
+        z-index: 20;
+        display: flex;
+        gap: .75rem;
+        width: fit-content;
+        margin-top: .5rem;
+        padding: .65rem;
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 12px;
+        background: rgba(20,21,25,.94);
+        box-shadow: 0 12px 35px rgba(0,0,0,.35);
+        backdrop-filter: blur(10px);
+    }
+    .form-actions:not(.is-visible) { padding: 0; border: 0; box-shadow: none; }
+
+    .address-input-group {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: .75rem;
+        align-items: stretch;
+    }
+    .location-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        min-width: 145px;
+        border: 1px solid rgba(229,9,20,.55);
+        border-radius: 10px;
+        padding: 0 1rem;
+        color: #fff;
+        background: rgba(229,9,20,.14);
+        font-weight: 650;
+        cursor: pointer;
+    }
+    .location-button:hover { background: rgba(229,9,20,.28); }
+    .location-button:disabled { opacity: .6; cursor: wait; }
     
     .checkbox-label {
         display: flex;
@@ -792,7 +999,7 @@
     
     @media (max-width: 768px) {
         .profile-luxury-container {
-            padding: 1rem;
+            padding: 5.5rem 1rem 2rem;
         }
         
         .row {
@@ -812,6 +1019,13 @@
         .profile-section {
             padding: 1rem;
         }
+
+        .profile-section .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .address-input-group { grid-template-columns: 1fr; }
+        .location-button { min-height: 46px; }
     }
 </style>
 
@@ -874,14 +1088,17 @@
         const isDisabled = inputs[0].disabled;
         
         inputs.forEach(input => {
-            input.disabled = !isDisabled;
+            if (input.dataset.profileLocked !== 'true') {
+                input.disabled = !isDisabled;
+            }
         });
         
         // Toggle button visibility
         const buttons = form.querySelectorAll('.form-actions button');
         buttons.forEach(btn => {
-            btn.style.display = isDisabled ? 'inline-block' : 'none';
+            btn.style.display = isDisabled ? 'inline-flex' : 'none';
         });
+        form.querySelector('.form-actions')?.classList.toggle('is-visible', isDisabled);
     }
     
     function cancelEdit(section) {
@@ -889,7 +1106,70 @@
         // Reload page or reset form
         location.reload();
     }
-    
+
+    function enablePersonalField(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        if (field.disabled) toggleEditMode('personal');
+        field.disabled = false;
+        field.focus();
+        if (typeof field.select === 'function') field.select();
+    }
+
+    async function fillCurrentAddress() {
+        const addressInput = document.getElementById('profileAddress');
+        const button = document.getElementById('locationButton');
+        const status = document.getElementById('locationStatus');
+
+        if (!navigator.geolocation) {
+            status.textContent = 'Trình duyệt này không hỗ trợ định vị. Bạn vẫn có thể nhập địa chỉ thủ công.';
+            status.classList.add('text-danger');
+            return;
+        }
+
+        button.disabled = true;
+        status.textContent = 'Đang xác định vị trí của bạn...';
+
+        navigator.geolocation.getCurrentPosition(async position => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            let address = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+
+            try {
+                const url = new URL('https://api.bigdatacloud.net/data/reverse-geocode-client');
+                url.searchParams.set('latitude', latitude);
+                url.searchParams.set('longitude', longitude);
+                url.searchParams.set('localityLanguage', 'vi');
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Reverse geocoding failed');
+                const location = await response.json();
+                address = [...new Set([
+                    location.locality,
+                    location.city,
+                    location.principalSubdivision,
+                    location.countryName,
+                ].filter(Boolean))].join(', ') || address;
+                status.textContent = 'Đã lấy địa chỉ gần đúng. Bạn có thể chỉnh lại số nhà hoặc tên đường trước khi lưu.';
+            } catch (error) {
+                status.textContent = 'Đã lấy tọa độ nhưng chưa đổi được thành địa chỉ. Bạn có thể chỉnh lại trước khi lưu.';
+            }
+
+            if (addressInput.disabled) toggleEditMode('personal');
+            addressInput.value = address;
+            addressInput.focus();
+            button.disabled = false;
+        }, error => {
+            const messages = {
+                1: 'Bạn đã từ chối quyền vị trí. Hãy cho phép vị trí hoặc nhập địa chỉ thủ công.',
+                2: 'Không xác định được vị trí hiện tại. Vui lòng thử lại.',
+                3: 'Quá thời gian lấy vị trí. Vui lòng thử lại.',
+            };
+            status.textContent = messages[error.code] || 'Không thể lấy vị trí hiện tại.';
+            status.classList.add('text-danger');
+            button.disabled = false;
+        }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 300000 });
+    }
+
     function confirmUpgrade(event, upgradeCost, userPoints, packageName) {
         const packagePrice = upgradeCost;
         if (userPoints < packagePrice) {

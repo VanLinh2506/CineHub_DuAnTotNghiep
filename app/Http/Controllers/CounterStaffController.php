@@ -11,6 +11,7 @@ use App\Models\SeatReservation;
 use App\Models\Screen;
 use App\Models\Movie;
 use App\Models\Transaction;
+use App\Models\FoodItem;
 use App\Services\QrCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,6 +40,17 @@ class CounterStaffController extends Controller
         }
         
         // Thống kê hôm nay
+        $scannedBookingIds = Ticket::whereHas('showtime.screen', function ($q) use ($theaterId) {
+                $q->where('theater_id', $theaterId);
+            })
+            ->where('picked_up_by', $user->id)
+            ->whereDate('picked_up_at', today())
+            ->whereNotNull('booking_pending_id')
+            ->distinct()
+            ->pluck('booking_pending_id');
+        $scannedBookings = Booking::whereIn('id', $scannedBookingIds)->get();
+        $drinkStats = $this->summarizeBookingFood($scannedBookings, $theaterId);
+
         $todayStats = [
             'tickets_sold' => Ticket::where('is_counter_sale', true)
                 ->where('sold_by', $user->id)
@@ -56,6 +68,8 @@ class CounterStaffController extends Controller
                 ->where('is_picked_up', true)
                 ->whereDate('picked_up_at', today())
                 ->count(),
+            'drinks_delivered' => $drinkStats['quantity'],
+            'drink_revenue' => $drinkStats['revenue'],
         ];
         
         // Lịch chiếu hôm nay
@@ -128,18 +142,24 @@ class CounterStaffController extends Controller
             return response()->json(['success' => false, 'message' => 'Vé không thuộc rạp của bạn']);
         }
         
-        // Xác nhận vé
-        $updatedCount = 0;
-        foreach ($tickets as $ticket) {
-            if (!$ticket->is_picked_up) {
-                $ticket->update([
-                    'is_picked_up' => true,
-                    'picked_up_at' => now(),
-                    'picked_up_by' => Auth::id(),
-                ]);
-                $updatedCount++;
+        $updatedCount = DB::transaction(function () use ($tickets) {
+            $updated = 0;
+            foreach ($tickets as $ticket) {
+                $lockedTicket = Ticket::lockForUpdate()->find($ticket->id);
+                if (!$lockedTicket->is_picked_up) {
+                    $lockedTicket->update([
+                        'is_picked_up' => true,
+                        'picked_up_at' => now(),
+                        'picked_up_by' => Auth::id(),
+                    ]);
+                    $updated++;
+                }
             }
-        }
+
+            return $updated;
+        });
+        $tickets->each->refresh();
+        $foodItems = $this->bookingFoodDetails($booking, Auth::user()->theater_id);
         
         return response()->json([
             'success' => true,
@@ -163,6 +183,8 @@ class CounterStaffController extends Controller
                     'screen_name' => $ticket->showtime->screen->screen_name ?? 'N/A',
                 ];
             })->values(),
+            'food_items' => $foodItems,
+            'food_total' => $foodItems->sum('subtotal'),
             'updated_count' => $updatedCount,
         ]);
     }
@@ -184,7 +206,13 @@ class CounterStaffController extends Controller
             ->orderByDesc('picked_up_at')
             ->paginate(20);
         
-        return view('admin.counter_staff.scanned_tickets', compact('tickets', 'date'));
+        $foodByBooking = $tickets->getCollection()
+            ->pluck('bookingPending')
+            ->filter()
+            ->unique('id')
+            ->mapWithKeys(fn ($booking) => [$booking->id => $this->bookingFoodDetails($booking, Auth::user()->theater_id)]);
+
+        return view('admin.counter_staff.scanned_tickets', compact('tickets', 'date', 'foodByBooking'));
     }
     
     /**
@@ -533,6 +561,40 @@ class CounterStaffController extends Controller
             'seats_per_row' => 12,
             'vip_rows' => ['D', 'E', 'F'],
             'couple_rows' => ['J'],
+        ];
+    }
+
+    private function bookingFoodDetails(Booking $booking, int $theaterId)
+    {
+        $quantities = collect($booking->food_items ?? [])
+            ->mapWithKeys(fn ($quantity, $id) => [(int) $id => max(0, (int) $quantity)])
+            ->filter();
+        $foods = FoodItem::where('theater_id', $theaterId)
+            ->whereIn('id', $quantities->keys())
+            ->get()
+            ->keyBy('id');
+
+        return $quantities->map(function ($quantity, $id) use ($foods) {
+            $food = $foods->get($id);
+            if (!$food) return null;
+            return [
+                'id' => $food->id,
+                'name' => $food->name,
+                'type' => $food->type,
+                'quantity' => $quantity,
+                'unit_price' => (float) $food->price,
+                'subtotal' => (float) $food->price * $quantity,
+            ];
+        })->filter()->values();
+    }
+
+    private function summarizeBookingFood($bookings, int $theaterId): array
+    {
+        $details = $bookings->flatMap(fn ($booking) => $this->bookingFoodDetails($booking, $theaterId));
+
+        return [
+            'quantity' => (int) $details->sum('quantity'),
+            'revenue' => (float) $details->sum('subtotal'),
         ];
     }
 }

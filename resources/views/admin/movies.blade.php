@@ -114,7 +114,11 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <i class="fas fa-star" style="color: gold;"></i> {{ $m['rating'] ?? 0 }}/10
+                                    @if($m['rating'] !== null)
+                                        <i class="fas fa-star" style="color: gold;"></i> {{ number_format($m['rating'], 1) }}/10
+                                    @else
+                                        <span class="text-muted">Chưa có đánh giá</span>
+                                    @endif
                                 </td>
                                 <td>{{ \Carbon\Carbon::parse($m['created_at'])->format('d/m/Y') }}</td>
                                 <td>
@@ -125,9 +129,13 @@
                                         <a href="{{ route('movies.show', $m['id']) }}" class="btn btn-outline-info" title="Xem chi tiết">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <button onclick="deleteMovie({{ $m['id'] }}, '{{ $m['title'] }}')" class="btn btn-outline-danger" title="Xóa">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        <form method="POST" action="{{ route('admin.movies.destroy', $m['id']) }}" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn xóa phim ' + @js($m['title']) + '?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger" title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -139,12 +147,4 @@
     </div>
 </div>
 
-<script>
-    function deleteMovie(movieId, title) {
-        if (confirm('Bạn chắc chắn muốn xóa phim "' + title + '"?')) {
-            // Submit delete action
-            window.location.href = '{{ url("?route=admin/movies/delete&id=") }}' + movieId;
-        }
-    }
-</script>
 @endsection

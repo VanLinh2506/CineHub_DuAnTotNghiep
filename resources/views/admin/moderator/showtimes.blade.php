@@ -10,6 +10,9 @@
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addShowtimeModal">
             <i class="fas fa-plus"></i> Thêm lịch chiếu
         </button>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#bulkShowtimeModal">
+            <i class="fas fa-layer-group"></i> Thêm hàng loạt
+        </button>
     </div>
 </div>
 
@@ -102,6 +105,25 @@
     </div>
 </div>
 
+<!-- Bulk Showtime Modal -->
+<div class="modal fade" id="bulkShowtimeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Tạo lịch chiếu hàng loạt</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <form method="POST" action="{{ route('moderator.showtimes.bulk-store') }}">@csrf
+            <div class="modal-body"><div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Phim</label><select name="movie_id" id="bulk_movie_id" class="form-select" required><option value="">Chọn phim</option>@foreach($movies as $movie)<option value="{{ $movie->id }}" data-format="{{ $movie->projection_format ?? '2D' }}" data-duration="{{ $movie->duration ?? 120 }}">{{ $movie->title }} — {{ $movie->projection_format ?? '2D' }}</option>@endforeach</select></div>
+                <div class="col-md-6"><label class="form-label">Phòng</label><select name="screen_id" id="bulk_screen_id" class="form-select" required><option value="">Chọn phòng</option>@foreach($screens as $screen)<option value="{{ $screen->id }}" data-format="{{ $screen->screen_type }}">{{ $screen->screen_name }} — {{ $screen->screen_type }}</option>@endforeach</select></div>
+                <div class="col-md-6"><label class="form-label">Từ ngày</label><input type="date" id="bulk_date_from" name="date_from" min="{{ now()->toDateString() }}" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label">Đến ngày</label><input type="date" id="bulk_date_to" name="date_to" min="{{ now()->toDateString() }}" class="form-control" required></div>
+                <div class="col-12"><label class="form-label">Các giờ chiếu</label><div id="bulkTimeSlots" class="d-flex flex-wrap gap-2"><small class="text-muted">Chọn phim, phòng và khoảng ngày để xem giờ trống.</small></div><small class="text-muted">Chỉ hiển thị các khung giờ còn trống trong tất cả ngày đã chọn.</small></div>
+                <div class="col-md-6"><label class="form-label">Nhóm giá hợp đồng</label><select name="contract_price_type" class="form-select" required><option value="bestseller">Phim bán chạy</option><option value="new_release">Phim mới phát hành</option><option value="hot_movie">Phim hot</option></select></div>
+                <div class="col-md-6"><label class="form-label">Giá vé</label><input type="number" name="price" min="0" step="1000" class="form-control" required></div>
+            </div></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button><button class="btn btn-success" type="submit">Tạo hàng loạt</button></div>
+        </form>
+    </div></div>
+</div>
+
 <!-- Add Showtime Modal -->
 <div class="modal fade" id="addShowtimeModal" tabindex="-1">
     <div class="modal-dialog">
@@ -144,7 +166,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="show_time" class="form-label">Giờ chiếu <span class="text-danger">*</span></label>
-                        <input type="time" name="show_time" id="show_time" class="form-control" required>
+                        <input type="time" name="show_time" id="show_time" class="form-control" step="900" required>
                         <div id="availableTimeSlots" class="mt-2" style="display: none;">
                             <small class="text-muted d-block mb-2">Các khung giờ còn trống trong ngày:</small>
                             <div id="timeSlotsContainer" class="d-flex flex-wrap gap-2"></div>
@@ -370,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function calculateEndTime(startTime, duration) {
             const [hours, minutes] = startTime.split(':').map(Number);
-            const endMinutes = hours * 60 + minutes + duration + 30;
+            const endMinutes = hours * 60 + minutes + duration + 15;
             return `${String(Math.floor(endMinutes / 60)).padStart(2,'0')}:${String(endMinutes % 60).padStart(2,'0')}`;
         }
 
@@ -563,6 +585,104 @@ function updateSeatPreviewShowtimes() {
 }
 </script>
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('bulkShowtimeModal');
+    if (!modal) return;
+
+    const form = modal.querySelector('form');
+    const movie = document.getElementById('bulk_movie_id');
+    const screen = document.getElementById('bulk_screen_id');
+    const from = document.getElementById('bulk_date_from');
+    const to = document.getElementById('bulk_date_to');
+    const container = document.getElementById('bulkTimeSlots');
+    let selected = new Set();
+    let commonSlots = [];
+
+    const datesBetween = (start, end) => {
+        const dates = [];
+        const cursor = new Date(start + 'T00:00:00Z');
+        const last = new Date(end + 'T00:00:00Z');
+        while (cursor <= last && dates.length <= 31) {
+            dates.push(cursor.toISOString().slice(0, 10));
+            cursor.setUTCDate(cursor.getUTCDate() + 1);
+        }
+        return dates;
+    };
+
+    const minutes = value => {
+        const [hour, minute] = value.split(':').map(Number);
+        return hour * 60 + minute;
+    };
+
+    const render = () => {
+        container.innerHTML = '';
+        if (!commonSlots.length) {
+            container.innerHTML = '<small class="text-warning">Không có khung giờ chung còn trống trong khoảng ngày này.</small>';
+            return;
+        }
+        const duration = Number(movie.options[movie.selectedIndex]?.dataset.duration || 120) + 15;
+        commonSlots.forEach(slot => {
+            const isSelected = selected.has(slot.time);
+            const overlaps = !isSelected && [...selected].some(time =>
+                minutes(slot.time) < minutes(time) + duration && minutes(slot.time) + duration > minutes(time)
+            );
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `btn btn-sm ${isSelected ? 'btn-primary' : 'btn-outline-primary'}`;
+            button.textContent = slot.label;
+            button.disabled = overlaps;
+            button.addEventListener('click', () => {
+                isSelected ? selected.delete(slot.time) : selected.add(slot.time);
+                render();
+            });
+            container.appendChild(button);
+            if (isSelected) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'show_times[]';
+                input.value = slot.time;
+                container.appendChild(input);
+            }
+        });
+    };
+
+    const load = async () => {
+        selected.clear();
+        commonSlots = [];
+        if (!movie.value || !screen.value || !from.value || !to.value || to.value < from.value) {
+            container.innerHTML = '<small class="text-muted">Chọn phim, phòng và khoảng ngày để xem giờ trống.</small>';
+            return;
+        }
+        const dates = datesBetween(from.value, to.value);
+        if (!dates.length || dates.length > 31) {
+            container.innerHTML = '<small class="text-danger">Khoảng ngày tối đa là 31 ngày.</small>';
+            return;
+        }
+        container.innerHTML = '<small class="text-muted">Đang tải các khung giờ trống...</small>';
+        try {
+            const results = await Promise.all(dates.map(date =>
+                fetch(`{{ route('moderator.api.availableTimeSlots') }}?screen_id=${screen.value}&date=${date}&movie_id=${movie.value}`).then(response => response.json())
+            ));
+            commonSlots = results[0]?.slots || [];
+            for (const result of results.slice(1)) {
+                const available = new Set((result.slots || []).map(slot => slot.time));
+                commonSlots = commonSlots.filter(slot => available.has(slot.time));
+            }
+            render();
+        } catch (error) {
+            container.innerHTML = '<small class="text-danger">Không thể tải khung giờ. Vui lòng thử lại.</small>';
+        }
+    };
+
+    [movie, screen, from, to].forEach(element => element.addEventListener('change', load));
+    form.addEventListener('submit', event => {
+        if (!selected.size) {
+            event.preventDefault();
+            alert('Vui lòng chọn ít nhất một khung giờ còn trống.');
+        }
+    });
+});
+
 function filterScreensByMovie(movieSelectId, screenSelectId) {
     const movieSelect = document.getElementById(movieSelectId);
     const screenSelect = document.getElementById(screenSelectId);
@@ -574,7 +694,8 @@ function filterScreensByMovie(movieSelectId, screenSelectId) {
 
         Array.from(screenSelect.options).forEach(option => {
             if (!option.value) return;
-            const compatible = !format || option.dataset.format === format;
+            const levels = { '2D': 1, '3D': 2, '4D': 3, '4DX': 3 };
+            const compatible = !format || (levels[option.dataset.format] || 0) >= (levels[format] || 0);
             option.hidden = !compatible;
             option.disabled = !compatible;
             if (compatible && option.selected) selectedStillValid = true;
@@ -590,6 +711,7 @@ function filterScreensByMovie(movieSelectId, screenSelectId) {
 document.addEventListener('DOMContentLoaded', () => {
     filterScreensByMovie('movie_id', 'screen_id');
     filterScreensByMovie('edit_movie_id', 'edit_screen_id');
+    filterScreensByMovie('bulk_movie_id', 'bulk_screen_id');
 });
 </script>
 @endpush

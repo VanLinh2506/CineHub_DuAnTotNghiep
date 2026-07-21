@@ -196,7 +196,9 @@ if (!empty($episodes)) {
 
             <div class="movie-details">
                 <div class="movie-meta-info">
+                    @if($movie['rating'] !== null)
                     <span><i class="fas fa-star"></i> {{ number_format($movie['rating'], 1) }}</span>
+                    @endif
                     @if(($movie['type'] ?? 'phimle') === 'phimbo')
                         <span><i class="fas fa-tv"></i> Phim bộ</span>
                     @else
@@ -506,7 +508,9 @@ if (!empty($episodes)) {
                             @endif
                             <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.9)); padding: 1rem 0.5rem 0.5rem;">
                                 <p style="margin: 0; font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;">{{ $related['title'] }}</p>
+                                @if($related['rating'] !== null)
                                 <p style="margin: 0; font-size: 0.75rem; color: #ffc107;"><i class="fas fa-star"></i> {{ number_format($related['rating'], 1) }}</p>
+                                @endif
                             </div>
                         </div>
                     </a>

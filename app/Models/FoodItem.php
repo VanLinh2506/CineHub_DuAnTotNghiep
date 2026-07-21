@@ -9,6 +9,9 @@ class FoodItem extends Model
 {
     use HasFactory;
 
+    // The legacy food_items table stores created_at but has no updated_at column.
+    public const UPDATED_AT = null;
+
     protected $fillable = [
         'theater_id',
         'name',

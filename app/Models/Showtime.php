@@ -32,7 +32,7 @@ class Showtime extends Model
     // Relationships
     public function movie()
     {
-        return $this->belongsTo(Movie::class);
+        return $this->belongsTo(Movie::class)->withTrashed();
     }
 
     public function theater()

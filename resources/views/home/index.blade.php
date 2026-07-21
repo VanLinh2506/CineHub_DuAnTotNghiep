@@ -22,7 +22,9 @@
                         if (($featuredMovie->type ?? 'phimle') === 'phimbo') {
                             $durationText = 'Phim bộ';
                         }
-                        $imdbRating = number_format($featuredMovie->rating * 1.1, 1);
+                        $userRating = $featuredMovie->rating !== null
+                            ? number_format($featuredMovie->rating, 1)
+                            : null;
                         $bgImage = !empty($featuredMovie->banner) ? $featuredMovie->banner : $featuredMovie->thumbnail;
                     @endphp
                     <div class="hero-slide @if($index === 0) active @endif" data-slide="{{ $index }}">
@@ -50,7 +52,9 @@
 
                                         <!-- Info Badges -->
                                         <div class="hero-info-badges">
-                                            <span class="badge-imdb">IMDb {{ $imdbRating }}</span>
+                                            @if($userRating !== null)
+                                            <span class="badge-imdb"><i class="fas fa-star"></i> {{ $userRating }}</span>
+                                            @endif
                                             @if (in_array($featuredMovie->level, ['Gold', 'Premium']))
                                                 <span class="badge-quality">4K</span>
                                             @endif
@@ -277,7 +281,9 @@
                                 <div class="genre-image">
                                     @if($movie->thumbnail)<img src="{{ $movie->thumbnail }}" alt="{{ $movie->title }}" loading="lazy">
                                     @else<div class="genre-image-empty"><i class="fas fa-film"></i></div>@endif
-                                    <span>{{ number_format($movie->rating ?? 0, 1) }} <i class="fas fa-star"></i></span>
+                                    @if($movie->rating !== null)
+                                    <span>{{ number_format($movie->rating, 1) }} <i class="fas fa-star"></i></span>
+                                    @endif
                                 </div>
                                 <strong>{{ $movie->title }}</strong>
                             </a>
@@ -303,7 +309,12 @@
                                 <a href="{{ route('movies.introduce', $movie->id) }}" class="genre-mini-card">
                                     @if($movie->thumbnail)<img src="{{ $movie->thumbnail }}" alt="{{ $movie->title }}" loading="lazy">
                                     @else<div class="genre-image-empty"><i class="fas fa-film"></i></div>@endif
-                                    <div><strong>{{ $movie->title }}</strong><small><i class="fas fa-star"></i> {{ number_format($movie->rating ?? 0, 1) }}</small></div>
+                                    <div>
+                                        <strong>{{ $movie->title }}</strong>
+                                        @if($movie->rating !== null)
+                                        <small><i class="fas fa-star"></i> {{ number_format($movie->rating, 1) }}</small>
+                                        @endif
+                                    </div>
                                 </a>
                             @endforeach
                         </div>

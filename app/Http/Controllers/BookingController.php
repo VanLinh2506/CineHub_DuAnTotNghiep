@@ -2536,6 +2536,7 @@ class BookingController extends Controller
 
     private function createBookingNotification(Booking $booking): void
     {
+        $booking->loadMissing(['showtime.movie', 'showtime.theater', 'showtime.screen']);
         $showtime = $booking->showtime;
         $movieTitle = $showtime?->movie?->title ?? 'phim';
         $seatList = implode(', ', $booking->seats ?? []);
@@ -2543,9 +2544,9 @@ class BookingController extends Controller
 
         DB::table('notifications')->insert([
             'user_id' => $booking->user_id,
-            'type' => 'success',
+            'type' => 'booking_success',
             'title' => 'Đặt vé thành công',
-            'message' => "Bạn đã đặt thành công {$seatCount} vé xem phim \"{$movieTitle}\" tại ghế {$seatList}. Quét mã QR để check vé.",
+            'message' => "Bạn đã đặt thành công {$seatCount} vé phim “{$movieTitle}”, ghế {$seatList}, tại ".($showtime?->theater?->name ?? 'rạp').', phòng '.($showtime?->screen?->screen_name ?? 'chưa xác định').', lúc '.\Carbon\Carbon::parse($showtime->show_time)->format('H:i').' ngày '.$showtime->show_date->format('d/m/Y').'. Tổng thanh toán: '.number_format($booking->total_amount).'đ. Hãy dùng mã QR khi vào rạp.',
             'link' => route('booking.history'),
             'is_read' => 0,
             'created_at' => now(),

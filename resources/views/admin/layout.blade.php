@@ -89,9 +89,9 @@
         
         /* Main Content */
         .admin-main { 
-            margin-left: 300px; 
-            width: calc(100% - 300px);
-            max-width: calc(100vw - 300px);
+            margin-left: 240px;
+            width: calc(100% - 240px);
+            max-width: calc(100vw - 240px);
             padding: 25px; 
             background: #f5f6fa; 
             min-height: 100vh; 
@@ -380,6 +380,14 @@
         }
         @media screen and (min-width: 769px) { 
             .mobile-menu-toggle { display: none !important; } 
+        }
+        /* Defensive bound for pagination icons from custom pagination views. */
+        .admin-main nav[role="navigation"] svg,
+        .admin-main .pagination svg {
+            width: 1rem !important;
+            height: 1rem !important;
+            max-width: 1rem;
+            max-height: 1rem;
         }
     </style>
     @stack('styles')

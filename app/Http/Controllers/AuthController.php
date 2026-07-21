@@ -64,7 +64,8 @@ class AuthController extends Controller
             
             if ($user && Hash::check($password, $user->password)) {
                 if (isset($user->is_active) && !$user->is_active) {
-                    $error = 'Tài khoản của bạn đã bị khóa!';
+                    $error = 'Tài khoản của bạn đã bị khóa.'
+                        .($user->ban_reason ? ' Lý do: '.$user->ban_reason : '');
                     if ($request->ajax()) {
                         return response()->json(['success' => false, 'error' => $error]);
                     }
@@ -74,13 +75,37 @@ class AuthController extends Controller
                 // Kiểm tra xem user có phải admin không
                 $isAdmin = ($user->role === 'admin' || $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists());
 
+                // Admins bypass login OTP. An existing session is replaced
+                // immediately so the one-session rule still remains enforced.
+                if ($isAdmin) {
+                    Auth::login($user, $remember);
+                    $this->removeExcessLoginSessions($user, $request);
+                    session()->forget(['login_user_id', 'login_otp', 'login_otp_expires_at', 'login_remember']);
+                    $request->session()->regenerate();
+
+                    if ($request->ajax()) {
+                        return response()->json([
+                            'success' => true,
+                            'redirect' => route('admin.index'),
+                        ]);
+                    }
+
+                    return redirect()->route('admin.index')
+                        ->with('success', 'Đăng nhập thành công!');
+                }
+
                 // Every account is limited to one concurrent login. Only ask
                 // for OTP when another active session must be replaced.
                 if (!$this->hasReachedLoginSessionLimit($user, $request)) {
                     Auth::login($user, $remember);
                     $request->session()->regenerate();
 
-                    $redirectUrl = $isAdmin ? route('admin.index') : route('home');
+                    $redirectUrl = !$user->birthdate
+                        ? route('profile.index')
+                        : route('home');
+                    if (!$user->birthdate) {
+                        session()->flash('error', 'Vui lòng cập nhật ngày sinh để hệ thống áp dụng giới hạn độ tuổi phim.');
+                    }
 
                     if ($request->ajax()) {
                         return response()->json([
@@ -409,10 +434,23 @@ class AuthController extends Controller
     /**
      * Hiển thị giao diện nhập mã OTP đăng nhập.
      */
-    public function showVerifyLoginOtp()
+    public function showVerifyLoginOtp(Request $request)
     {
         if (!session()->has('login_user_id') || !session()->has('login_otp')) {
             return redirect()->route('home')->with('error', 'Phiên đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.');
+        }
+
+        // Complete pending admin logins created before the OTP bypass was
+        // enabled. Their password was validated before this session was set.
+        $pendingUser = User::find(session('login_user_id'));
+        if ($pendingUser && $pendingUser->isAdmin()) {
+            Auth::login($pendingUser, session('login_remember', false));
+            $this->removeExcessLoginSessions($pendingUser, $request);
+            session()->forget(['login_user_id', 'login_otp', 'login_otp_expires_at', 'login_remember']);
+            $request->session()->regenerate();
+
+            return redirect()->route('admin.index')
+                ->with('success', 'Đăng nhập thành công!');
         }
 
         return view('auth.verify-login-otp');
@@ -462,7 +500,10 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             // Xác định redirect URL dựa trên role và theater_id (giống luồng đăng nhập gốc)
-            $redirectUrl = route('home');
+            $redirectUrl = !$user->birthdate ? route('profile.index') : route('home');
+            if (!$user->birthdate) {
+                session()->flash('error', 'Vui lòng cập nhật ngày sinh để hệ thống áp dụng giới hạn độ tuổi phim.');
+            }
             
             if ($user->role === 'admin' || $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists()) {
                 $redirectUrl = route('admin.index');

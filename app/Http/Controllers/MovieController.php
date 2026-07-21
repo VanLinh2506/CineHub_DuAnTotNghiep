@@ -615,6 +615,16 @@ class MovieController extends Controller
         ]);
     }
 
+    public function removeInterest($id)
+    {
+        MovieInterest::where('user_id', Auth::id())
+            ->where('movie_id', $id)
+            ->delete();
+
+        return redirect(route('profile.index').'#interests')
+            ->with('success', 'Đã bỏ phim khỏi danh sách quan tâm.');
+    }
+
     private function watchProgressByMovie()
     {
         if (!Auth::check()) {
@@ -929,8 +939,11 @@ class MovieController extends Controller
         'Free' => 0,
         'Basic' => 1,
         'Silver' => 2,
+        'Silver Năm' => 2,
         'Gold' => 3,
+        'Gold Năm' => 3,
         'Premium' => 4,
+        'Premium Năm' => 4,
     ];
 
     private function checkMovieAccess($user, $movieLevel)

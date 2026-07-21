@@ -21,7 +21,7 @@
 
     <!-- Statistics Cards -->
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -53,7 +53,7 @@
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -64,6 +64,20 @@
                         <div class="icon-shape bg-gradient-warning text-white rounded-circle">
                             <i class="fas fa-qrcode fa-2x"></i>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Nước đã giao khi quét</h6>
+                            <h3 class="mb-0">{{ number_format($todayStats['drinks_delivered']) }}</h3>
+                            <small class="text-success">{{ number_format($todayStats['drink_revenue']) }}₫</small>
+                        </div>
+                        <div class="icon-shape bg-gradient-primary text-white rounded-circle"><i class="fas fa-glass-whiskey fa-2x"></i></div>
                     </div>
                 </div>
             </div>

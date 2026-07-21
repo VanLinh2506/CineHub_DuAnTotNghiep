@@ -69,6 +69,29 @@ class AdminFeatureTestSeeder extends Seeder
                 throw new \RuntimeException('Cần ít nhất một rạp, một phòng chiếu và một user để tạo booking test.');
             }
 
+            $counterStaffId = DB::table('users')
+                ->where('theater_id', $theaterId)
+                ->whereIn('role', ['user', 'moderator'])
+                ->orderBy('id')
+                ->value('id');
+
+            $testFoods = [
+                ['name' => '[TEST] Coca Cola', 'type' => 'drink', 'price' => 35000],
+                ['name' => '[TEST] Nước suối', 'type' => 'drink', 'price' => 20000],
+                ['name' => '[TEST] Combo bắp nước', 'type' => 'combo', 'price' => 79000],
+            ];
+            foreach ($testFoods as $food) {
+                DB::table('food_items')->updateOrInsert(
+                    ['theater_id' => $theaterId, 'name' => $food['name']],
+                    $food + ['description' => 'Dữ liệu kiểm thử đối soát khi quét vé.', 'is_active' => true, 'created_at' => now()]
+                );
+            }
+            $foodItems = DB::table('food_items')
+                ->where('theater_id', $theaterId)
+                ->whereIn('name', collect($testFoods)->pluck('name'))
+                ->get()
+                ->values();
+
             // Movies shown on /movies/theater are selected by upcoming
             // showtimes, so create one theater movie and showtime per day.
             for ($day = 1; $day <= 7; $day++) {
@@ -191,6 +214,7 @@ class AdminFeatureTestSeeder extends Seeder
                     'thumbnail' => $sourceMovie->thumbnail ?? null,
                     'banner' => $sourceMovie->banner ?? null,
                     'status' => 'Chiếu rạp',
+                    'projection_format' => '2D',
                     'rating' => 8.1,
                     'status_admin' => 'published',
                     'publish_date' => now()->subMonths(2),
@@ -236,7 +260,13 @@ class AdminFeatureTestSeeder extends Seeder
                     ->value('id');
                 $userId = $userIds[($index - 1) % count($userIds)];
                 $seats = $index % 3 === 0 ? ['D1', 'D2'] : ['A1', 'A2'];
-                $total = $index % 3 === 0 ? 240000 : 180000;
+                $ticketTotal = $index % 3 === 0 ? 240000 : 180000;
+                $selectedFoods = $foodItems->take(1 + ($index % max(1, $foodItems->count())));
+                $foodQuantities = $selectedFoods->mapWithKeys(fn ($food, $foodIndex) => [
+                    $food->id => 1 + (($index + $foodIndex) % 2),
+                ])->all();
+                $foodTotal = $selectedFoods->sum(fn ($food) => $food->price * $foodQuantities[$food->id]);
+                $total = $ticketTotal + $foodTotal;
                 $bookingCode = sprintf('ADMIN-TEST-%s-%02d', $createdAt->format('Ymd'), $index);
 
                 DB::table('booking_pending')->updateOrInsert(
@@ -247,7 +277,7 @@ class AdminFeatureTestSeeder extends Seeder
                         'customer_phone' => '090000'.str_pad((string) $index, 4, '0', STR_PAD_LEFT),
                         'showtime_id' => $showtimeId,
                         'seats' => json_encode($seats),
-                        'food_items' => null,
+                        'food_items' => json_encode($foodQuantities),
                         'customer_email' => 'admin-test-'.$index.'@cinehub.local',
                         'total_amount' => $total,
                         'vnp_txn_ref' => 'ADMINTEST'.$createdAt->format('Ymd').str_pad((string) $index, 2, '0', STR_PAD_LEFT),
@@ -259,6 +289,18 @@ class AdminFeatureTestSeeder extends Seeder
                 );
 
                 $bookingId = DB::table('booking_pending')->where('booking_code', $bookingCode)->value('id');
+                $wasScanned = $index % 4 !== 0;
+
+                DB::table('booking_food_items')->where('booking_pending_id', $bookingId)->delete();
+                foreach ($selectedFoods as $food) {
+                    DB::table('booking_food_items')->insert([
+                        'booking_pending_id' => $bookingId,
+                        'food_item_id' => $food->id,
+                        'quantity' => $foodQuantities[$food->id],
+                        'price' => $food->price,
+                        'created_at' => $createdAt,
+                    ]);
+                }
 
                 foreach ($seats as $seat) {
                     DB::table('tickets')->updateOrInsert(
@@ -271,8 +313,9 @@ class AdminFeatureTestSeeder extends Seeder
                             'price' => str_starts_with($seat, 'D') ? 120000 : 90000,
                             'status' => 'Đã đặt',
                             'is_counter_sale' => $index % 4 === 0,
-                            'is_picked_up' => true,
-                            'picked_up_at' => $createdAt->copy()->addMinutes(20),
+                            'is_picked_up' => $wasScanned,
+                            'picked_up_at' => $wasScanned ? $createdAt->copy()->addMinutes(20) : null,
+                            'picked_up_by' => $wasScanned ? $counterStaffId : null,
                             'created_at' => $createdAt,
                         ]
                     );
@@ -295,6 +338,6 @@ class AdminFeatureTestSeeder extends Seeder
             }
         });
 
-        $this->command?->info('Đã lên lịch 7 phim cũ trong 7 ngày tới và tạo 30 booking lịch sử cho admin.');
+        $this->command?->info('Đã tạo 30 booking có vé, nước/combo và trạng thái quét để kiểm thử đối soát doanh thu.');
     }
 }

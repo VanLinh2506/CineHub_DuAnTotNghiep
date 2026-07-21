@@ -211,7 +211,9 @@
                         @endif
                     </div>
                     <p class="movie-meta">
+                        @if($movie['rating'] !== null)
                         <span><i class="fas fa-star"></i> {{ number_format($movie['rating'], 1) }}</span>
+                        @endif
                         @if($movie['type'] === 'phimbo')
                         <span><i class="fas fa-tv"></i> Phim bộ</span>
                         @else

@@ -295,7 +295,7 @@ class ModeratorController extends Controller
             'movie_id' => 'required|exists:movies,id',
             'screen_id' => 'required|exists:theater_screens,id',
             'show_date' => 'required|date',
-            'show_time' => 'required',
+            'show_time' => ['required', 'date_format:H:i', 'regex:/^(?:[01]\d|2[0-3]):(?:00|15|30|45)$/'],
             'price' => 'required|numeric|min:0',
             'contract_price_type' => 'required|in:bestseller,new_release,hot_movie',
         ]);
@@ -320,23 +320,24 @@ class ModeratorController extends Controller
                 "Phim {$movie->projection_format} chỉ được xếp vào phòng {$movie->projection_format}."
             );
         }
-        $movieDuration = $movie->duration ?? 120; // Mặc định 120 phút nếu không có
-        
         // Tính thời gian kết thúc (thời lượng phim + 15 phút dọn dẹp)
         $showTime = \Carbon\Carbon::parse($request->show_date . ' ' . $request->show_time);
-        $endTime = $showTime->copy()->addMinutes($movieDuration + 15);
+        if ($showTime->lte(now())) {
+            return back()->withInput()->with('error', 'Giờ chiếu phải lớn hơn thời gian hiện tại.');
+        }
+        $endTime = $this->showtimeEnd($showTime, $movie);
         
         // Kiểm tra xem có suất chiếu nào trùng lặp không
         $conflicts = Showtime::where('screen_id', $request->screen_id)
             ->where('show_date', $request->show_date)
             ->get()
             ->filter(function($showtime) use ($showTime, $endTime) {
-                $existingStart = \Carbon\Carbon::parse($showtime->show_date . ' ' . $showtime->show_time);
+                $existingStart = \Carbon\Carbon::parse($showtime->show_date->toDateString() . ' ' . $showtime->show_time);
                 
                 // Lấy thời lượng phim của suất chiếu đang có
                 $existingMovie = Movie::find($showtime->movie_id);
                 $existingDuration = $existingMovie->duration ?? 120;
-                $existingEnd = $existingStart->copy()->addMinutes($existingDuration + 15);
+                $existingEnd = $this->showtimeEnd($existingStart, $existingMovie);
                 
                 // Kiểm tra xem có trùng lặp không
                 return ($showTime < $existingEnd && $endTime > $existingStart);
@@ -368,6 +369,71 @@ class ModeratorController extends Controller
             ->with('success', 'Thêm lịch chiếu thành công!');
     }
     
+    public function showtimesBulkStore(Request $request)
+    {
+        if ($error = $this->checkPermission()) return $error;
+
+        $data = $request->validate([
+            'movie_id' => 'required|exists:movies,id',
+            'screen_id' => 'required|exists:theater_screens,id',
+            'date_from' => 'required|date|after_or_equal:today',
+            'date_to' => 'required|date|after_or_equal:date_from',
+            'show_times' => 'required|array|min:1|max:64',
+            'show_times.*' => ['required', 'date_format:H:i', 'regex:/^(?:[01]\d|2[0-3]):(?:00|15|30|45)$/'],
+            'price' => 'required|numeric|min:0',
+            'contract_price_type' => 'required|in:bestseller,new_release,hot_movie',
+        ]);
+
+        $from = \Carbon\Carbon::parse($data['date_from'])->startOfDay();
+        $to = \Carbon\Carbon::parse($data['date_to'])->startOfDay();
+        if ($from->diffInDays($to) > 30) {
+            return back()->withInput()->with('error', 'Mỗi lần chỉ được tạo lịch chiếu trong tối đa 31 ngày.');
+        }
+
+        $times = collect($data['show_times'])->unique()->sort()->values();
+        if ($times->isEmpty()) {
+            return back()->withInput()->with('error', 'Vui lòng nhập ít nhất một giờ chiếu đúng định dạng HH:mm.');
+        }
+
+        $screen = Screen::where('id', $data['screen_id'])->where('theater_id', $this->theaterId)->firstOrFail();
+        $movie = Movie::findOrFail($data['movie_id']);
+        if (!$movie->canPlayInScreen($screen)) {
+            return back()->withInput()->with('error', "Phim {$movie->projection_format} không phù hợp phòng {$screen->screen_type}.");
+        }
+
+        $created = 0;
+        $skipped = 0;
+        DB::transaction(function () use ($from, $to, $times, $data, $screen, $movie, &$created, &$skipped) {
+            foreach (\Carbon\CarbonPeriod::create($from, $to) as $date) {
+                $dateString = $date->toDateString();
+                $contract = $this->validateShowtimeContractPrice($dateString, (int) $data['movie_id'], $data['contract_price_type'], (int) $data['price']);
+                foreach ($times as $time) {
+                    $start = \Carbon\Carbon::parse("{$dateString} {$time}");
+                    if ($start->lte(now())) { $skipped++; continue; }
+                    $end = $this->showtimeEnd($start, $movie);
+                    $conflict = Showtime::with('movie')->where('screen_id', $screen->id)->whereDate('show_date', $dateString)->get()
+                        ->contains(function ($existing) use ($start, $end) {
+                            $existingStart = \Carbon\Carbon::parse($existing->show_date->toDateString().' '.$existing->show_time);
+                            $existingEnd = $this->showtimeEnd($existingStart, $existing->movie);
+                            return $start < $existingEnd && $end > $existingStart;
+                        });
+                    if ($conflict) { $skipped++; continue; }
+
+                    Showtime::create([
+                        'movie_id' => $movie->id, 'theater_id' => $this->theaterId,
+                        'theater_contract_id' => $contract->id, 'screen_id' => $screen->id,
+                        'show_date' => $dateString, 'show_time' => $time, 'price' => (int) $data['price'],
+                        'contract_price_type' => $data['contract_price_type'], 'available_seats' => $screen->total_seats,
+                    ]);
+                    $created++;
+                }
+            }
+        });
+
+        return redirect()->route('moderator.showtimes.index')
+            ->with('success', "Đã tạo {$created} lịch chiếu hàng loạt; bỏ qua {$skipped} khung giờ bị trùng.");
+    }
+
     public function showtimesUpdate(Request $request, $id)
     {
         if ($error = $this->checkPermission()) return $error;
@@ -380,7 +446,7 @@ class ModeratorController extends Controller
             'movie_id' => 'required|exists:movies,id',
             'screen_id' => 'required|exists:theater_screens,id',
             'show_date' => 'required|date',
-            'show_time' => 'required',
+            'show_time' => ['required', 'date_format:H:i', 'regex:/^(?:[01]\d|2[0-3]):(?:00|15|30|45)$/'],
             'price' => 'required|numeric|min:0',
             'contract_price_type' => 'nullable|in:bestseller,new_release,hot_movie',
         ]);
@@ -408,6 +474,23 @@ class ModeratorController extends Controller
             $showtimePrice,
             $showtime->id
         );
+
+        $start = \Carbon\Carbon::parse($request->show_date.' '.$request->show_time);
+        $end = $this->showtimeEnd($start, $movie);
+        $hasConflict = Showtime::with('movie')
+            ->where('screen_id', $screen->id)
+            ->whereDate('show_date', $request->show_date)
+            ->whereKeyNot($showtime->id)
+            ->get()
+            ->contains(function (Showtime $existing) use ($start, $end) {
+                $existingStart = \Carbon\Carbon::parse($existing->show_date->toDateString().' '.$existing->show_time);
+                $existingEnd = $this->showtimeEnd($existingStart, $existing->movie);
+
+                return $start < $existingEnd && $end > $existingStart;
+            });
+        if ($hasConflict) {
+            return back()->withInput()->with('error', 'Khung giờ mới bị trùng với một suất chiếu khác trong phòng.');
+        }
         
         $showtime->update([
             'movie_id' => $request->movie_id,
@@ -698,24 +781,28 @@ class ModeratorController extends Controller
         
         $theater = Theater::findOrFail($this->theaterId);
         
-        // Revenue by movie
-        $revenueByMovie = Movie::join('showtimes', 'movies.id', '=', 'showtimes.movie_id')
+        // Booking total_amount is the accounting source of truth: tickets + food/drinks.
+        $revenueByMovie = DB::table('booking_pending as bookings')
+            ->join('showtimes', 'showtimes.id', '=', 'bookings.showtime_id')
             ->join('theater_screens', 'showtimes.screen_id', '=', 'theater_screens.id')
-            ->leftJoin('tickets', function($join) {
-                $join->on('showtimes.id', '=', 'tickets.showtime_id')
-                     ->where('tickets.status', 'Đã đặt');
-            })
+            ->join('movies', 'movies.id', '=', 'showtimes.movie_id')
             ->where('theater_screens.theater_id', $this->theaterId)
+            ->where('bookings.status', 'completed')
             ->groupBy('movies.id', 'movies.title')
             ->select('movies.id', 'movies.title')
-            ->selectRaw('COUNT(tickets.id) as ticket_count, COALESCE(SUM(tickets.price), 0) as revenue')
+            ->selectRaw('COUNT(DISTINCT bookings.id) as booking_count, COALESCE(SUM(bookings.total_amount), 0) as revenue')
             ->orderByDesc('revenue')
             ->get()
             ->map(function($item) {
+                $ticketCount = Ticket::whereHas('showtime', fn ($query) => $query->where('movie_id', $item->id))
+                    ->whereHas('showtime.screen', fn ($query) => $query->where('theater_id', $this->theaterId))
+                    ->where('status', 'Đã đặt')
+                    ->count();
                 return [
                     'id' => $item->id,
                     'title' => $item->title,
-                    'ticket_count' => $item->ticket_count,
+                    'ticket_count' => $ticketCount,
+                    'booking_count' => $item->booking_count,
                     'revenue' => $item->revenue
                 ];
             })
@@ -728,37 +815,39 @@ class ModeratorController extends Controller
         for ($i = 29; $i >= 0; $i--) {
             $date = now()->subDays($i)->toDateString();
             $dates[] = $date;
-            
-            // Get revenue per movie for this date
-            $dailyRevenue = Movie::join('showtimes', 'movies.id', '=', 'showtimes.movie_id')
-                ->join('theater_screens', 'showtimes.screen_id', '=', 'theater_screens.id')
-                ->leftJoin('tickets', function($join) use ($date) {
-                    $join->on('showtimes.id', '=', 'tickets.showtime_id')
-                         ->where('tickets.status', 'Đã đặt')
-                         ->whereDate('tickets.created_at', $date);
-                })
-                ->where('theater_screens.theater_id', $this->theaterId)
-                ->whereDate('showtimes.show_date', '<=', $date)
-                ->groupBy('movies.id', 'movies.title')
-                ->select('movies.id', 'movies.title')
-                ->selectRaw('COALESCE(SUM(tickets.price), 0) as revenue')
-                ->get();
-            
-            foreach ($dailyRevenue as $movieRevenue) {
-                if (!isset($revenueByDateRaw[$movieRevenue->id])) {
-                    $revenueByDateRaw[$movieRevenue->id] = [
-                        'title' => $movieRevenue->title,
-                        'data' => []
-                    ];
-                }
-                $revenueByDateRaw[$movieRevenue->id]['data'][] = [
+        }
+
+        $dailyRows = DB::table('booking_pending as bookings')
+            ->join('showtimes', 'showtimes.id', '=', 'bookings.showtime_id')
+            ->join('theater_screens', 'showtimes.screen_id', '=', 'theater_screens.id')
+            ->join('movies', 'movies.id', '=', 'showtimes.movie_id')
+            ->where('theater_screens.theater_id', $this->theaterId)
+            ->where('bookings.status', 'completed')
+            ->whereBetween('bookings.created_at', [now()->subDays(29)->startOfDay(), now()->endOfDay()])
+            ->groupBy('movies.id', 'movies.title', DB::raw('DATE(bookings.created_at)'))
+            ->select('movies.id', 'movies.title')
+            ->selectRaw('DATE(bookings.created_at) as revenue_date, SUM(bookings.total_amount) as revenue')
+            ->get()
+            ->groupBy('id');
+
+        foreach ($dailyRows as $movieId => $rows) {
+            $byDate = $rows->keyBy('revenue_date');
+            $revenueByDateRaw[$movieId] = [
+                'title' => $rows->first()->title,
+                'data' => collect($dates)->map(fn ($date) => [
                     'date' => $date,
-                    'revenue' => $movieRevenue->revenue
-                ];
-            }
+                    'revenue' => (float) ($byDate->get($date)->revenue ?? 0),
+                ])->all(),
+            ];
         }
         
         $revenueByDate = $revenueByDateRaw;
+        $revenueSummary = [
+            'total' => collect($revenueByMovie)->sum('revenue'),
+            'tickets' => Ticket::whereHas('showtime.screen', fn ($query) => $query->where('theater_id', $this->theaterId))
+                ->where('status', 'Đã đặt')->sum('price'),
+        ];
+        $revenueSummary['food'] = max(0, $revenueSummary['total'] - $revenueSummary['tickets']);
         
         // Get available dates from showtimes
         $availableDates = Showtime::whereHas('screen', function($q) {
@@ -905,6 +994,7 @@ class ModeratorController extends Controller
             'theater', 
             'revenueByMovie', 
             'revenueByDate', 
+            'revenueSummary',
             'dates',
             'availableDates',
             'availableMovies',
@@ -986,6 +1076,12 @@ class ModeratorController extends Controller
     /**
      * Get available time slots for a screen on a specific date
      */
+    private function showtimeEnd(\Carbon\Carbon $start, ?Movie $movie): \Carbon\Carbon
+    {
+        // Compare exact timestamps, including seconds stored in show_time.
+        return $start->copy()->addSeconds((max((int) ($movie?->duration ?? 120), 0) * 60) + (15 * 60));
+    }
+
     public function getAvailableTimeSlots(Request $request)
     {
         if ($error = $this->checkPermission()) return $error;
@@ -1004,8 +1100,6 @@ class ModeratorController extends Controller
             return response()->json(['slots' => []]);
         }
         
-        $movieDuration = $movie->duration ?? 120;
-        
         // Lấy tất cả suất chiếu trong ngày
         $existingShowtimes = Showtime::where('screen_id', $screenId)
             ->where('show_date', $date)
@@ -1019,19 +1113,18 @@ class ModeratorController extends Controller
         $endHour = 23;
         
         for ($hour = $startHour; $hour <= $endHour; $hour++) {
-            foreach ([0, 30] as $minute) {
-                if ($hour == $endHour && $minute > 0) break;
+            foreach ([0, 15, 30, 45] as $minute) {
                 
                 $timeSlot = sprintf('%02d:%02d', $hour, $minute);
                 $slotStart = \Carbon\Carbon::parse($date . ' ' . $timeSlot);
-                $slotEnd = $slotStart->copy()->addMinutes($movieDuration + 15);
+                if ($slotStart->lte(now())) continue;
+                $slotEnd = $this->showtimeEnd($slotStart, $movie);
                 
                 // Kiểm tra xem khung giờ này có trùng với suất chiếu nào không
                 $isAvailable = true;
                 foreach ($existingShowtimes as $showtime) {
-                    $existingStart = \Carbon\Carbon::parse($showtime->show_date . ' ' . $showtime->show_time);
-                    $existingDuration = $showtime->movie->duration ?? 120;
-                    $existingEnd = $existingStart->copy()->addMinutes($existingDuration + 15);
+                    $existingStart = \Carbon\Carbon::parse($showtime->show_date->toDateString() . ' ' . $showtime->show_time);
+                    $existingEnd = $this->showtimeEnd($existingStart, $showtime->movie);
                     
                     if ($slotStart < $existingEnd && $slotEnd > $existingStart) {
                         $isAvailable = false;
@@ -1042,7 +1135,7 @@ class ModeratorController extends Controller
                 if ($isAvailable) {
                     $possibleSlots[] = [
                         'time' => $timeSlot,
-                        'label' => $timeSlot . ' (kết thúc lúc ' . $slotEnd->format('H:i') . ')'
+                        'label' => $timeSlot . ' (kết thúc lúc ' . $slotEnd->format('H:i:s') . ')'
                     ];
                 }
             }

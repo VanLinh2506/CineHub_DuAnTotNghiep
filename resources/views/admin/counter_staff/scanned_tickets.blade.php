@@ -28,6 +28,7 @@
                         <th>Ngày chiếu</th>
                         <th>Phòng</th>
                         <th>Ghế</th>
+                        <th>Nước / combo đã giao</th>
                         <th>Thời gian quét</th>
                     </tr>
                 </thead>
@@ -40,6 +41,13 @@
                         <td>{{ optional($ticket->showtime)->show_date ? date('d/m/Y H:i', strtotime($ticket->showtime->show_date . ' ' . $ticket->showtime->show_time)) : 'N/A' }}</td>
                         <td>{{ $ticket->showtime->screen->screen_name ?? 'N/A' }}</td>
                         <td>{{ $ticket->seat }}</td>
+                        <td>
+                            @forelse(($foodByBooking[$ticket->booking_pending_id] ?? collect()) as $item)
+                                <span class="badge bg-info text-dark">{{ $item['name'] }} × {{ $item['quantity'] }}</span>
+                            @empty
+                                <span class="text-muted">Không có</span>
+                            @endforelse
+                        </td>
                         <td>{{ $ticket->picked_up_at ? date('d/m/Y H:i:s', strtotime($ticket->picked_up_at)) : 'N/A' }}</td>
                     </tr>
                     @endforeach

@@ -52,13 +52,7 @@ $db = Database::getInstance();
                             <td><?php echo $u['id']; ?></td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <?php if ($u['avatar']): ?>
-                                        <img src="<?php echo htmlspecialchars($u['avatar']); ?>" alt="" class="rounded-circle me-2" style="width: 40px; height: 40px;">
-                                    <?php else: ?>
-                                        <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                            <i class="fas fa-user text-white"></i>
-                                        </div>
-                                    <?php endif; ?>
+                                    <img src="<?php echo htmlspecialchars($u['avatar_url'] ?? asset('images/default-avatar.svg')); ?>" alt="Ảnh đại diện" class="rounded-circle me-2" width="40" height="40" style="width:40px;height:40px;object-fit:cover;object-position:center;background:#747f88;" onerror="this.onerror=null;this.src='<?php echo asset('images/default-avatar.svg'); ?>';">
                                     <?php echo htmlspecialchars($u['name']); ?>
                                 </div>
                             </td>
@@ -270,4 +264,3 @@ function toggleUserStatus(userId, newStatus) {
     }
 }
 </script>
-

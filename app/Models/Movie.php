@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Movie extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     const UPDATED_AT = null;
     public const STATUS_ONLINE = 'Chiếu online';
@@ -133,7 +134,16 @@ class Movie extends Model
     {
         $screenType = $screen instanceof Screen ? $screen->screen_type : $screen;
 
-        return ($this->projection_format ?? '2D') === $screenType;
+        $levels = ['2D' => 1, '3D' => 2, '4DX' => 3];
+        $movieFormat = strtoupper(trim($this->projection_format ?? '2D'));
+        $screenFormat = strtoupper(trim($screenType ?: '2D'));
+
+        // Treat the legacy "4D" value as the same capability as 4DX.
+        $movieFormat = $movieFormat === '4D' ? '4DX' : $movieFormat;
+        $screenFormat = $screenFormat === '4D' ? '4DX' : $screenFormat;
+
+        return isset($levels[$movieFormat], $levels[$screenFormat])
+            && $levels[$screenFormat] >= $levels[$movieFormat];
     }
 
     // URL Accessors for storage files

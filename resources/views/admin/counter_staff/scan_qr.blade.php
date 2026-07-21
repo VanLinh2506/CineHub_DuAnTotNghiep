@@ -32,11 +32,7 @@
             <div id="ticketInfo" style="display: none;">
                 <h6 class="mb-3">Thông tin vé</h6>
                 <div id="ticketDetails"></div>
-                <div class="mt-3">
-                    <button class="btn btn-success" id="confirmPickupBtn">
-                        <i class="fas fa-check"></i> Xác nhận đã lấy vé
-                    </button>
-                </div>
+                <div class="alert alert-success mt-3 mb-0"><i class="fas fa-check-circle"></i> Vé và đồ uống được ghi nhận đã giao ngay khi quét QR thành công.</div>
             </div>
             <div id="scanResult" class="mt-3"></div>
         </div>
@@ -141,17 +137,17 @@ function displayTicketInfo(data) {
         const pickedUp = ticket.is_picked_up ? '<span class="badge bg-success">Đã lấy</span>' : '<span class="badge bg-warning">Chưa lấy</span>';
         html += `<li class="list-group-item d-flex justify-content-between align-items-center">Ghế ${ticket.seat} - ${ticket.seat_type} ${pickedUp}</li>`;
     });
+    if (data.food_items && data.food_items.length) {
+        html += `</ul><hr><h6><i class="fas fa-glass-whiskey"></i> Nước / combo đi kèm:</h6><ul class="list-group">`;
+        data.food_items.forEach(item => {
+            html += `<li class="list-group-item d-flex justify-content-between"><span>${item.name} × ${item.quantity}</span><strong>${new Intl.NumberFormat('vi-VN').format(item.subtotal)}₫</strong></li>`;
+        });
+        html += `</ul><p class="mt-2 text-success"><strong>Tổng đồ uống: ${new Intl.NumberFormat('vi-VN').format(data.food_total)}₫ — giao cùng lần quét này</strong></p><ul class="list-group d-none">`;
+    }
     html += `</ul><p class="mt-3"><strong>Tổng số vé:</strong> ${tickets.length}</p><p><strong>Đã xác nhận:</strong> ${data.updated_count} vé</p></div></div>`;
     document.getElementById('ticketDetails').innerHTML = html;
     document.getElementById('ticketInfo').style.display = 'block';
 }
 
-document.getElementById('confirmPickupBtn').addEventListener('click', function() {
-    if (!currentBookingId) { alert('Không có thông tin booking'); return; }
-    if (confirm('Xác nhận tất cả vé trong booking này đã được lấy?')) {
-        const code = document.getElementById('manualCode').value.trim() || currentBookingId;
-        verifyTicket(code);
-    }
-});
 </script>
 @endpush

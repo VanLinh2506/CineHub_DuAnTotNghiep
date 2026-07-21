@@ -14,7 +14,9 @@
                     @else
                         <div class="ranking-poster-empty"><i class="fas fa-film"></i></div>
                     @endif
-                    <span class="ranking-rating"><i class="fas fa-star"></i> {{ number_format($movie->rating ?? 0, 1) }}</span>
+                    @if($movie->rating !== null)
+                    <span class="ranking-rating"><i class="fas fa-star"></i> {{ number_format($movie->rating, 1) }}</span>
+                    @endif
                 </div>
                 <div class="ranking-info">
                     <strong>{{ $movie->title }}</strong>

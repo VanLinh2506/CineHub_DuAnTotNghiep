@@ -89,4 +89,20 @@ class ModeratorFoodItemsTest extends TestCase
             ->get('/admin/food-items')
             ->assertNotFound();
     }
+
+    public function test_food_item_can_be_updated_without_an_updated_at_column(): void
+    {
+        $theater = Theater::factory()->create();
+        $item = FoodItem::create([
+            'theater_id' => $theater->id,
+            'name' => 'Bắp rang',
+            'type' => 'snack',
+            'price' => 50000,
+            'is_active' => true,
+        ]);
+
+        $item->update(['image' => 'food_items/new-image.jpg']);
+
+        $this->assertSame('food_items/new-image.jpg', $item->fresh()->image);
+    }
 }

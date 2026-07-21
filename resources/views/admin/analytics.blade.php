@@ -210,6 +210,17 @@
     </div>
 </div>
 
+<div class="card mt-4">
+    <div class="card-header"><strong>Nguồn doanh thu trong kỳ</strong></div>
+    <div class="table-responsive"><table class="table mb-0">
+        <thead><tr><th>Loại nguồn</th><th>Gói / Rạp</th><th class="text-end">Số giao dịch</th><th class="text-end">Doanh thu</th></tr></thead>
+        <tbody>@forelse($platformRevenueSources as $source)<tr>
+            <td>{{ $source->source_type === 'ticket' ? 'Hoa hồng vé (5%)' : 'Gói thành viên' }}</td><td>{{ $source->source_name }}</td>
+            <td class="text-end">{{ number_format($source->transaction_count) }}</td><td class="text-end fw-bold">{{ number_format($source->revenue) }}₫</td>
+        </tr>@empty<tr><td colspan="4" class="text-center text-muted">Chưa có dữ liệu.</td></tr>@endforelse</tbody>
+    </table></div>
+</div>
+
 @php
     $movieTypeRevenue = [
         ['Phim lẻ', (float) ($topMoviesByRevenue ?? collect())->where('type', 'phimle')->sum('revenue')],

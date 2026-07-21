@@ -4,45 +4,62 @@ namespace App\Console\Commands;
 
 use App\Models\Booking;
 use App\Models\Notification;
-use Illuminate\Console\Command;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class SendShowtimeReminders extends Command
 {
     protected $signature = 'bookings:send-reminders';
-    protected $description = 'Send showtime reminders to users 2 hours before their movie starts';
+    protected $description = 'Send each customer one reminder at the calculated lead time';
 
-    public function handle()
+    public function handle(): int
     {
-        // Get bookings with showtimes starting in 2 hours
-        $twoHoursLater = now()->addHours(2);
-        
-        $bookings = Booking::with(['user', 'showtime.movie', 'showtime.theater'])
-            ->whereHas('showtime', function($query) use ($twoHoursLater) {
-                $query->whereDate('show_date', $twoHoursLater->toDateString())
-                    ->whereTime('show_time', '>=', $twoHoursLater->subMinutes(5)->toTimeString())
-                    ->whereTime('show_time', '<=', $twoHoursLater->addMinutes(10)->toTimeString());
-            })
-            ->where('status', 'confirmed')
-            ->get();
-
+        $now = now();
         $count = 0;
-        
-        foreach ($bookings as $booking) {
-            // Create notification
-            Notification::create([
-                'user_id' => $booking->user_id,
-                'type' => 'showtime_reminder',
-                'title' => 'Nhắc nhở suất chiếu',
-                'message' => "Phim '{$booking->showtime->movie->title}' sẽ bắt đầu lúc {$booking->showtime->show_time}. Vui lòng đến rạp sớm!",
-                'link' => route('booking.confirmation', $booking->id),
-            ]);
-            
-            $count++;
-        }
-        
+
+        Booking::with(['showtime.movie', 'showtime.theater', 'showtime.screen'])
+            ->where('status', 'completed')
+            ->whereHas('showtime', function ($query) use ($now) {
+                $query->where(function ($dates) use ($now) {
+                    $dates->whereDate('show_date', '>', $now->toDateString())
+                        ->orWhere(function ($today) use ($now) {
+                            $today->whereDate('show_date', $now->toDateString())
+                                ->whereTime('show_time', '>', $now->format('H:i:s'));
+                        });
+                });
+            })
+            ->orderBy('id')
+            ->chunkById(200, function ($bookings) use ($now, &$count) {
+                foreach ($bookings as $booking) {
+                    $showtime = $booking->showtime;
+                    if (!$showtime) continue;
+
+                    $startsAt = Carbon::parse($showtime->show_date->toDateString().' '.$showtime->show_time);
+                    $bookedAt = Carbon::parse($booking->created_at);
+                    $totalSeconds = max($bookedAt->diffInSeconds($startsAt, false), 0);
+                    $thirtyPercentSeconds = (int) floor($totalSeconds * 0.30);
+                    $leadMinutes = $thirtyPercentSeconds >= 3600 ? 60 : 30;
+                    $notifyAt = $startsAt->copy()->subMinutes($leadMinutes);
+                    if ($now->lt($notifyAt) || $now->gte($startsAt)) continue;
+
+                    $dedupeLink = route('booking.history').'?booking_id='.$booking->id;
+                    $alreadySent = Notification::where('user_id', $booking->user_id)
+                        ->where('type', 'showtime_reminder')->where('link', $dedupeLink)->exists();
+                    if ($alreadySent) continue;
+
+                    Notification::create([
+                        'user_id' => $booking->user_id,
+                        'type' => 'showtime_reminder',
+                        'title' => 'Sắp đến giờ xem phim',
+                        'message' => 'Còn '.$leadMinutes.' phút nữa phim “'.($showtime->movie?->title ?? 'phim').'” sẽ bắt đầu tại '.($showtime->theater?->name ?? 'rạp').', phòng '.($showtime->screen?->screen_name ?? 'chưa xác định').', lúc '.$startsAt->format('H:i d/m/Y').'. Vui lòng đến sớm để quét mã QR.',
+                        'link' => $dedupeLink,
+                        'is_read' => false,
+                    ]);
+                    $count++;
+                }
+            });
+
         $this->info("Sent {$count} showtime reminder(s).");
-        
-        return 0;
+        return self::SUCCESS;
     }
 }

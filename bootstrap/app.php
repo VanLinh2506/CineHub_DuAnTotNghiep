@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'moderator' => \App\Http\Middleware\ModeratorMiddleware::class,
             'counter_staff' => \App\Http\Middleware\CounterStaffMiddleware::class,
+            'movie.age' => \App\Http\Middleware\EnsureMovieAge::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -8,6 +8,7 @@ use App\Models\Ticket;
 use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Models\Movie;
+use App\Models\Notification;
 use App\Services\VNPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +31,7 @@ class ProfileController extends Controller
         ]);
 
         $user = Auth::user();
+
         $points = (int) $request->input('points');
         $amount = $points;
         $vnpTxnRef = 'DEP' . $user->id . '_' . time();
@@ -118,6 +120,11 @@ class ProfileController extends Controller
 
                 if ($transaction->wasRecentlyCreated) {
                     $user->addPoints($points);
+                    Notification::create([
+                        'user_id' => $user->id, 'type' => 'deposit_success', 'title' => 'Nạp xu thành công',
+                        'message' => 'Bạn đã nạp thành công '.number_format($points).' xu qua VNPay. Số dư mới: '.number_format($user->fresh()->points).' xu.',
+                        'link' => route('profile.index').'#wallet', 'is_read' => false,
+                    ]);
                 }
 
                 Cache::put($processedCacheKey, ['user_id' => $user->id], now()->addDay());
@@ -179,6 +186,14 @@ class ProfileController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
+        $interestedMovies = Movie::with(['category', 'categories'])
+            ->whereHas('interests', fn ($query) => $query->where('user_id', $user->id))
+            ->where('status', 'Sắp chiếu')
+            ->where('scheduled_status', 'Chiếu online')
+            ->where('publish_date', '>', now())
+            ->orderBy('publish_date')
+            ->get();
+
         return view('profile.index', compact(
             'user',
             'history',
@@ -188,7 +203,8 @@ class ProfileController extends Controller
             'userRole',
             'balance',
             'isModerator',
-            'favoriteMovies'
+            'favoriteMovies',
+            'interestedMovies'
         ));
     }
 
@@ -223,7 +239,11 @@ class ProfileController extends Controller
         
         // Kiểm tra nếu đã có gói này hoặc gói cao hơn
         if ($currentSubscription) {
-            if ($newPrice <= $currentPrice) {
+            $lowerAccess = $subscription->accessRank() < $currentSubscription->accessRank();
+            $samePlan = $subscription->id === $currentSubscription->id;
+            $shorterEquivalentPlan = $subscription->accessRank() === $currentSubscription->accessRank()
+                && $subscription->duration_months <= $currentSubscription->duration_months;
+            if ($lowerAccess || $samePlan || $shorterEquivalentPlan) {
                 return $redirectAfterUpgrade()
                     ->with('error', 'Bạn đã có gói tương đương hoặc cao hơn!');
             }
@@ -238,18 +258,29 @@ class ProfileController extends Controller
         }
         
         // Trừ điểm và cập nhật gói
-        $user->deductPoints($requiredPoints);
-        $user->update(['subscription_id' => $subscriptionId]);
-        
-        // Tạo transaction
-        Transaction::create([
-            'user_id' => $user->id,
-            'type' => 'subscription',
-            'related_id' => $subscriptionId,
-            'amount' => $requiredPoints,
-            'method' => 'Points',
-            'status' => 'Thành công',
-        ]);
+        DB::transaction(function () use ($user, $requiredPoints, $subscriptionId, $subscription) {
+            $lockedUser = User::query()->lockForUpdate()->findOrFail($user->id);
+            if ($lockedUser->points < $requiredPoints) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'subscription_id' => 'Số dư xu không còn đủ để đăng ký gói.',
+                ]);
+            }
+            $lockedUser->decrement('points', $requiredPoints);
+            $lockedUser->update([
+                'subscription_id' => $subscriptionId,
+                'subscription_expires_at' => now()->addMonthsNoOverflow($subscription->duration_months ?: 1),
+                'subscription_auto_renew' => true,
+            ]);
+            Transaction::create([
+                'user_id' => $lockedUser->id, 'type' => 'subscription', 'related_id' => $subscriptionId,
+                'amount' => $requiredPoints, 'method' => 'CineHub Coins', 'status' => 'Thành công',
+            ]);
+            Notification::create([
+                'user_id' => $lockedUser->id, 'type' => 'subscription_success', 'title' => 'Đăng ký gói thành công',
+                'message' => 'Gói '.$subscription->name.' đã được kích hoạt đến '.$lockedUser->subscription_expires_at->format('H:i d/m/Y').'. Đã trừ '.number_format($requiredPoints).' xu; tự động gia hạn đang bật.',
+                'link' => route('profile.index').'#subscription', 'is_read' => false,
+            ]);
+        });
         
         return $redirectAfterUpgrade()
             ->with('success', "Nâng cấp gói {$subscription->name} thành công! Đã trừ {$requiredPoints} điểm.");
@@ -266,23 +297,57 @@ class ProfileController extends Controller
 
         $user = Auth::user();
 
+        // Disabled fields are omitted from form submissions. Preserve their
+        // current values when confirming age or editing a single field.
+        $request->merge([
+            'name' => $request->input('name', $user->name),
+            'email' => $request->input('email', $user->email),
+            'phone' => $request->input('phone', $user->phone),
+            'address' => $request->input('address', $user->address),
+        ]);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
-            'birthdate' => 'nullable|date',
-            'birth_date' => 'nullable|date',
+            'birthdate' => 'nullable|date|before_or_equal:today',
+            'birth_date' => 'nullable|date|before_or_equal:today',
             'address' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
         ]);
+
+        $submittedBirthdate = $request->input('birthdate', $request->input('birth_date'));
+        if ($user->birthdate && $submittedBirthdate
+            && $user->birthdate->toDateString() !== $submittedBirthdate) {
+            return back()->withErrors([
+                'birthdate' => 'Ngày sinh đã được xác nhận và không thể thay đổi.',
+            ]);
+        }
+
+        $nameChanged = trim($request->input('name')) !== $user->name;
+        $nextNameChangeAt = $user->name_changed_at?->copy()->addDays(15);
+        if ($nameChanged && $nextNameChangeAt?->isFuture()) {
+            return back()->withErrors([
+                'name' => 'Bạn chỉ được đổi tên sau '.$nextNameChangeAt->format('H:i d/m/Y').'.',
+            ]);
+        }
 
         $data = [
             'name' => $request->input('name'),
             'email' => $request->input('email'),
             'phone' => $request->input('phone'),
-            'birthdate' => $request->input('birthdate', $request->input('birth_date')),
             'address' => $request->input('address'),
         ];
+
+        // Date of birth is a one-time declaration because it controls access
+        // to age-restricted movies.
+        if (!$user->birthdate && $submittedBirthdate) {
+            $data['birthdate'] = $submittedBirthdate;
+        }
+        if ($nameChanged) {
+            $data['name'] = trim($request->input('name'));
+            $data['name_changed_at'] = now();
+        }
 
         // Xử lý avatar
         if ($request->hasFile('avatar')) {
