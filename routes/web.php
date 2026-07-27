@@ -106,6 +106,7 @@ Route::post('/booking/location', [BookingController::class, 'saveLocation'])->na
 // API routes for getting data (can be public or require auth based on your needs)
 Route::get('/api/booking/showtimes', [BookingController::class, 'getShowtimesByDate'])->name('api.booking.showtimes');
 Route::get('/api/booking/seat-map', [BookingController::class, 'getSeatMap'])->name('api.booking.seatMap');
+Route::get('/api/booking/food-items', [BookingController::class, 'getFoodItems'])->name('api.booking.foodItems');
 
 // ==================== PAYMENT ROUTES ====================
 Route::prefix('payment')->name('payment.')->group(function () {
