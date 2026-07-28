@@ -17,6 +17,13 @@
         ->orderBy('country')
         ->pluck('country')
         ->toArray();
+
+    $categoryMenuChunks = $menuCategories->chunk(
+        max(1, (int) ceil($menuCategories->count() / 3))
+    );
+    $countryMenuChunks = collect($countries)->chunk(
+        max(1, (int) ceil(count($countries) / 3))
+    );
 @endphp
 
 <!-- Desktop Header -->
@@ -54,28 +61,40 @@
             <a href="{{ route('movies.phimbo') }}" class="nav-link-new">
                 Phim bộ
             </a>
-            <div class="nav-dropdown">
+            <div class="nav-dropdown nav-dropdown-mega">
                 <span class="nav-link-new dropdown-trigger">
                     Thể loại <i class="fas fa-chevron-down"></i>
                 </span>
-                <div class="dropdown-menu">
-                    @foreach ($menuCategories as $cat)
-                        <a href="{{ route('movies.category', $cat->id) }}" class="dropdown-item">
-                            {{ $cat->name }}
-                        </a>
-                    @endforeach
+                <div class="dropdown-menu mega-menu" aria-label="Danh sách thể loại">
+                    <div class="mega-menu-grid">
+                        @foreach ($categoryMenuChunks as $categoryChunk)
+                            <div class="mega-menu-column">
+                                @foreach ($categoryChunk as $cat)
+                                    <a href="{{ route('movies.category', $cat->id) }}" class="dropdown-item">
+                                        {{ $cat->name }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
-            <div class="nav-dropdown">
+            <div class="nav-dropdown nav-dropdown-mega">
                 <span class="nav-link-new dropdown-trigger">
                     Quốc gia <i class="fas fa-chevron-down"></i>
                 </span>
-                <div class="dropdown-menu">
-                    @foreach ($countries as $country)
-                        <a href="{{ route('movies.index', ['country' => $country]) }}" class="dropdown-item">
-                            {{ $country }}
-                        </a>
-                    @endforeach
+                <div class="dropdown-menu mega-menu" aria-label="Danh sách quốc gia">
+                    <div class="mega-menu-grid">
+                        @foreach ($countryMenuChunks as $countryChunk)
+                            <div class="mega-menu-column">
+                                @foreach ($countryChunk as $country)
+                                    <a href="{{ route('movies.index', ['country' => $country]) }}" class="dropdown-item">
+                                        {{ $country }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
             <a href="{{ route('movies.library.index') }}" class="nav-link-new">

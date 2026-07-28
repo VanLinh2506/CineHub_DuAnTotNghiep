@@ -11,6 +11,7 @@ use App\Models\Episode;
 use App\Models\Subscription;
 use App\Models\MovieViewEvent;
 use App\Models\MovieInterest;
+use App\Models\MovieSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -167,6 +168,29 @@ class MovieController extends Controller
 
         // Pagination
         $movies = $query->orderBy('created_at', 'desc')->paginate(12)->withQueryString();
+
+        // Only count the initial submitted search. Following pagination links
+        // must not artificially increase a movie's search popularity.
+        if ($search !== '' && !$request->has('page')) {
+            $normalizedKeyword = $this->normalizeSearchText($search);
+            $matchingMovies = $movies->getCollection();
+
+            $matchedMovie = $matchingMovies->first(
+                fn (Movie $movie) => $this->normalizeSearchText($movie->title) === $normalizedKeyword
+            ) ?? $matchingMovies->first(
+                fn (Movie $movie) => str_contains(
+                    $this->normalizeSearchText($movie->title),
+                    $normalizedKeyword
+                )
+            );
+
+            MovieSearch::create([
+                'movie_id' => $matchedMovie?->id,
+                'user_id' => Auth::id(),
+                'keyword' => mb_substr($search, 0, 255),
+                'searched_at' => now(),
+            ]);
+        }
 
         $categories = Category::orderBy('name')->get();
         $countries = Movie::select('country')
@@ -484,6 +508,49 @@ class MovieController extends Controller
                 ->toArray();
         }
         $watchProgressByMovie = $this->watchProgressByMovie();
+        $frequentlyWatchedMovies = collect();
+        $continueWatching = collect();
+
+        if (Auth::check()) {
+            $frequentlyWatchedQuery = Movie::with(['category', 'categories'])
+                ->withCount(['episodes as episode_count'])
+                ->withCount([
+                    'viewEvents as personal_view_count' => fn ($viewQuery) => $viewQuery
+                        ->where('user_id', Auth::id()),
+                ])
+                ->whereHas('viewEvents', fn ($viewQuery) => $viewQuery
+                    ->where('user_id', Auth::id()))
+                ->where('status_admin', 'published')
+                ->whereIn('status', Movie::onlineStatuses());
+
+            $this->applyAudienceFilter($frequentlyWatchedQuery, $audience);
+
+            $frequentlyWatchedMovies = $frequentlyWatchedQuery
+                ->orderByDesc('personal_view_count')
+                ->orderByDesc('rating')
+                ->limit(8)
+                ->get();
+
+            $continueWatching = WatchHistory::with([
+                    'movie' => fn ($movieQuery) => $movieQuery
+                        ->with(['category', 'categories'])
+                        ->withCount(['episodes as episode_count']),
+                    'episode',
+                ])
+                ->where('user_id', Auth::id())
+                ->where('last_time', '>', 0)
+                ->where('playback_updated_at', '>=', now()->subDays(30))
+                ->whereHas('movie', function ($movieQuery) use ($audience) {
+                    $movieQuery
+                        ->where('status_admin', 'published')
+                        ->whereIn('status', Movie::onlineStatuses());
+                    $this->applyAudienceFilter($movieQuery, $audience);
+                })
+                ->latest('playback_updated_at')
+                ->limit(8)
+                ->get()
+                ->filter(fn (WatchHistory $history) => $history->movie);
+        }
 
         $search = '';
         $categoryId = null;
@@ -506,7 +573,9 @@ class MovieController extends Controller
             'minRating',
             'audience',
             'audienceTitle',
-            'watchProgressByMovie'
+            'watchProgressByMovie',
+            'frequentlyWatchedMovies',
+            'continueWatching'
         ));
     }
 
