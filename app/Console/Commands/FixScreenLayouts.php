@@ -27,7 +27,7 @@ class FixScreenLayouts extends Command
             
             // Update without timestamps
             Screen::where('id', $screen->id)->update([
-                'seat_layout_config' => json_encode($correctLayout),
+                'seat_layout_config' => $correctLayout,
                 'total_seats' => 144
             ]);
             

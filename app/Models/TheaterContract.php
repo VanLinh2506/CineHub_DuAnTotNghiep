@@ -32,6 +32,7 @@ class TheaterContract extends Model
         'new_release_price_max',
         'hot_movie_price_min',
         'hot_movie_price_max',
+        'commission_percentage',
         'admin_permissions',
         'auto_revoke_terms',
         'party_terms',
@@ -57,6 +58,7 @@ class TheaterContract extends Model
         'new_release_price_max' => 'integer',
         'hot_movie_price_min' => 'integer',
         'hot_movie_price_max' => 'integer',
+        'commission_percentage' => 'decimal:2',
     ];
 
     public function theater()
@@ -98,5 +100,10 @@ class TheaterContract extends Model
             self::PRICE_TYPE_HOT_MOVIE => [(int) $this->hot_movie_price_min, (int) $this->hot_movie_price_max],
             default => [(int) $this->bestseller_price_min, (int) $this->bestseller_price_max],
         };
+    }
+
+    public function commissionRate(): float
+    {
+        return ((float) ($this->commission_percentage ?? 5)) / 100;
     }
 }

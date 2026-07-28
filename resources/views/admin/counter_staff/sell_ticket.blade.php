@@ -43,8 +43,8 @@
         </div>
         <div class="seat-map" id="seatMap">
             @php
-                $rows = ['A','B','C','D','E','F','G','H','I','J'];
-                $seatsPerRow = $seatLayout['seats_per_row'] ?? 12;
+                $rows = $seatLayout['rows'] ?? ['A','B','C','D','E','F','G','H','I','J'];
+                $cols = $seatLayout['cols'] ?? range(1, (int) ($seatLayout['seats_per_row'] ?? 12));
                 $vipRows = $seatLayout['vip_rows'] ?? ['D','E','F'];
                 $coupleRows = $seatLayout['couple_rows'] ?? ['J'];
             @endphp
@@ -53,28 +53,43 @@
                     $isVip = in_array($row, $vipRows);
                     $isCouple = in_array($row, $coupleRows);
                     // Hàng J có 6 ghế đôi thay vì 12 ghế thường
-                    $rowSeats = $isCouple ? 6 : $seatsPerRow;
+                    $rowGroups = [];
+                    if ($isCouple) {
+                        $coupleCount = max(1, (int) floor(count($cols) / 2));
+                        $half = max(1, (int) ceil($coupleCount / 2));
+                        $rowGroups = [range(1, $half), range($half + 1, $coupleCount)];
+                    } elseif (!empty($seatLayout['seat_groups'])) {
+                        foreach ($seatLayout['seat_groups'] as $group) {
+                            if (in_array($row, $group['rows'] ?? []) && !empty($group['cols'])) {
+                                $rowGroups[] = $group['cols'];
+                            }
+                        }
+                    }
+                    if (empty($rowGroups)) {
+                        $half = max(1, (int) ceil(count($cols) / 2));
+                        $rowGroups = [array_slice($cols, 0, $half), array_slice($cols, $half)];
+                    }
                 @endphp
                 <div class="seat-row">
                     <span class="row-label">{{ $row }}</span>
                     <div class="seats">
-                        @for($i = 1; $i <= $rowSeats; $i++)
+                        @foreach($rowGroups as $groupIndex => $groupCols)
+                            @if($groupIndex > 0)
+                                <div class="seat-space"></div>
+                            @endif
+                            @foreach($groupCols as $i)
                             @php
                                 $seatId = $row . $i;
                                 $isBooked = in_array($seatId, $bookedSeats);
                                 $seatClass = $isBooked ? 'booked' : ($isVip ? 'vip' : ($isCouple ? 'couple' : 'normal'));
                             @endphp
                             
-                            {{-- Khoảng trống giữa (lối đi) --}}
-                            @if(($isCouple && $i == 4) || (!$isCouple && $i == 7))
-                                <div class="seat-space"></div>
-                            @endif
-                            
                             <div class="seat {{ $seatClass }}"
                                  data-seat="{{ $seatId }}"
                                  data-type="{{ $isCouple ? 'couple' : ($isVip ? 'vip' : 'normal') }}"
                                  @if(!$isBooked) onclick="toggleSeat(this)" @endif>{{ $i }}</div>
-                        @endfor
+                            @endforeach
+                        @endforeach
                     </div>
                 </div>
             @endforeach
@@ -99,9 +114,31 @@
                 </div>
             </div>
         </div>
+        @if(isset($foodItems) && $foodItems->isNotEmpty())
+        <div class="food-selection">
+            <h4>Combo / đồ ăn uống</h4>
+            <div class="food-grid">
+                @foreach($foodItems as $food)
+                    <div class="food-card" data-food-id="{{ $food->id }}" data-price="{{ (float) $food->price }}">
+                        <div>
+                            <strong>{{ $food->name }}</strong>
+                            <small>{{ $food->type === 'combo' ? 'Combo' : ($food->type === 'snack' ? 'Snack' : 'Đồ uống') }}</small>
+                        </div>
+                        <div class="food-controls">
+                            <span>{{ number_format($food->price) }} đ</span>
+                            <button type="button" onclick="changeFoodQty({{ $food->id }}, -1)">-</button>
+                            <input type="number" id="foodQty{{ $food->id }}" value="0" min="0" max="10" readonly>
+                            <button type="button" onclick="changeFoodQty({{ $food->id }}, 1)">+</button>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
         <div class="booking-summary">
             <div class="summary-row"><span>Ghế đã chọn:</span><span id="selectedSeats">Chưa chọn</span></div>
             <div class="summary-row"><span>Số lượng:</span><span id="seatCount">0</span></div>
+            <div class="summary-row"><span>Combo / đồ ăn uống:</span><span id="foodTotal">0 đ</span></div>
             <div class="summary-row total"><span>Tổng tiền:</span><span id="totalPrice">0 đ</span></div>
             <button type="button" class="btn btn-primary btn-lg" id="btnProcessSale" onclick="processSale()" disabled>
                 <i class="fas fa-cash-register"></i> Xác nhận bán vé
@@ -144,6 +181,15 @@
 .legend-item .seat { width: 25px; height: 25px; cursor: default; }
 .customer-info { background: #2a2a2a; border-radius: 10px; padding: 20px; margin: 20px 0; }
 .customer-info h4 { margin: 0 0 15px 0; color: #fff; }
+.food-selection { background: #2a2a2a; border-radius: 10px; padding: 20px; margin: 20px 0; }
+.food-selection h4 { margin: 0 0 15px 0; color: #fff; }
+.food-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.food-card { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 12px; border: 1px solid #444; border-radius: 8px; background: #333; color: #fff; }
+.food-card strong { display: block; }
+.food-card small { color: #aaa; }
+.food-controls { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.food-controls button { width: 28px; height: 28px; border: 0; border-radius: 5px; background: #e50914; color: #fff; font-weight: bold; cursor: pointer; }
+.food-controls input { width: 36px; height: 28px; text-align: center; border: 1px solid #555; border-radius: 5px; background: #222; color: #fff; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 .form-group label { display: block; margin-bottom: 5px; color: #aaa; }
 .form-control { width: 100%; padding: 10px 15px; border: 1px solid #444; border-radius: 5px; background: #333; color: #fff; }
@@ -160,11 +206,19 @@
 @push('scripts')
 <script>
 let selectedSeats = [];
+let selectedFood = {};
 let showtimeId = {{ $selectedShowtime ? $selectedShowtime->id : 'null' }};
 let prices = {
     normal: {{ $selectedShowtime ? $selectedShowtime->price : 0 }},
     vip: {{ $selectedShowtime ? ($selectedShowtime->price * 1.5) : 0 }},
     couple: {{ $selectedShowtime ? ($selectedShowtime->price * 2.5) : 0 }}
+};
+let foodPrices = {
+@if(isset($foodItems))
+@foreach($foodItems as $food)
+    {{ $food->id }}: {{ (float) $food->price }},
+@endforeach
+@endif
 };
 
 function selectShowtime(id) {
@@ -197,6 +251,22 @@ function toggleSeat(element) {
     updateSummary();
 }
 
+function changeFoodQty(foodId, delta) {
+    const input = document.getElementById('foodQty' + foodId);
+    if (!input) return;
+
+    const nextValue = Math.max(0, Math.min(10, parseInt(input.value || '0', 10) + delta));
+    input.value = nextValue;
+
+    if (nextValue > 0) {
+        selectedFood[foodId] = nextValue;
+    } else {
+        delete selectedFood[foodId];
+    }
+
+    updateSummary();
+}
+
 function updateSummary() {
     const selectedSeatsText = selectedSeats.length > 0 
         ? selectedSeats.map(s => s.seat).join(', ') 
@@ -209,7 +279,14 @@ function updateSummary() {
     selectedSeats.forEach(s => { 
         total += prices[s.type]; 
     });
+
+    let foodTotal = 0;
+    Object.entries(selectedFood).forEach(([foodId, quantity]) => {
+        foodTotal += (foodPrices[foodId] || 0) * quantity;
+    });
+    total += foodTotal;
     
+    document.getElementById('foodTotal').textContent = foodTotal.toLocaleString('vi-VN') + ' đ';
     document.getElementById('totalPrice').textContent = total.toLocaleString('vi-VN') + ' đ';
     document.getElementById('btnProcessSale').disabled = selectedSeats.length === 0;
 }
@@ -247,7 +324,8 @@ function processSale() {
             showtime_id: showtimeId, 
             seats: selectedSeats.map(s => s.seat), 
             customer_name: customerName, 
-            customer_phone: customerPhone 
+            customer_phone: customerPhone,
+            food_items: selectedFood
         })
     })
     .then(r => r.json())

@@ -455,14 +455,8 @@ class BookingController extends Controller
                 $reservedSeats = $seatStatus['reservedSeats'];
                 $myReservedSeats = $seatStatus['myReservedSeats'];
                 
-                // Get seat layout
-                if ($screenInfo && $screenInfo->seat_layout_config) {
-                    $seatLayoutData = $screenInfo->seat_layout_config;
-                    if (is_string($seatLayoutData)) {
-                        $seatLayout = json_decode($seatLayoutData, true);
-                    } else {
-                        $seatLayout = $seatLayoutData;
-                    }
+                if ($screenInfo) {
+                    $seatLayout = $this->normalizeSeatLayout($screenInfo->seat_layout_config);
                 }
             }
         }
@@ -1054,20 +1048,9 @@ class BookingController extends Controller
         $myReservedSeats = $seatStatus['myReservedSeats'];
         $timer = $this->getReservationTimerData((int) $showtimeId, Auth::id());
         
-        // Get seat layout
         $seatLayout = null;
-        if ($showtime->screen && isset($showtime->screen->seat_layout_config)) {
-            $seatLayoutData = $showtime->screen->seat_layout_config;
-            
-            if (is_string($seatLayoutData)) {
-                try {
-                    $seatLayout = json_decode($seatLayoutData, true);
-                } catch (\Exception $e) {
-                    $seatLayout = null;
-                }
-            } elseif (is_array($seatLayoutData)) {
-                $seatLayout = $seatLayoutData;
-            }
+        if ($showtime->screen) {
+            $seatLayout = $this->normalizeSeatLayout($showtime->screen->seat_layout_config);
         }
         
         // Calculate prices
@@ -1700,29 +1683,15 @@ class BookingController extends Controller
                 $showtime = Showtime::find($showtime_id);
                 if ($showtime && $showtime->screen_id) {
                     $screen = Screen::find($showtime->screen_id);
-                    if ($screen && $screen->seat_layout_config) {
-                        $seatLayout = is_string($screen->seat_layout_config)
-                            ? json_decode($screen->seat_layout_config, true)
-                            : $screen->seat_layout_config;
+                    if ($screen) {
+                        $seatLayout = $this->normalizeSeatLayout($screen->seat_layout_config);
                     }
                 }
 
-                if (!$seatLayout) {
-                    $seatLayout = [
-                        'rows' => ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
-                        'cols' => range(1, 12),
-                        'vip_rows' => ['D', 'E', 'F'],
-                        'couple_rows' => ['J'],
-                    ];
-                }
+                $seatLayout ??= $this->getDefaultSeatLayout();
             } catch (\Exception $e) {
                 Log::error('ERROR getting seat layout: ' . $e->getMessage());
-                $seatLayout = [
-                    'rows' => ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
-                    'cols' => range(1, 12),
-                    'vip_rows' => ['D', 'E', 'F'],
-                    'couple_rows' => ['J'],
-                ];
+                $seatLayout = $this->getDefaultSeatLayout();
             }
         }
 
@@ -1758,30 +1727,16 @@ class BookingController extends Controller
                 
                 if ($showtime && $showtime->screen_id) {
                     $screen = Screen::find($showtime->screen_id);
-                    if ($screen && $screen->seat_layout_config) {
-                        $seatLayout = is_string($screen->seat_layout_config) 
-                            ? json_decode($screen->seat_layout_config, true) 
-                            : $screen->seat_layout_config;
+                    if ($screen) {
+                        $seatLayout = $this->normalizeSeatLayout($screen->seat_layout_config);
                     }
                 }
                 
                 // Nếu không có layout, tạo layout mặc định
-                if (!$seatLayout) {
-                    $seatLayout = [
-                        'rows' => ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
-                        'cols' => range(1, 12),
-                        'vip_rows' => ['D', 'E', 'F'],
-                        'couple_rows' => ['J']
-                    ];
-                }
+                $seatLayout ??= $this->getDefaultSeatLayout();
             } catch (\Exception $e) {
                 Log::error("ERROR getting seat layout: " . $e->getMessage());
-                $seatLayout = [
-                    'rows' => ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
-                    'cols' => range(1, 12),
-                    'vip_rows' => ['D', 'E', 'F'],
-                    'couple_rows' => ['J']
-                ];
+                $seatLayout = $this->getDefaultSeatLayout();
             }
         }
         
@@ -2564,6 +2519,33 @@ class BookingController extends Controller
                         ->where('show_time', '>=', $now->format('H:i:s'));
                 });
         });
+    }
+
+    private function getDefaultSeatLayout(): array
+    {
+        return [
+            'rows' => ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
+            'cols' => range(1, 12),
+            'vip_rows' => ['D', 'E', 'F'],
+            'couple_rows' => ['J'],
+        ];
+    }
+
+    private function normalizeSeatLayout($layout): array
+    {
+        if (is_array($layout) && !empty($layout)) {
+            return $layout;
+        }
+
+        if (is_string($layout) && trim($layout) !== '') {
+            $decoded = json_decode($layout, true);
+
+            if (is_array($decoded) && !empty($decoded)) {
+                return $decoded;
+            }
+        }
+
+        return $this->getDefaultSeatLayout();
     }
     
     // Helper methods

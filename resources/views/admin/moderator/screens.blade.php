@@ -280,11 +280,13 @@ function viewScreenLayout(screenId) {
     }
     
     let layout = {};
-    try {
-        layout = screen.seat_layout_config ? JSON.parse(screen.seat_layout_config) : {};
-        console.log('Parsed layout:', layout);
-    } catch (e) {
-        console.error('Error parsing layout:', e);
+    if (typeof screen.seat_layout_config === 'string') {
+        try {
+            layout = screen.seat_layout_config ? JSON.parse(screen.seat_layout_config) : {};
+        } catch (e) {
+            console.error('Error parsing layout:', e);
+        }
+    } else {
         layout = screen.seat_layout_config || {};
     }
     
@@ -383,7 +385,7 @@ function loadScreenMovies(screenId, screenName) {
     timeSlotCount = 0;
     document.getElementById('addTimeSlotsContainer').innerHTML = '';
     defaultTimeSlots.forEach(time => addTimeSlotToForm(time));
-    const today = new Date().toISOString().split('T')[0];
+    const today = localDateString(new Date());
     document.getElementById('add_from_date').value = today;
     document.getElementById('add_from_date').min = today;
     document.getElementById('add_to_date').min = today;
@@ -431,7 +433,18 @@ function removeMovieFromScreen(screenId, movieId, movieTitle) {
 }
 
 function escapeHtml(text) { const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}; return text.replace(/[&<>"']/g, m => map[m]); }
-function formatDate(dateString) { if (!dateString) return ''; return new Date(dateString).toLocaleDateString('vi-VN'); }
+function localDateString(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const [year, month, day] = String(dateString).slice(0, 10).split('-');
+    return day && month && year ? `${day}/${month}/${year}` : dateString;
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('add_from_date')?.addEventListener('change', function() { if (this.value) document.getElementById('add_to_date').min = this.value; });

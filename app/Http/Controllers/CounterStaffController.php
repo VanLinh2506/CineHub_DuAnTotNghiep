@@ -283,6 +283,11 @@ class CounterStaffController extends Controller
         $selectedShowtime = null;
         $bookedSeats = [];
         $seatLayout = null;
+        $foodItems = FoodItem::where('theater_id', $theaterId)
+            ->where('is_active', true)
+            ->orderBy('type')
+            ->orderBy('name')
+            ->get();
         
         if ($showtimeId) {
             $selectedShowtime = Showtime::with(['movie', 'screen'])
@@ -307,9 +312,7 @@ class CounterStaffController extends Controller
                 $bookedSeats = array_unique(array_merge($bookedSeats, $reservedSeats));
                 
                 // Seat layout
-                $seatLayout = $selectedShowtime->screen->seat_layout_config 
-                    ? json_decode($selectedShowtime->screen->seat_layout_config, true)
-                    : $this->getDefaultSeatLayout();
+                $seatLayout = $this->normalizeSeatLayout($selectedShowtime->screen?->seat_layout_config);
             }
         }
         
@@ -318,7 +321,8 @@ class CounterStaffController extends Controller
             'selectedShowtime',
             'bookedSeats',
             'seatLayout',
-            'date'
+            'date',
+            'foodItems'
         ));
     }
     
@@ -329,15 +333,17 @@ class CounterStaffController extends Controller
     {
         $request->validate([
             'showtime_id' => 'required|exists:showtimes,id',
-            'seats' => 'required|array|min:1',
+            'seats' => 'required|array|min:1|max:8',
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:20',
+            'food_items' => 'nullable|array',
         ]);
         
         $showtimeId = $request->input('showtime_id');
-        $seats = $request->input('seats');
+        $seats = $this->normalizeSeatList($request->input('seats', []));
         $customerName = $request->input('customer_name', 'Khách lẻ');
         $customerPhone = $request->input('customer_phone', '');
+        $foodItems = $request->input('food_items', []);
         
         $theaterId = Auth::user()->theater_id;
         
@@ -346,8 +352,35 @@ class CounterStaffController extends Controller
                 $query->where('theater_id', $theaterId);
             })
             ->findOrFail($showtimeId);
+
+        if (empty($seats)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng chọn ghế hợp lệ.'
+            ]);
+        }
+
+        $seatLayout = $this->normalizeSeatLayout($showtime->screen?->seat_layout_config);
+        $validSeatError = $this->validateSeatsExistInLayout($seats, $seatLayout);
+        if ($validSeatError) {
+            return response()->json([
+                'success' => false,
+                'message' => $validSeatError
+            ]);
+        }
         
         // Kiểm tra ghế
+        $occupiedSeats = array_unique(array_merge(
+            Ticket::where('showtime_id', $showtimeId)
+                ->where('status', 'Đã đặt')
+                ->pluck('seat')
+                ->toArray(),
+            SeatReservation::where('showtime_id', $showtimeId)
+                ->active()
+                ->pluck('seat')
+                ->toArray()
+        ));
+
         $existingSeats = Ticket::where('showtime_id', $showtimeId)
             ->where('status', 'Đã đặt')
             ->whereIn('seat', $seats)
@@ -368,7 +401,15 @@ class CounterStaffController extends Controller
                 'message' => 'Ghế ' . implode(', ', $unavailableSeats) . ' đã được đặt'
             ]);
         }
-        
+
+        $seatRuleError = $this->validateSeatSelection($seats, $seatLayout, $occupiedSeats);
+        if ($seatRuleError) {
+            return response()->json([
+                'success' => false,
+                'message' => $seatRuleError
+            ]);
+        }
+
         DB::beginTransaction();
         
         try {
@@ -376,16 +417,39 @@ class CounterStaffController extends Controller
             $totalAmount = 0;
             
             foreach ($seats as $seat) {
-                $seatType = $this->getSeatType($seat);
+                $seatType = $this->getSeatType($seat, $seatLayout);
                 $price = $this->getSeatPrice($showtime->price, $seatType);
                 $totalAmount += $price;
             }
+
+            $foodTotal = 0;
+            $filteredFoodItems = [];
+            $foodItemRows = FoodItem::where('theater_id', $theaterId)
+                ->where('is_active', true)
+                ->whereIn('id', array_keys($foodItems))
+                ->get()
+                ->keyBy('id');
+
+            foreach ($foodItems as $foodId => $quantity) {
+                $quantity = min(max((int) $quantity, 0), 10);
+                $food = $foodItemRows->get((int) $foodId);
+
+                if (!$food || $quantity <= 0) {
+                    continue;
+                }
+
+                $filteredFoodItems[(int) $foodId] = $quantity;
+                $foodTotal += (float) $food->price * $quantity;
+            }
+
+            $totalAmount += $foodTotal;
             
             // Tạo booking
             $booking = Booking::create([
                 'user_id' => Auth::id(),
                 'showtime_id' => $showtimeId,
                 'seats' => $seats,
+                'food_items' => $filteredFoodItems,
                 'total_amount' => $totalAmount,
                 'status' => 'completed',
                 'customer_name' => $customerName,
@@ -396,7 +460,7 @@ class CounterStaffController extends Controller
             // Tạo tickets
             $ticketIds = [];
             foreach ($seats as $seat) {
-                $seatType = $this->getSeatType($seat);
+                $seatType = $this->getSeatType($seat, $seatLayout);
                 $price = $this->getSeatPrice($showtime->price, $seatType);
                 $qrCode = 'TICKET_COUNTER_' . uniqid() . '_' . $booking->id . '_' . $seat;
                 
@@ -414,6 +478,18 @@ class CounterStaffController extends Controller
                 ]);
                 
                 $ticketIds[] = $ticket->id;
+            }
+
+            foreach ($filteredFoodItems as $foodId => $quantity) {
+                $food = $foodItemRows->get((int) $foodId);
+
+                DB::table('booking_food_items')->insert([
+                    'booking_pending_id' => $booking->id,
+                    'food_item_id' => $food->id,
+                    'quantity' => $quantity,
+                    'price' => $food->price,
+                    'created_at' => now(),
+                ]);
             }
             
             // Tạo transaction
@@ -534,11 +610,11 @@ class CounterStaffController extends Controller
         return $isCounterStaff || $isModerator || $isAdmin;
     }
     
-    private function getSeatType($seat)
+    private function getSeatType($seat, ?array $seatLayout = null)
     {
         $row = substr($seat, 0, 1);
-        $vipRows = ['D', 'E', 'F'];
-        $coupleRows = ['J'];
+        $vipRows = $seatLayout['vip_rows'] ?? ['D', 'E', 'F'];
+        $coupleRows = $seatLayout['couple_rows'] ?? ['J'];
         
         if (in_array($row, $coupleRows)) return 'couple';
         if (in_array($row, $vipRows)) return 'vip';
@@ -562,6 +638,224 @@ class CounterStaffController extends Controller
             'vip_rows' => ['D', 'E', 'F'],
             'couple_rows' => ['J'],
         ];
+    }
+
+    private function normalizeSeatLayout($layout): array
+    {
+        if (is_array($layout) && !empty($layout)) {
+            return $layout;
+        }
+
+        if (is_string($layout) && trim($layout) !== '') {
+            $decoded = json_decode($layout, true);
+
+            if (is_array($decoded) && !empty($decoded)) {
+                return $decoded;
+            }
+        }
+
+        return $this->getDefaultSeatLayout();
+    }
+
+    private function normalizeSeatList(array $seats): array
+    {
+        $normalized = [];
+
+        foreach ($seats as $seat) {
+            if (!is_string($seat) && !is_numeric($seat)) {
+                continue;
+            }
+
+            $seat = strtoupper(trim((string) $seat));
+
+            if (!preg_match('/^[A-Z]\d+$/', $seat)) {
+                continue;
+            }
+
+            $normalized[$seat] = $seat;
+        }
+
+        return array_values($normalized);
+    }
+
+    private function getSeatColumnsForRow(string $row, array $seatLayout): array
+    {
+        $rows = $seatLayout['rows'] ?? [];
+        $coupleRows = $seatLayout['couple_rows'] ?? ['J'];
+
+        if (!empty($rows) && !in_array($row, $rows, true)) {
+            return [];
+        }
+
+        if (array_is_list($seatLayout)) {
+            foreach ($seatLayout as $rowConfig) {
+                if (($rowConfig['row'] ?? null) !== $row || empty($rowConfig['seats']) || !is_array($rowConfig['seats'])) {
+                    continue;
+                }
+
+                $cols = [];
+                foreach ($rowConfig['seats'] as $seat) {
+                    if (($seat['type'] ?? null) === 'disabled' || (isset($seat['available']) && !$seat['available'])) {
+                        continue;
+                    }
+
+                    $seatNumber = $seat['number'] ?? null;
+                    if ($seatNumber) {
+                        $cols[] = (int) substr($seatNumber, 1);
+                    }
+                }
+
+                sort($cols);
+                return array_values(array_unique($cols));
+            }
+        }
+
+        $cols = $seatLayout['cols'] ?? range(1, (int) ($seatLayout['seats_per_row'] ?? 12));
+
+        if (in_array($row, $coupleRows, true)) {
+            $pairCount = max(1, (int) floor(count($cols) / 2));
+            return range(1, $pairCount);
+        }
+
+        sort($cols);
+        return array_values(array_unique(array_map('intval', $cols)));
+    }
+
+    private function validateSeatsExistInLayout(array $seats, array $seatLayout): ?string
+    {
+        foreach ($seats as $seat) {
+            $row = substr($seat, 0, 1);
+            $col = (int) substr($seat, 1);
+            $cols = $this->getSeatColumnsForRow($row, $seatLayout);
+
+            if (empty($cols) || !in_array($col, $cols, true)) {
+                return "Ghe {$seat} khong ton tai trong so do phong chieu.";
+            }
+        }
+
+        return null;
+    }
+
+    private function splitColsByAisles(array $cols): array
+    {
+        sort($cols);
+        $groups = [[]];
+
+        foreach ($cols as $col) {
+            if (!empty($groups[count($groups) - 1]) && $col - end($groups[count($groups) - 1]) > 1) {
+                $groups[] = [];
+            }
+
+            $groups[count($groups) - 1][] = $col;
+        }
+
+        return array_values(array_filter($groups));
+    }
+
+    private function resolveSeatGroupsForRow(string $row, array $seatLayout): array
+    {
+        $coupleRows = $seatLayout['couple_rows'] ?? ['J'];
+        $groups = [];
+
+        if (!in_array($row, $coupleRows, true) && isset($seatLayout['seat_groups']) && is_array($seatLayout['seat_groups'])) {
+            foreach ($seatLayout['seat_groups'] as $group) {
+                $groupRows = $group['rows'] ?? [];
+                $groupCols = $group['cols'] ?? [];
+
+                if (in_array($row, $groupRows, true) && !empty($groupCols)) {
+                    $groups[] = array_values(array_unique(array_map('intval', $groupCols)));
+                }
+            }
+        }
+
+        if (!empty($groups)) {
+            return $groups;
+        }
+
+        return $this->splitColsByAisles($this->getSeatColumnsForRow($row, $seatLayout));
+    }
+
+    private function validateSeatSelection(array $seats, array $seatLayout, array $bookedSeats): ?string
+    {
+        $seatsByRow = [];
+
+        foreach ($seats as $seat) {
+            $row = substr($seat, 0, 1);
+            $seatsByRow[$row][] = (int) substr($seat, 1);
+        }
+
+        foreach ($seatsByRow as $row => $selectedCols) {
+            sort($selectedCols);
+
+            if (in_array($row, $seatLayout['couple_rows'] ?? ['J'], true)) {
+                continue;
+            }
+
+            foreach ($this->resolveSeatGroupsForRow($row, $seatLayout) as $groupCols) {
+                sort($groupCols);
+                $selectedInGroup = array_values(array_intersect($selectedCols, $groupCols));
+
+                if (empty($selectedInGroup)) {
+                    continue;
+                }
+
+                for ($i = 0; $i < count($selectedInGroup) - 1; $i++) {
+                    if ($selectedInGroup[$i + 1] - $selectedInGroup[$i] > 1) {
+                        return "Khong duoc bo trong ghe o giua cum ghe hang {$row}. Vui long chon cac ghe lien ke nhau.";
+                    }
+                }
+
+                $error = $this->validateNoNewSingleSeat($row, $groupCols, $selectedInGroup, $bookedSeats);
+                if ($error) {
+                    return $error;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function validateNoNewSingleSeat(string $row, array $groupCols, array $selectedCols, array $bookedSeats): ?string
+    {
+        $existingSingles = $this->findSingleFreeColsInGroup($row, $groupCols, [], $bookedSeats);
+        $newSingles = $this->findSingleFreeColsInGroup($row, $groupCols, $selectedCols, $bookedSeats);
+
+        foreach ($newSingles as $col) {
+            if (!in_array($col, $existingSingles, true)) {
+                return "Khong duoc de le 1 ghe trong cum hang {$row} (ghe {$row}{$col}).";
+            }
+        }
+
+        return null;
+    }
+
+    private function findSingleFreeColsInGroup(string $row, array $groupCols, array $selectedCols, array $bookedSeats): array
+    {
+        $selectedLookup = array_fill_keys($selectedCols, true);
+        $singles = [];
+        $freeRun = [];
+
+        foreach ($groupCols as $col) {
+            $seat = $row . $col;
+            $occupied = in_array($seat, $bookedSeats, true) || isset($selectedLookup[$col]);
+
+            if (!$occupied) {
+                $freeRun[] = $col;
+                continue;
+            }
+
+            if (count($freeRun) === 1) {
+                $singles[] = $freeRun[0];
+            }
+
+            $freeRun = [];
+        }
+
+        if (count($freeRun) === 1) {
+            $singles[] = $freeRun[0];
+        }
+
+        return $singles;
     }
 
     private function bookingFoodDetails(Booking $booking, int $theaterId)

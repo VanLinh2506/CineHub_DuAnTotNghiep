@@ -407,14 +407,7 @@
         <div class="notification-dropdown" id="notificationDropdown" style="display: none;">
             <div class="notification-dropdown-header">
                 <h6>Thông báo</h6>
-                <?php 
-                // Nếu là moderator, link đến trang yêu cầu thay đổi quyền
-                $viewAllLink = '?route=notifications/index';
-                if (isset($isModerator) && $isModerator) {
-                    $viewAllLink = '?route=moderator/permissionRequests';
-                }
-                ?>
-                <a href="<?php echo $viewAllLink; ?>" class="view-all-link">Xem tất cả</a>
+                <a href="?route=notifications/index" class="view-all-link">Xem tất cả</a>
             </div>
             <div class="notification-dropdown-body" id="notificationList">
                 <div class="notification-loading">

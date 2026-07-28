@@ -218,7 +218,7 @@
                     <h5 class="mb-0" style="color:#333;font-weight:600;">
                         <i class="fas fa-building text-primary me-2"></i>Doanh thu phim chiếu rạp theo rạp
                     </h5>
-                    <small class="text-muted">Nền tảng nhận 5% doanh thu vé</small>
+                    <small class="text-muted">Nền tảng nhận hoa hồng theo hợp đồng</small>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
@@ -227,8 +227,8 @@
                                 <th>Rạp</th>
                                 <th class="text-end">Vé đã bán</th>
                                 <th class="text-end">Doanh thu vé gộp</th>
-                                <th class="text-end">Phần của rạp (95%)</th>
-                                <th class="text-end">Nền tảng (5%)</th>
+                                <th class="text-end">Phần của rạp</th>
+                                <th class="text-end">Nền tảng</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -259,7 +259,7 @@
             <tbody>
             @forelse($platformRevenueSources as $source)
                 <tr>
-                    <td>{{ $source->source_type === 'ticket' ? 'Hoa hồng vé (5%)' : 'Gói thành viên' }}</td>
+                    <td>{{ $source->source_type === 'ticket' ? 'Hoa hồng vé theo hợp đồng' : 'Gói thành viên' }}</td>
                     <td>{{ $source->source_name }}</td>
                     <td class="text-end">{{ number_format($source->transaction_count) }}</td>
                     <td class="text-end fw-bold">{{ number_format($source->revenue) }}₫</td>
@@ -410,8 +410,8 @@
         const revenueData = @json($revenueByDay ?? []);
         
         const formatDate = (dateString) => {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+            const [year, month, day] = String(dateString).slice(0, 10).split('-');
+            return day && month ? `${day}/${month}` : dateString;
         };
         
         const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);

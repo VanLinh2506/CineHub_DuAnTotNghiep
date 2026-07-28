@@ -149,6 +149,7 @@
         <tr><td>Phim bán chạy</td><td>{{ number_format($contract->bestseller_price_min) }} - {{ number_format($contract->bestseller_price_max) }} VNĐ/vé</td></tr>
         <tr><td>Phim mới phát hành</td><td>{{ number_format($contract->new_release_price_min) }} - {{ number_format($contract->new_release_price_max) }} VNĐ/vé</td></tr>
         <tr><td>Phim hot</td><td>{{ number_format($contract->hot_movie_price_min) }} - {{ number_format($contract->hot_movie_price_max) }} VNĐ/vé</td></tr>
+        <tr><td>Hoa hồng CineHub</td><td>{{ number_format((float) ($contract->commission_percentage ?? 5), 2) }}% doanh thu vé bán qua nền tảng</td></tr>
     </table>
 
     <div class="section-title">Điều khoản của hai bên</div>

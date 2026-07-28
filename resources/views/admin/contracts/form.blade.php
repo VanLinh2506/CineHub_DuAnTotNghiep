@@ -51,8 +51,14 @@
         </div>
     @endif
 
-    <div class="col-md-6"><label class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label><input type="date" name="start_date" class="form-control" required value="{{ old('start_date', isset($contract) && $contract ? $contract->end_date->copy()->addDay()->format('Y-m-d') : now()->format('Y-m-d')) }}"></div>
-    <div class="col-md-6"><label class="form-label">Ngày kết thúc <span class="text-danger">*</span></label><input type="date" name="end_date" class="form-control" required value="{{ old('end_date', isset($contract) && $contract ? $contract->end_date->copy()->addYear()->format('Y-m-d') : now()->addYear()->format('Y-m-d')) }}"></div>
+    @php
+        $defaultStartDate = isset($contract) && $contract
+            ? $contract->end_date->copy()->addDay()->toDateString()
+            : today()->toDateString();
+        $defaultEndDate = \Carbon\Carbon::parse($defaultStartDate)->addYearNoOverflow()->toDateString();
+    @endphp
+    <div class="col-md-6"><label class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label><input type="date" name="start_date" class="form-control" required value="{{ old('start_date', $defaultStartDate) }}"></div>
+    <div class="col-md-6"><label class="form-label">Ngày kết thúc <span class="text-danger">*</span></label><input type="date" name="end_date" class="form-control" required value="{{ old('end_date', $defaultEndDate) }}"></div>
     <div class="col-12"><h6 class="mb-0">Bảng giá niêm yết cho suất chiếu</h6><small class="text-muted">Giá gốc mỗi vé; giá suất chiếu phải nằm trong khoảng của hợp đồng.</small></div>
     <div class="col-md-3"><label class="form-label">Phim bán chạy - từ</label><input type="number" name="bestseller_price_min" class="form-control" min="0" step="1000" required value="{{ old('bestseller_price_min', $contract->bestseller_price_min ?? 90000) }}"></div>
     <div class="col-md-3"><label class="form-label">Phim bán chạy - đến</label><input type="number" name="bestseller_price_max" class="form-control" min="0" step="1000" required value="{{ old('bestseller_price_max', $contract->bestseller_price_max ?? 100000) }}"></div>
@@ -60,6 +66,8 @@
     <div class="col-md-3"><label class="form-label">Phim mới phát hành - đến</label><input type="number" name="new_release_price_max" class="form-control" min="0" step="1000" required value="{{ old('new_release_price_max', $contract->new_release_price_max ?? 120000) }}"></div>
     <div class="col-md-3"><label class="form-label">Phim hot - từ</label><input type="number" name="hot_movie_price_min" class="form-control" min="0" step="1000" required value="{{ old('hot_movie_price_min', $contract->hot_movie_price_min ?? 120000) }}"></div>
     <div class="col-md-3"><label class="form-label">Phim hot - đến</label><input type="number" name="hot_movie_price_max" class="form-control" min="0" step="1000" required value="{{ old('hot_movie_price_max', $contract->hot_movie_price_max ?? 150000) }}"></div>
+    <div class="col-md-3"><label class="form-label">Hoa hồng CineHub (%)</label><input type="number" name="commission_percentage" class="form-control" min="0" max="100" step="0.01" required value="{{ old('commission_percentage', $contract->commission_percentage ?? 5) }}"></div>
+    <div class="col-md-9 d-flex align-items-end"><small class="text-muted mb-2">Tỷ lệ này dùng để tính doanh thu CineHub nhận khi làm trung gian bán vé phim cho rạp.</small></div>
     <div class="col-md-6"><label class="form-label">Chữ ký Super Admin</label><input type="text" name="super_admin_signature" class="form-control" value="{{ old('super_admin_signature', auth()->user()->name) }}"></div>
     <div class="col-md-6"><label class="form-label">Chữ ký Đại diện rạp</label><input type="text" name="representative_signature" class="form-control" value="{{ old('representative_signature', $contract->representative->name ?? '') }}"></div>
 

@@ -241,7 +241,7 @@ function initStatisticsCharts() {
             @php $colorIndex++; endforeach; @endphp
             new Chart(revenueByDateCtx.getContext('2d'), {
                 type: 'line',
-                data: { labels: datesData.map(d => new Date(d).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'})), datasets },
+                data: { labels: datesData.map(d => formatDate(d).slice(0, 5)), datasets },
                 options: { responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
                     scales:{ y:{ beginAtZero:true, ticks:{ callback: v => new Intl.NumberFormat('vi-VN').format(v)+' đ' } }, x:{ grid:{display:false} } },
                     plugins:{ tooltip:{ callbacks:{ label: ctx => ctx.dataset.label+': '+new Intl.NumberFormat('vi-VN').format(ctx.parsed.y)+' đ' } } } }
@@ -330,7 +330,11 @@ function updateFillRateTable(data) {
     tableBody.innerHTML = html;
 }
 
-function formatDate(d) { if (!d) return ''; const dt = new Date(d); return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`; }
+function formatDate(d) {
+    if (!d) return '';
+    const [year, month, day] = String(d).slice(0, 10).split('-');
+    return day && month && year ? `${day}/${month}/${year}` : d;
+}
 function formatTime(t) { if (!t) return '-'; return t.split(':').slice(0,2).join(':'); }
 function escapeHtml(text) { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
 </script>

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{User, Movie, Category, Theater, Ticket, Transaction, Showtime, Screen, Episode, Booking, Notification, MovieViewEvent};
+use App\Models\{User, Movie, Category, Theater, TheaterContract, Ticket, Transaction, Showtime, Screen, Episode, Booking, Notification, MovieViewEvent};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, DB, Hash, Storage, Log};
 use Illuminate\Support\Str;
@@ -10,7 +10,7 @@ use Carbon\Carbon;
 
 class AdminController extends Controller
 {
-    private const THEATER_COMMISSION_RATE = 0.05;
+    private const DEFAULT_TICKET_COMMISSION_PERCENTAGE = 5;
 
     // Middleware is handled by routes - no need for constructor middleware
 
@@ -77,12 +77,20 @@ class AdminController extends Controller
                 $join->on('showtimes.id', '=', 'tickets.showtime_id')
                     ->where('tickets.status', '=', 'Đã đặt');
             })
+            ->leftJoin('theater_contracts as showtime_contracts', 'showtime_contracts.id', '=', 'showtimes.theater_contract_id')
+            ->leftJoin('theater_contracts as active_contracts', function ($join) {
+                $join->on('active_contracts.theater_id', '=', 'showtimes.theater_id')
+                    ->where('active_contracts.status', '=', TheaterContract::STATUS_ACTIVE)
+                    ->whereColumn('active_contracts.start_date', '<=', 'showtimes.show_date')
+                    ->whereColumn('active_contracts.end_date', '>=', 'showtimes.show_date');
+            })
             ->selectRaw('theaters.id, theaters.name, COUNT(tickets.id) as tickets_sold, COALESCE(SUM(tickets.price), 0) as gross_revenue')
+            ->selectRaw('COALESCE(SUM(' . $this->ticketCommissionSql() . '), 0) as platform_commission')
             ->groupBy('theaters.id', 'theaters.name')
             ->orderByDesc('gross_revenue')
             ->get()
             ->map(function ($theater) {
-                $theater->platform_commission = (float) $theater->gross_revenue * self::THEATER_COMMISSION_RATE;
+                $theater->platform_commission = (float) $theater->platform_commission;
                 $theater->theater_revenue = (float) $theater->gross_revenue - $theater->platform_commission;
                 return $theater;
             });
@@ -918,9 +926,16 @@ class AdminController extends Controller
         // Safely get top movies by revenue with error handling
         try {
             $topMoviesByRevenue = Ticket::whereBetween('tickets.created_at', [$start, $end])
-                ->join('showtimes', 'tickets.showtime_id', '=', 'showtimes.id')
+                ->leftJoin('showtimes', 'tickets.showtime_id', '=', 'showtimes.id')
+                ->leftJoin('theater_contracts as showtime_contracts', 'showtime_contracts.id', '=', 'showtimes.theater_contract_id')
+                ->leftJoin('theater_contracts as active_contracts', function ($join) {
+                    $join->on('active_contracts.theater_id', '=', 'showtimes.theater_id')
+                        ->where('active_contracts.status', '=', TheaterContract::STATUS_ACTIVE)
+                        ->whereColumn('active_contracts.start_date', '<=', 'showtimes.show_date')
+                        ->whereColumn('active_contracts.end_date', '>=', 'showtimes.show_date');
+                })
                 ->join('movies', 'showtimes.movie_id', '=', 'movies.id')
-                ->selectRaw('movies.id, movies.title, movies.type, SUM(tickets.price) * 0.05 as revenue, COUNT(tickets.id) as ticket_count')
+                ->selectRaw('movies.id, movies.title, movies.type, SUM(' . $this->ticketCommissionSql() . ') as revenue, COUNT(tickets.id) as ticket_count')
                 ->groupBy('movies.id', 'movies.title', 'movies.type')
                 ->orderByDesc('revenue')
                 ->limit(10)
@@ -946,12 +961,19 @@ class AdminController extends Controller
     private function platformRevenueSources(?Carbon $start = null, ?Carbon $end = null)
     {
         $tickets = DB::table('tickets')
-            ->join('showtimes', 'showtimes.id', '=', 'tickets.showtime_id')
+            ->leftJoin('showtimes', 'showtimes.id', '=', 'tickets.showtime_id')
             ->join('theaters', 'theaters.id', '=', 'showtimes.theater_id')
+            ->leftJoin('theater_contracts as showtime_contracts', 'showtime_contracts.id', '=', 'showtimes.theater_contract_id')
+            ->leftJoin('theater_contracts as active_contracts', function ($join) {
+                $join->on('active_contracts.theater_id', '=', 'showtimes.theater_id')
+                    ->where('active_contracts.status', '=', TheaterContract::STATUS_ACTIVE)
+                    ->whereColumn('active_contracts.start_date', '<=', 'showtimes.show_date')
+                    ->whereColumn('active_contracts.end_date', '>=', 'showtimes.show_date');
+            })
             ->where('tickets.status', 'Đã đặt')
             ->when($start && $end, fn ($query) => $query->whereBetween('tickets.created_at', [$start, $end]))
             ->groupBy('theaters.id', 'theaters.name')
-            ->selectRaw("'ticket' as source_type, theaters.name as source_name, COUNT(*) as transaction_count, SUM(tickets.price) * 0.05 as revenue")
+            ->selectRaw("'ticket' as source_type, theaters.name as source_name, COUNT(*) as transaction_count, SUM(" . $this->ticketCommissionSql() . ') as revenue')
             ->get();
 
         $subscriptions = DB::table('transactions')
@@ -967,24 +989,43 @@ class AdminController extends Controller
 
     private function adminRevenue(?Carbon $start = null, ?Carbon $end = null): float
     {
-        $ticketQuery = Ticket::where('status', 'Đã đặt');
         $subscriptionQuery = Transaction::where('status', 'Thành công')
             ->where('type', 'subscription');
 
+        $ticketQuery = DB::table('tickets')
+            ->leftJoin('showtimes', 'showtimes.id', '=', 'tickets.showtime_id')
+            ->leftJoin('theater_contracts as showtime_contracts', 'showtime_contracts.id', '=', 'showtimes.theater_contract_id')
+            ->leftJoin('theater_contracts as active_contracts', function ($join) {
+                $join->on('active_contracts.theater_id', '=', 'showtimes.theater_id')
+                    ->where('active_contracts.status', '=', TheaterContract::STATUS_ACTIVE)
+                    ->whereColumn('active_contracts.start_date', '<=', 'showtimes.show_date')
+                    ->whereColumn('active_contracts.end_date', '>=', 'showtimes.show_date');
+            })
+            ->where('tickets.status', 'Đã đặt');
+
         if ($start && $end) {
-            $ticketQuery->whereBetween('created_at', [$start, $end]);
+            $ticketQuery->whereBetween('tickets.created_at', [$start, $end]);
             $subscriptionQuery->whereBetween('created_at', [$start, $end]);
         }
 
-        return ((float) $ticketQuery->sum('price') * self::THEATER_COMMISSION_RATE)
+        return (float) $ticketQuery->selectRaw('COALESCE(SUM(' . $this->ticketCommissionSql() . '), 0) as revenue')->value('revenue')
             + (float) $subscriptionQuery->sum('amount');
     }
 
     private function adminRevenueByDay(Carbon $start, Carbon $end)
     {
-        $tickets = Ticket::where('status', 'Đã đặt')
-            ->whereBetween('created_at', [$start, $end])
-            ->selectRaw('DATE(created_at) as date, SUM(price) * 0.05 as revenue, COUNT(*) as transaction_count')
+        $tickets = DB::table('tickets')
+            ->leftJoin('showtimes', 'showtimes.id', '=', 'tickets.showtime_id')
+            ->leftJoin('theater_contracts as showtime_contracts', 'showtime_contracts.id', '=', 'showtimes.theater_contract_id')
+            ->leftJoin('theater_contracts as active_contracts', function ($join) {
+                $join->on('active_contracts.theater_id', '=', 'showtimes.theater_id')
+                    ->where('active_contracts.status', '=', TheaterContract::STATUS_ACTIVE)
+                    ->whereColumn('active_contracts.start_date', '<=', 'showtimes.show_date')
+                    ->whereColumn('active_contracts.end_date', '>=', 'showtimes.show_date');
+            })
+            ->where('tickets.status', 'Đã đặt')
+            ->whereBetween('tickets.created_at', [$start, $end])
+            ->selectRaw('DATE(tickets.created_at) as date, SUM(' . $this->ticketCommissionSql() . ') as revenue, COUNT(*) as transaction_count')
             ->groupBy('date')
             ->get()
             ->keyBy('date');
@@ -1044,7 +1085,7 @@ class AdminController extends Controller
             'total_tickets' => Ticket::count(),
             'tickets_sold' => Ticket::where('status', 'Đã đặt')->count(),
             'tickets_cancelled' => Ticket::where('status', 'Đã hủy')->count(),
-            'total_revenue' => Ticket::where('status', 'Đã đặt')->sum('price') * self::THEATER_COMMISSION_RATE,
+            'total_revenue' => $this->adminRevenue() - (float) Transaction::where('status', 'Thành công')->where('type', 'subscription')->sum('amount'),
         ];
 
         $status = $request->input('status');
@@ -1070,6 +1111,11 @@ class AdminController extends Controller
         ]);
 
         return view('admin.tickets.view', compact('ticket'));
+    }
+
+    private function ticketCommissionSql(): string
+    {
+        return 'tickets.price * COALESCE(showtime_contracts.commission_percentage, active_contracts.commission_percentage, ' . self::DEFAULT_TICKET_COMMISSION_PERCENTAGE . ') / 100';
     }
 
     // Categories Management

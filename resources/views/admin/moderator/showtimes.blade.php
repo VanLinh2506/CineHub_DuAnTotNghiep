@@ -85,7 +85,7 @@
                                     data-id="{{ $showtime['id'] }}"
                                     data-movie-id="{{ $showtime['movie_id'] }}"
                                     data-screen-id="{{ $showtime['screen_id'] }}"
-                                    data-show-date="{{ $showtime['show_date'] }}"
+                                    data-show-date="{{ \Carbon\Carbon::parse($showtime['show_date'])->toDateString() }}"
                                     data-show-time="{{ date('H:i', strtotime($showtime['show_time'])) }}"
                                     data-price="{{ $showtime['price'] }}"
                                     data-contract-price-type="{{ $showtime['contract_price_type'] ?? 'bestseller' }}">

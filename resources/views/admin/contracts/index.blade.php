@@ -90,6 +90,7 @@
                         <th>Rạp</th>
                         <th>Đại diện</th>
                         <th>Thời hạn</th>
+                        <th>Hoa hồng</th>
                         <th>Còn lại</th>
                         <th>Trạng thái</th>
                         <th>PDF</th>
@@ -111,6 +112,7 @@
                                 <br><small class="text-muted">{{ $contract->representative->email ?? '' }}</small>
                             </td>
                             <td>{{ $contract->start_date->format('d/m/Y') }} - {{ $contract->end_date->format('d/m/Y') }}</td>
+                            <td>{{ number_format((float) ($contract->commission_percentage ?? 5), 2) }}%</td>
                             <td>
                                 @if($daysLeft !== null)
                                     @if($daysLeft <= 0)
@@ -142,7 +144,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-4">
+                            <td colspan="9" class="text-center text-muted py-4">
                                 <i class="fas fa-file-contract" style="font-size: 2rem; opacity: 0.3;"></i>
                                 <p class="mt-2 mb-0">Chưa có hợp đồng nào</p>
                             </td>

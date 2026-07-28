@@ -80,20 +80,20 @@ class DemoTheaterContract extends Command
         $this->info('');
         $this->info('━━━ BƯỚC 1: TẠO HỢP ĐỒNG MỚI + SINH PDF ━━━');
 
-        $startDate = now()->format('Y-m-d');
-        $endDate = now()->addYear()->format('Y-m-d');
+        $startDate = today()->toDateString();
+        $endDate = today()->addYearNoOverflow()->toDateString();
 
         if ($this->option('expire-test')) {
             // Tạo hợp đồng đã hết hạn (kết thúc hôm qua) để test thu hồi
-            $startDate = now()->subYear()->format('Y-m-d');
-            $endDate = now()->subDay()->format('Y-m-d');
+            $startDate = today()->subYearNoOverflow()->toDateString();
+            $endDate = today()->subDay()->toDateString();
             $this->warn('⚡ Chế độ test hết hạn: hợp đồng sẽ kết thúc ngày hôm qua.');
         }
 
         if ($this->option('notify-test')) {
             // Tạo hợp đồng sắp hết hạn (5 ngày nữa)
-            $startDate = now()->subMonths(11)->format('Y-m-d');
-            $endDate = now()->addDays(5)->format('Y-m-d');
+            $startDate = today()->subMonthsNoOverflow(11)->toDateString();
+            $endDate = today()->addDays(5)->toDateString();
             $this->warn('⚡ Chế độ test thông báo: hợp đồng sẽ hết hạn trong 5 ngày.');
         }
 
@@ -139,12 +139,15 @@ class DemoTheaterContract extends Command
             $this->info('');
             $this->info('━━━ BƯỚC 2: GIA HẠN HỢP ĐỒNG ━━━');
 
+            $renewalStartDate = $contract->end_date->copy()->addDay()->toDateString();
+            $renewalEndDate = \Carbon\Carbon::parse($renewalStartDate)->addYearNoOverflow()->toDateString();
+
             $newContract = $service->createContract([
                 'theater_id' => $theater->id,
                 'representative_user_id' => $user->id,
                 'super_admin_id' => $superAdmin->id,
-                'start_date' => $contract->end_date->copy()->addDay()->format('Y-m-d'),
-                'end_date' => $contract->end_date->copy()->addYear()->format('Y-m-d'),
+                'start_date' => $renewalStartDate,
+                'end_date' => $renewalEndDate,
                 'renewed_from_id' => $contract->id,
                 'super_admin_signature' => $superAdmin->name,
                 'representative_signature' => $user->name,

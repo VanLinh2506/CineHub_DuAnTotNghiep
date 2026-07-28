@@ -549,9 +549,7 @@
 
                     <h6>Thông báo</h6>
 
-                    <a href="{{ isset($isModerator) && $isModerator
-            ? route('moderator.permissionRequests')
-            : route('notifications.index') }}" class="view-all-link">
+                    <a href="{{ route('notifications.index') }}" class="view-all-link">
 
                         Xem tất cả
 

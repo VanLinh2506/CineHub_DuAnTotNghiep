@@ -148,6 +148,7 @@ class TheaterContractController extends Controller
             'new_release_price_max' => ['required', 'integer', 'gte:new_release_price_min'],
             'hot_movie_price_min' => ['required', 'integer', 'min:0'],
             'hot_movie_price_max' => ['required', 'integer', 'gte:hot_movie_price_min'],
+            'commission_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
             'admin_permissions' => ['nullable', 'array'],
             'admin_permissions.*' => ['nullable', 'string', 'max:255'],
             'auto_revoke_terms' => ['nullable', 'string'],

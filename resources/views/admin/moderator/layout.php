@@ -604,7 +604,7 @@
                 $isCounterStaff = AdminMiddleware::isCounterStaff($user['id'] ?? 0);
             } catch (Exception $e) {}
             
-            // Counter Staff không thấy Dashboard, Thông tin rạp, và Yêu cầu thay đổi quyền
+            // Counter Staff không thấy Dashboard và Thông tin rạp
             if (!$isCounterStaff):
             ?>
             <li><a href="?route=moderator/index" class="<?php echo ($current_page ?? '') === 'dashboard' ? 'active' : ''; ?>">
@@ -644,22 +644,6 @@
                 <i class="fas fa-users"></i> Quản lý nhân viên
             </a></li>
             <?php endif; ?>
-            <li><a href="?route=moderator/permissionRequests" class="<?php echo ($current_page ?? '') === 'permission_requests' ? 'active' : ''; ?>">
-                <i class="fas fa-user-shield"></i> Yêu cầu thay đổi quyền
-                <?php
-                // Đếm số yêu cầu chưa xử lý
-                try {
-                    $db = Database::getInstance();
-                    $pendingCount = $db->fetch("
-                        SELECT COUNT(*) as count 
-                        FROM moderator_permission_requests 
-                        WHERE theater_id = ? AND status = 'pending'
-                    ", [$theaterId])['count'] ?? 0;
-                    if ($pendingCount > 0):
-                ?>
-                    <span class="badge bg-danger ms-2"><?php echo $pendingCount; ?></span>
-                <?php endif; } catch (Exception $e) {} ?>
-            </a></li>
             <?php endif; ?>
             <li><a href="/">
                 <i class="fas fa-home"></i> Về trang chủ
@@ -725,5 +709,4 @@
     </script>
 </body>
 </html>
-
 

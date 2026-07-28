@@ -31,6 +31,7 @@ class TheaterContractService
                 'new_release_price_max' => $data['new_release_price_max'] ?? 120000,
                 'hot_movie_price_min' => $data['hot_movie_price_min'] ?? 120000,
                 'hot_movie_price_max' => $data['hot_movie_price_max'] ?? 150000,
+                'commission_percentage' => $data['commission_percentage'] ?? 5,
                 'admin_permissions' => $data['admin_permissions'] ?? $this->defaultPermissions(),
                 'auto_revoke_terms' => $data['auto_revoke_terms'] ?? $this->defaultAutoRevokeTerms(),
                 'party_terms' => $data['party_terms'] ?? $this->defaultPartyTerms(),
@@ -174,7 +175,7 @@ class TheaterContractService
 
     public function defaultPartyTerms(): string
     {
-        return "Bên CineHub có trách nhiệm cung cấp hệ thống quản lý, phân quyền, bảo vệ dữ liệu và giữ hạ tầng vận hành ổn định.\nBên rạp có trách nhiệm cập nhật thông tin rạp, phòng chiếu, lịch chiếu, giá vé và nhân sự đúng thực tế.\nGiá vé phim hot được phép tăng theo nhu cầu thị trường nhưng phải nằm trong khoảng giá phim hot của hợp đồng và không được chênh quá 20.000 VNĐ so với cùng phim, cùng ngày chiếu tại rạp khác trên CineHub.";
+        return "Bên CineHub có trách nhiệm cung cấp hệ thống quản lý, phân quyền, bảo vệ dữ liệu và giữ hạ tầng vận hành ổn định.\nBên rạp có trách nhiệm cập nhật thông tin rạp, phòng chiếu, lịch chiếu, giá vé và nhân sự đúng thực tế.\nCineHub nhận hoa hồng theo tỷ lệ ghi trong hợp đồng trên doanh thu vé bán qua nền tảng.\nGiá vé phim hot được phép tăng theo nhu cầu thị trường nhưng phải nằm trong khoảng giá phim hot của hợp đồng và không được chênh quá 20.000 VNĐ so với cùng phim, cùng ngày chiếu tại rạp khác trên CineHub.";
     }
 
     private function generateContractCode(): string

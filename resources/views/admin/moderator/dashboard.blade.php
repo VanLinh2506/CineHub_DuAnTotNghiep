@@ -261,7 +261,10 @@ function initRevenueChart() {
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: revenueData.map(item => new Date(item.date).toLocaleDateString('vi-VN', {day:'2-digit',month:'2-digit'})),
+            labels: revenueData.map(item => {
+                const [year, month, day] = String(item.date).slice(0, 10).split('-');
+                return day && month ? `${day}/${month}` : item.date;
+            }),
             datasets: [{ label: 'Doanh thu (₫)', data: revenueData.map(item => parseFloat(item.revenue || 0)),
                 borderColor: 'rgba(102,126,234,1)', backgroundColor: gradient, borderWidth: 3, fill: true, tension: 0.5,
                 pointRadius: 5, pointHoverRadius: 8, pointBackgroundColor: '#fff', pointBorderColor: 'rgba(102,126,234,1)', pointBorderWidth: 3 }]

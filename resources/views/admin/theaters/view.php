@@ -124,7 +124,9 @@
                     </thead>
                     <tbody>
                         <?php foreach ($screens as $screen): 
-                            $layout = $screen['seat_layout_config'] ? json_decode($screen['seat_layout_config'], true) : null;
+                            $layout = is_array($screen['seat_layout_config'])
+                                ? $screen['seat_layout_config']
+                                : (json_decode($screen['seat_layout_config'] ?? '{}', true) ?: []);
                             $vipRows = $layout['vip_rows'] ?? [];
                             $coupleRows = $layout['couple_rows'] ?? [];
                         ?>
@@ -231,7 +233,16 @@ function viewScreenLayout(screenId) {
     const screen = screensData.find(s => s.id == screenId);
     if (!screen) return;
     
-    const layout = screen.seat_layout_config ? JSON.parse(screen.seat_layout_config) : {};
+    let layout = {};
+    if (typeof screen.seat_layout_config === 'string') {
+        try {
+            layout = screen.seat_layout_config ? JSON.parse(screen.seat_layout_config) : {};
+        } catch (e) {
+            console.error('Error parsing layout:', e);
+        }
+    } else {
+        layout = screen.seat_layout_config || {};
+    }
     
     // Hiển thị thông tin
     document.getElementById('view_screen_name').textContent = screen.screen_name;
@@ -316,4 +327,3 @@ function renderSeatPreviewView(rows, vipRows, coupleRows, numGroups, seatsPerGro
     });
 }
 </script>
-

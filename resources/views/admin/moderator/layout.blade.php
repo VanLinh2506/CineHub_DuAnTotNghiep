@@ -302,10 +302,6 @@
                 <i class="fas fa-file-contract"></i> Hợp đồng của rạp
             </a></li>
 
-            <li><a href="{{ route('moderator.permissionRequests') }}" class="{{ request()->routeIs('moderator.permissionRequests') ? 'active' : '' }}">
-                <i class="fas fa-user-shield"></i> Yêu cầu thay đổi quyền
-            </a></li>
-            
             <li><a href="{{ route('home') }}">
                 <i class="fas fa-home"></i> Về trang chủ
             </a></li>

@@ -160,83 +160,6 @@ class ModeratorController extends Controller
     }
     
     /**
-     * Permission Requests
-     */
-    public function permissionRequests(Request $request)
-    {
-        if ($error = $this->checkPermission()) return $error;
-        
-        $requests = DB::table('moderator_permission_requests as mpr')
-            ->leftJoin('users as u1', 'mpr.requested_by', '=', 'u1.id')
-            ->leftJoin('users as u2', 'mpr.target_user_id', '=', 'u2.id')
-            ->leftJoin('theaters as t', 'mpr.theater_id', '=', 't.id')
-            ->where('mpr.theater_id', $this->theaterId)
-            ->where('mpr.status', 'pending')
-            ->select('mpr.*', 'u1.name as requested_by_name', 'u2.name as target_user_name', 't.name as theater_name')
-            ->orderByDesc('mpr.created_at')
-            ->get();
-        
-        $selectedRequest = null;
-        if ($requestId = $request->input('id')) {
-            $selectedRequest = DB::table('moderator_permission_requests as mpr')
-                ->leftJoin('users as u1', 'mpr.requested_by', '=', 'u1.id')
-                ->leftJoin('users as u2', 'mpr.target_user_id', '=', 'u2.id')
-                ->leftJoin('theaters as t', 'mpr.theater_id', '=', 't.id')
-                ->where('mpr.id', $requestId)
-                ->where('mpr.theater_id', $this->theaterId)
-                ->select('mpr.*', 'u1.name as requested_by_name', 'u1.email as requested_by_email',
-                         'u2.name as target_user_name', 'u2.email as target_user_email', 't.name as theater_name')
-                ->first();
-        }
-        
-        return view('admin.moderator.permission_requests', compact('requests', 'selectedRequest'));
-    }
-    
-    public function handlePermissionRequest(Request $request)
-    {
-        if ($error = $this->checkPermission()) return $error;
-        
-        $requestId = $request->input('request_id');
-        $action = $request->input('action');
-        
-        $permissionRequest = DB::table('moderator_permission_requests')
-            ->where('id', $requestId)
-            ->where('theater_id', $this->theaterId)
-            ->where('status', 'pending')
-            ->where('moderator_id', Auth::id())
-            ->first();
-        
-        if (!$permissionRequest) {
-            return redirect()->route('moderator.permission-requests')
-                ->with('error', 'Yêu cầu không hợp lệ!');
-        }
-        
-        if ($action === 'approve') {
-            $newData = json_decode($permissionRequest->new_data, true);
-            
-            User::where('id', $permissionRequest->target_user_id)
-                ->update([
-                    'role' => $newData['role'],
-                    'theater_id' => $newData['theater_id'] ?? null,
-                ]);
-            
-            DB::table('moderator_permission_requests')
-                ->where('id', $requestId)
-                ->update(['status' => 'approved', 'responded_at' => now()]);
-            
-            return redirect()->route('moderator.permission-requests')
-                ->with('success', 'Đã chấp nhận yêu cầu!');
-        } else {
-            DB::table('moderator_permission_requests')
-                ->where('id', $requestId)
-                ->update(['status' => 'rejected', 'responded_at' => now()]);
-            
-            return redirect()->route('moderator.permission-requests')
-                ->with('success', 'Đã từ chối yêu cầu!');
-        }
-    }
-    
-    /**
      * Showtimes Management
      */
     public function showtimes(Request $request)
@@ -275,7 +198,19 @@ class ModeratorController extends Controller
         $contractPrices = TheaterContract::where('theater_id', $this->theaterId)
             ->whereIn('status', [TheaterContract::STATUS_ACTIVE, TheaterContract::STATUS_PENDING])
             ->orderBy('start_date')
-            ->get(['id', 'contract_code', 'start_date', 'end_date', 'bestseller_price_min', 'bestseller_price_max', 'new_release_price_min', 'new_release_price_max', 'hot_movie_price_min', 'hot_movie_price_max']);
+            ->get(['id', 'contract_code', 'start_date', 'end_date', 'bestseller_price_min', 'bestseller_price_max', 'new_release_price_min', 'new_release_price_max', 'hot_movie_price_min', 'hot_movie_price_max'])
+            ->map(fn (TheaterContract $contract) => [
+                'id' => $contract->id,
+                'contract_code' => $contract->contract_code,
+                'start_date' => $contract->start_date->toDateString(),
+                'end_date' => $contract->end_date->toDateString(),
+                'bestseller_price_min' => $contract->bestseller_price_min,
+                'bestseller_price_max' => $contract->bestseller_price_max,
+                'new_release_price_min' => $contract->new_release_price_min,
+                'new_release_price_max' => $contract->new_release_price_max,
+                'hot_movie_price_min' => $contract->hot_movie_price_min,
+                'hot_movie_price_max' => $contract->hot_movie_price_max,
+            ]);
         
         return view('admin.moderator.showtimes', compact('theater', 'showtimes', 'movies', 'screens', 'date', 'contractPrices'));
     }
@@ -1170,14 +1105,14 @@ class ModeratorController extends Controller
             ];
         }
         
-        return json_encode([
+        return [
             'rows' => $rows,
             'cols' => $cols,
             'seat_groups' => $seatGroups,
             'vip_rows' => $vipRows,
             'couple_rows' => $coupleRows,
             'layout_type' => 'grouped',
-        ]);
+        ];
     }
     
     /**

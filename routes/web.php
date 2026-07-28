@@ -279,10 +279,6 @@ Route::middleware(['auth', 'moderator'])->prefix('moderator')->name('moderator.'
     // Statistics
     Route::get('/statistics', [ModeratorController::class, 'statistics'])->name('statistics');
 
-    // Permission Requests
-    Route::get('/permission-requests', [ModeratorController::class, 'permissionRequests'])->name('permissionRequests');
-    Route::post('/permission-requests/handle', [ModeratorController::class, 'handlePermissionRequest'])->name('permissionRequests.handle');
-
     // API - Get available time slots
     Route::get('/api/available-time-slots', [ModeratorController::class, 'getAvailableTimeSlots'])->name('api.availableTimeSlots');
 });

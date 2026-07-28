@@ -37,7 +37,7 @@
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="stat-label">Doanh thu nền tảng (5% vé + gói)</div>
+                        <div class="stat-label">Doanh thu nền tảng (hoa hồng vé + gói)</div>
                         <div class="stat-value text-primary">{{ number_format($summaryStats['total_revenue'] ?? 0) }}đ</div>
                     </div>
                     <div class="stat-icon bg-primary">
@@ -215,7 +215,7 @@
     <div class="table-responsive"><table class="table mb-0">
         <thead><tr><th>Loại nguồn</th><th>Gói / Rạp</th><th class="text-end">Số giao dịch</th><th class="text-end">Doanh thu</th></tr></thead>
         <tbody>@forelse($platformRevenueSources as $source)<tr>
-            <td>{{ $source->source_type === 'ticket' ? 'Hoa hồng vé (5%)' : 'Gói thành viên' }}</td><td>{{ $source->source_name }}</td>
+            <td>{{ $source->source_type === 'ticket' ? 'Hoa hồng vé theo hợp đồng' : 'Gói thành viên' }}</td><td>{{ $source->source_name }}</td>
             <td class="text-end">{{ number_format($source->transaction_count) }}</td><td class="text-end fw-bold">{{ number_format($source->revenue) }}₫</td>
         </tr>@empty<tr><td colspan="4" class="text-center text-muted">Chưa có dữ liệu.</td></tr>@endforelse</tbody>
     </table></div>
@@ -237,8 +237,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const revenueData = @json($revenueData ?? []);
         
         const formatDate = (dateString) => {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+            const [year, month, day] = String(dateString).slice(0, 10).split('-');
+            return day && month ? `${day}/${month}` : dateString;
         };
         
         const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 350);
