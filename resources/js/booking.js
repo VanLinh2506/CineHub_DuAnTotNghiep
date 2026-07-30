@@ -1065,6 +1065,126 @@ window.requestUserLocation = function() {
         }
     };
 
+    window.loadFoodItemsForTheater = function(theaterId) {
+        var container = document.getElementById('foodItemsContainer');
+        if (!container || !bookingPageRoutes.bookingFoodItems || !theaterId) {
+            return Promise.resolve();
+        }
+
+        var requestedTheaterId = String(theaterId);
+        container.innerHTML = '<div style="text-align:center;grid-column:1/-1;padding:22px;color:#aaa;">Dang tai combo...</div>';
+
+        return fetch(bookingPageRoutes.bookingFoodItems + '?theater_id=' + encodeURIComponent(requestedTheaterId), {
+            headers: {
+                Accept: 'application/json'
+            }
+        })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Food items request failed with status ' + response.status);
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                if (String(window.selectedTheaterId || '') !== requestedTheaterId) {
+                    return;
+                }
+
+                var items = Array.isArray(data.foodItems) ? data.foodItems : [];
+                container.innerHTML = '';
+
+                if (!items.length) {
+                    var selectedCard = document.querySelector('.theater-card[data-theater-id="' + requestedTheaterId + '"]');
+                    var theaterName = selectedCard ? selectedCard.querySelector('h5') : null;
+                    var emptyState = document.createElement('div');
+                    emptyState.style.cssText = 'text-align:center;grid-column:1/-1;padding:22px;color:#aaa;';
+                    emptyState.innerHTML = '<i class="fas fa-store-slash" style="font-size:28px;margin-bottom:10px;"></i>';
+                    var message = document.createElement('p');
+                    message.style.margin = '0';
+                    message.textContent = 'Rạp ' + (theaterName ? theaterName.textContent.trim() : 'đã chọn') + ' hiện chưa có combo.';
+                    emptyState.appendChild(message);
+                    container.appendChild(emptyState);
+                    return;
+                }
+
+                items.forEach(function(item) {
+                    var card = document.createElement('div');
+                    card.className = 'food-item-card-compact';
+                    card.dataset.foodId = item.id;
+                    card.dataset.foodPrice = item.price;
+                    card.style.cssText = 'border:2px solid #444;border-radius:10px;padding:10px;background:#2a2a2a;text-align:center;transition:all .3s;cursor:pointer;';
+
+                    if (item.image_url) {
+                        var image = document.createElement('img');
+                        image.src = item.image_url;
+                        image.alt = item.name;
+                        image.style.cssText = 'width:50px;height:50px;object-fit:cover;border-radius:8px;margin:0 auto 8px;';
+                        card.appendChild(image);
+                    } else {
+                        var placeholder = document.createElement('div');
+                        placeholder.style.cssText = 'width:50px;height:50px;background:#444;border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;';
+                        placeholder.innerHTML = '<i class="fas fa-utensils" style="color:#666;font-size:20px;"></i>';
+                        card.appendChild(placeholder);
+                    }
+
+                    var name = document.createElement('h6');
+                    name.textContent = item.name;
+                    name.style.cssText = 'margin:0 0 5px;color:#fff;font-size:12px;font-weight:600;min-height:32px;display:flex;align-items:center;justify-content:center;';
+                    card.appendChild(name);
+
+                    var price = document.createElement('p');
+                    price.className = 'food-item-price';
+                    price.textContent = new Intl.NumberFormat('vi-VN').format(item.price) + ' ₫';
+                    price.style.cssText = 'margin:0 0 8px;color:#ffc107;font-weight:bold;font-size:13px;';
+                    card.appendChild(price);
+
+                    var controls = document.createElement('div');
+                    controls.className = 'quantity-control';
+                    controls.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;';
+
+                    var minus = document.createElement('button');
+                    minus.type = 'button';
+                    minus.className = 'btn-quantity-compact btn-quantity-minus';
+                    minus.textContent = '−';
+                    minus.setAttribute('aria-label', 'Giảm số lượng ' + item.name);
+                    minus.addEventListener('click', function() { window.updateFoodQuantity(item.id, -1); });
+
+                    var input = document.createElement('input');
+                    input.type = 'number';
+                    input.name = 'food_items[' + item.id + ']';
+                    input.id = 'food_' + item.id;
+                    input.value = '0';
+                    input.min = '0';
+                    input.max = '10';
+                    input.inputMode = 'numeric';
+                    input.setAttribute('aria-label', 'Số lượng ' + item.name);
+
+                    var plus = document.createElement('button');
+                    plus.type = 'button';
+                    plus.className = 'btn-quantity-compact btn-quantity-plus';
+                    plus.textContent = '+';
+                    plus.setAttribute('aria-label', 'Tăng số lượng ' + item.name);
+                    plus.addEventListener('click', function() { window.updateFoodQuantity(item.id, 1); });
+
+                    controls.appendChild(minus);
+                    controls.appendChild(input);
+                    controls.appendChild(plus);
+                    card.appendChild(controls);
+                    container.appendChild(card);
+                });
+
+                if (typeof updateFoodModalSummary === 'function') {
+                    updateFoodModalSummary();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error loading food items:', error);
+                if (String(window.selectedTheaterId || '') === requestedTheaterId) {
+                    container.innerHTML = '<div style="text-align:center;grid-column:1/-1;padding:22px;color:#ffb4b4;">Khong the tai combo. Vui long thu lai.</div>';
+                }
+            });
+    };
+
     function doSelectTheater(theaterId) {
         console.log('Executing doSelectTheater for ID:', theaterId);
 
@@ -1099,6 +1219,7 @@ window.requestUserLocation = function() {
 
         window.selectedTheaterId = theaterId;
         window.selectedDate = null;
+        window.loadFoodItemsForTheater(theaterId);
         updateBookingUrlWithoutShowtime();
 
         // Reset other inputs
@@ -1829,7 +1950,7 @@ window.requestUserLocation = function() {
         if (shell && !shell.querySelector('.food-modal-actions')) {
             var actions = document.createElement('div');
             actions.className = 'food-modal-actions';
-            actions.innerHTML = '<div><span>Combo da chon</span><strong id="foodModalSummary">Chua chon combo nao</strong></div><button type="button" class="food-modal-done-btn">Xong</button>';
+            actions.innerHTML = '<div><span>Combo đã chọn</span><strong id="foodModalSummary">Chưa chọn combo nào</strong></div><button type="button" class="food-modal-done-btn">Hoàn tất</button>';
             actions.querySelector('button').addEventListener('click', window.closeFoodModal);
             shell.appendChild(actions);
         }
@@ -1859,6 +1980,11 @@ window.requestUserLocation = function() {
         });
         input.value = newValue;
 
+        var foodCard = document.querySelector('.food-item-card-compact[data-food-id="' + foodId + '"]');
+        if (foodCard) {
+            foodCard.classList.toggle('food-item-selected', newValue > 0);
+        }
+
         // Update total price immediately
         updateBookingSummaryFull();
         updateFoodModalSummary();
@@ -1867,9 +1993,48 @@ window.requestUserLocation = function() {
     // Also make it available without window prefix
     var updateFoodQuantity = window.updateFoodQuantity;
 
+    function syncTypedFoodQuantity(input, normalizeEmpty) {
+        if (!input || !input.matches('input[name^="food_items["]')) {
+            return;
+        }
+
+        var value = input.value === '' ? 0 : parseInt(input.value, 10);
+        if (!Number.isFinite(value)) value = 0;
+        value = Math.max(0, Math.min(10, value));
+
+        if (normalizeEmpty || input.value !== '') {
+            input.value = String(value);
+        }
+
+        var foodIdMatch = input.name.match(/\[(\d+)\]/);
+        var foodId = foodIdMatch ? foodIdMatch[1] : null;
+        var foodCard = foodId
+            ? document.querySelector('.food-item-card-compact[data-food-id="' + foodId + '"]')
+            : null;
+
+        if (foodCard) {
+            foodCard.classList.toggle('food-item-selected', value > 0);
+        }
+
+        updateBookingSummaryFull();
+        updateFoodModalSummary();
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         ensureFoodModalControls();
         updateFoodModalSummary();
+
+        document.addEventListener('input', function(event) {
+            if (event.target && event.target.matches('input[name^="food_items["]')) {
+                syncTypedFoodQuantity(event.target, false);
+            }
+        });
+
+        document.addEventListener('change', function(event) {
+            if (event.target && event.target.matches('input[name^="food_items["]')) {
+                syncTypedFoodQuantity(event.target, true);
+            }
+        });
 
         var foodSection = document.getElementById('foodSection');
         if (foodSection && !foodSection.dataset.overlayCloseBound) {

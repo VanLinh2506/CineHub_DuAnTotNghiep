@@ -53,6 +53,29 @@ class BookingController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function getFoodItems(Request $request)
+    {
+        $data = $request->validate([
+            'theater_id' => 'required|integer|exists:theaters,id',
+        ]);
+
+        $items = FoodItem::query()
+            ->where('theater_id', $data['theater_id'])
+            ->where('is_active', true)
+            ->orderBy('type')
+            ->orderBy('name')
+            ->get()
+            ->map(static fn (FoodItem $item): array => [
+                'id' => $item->id,
+                'name' => $item->name,
+                'price' => (float) $item->price,
+                'image_url' => $item->image ? storage_url($item->image) : null,
+            ])
+            ->values();
+
+        return response()->json(['foodItems' => $items]);
+    }
+
     public function vnpayCallback(Request $request)
     {
         $vnpTxnRef = $request->input('vnp_TxnRef');
@@ -1526,6 +1549,27 @@ class BookingController extends Controller
         DB::beginTransaction();
         
         try {
+            // Serialize checkout attempts for this hold. A browser refresh, a second
+            // tab, or returning from the payment page must not create another
+            // booking for the same reserved seats.
+            $lockedReservationSeats = SeatReservation::query()
+                ->where('showtime_id', $showtimeId)
+                ->where('user_id', $user->id)
+                ->whereIn('seat', $seats)
+                ->active()
+                ->lockForUpdate()
+                ->pluck('seat')
+                ->all();
+
+            if (count(array_unique($lockedReservationSeats)) !== count($seats)) {
+                DB::rollBack();
+
+                return redirect()->back()->withInput()->with(
+                    'error',
+                    'Ghế của bạn đã hết hạn hoặc chưa được xác nhận. Vui lòng chọn lại ghế.'
+                );
+            }
+
             // Calculate total amount
             $basePrice = $showtime->price;
             $screenType = $showtime->screen->screen_type ?? '2D';
@@ -1560,20 +1604,42 @@ class BookingController extends Controller
             
             $totalAmount += $foodTotal;
             
-            // Create pending booking
-            $vnpTxnRef = 'BKG' . $user->id . '_' . time();
-            
-            $booking = Booking::create([
-                'user_id' => $user->id,
-                'showtime_id' => $showtimeId,
-                'seats' => $seats,
+            $booking = Booking::query()
+                ->where('user_id', $user->id)
+                ->where('showtime_id', $showtimeId)
+                ->whereIn('status', ['pending', 'cancelled'])
+                ->where('expires_at', '>', now())
+                ->latest('id')
+                ->lockForUpdate()
+                ->get()
+                ->first(function (Booking $candidate) use ($seats): bool {
+                    $candidateSeats = $this->normalizeSeatList($candidate->seats ?? []);
+                    $requestedSeats = $seats;
+                    sort($candidateSeats);
+                    sort($requestedSeats);
+
+                    return $candidateSeats === $requestedSeats;
+                });
+
+            $vnpTxnRef = 'BKG' . $user->id . '_' . now()->format('YmdHisv') . '_' . Str::lower(Str::random(4));
+            $bookingData = [
                 'food_items' => $filteredFoodItems,
                 'customer_email' => $customerEmail,
                 'total_amount' => $totalAmount,
                 'vnp_txn_ref' => $vnpTxnRef,
                 'status' => 'pending',
                 'expires_at' => $reservationExpiresAt,
-            ]);
+            ];
+
+            if ($booking) {
+                $booking->update($bookingData);
+            } else {
+                $booking = Booking::create($bookingData + [
+                    'user_id' => $user->id,
+                    'showtime_id' => $showtimeId,
+                    'seats' => $seats,
+                ]);
+            }
             
             // Save to session for VNPay
             session([

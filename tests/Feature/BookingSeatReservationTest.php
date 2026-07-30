@@ -353,6 +353,46 @@ class BookingSeatReservationTest extends TestCase
         $this->assertSame($booking->id, session('pending_booking_id'));
     }
 
+    public function test_repeated_checkout_reuses_the_booking_for_the_same_seat_hold(): void
+    {
+        $this->withoutMiddleware(VerifyCsrfToken::class);
+        config([
+            'services.vnpay.url' => 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+            'services.vnpay.tmn_code' => 'TESTCODE',
+            'services.vnpay.hash_secret' => 'test-secret',
+            'services.vnpay.return_url' => 'http://localhost/payment/vnpay/callback',
+        ]);
+
+        $user = User::factory()->create();
+        $showtime = $this->createShowtime();
+        $this->actingAs($user);
+
+        $this->postJson('/booking/seats/reserve', [
+            'showtime_id' => $showtime->id,
+            'seats' => ['A1', 'A2'],
+        ])->assertOk();
+
+        $checkoutData = [
+            'showtime_id' => $showtime->id,
+            'seats' => ['A1', 'A2'],
+            'customer_email' => $user->email,
+            'food_items' => [],
+            'payment_method' => 'vnpay',
+        ];
+
+        $this->post(route('booking.processBooking'), $checkoutData)
+            ->assertRedirectContains('sandbox.vnpayment.vn/paymentv2/vpcpay.html');
+
+        $bookingId = Booking::query()->sole()->id;
+
+        $this->post(route('booking.processBooking'), $checkoutData)
+            ->assertRedirectContains('sandbox.vnpayment.vn/paymentv2/vpcpay.html');
+
+        $this->assertDatabaseCount('booking_pending', 1);
+        $this->assertSame($bookingId, Booking::query()->sole()->id);
+        $this->assertSame($bookingId, session('pending_booking_id'));
+    }
+
     public function test_expired_pending_booking_cannot_be_resumed(): void
     {
         $user = User::factory()->create();

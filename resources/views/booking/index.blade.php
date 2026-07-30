@@ -16,6 +16,7 @@
             bookingLocation: "{{ route('booking.location') }}",
             bookingShowtimes: "{{ route('api.booking.showtimes') }}",
             bookingSeatMap: "{{ route('api.booking.seatMap') }}",
+            bookingFoodItems: "{{ route('api.booking.foodItems') }}",
             bookingReserveSeats: "{{ route('booking.reservations.reserve') }}",
             bookingReleaseSeats: "{{ route('booking.reservations.release') }}",
             bookingExtendSeats: "{{ route('booking.reservations.extend') }}",
@@ -589,10 +590,13 @@ $meta_og_description = $meta_description;
                                 id="customerEmail"
                                 class="form-control"
                                 placeholder="email@example.com"
+                                autocomplete="email"
+                                required
                                 value="{{ old('customer_email', Auth::check() ? Auth::user()->email : '') }}">
-                            <small class="text-muted" style="font-size: 11px; display: block; margin-top: 5px;">
-                                <i class="fas fa-info-circle"></i> Vé điện tử sẽ được gửi đến email này
-                            </small>
+                            <div class="email-ticket-help">
+                                <i class="fas fa-circle-info" aria-hidden="true"></i>
+                                <span>Vé điện tử sẽ được gửi đến email này.</span>
+                            </div>
                         </div>
 
                         <!-- Selected Seats Display -->
@@ -621,6 +625,52 @@ $meta_og_description = $meta_description;
                         </div>
 
                         <style>
+                            #emailSection .form-label {
+                                margin-bottom: 9px;
+                                color: #fff;
+                                font-size: 15px;
+                                font-weight: 700;
+                            }
+
+                            #emailSection #customerEmail {
+                                height: 46px;
+                                border: 1px solid #555;
+                                background: #202124;
+                                color: #fff;
+                                font-size: 14px;
+                            }
+
+                            #emailSection #customerEmail::placeholder {
+                                color: #8f949e;
+                                opacity: 1;
+                            }
+
+                            #emailSection #customerEmail:focus {
+                                border-color: #ffc107;
+                                box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.14);
+                            }
+
+                            .email-ticket-help {
+                                display: flex;
+                                align-items: flex-start;
+                                gap: 8px;
+                                margin-top: 9px;
+                                padding: 9px 11px;
+                                border: 1px solid rgba(56, 189, 248, 0.24);
+                                border-radius: 8px;
+                                background: rgba(56, 189, 248, 0.08);
+                                color: #c9eefe;
+                                font-size: 12px;
+                                line-height: 1.45;
+                            }
+
+                            .email-ticket-help i {
+                                flex: 0 0 auto;
+                                margin-top: 2px;
+                                color: #38bdf8;
+                                font-size: 13px;
+                            }
+
                             .btn-confirm-seats:hover:not(:disabled) {
                                 background: #ffca2c;
                                 transform: translateY(-2px);
@@ -677,9 +727,12 @@ $meta_og_description = $meta_description;
                         </div>
 
                         <div id="foodModalLauncher" class="form-group" style="display: none;">
+                            <label class="form-label" style="margin-bottom: 10px;">
+                                <i class="fas fa-utensils me-2"></i>Combo Đồ Ăn & Nước (Tùy chọn)
+                            </label>
                             <button type="button" class="food-modal-launcher-btn" onclick="openFoodModal()">
-                                <span><i class="fas fa-shopping-basket"></i> Chon combo do an & nuoc</span>
-                                <small id="foodLauncherSummary">Chua chon combo nao</small>
+                                <span><i class="fas fa-shopping-basket"></i> Chọn combo đồ ăn & nước</span>
+                                <small id="foodLauncherSummary">Chưa chọn combo nào</small>
                                 <i class="fas fa-chevron-right"></i>
                             </button>
                         </div>
@@ -691,8 +744,8 @@ $meta_og_description = $meta_description;
                             </label>
                             <div class="food-iframe-shell">
                                 <div class="food-iframe-header">
-                                    <span><i class="fas fa-shopping-basket"></i> Chọn combo</span>
-                                    <small>Cuộn xuống để xem thêm</small>
+                                    <span><i class="fas fa-shopping-basket"></i> Chọn đồ ăn & nước</span>
+                                    <small>Chọn số lượng cho từng món</small>
                                 </div>
                                 <div class="food-order-frame">
                                     <div id="foodItemsContainer" class="food-items-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
@@ -711,11 +764,11 @@ $meta_og_description = $meta_description;
                                             </div>
                                             @endif
                                             <h6 style="margin: 0 0 5px 0; color: #fff; font-size: 12px; font-weight: 600; min-height: 32px; display: flex; align-items: center; justify-content: center;">{{ $food->name }}</h6>
-                                            <p style="margin: 0 0 8px 0; color: #ffc107; font-weight: bold; font-size: 13px;">{{ number_format($food->price) }}đ</p>
+                                            <p class="food-item-price">{{ number_format($food->price, 0, ',', '.') }} ₫</p>
                                             <div class="quantity-control" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
-                                                <button type="button" class="btn-quantity-compact" onclick="updateFoodQuantity({{ $food->id }}, -1)" style="width: 26px; height: 26px; border: 1px solid #666; background: #3a3a3a; color: #fff; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">−</button>
-                                                <input type="number" name="food_items[{{ $food->id }}]" id="food_{{ $food->id }}" value="0" min="0" max="10" readonly style="width: 40px; height: 26px; text-align: center; background: #1a1a1a; border: 1px solid #666; color: #fff; border-radius: 4px; font-size: 14px; font-weight: bold; padding: 0;">
-                                                <button type="button" class="btn-quantity-compact" onclick="updateFoodQuantity({{ $food->id }}, 1)" style="width: 26px; height: 26px; border: 1px solid #666; background: #3a3a3a; color: #fff; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">+</button>
+                                                <button type="button" class="btn-quantity-compact btn-quantity-minus" aria-label="Giảm số lượng {{ $food->name }}" onclick="updateFoodQuantity({{ $food->id }}, -1)">−</button>
+                                                <input type="number" name="food_items[{{ $food->id }}]" id="food_{{ $food->id }}" value="0" min="0" max="10" inputmode="numeric" aria-label="Số lượng {{ $food->name }}">
+                                                <button type="button" class="btn-quantity-compact btn-quantity-plus" aria-label="Tăng số lượng {{ $food->name }}" onclick="updateFoodQuantity({{ $food->id }}, 1)">+</button>
                                             </div>
                                         </div>
                                         @endforeach
@@ -844,14 +897,7 @@ $meta_og_description = $meta_description;
                             }
 
                             #foodSection > .form-label {
-                                position: absolute;
-                                top: calc(50% - 280px);
-                                left: calc(50% - 340px);
-                                margin: 0 !important;
-                                color: #fff;
-                                font-size: 17px;
-                                font-weight: 700;
-                                z-index: 2;
+                                display: none;
                             }
 
                             #foodSection .food-iframe-shell {
@@ -865,9 +911,22 @@ $meta_og_description = $meta_description;
                             }
 
                             #foodSection .food-iframe-header {
-                                min-height: 48px;
+                                min-height: 58px;
                                 padding: 9px 50px 9px 14px;
                                 position: relative;
+                                background: linear-gradient(135deg, #b5121b, #73080e);
+                                border-bottom-color: rgba(255, 255, 255, 0.18);
+                            }
+
+                            #foodSection .food-iframe-header span {
+                                color: #fff;
+                                font-size: 16px;
+                                font-weight: 800;
+                            }
+
+                            #foodSection .food-iframe-header small {
+                                color: #ffe9e9;
+                                font-size: 12px;
                             }
 
                             #foodSection .food-order-frame {
@@ -877,13 +936,22 @@ $meta_og_description = $meta_description;
                             }
 
                             #foodSection .food-items-grid {
-                                grid-template-columns: repeat(auto-fit, minmax(138px, 1fr)) !important;
-                                gap: 10px !important;
+                                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+                                gap: 14px !important;
                             }
 
                             #foodSection .food-item-card-compact {
-                                padding: 10px !important;
-                                border-radius: 8px !important;
+                                padding: 14px !important;
+                                border: 1px solid #4b4b4b !important;
+                                border-radius: 12px !important;
+                                background: #292929 !important;
+                                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+                            }
+
+                            #foodSection .food-item-card-compact.food-item-selected {
+                                border-color: #ffc107 !important;
+                                background: #352f1c !important;
+                                box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.18);
                             }
 
                             #foodSection .food-item-card-compact img,
@@ -894,31 +962,79 @@ $meta_og_description = $meta_description;
                             }
 
                             #foodSection .food-item-card-compact h6 {
-                                min-height: 30px !important;
-                                margin-bottom: 5px !important;
-                                font-size: 12px !important;
-                                line-height: 1.25;
+                                min-height: 42px !important;
+                                margin-bottom: 7px !important;
+                                color: #fff !important;
+                                font-size: 14px !important;
+                                line-height: 1.4;
                             }
 
+                            #foodSection .food-item-card-compact .food-item-price,
                             #foodSection .food-item-card-compact p {
-                                margin-bottom: 7px !important;
-                                font-size: 12px !important;
+                                margin: 0 0 12px !important;
+                                color: #ffd54f !important;
+                                font-size: 15px !important;
+                                font-weight: 800 !important;
                             }
 
                             #foodSection .quantity-control {
-                                gap: 5px !important;
+                                gap: 10px !important;
                             }
 
                             #foodSection .btn-quantity-compact {
-                                width: 25px !important;
-                                height: 25px !important;
-                                font-size: 13px !important;
+                                width: 38px !important;
+                                height: 38px !important;
+                                display: inline-flex !important;
+                                align-items: center;
+                                justify-content: center;
+                                padding: 0 !important;
+                                border: 1px solid #686868 !important;
+                                border-radius: 9px !important;
+                                background: #414141 !important;
+                                color: #fff !important;
+                                font-size: 22px !important;
+                                font-weight: 800 !important;
+                                line-height: 1 !important;
+                                cursor: pointer;
+                                box-shadow: none !important;
+                            }
+
+                            #foodSection .btn-quantity-plus {
+                                border-color: #e50914 !important;
+                                background: #e50914 !important;
+                            }
+
+                            #foodSection .btn-quantity-compact:hover {
+                                filter: brightness(1.2);
+                                transform: translateY(-1px);
+                            }
+
+                            #foodSection .btn-quantity-compact:focus-visible {
+                                outline: 3px solid rgba(255, 193, 7, 0.55);
+                                outline-offset: 2px;
                             }
 
                             #foodSection input[name^="food_items["] {
-                                width: 36px !important;
-                                height: 25px !important;
-                                font-size: 13px !important;
+                                width: 52px !important;
+                                height: 38px !important;
+                                padding: 0 !important;
+                                border: 2px solid #777 !important;
+                                border-radius: 9px !important;
+                                background: #111 !important;
+                                color: #fff !important;
+                                font-size: 17px !important;
+                                font-weight: 800 !important;
+                                text-align: center !important;
+                                opacity: 1 !important;
+                                -webkit-text-fill-color: #fff;
+                                appearance: textfield;
+                            }
+
+                            #foodSection input[name^="food_items["]::-webkit-inner-spin-button,
+                            #foodSection input[name^="food_items["]::-webkit-outer-spin-button {
+                                margin: 0;
+                                appearance: none;
+                                -webkit-appearance: none;
                             }
 
                             .food-modal-close-btn,
@@ -937,6 +1053,13 @@ $meta_og_description = $meta_description;
                                 width: 31px;
                                 height: 31px;
                                 border-radius: 50%;
+                                font-size: 16px;
+                            }
+
+                            .food-modal-close-btn:hover {
+                                border-color: #fff;
+                                background: #fff;
+                                color: #111;
                             }
 
                             .food-modal-actions {
@@ -966,6 +1089,12 @@ $meta_og_description = $meta_description;
                                 padding: 8px 16px;
                                 background: #e50914;
                                 font-weight: 700;
+                                color: #fff;
+                                min-width: 96px;
+                            }
+
+                            .food-modal-done-btn:hover {
+                                background: #ff1723;
                             }
 
                             body.food-modal-open {
@@ -973,21 +1102,11 @@ $meta_og_description = $meta_description;
                             }
 
                             @media (max-width: 980px) {
-                                #foodSection > .form-label {
-                                    left: 24px;
-                                    top: 24px;
-                                }
                             }
 
                             @media (max-width: 640px) {
                                 #foodSection {
                                     padding: 10px;
-                                }
-
-                                #foodSection > .form-label {
-                                    position: static;
-                                    width: 100%;
-                                    margin-bottom: 10px !important;
                                 }
 
                                 #foodSection[style*="display: block"] {
@@ -996,11 +1115,25 @@ $meta_og_description = $meta_description;
                                 }
 
                                 #foodSection .food-items-grid {
-                                    grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)) !important;
+                                    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
                                 }
 
                                 #foodSection .food-iframe-shell {
-                                    max-height: calc(100vh - 70px);
+                                    max-height: calc(100vh - 20px);
+                                }
+
+                                #foodSection .food-item-card-compact {
+                                    padding: 10px !important;
+                                }
+
+                                #foodSection .btn-quantity-compact {
+                                    width: 34px !important;
+                                    height: 34px !important;
+                                }
+
+                                #foodSection input[name^="food_items["] {
+                                    width: 42px !important;
+                                    height: 34px !important;
                                 }
                             }
                         </style>
