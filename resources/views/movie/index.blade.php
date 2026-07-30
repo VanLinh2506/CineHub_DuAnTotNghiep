@@ -66,6 +66,80 @@
 
 <section class="section">
     <div class="container">
+        @if(!empty($audienceTitle) && !empty($frequentlyWatchedMovies) && $frequentlyWatchedMovies->isNotEmpty())
+        <section class="series-resume-section personal-library-section">
+            <div class="series-resume-heading">
+                <div>
+                    <span>Dành riêng cho bạn</span>
+                    <h2><i class="fas fa-fire"></i> Phim bạn hay xem</h2>
+                </div>
+                <small>Xếp theo số lượt xem của bạn</small>
+            </div>
+            <div class="series-resume-list">
+                @foreach($frequentlyWatchedMovies as $frequentMovie)
+                    <a class="series-resume-card" href="{{ route('movies.introduce', $frequentMovie->id) }}">
+                        <div class="series-resume-poster">
+                            @if($frequentMovie->thumbnail)
+                            <img src="{{ $frequentMovie->thumbnail }}" alt="{{ $frequentMovie->title }}" loading="lazy">
+                            @else
+                            <span class="personal-library-placeholder"><i class="fas fa-film"></i></span>
+                            @endif
+                            <span><i class="fas fa-play"></i></span>
+                            <b>{{ number_format((int) $frequentMovie->personal_view_count) }} lượt xem</b>
+                        </div>
+                        <strong>{{ $frequentMovie->title }}</strong>
+                        <small>
+                            {{ ($frequentMovie->type ?? 'phimle') === 'phimbo' ? 'Phim bộ' : 'Phim lẻ' }}
+                            @if($frequentMovie->rating) · {{ number_format($frequentMovie->rating, 1) }}/10 @endif
+                        </small>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+        @endif
+
+        @if(!empty($audienceTitle) && !empty($continueWatching) && $continueWatching->isNotEmpty())
+        <section class="series-resume-section personal-library-section">
+            <div class="series-resume-heading">
+                <div>
+                    <span>Tiếp tục hành trình</span>
+                    <h2><i class="fas fa-history"></i> Phim đang xem</h2>
+                </div>
+                <small>Lưu vị trí xem trong 30 ngày</small>
+            </div>
+            <div class="series-resume-list">
+                @foreach($continueWatching as $history)
+                    @php
+                        $resumeMovie = $history->movie;
+                        $resumeEpisode = $history->episode;
+                        $resumeMinute = max(1, (int) floor($history->last_time / 60));
+                        $resumeUrl = route('movies.watch', array_filter([
+                            'id' => $history->movie_id,
+                            'episode_id' => $history->episode_id,
+                        ]));
+                    @endphp
+                    <a class="series-resume-card" href="{{ $resumeUrl }}">
+                        <div class="series-resume-poster">
+                            @if($resumeMovie->thumbnail)
+                            <img src="{{ $resumeMovie->thumbnail }}" alt="{{ $resumeMovie->title }}" loading="lazy">
+                            @else
+                            <span class="personal-library-placeholder"><i class="fas fa-film"></i></span>
+                            @endif
+                            <span><i class="fas fa-play"></i></span>
+                            @if($resumeEpisode)
+                            <b>Tập {{ $resumeEpisode->episode_number }}</b>
+                            @else
+                            <b>Phút {{ $resumeMinute }}</b>
+                            @endif
+                        </div>
+                        <strong>{{ $resumeMovie->title }}</strong>
+                        <small>Tiếp tục từ phút {{ $resumeMinute }}</small>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+        @endif
+
         @if(($type ?? null) === 'phimbo' && !empty($continueWatchingSeries) && $continueWatchingSeries->isNotEmpty())
         <section class="series-resume-section">
             <div class="series-resume-heading">
@@ -749,6 +823,8 @@
     .series-resume-poster b { position:absolute; z-index:2; right:9px; bottom:8px; padding:5px 8px; border-radius:999px; background:rgba(0,0,0,.78); font-size:11px; }
     .series-resume-card > strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px; }
     .series-resume-card > small { color:rgba(255,255,255,.62); }
+    .personal-library-section + .personal-library-section { margin-top:-14px; }
+    .personal-library-placeholder { position:absolute; inset:0 !important; width:auto !important; height:auto !important; border-radius:0 !important; color:#777; background:#222 !important; box-shadow:none !important; }
     .upcoming-date-badge { position:absolute; z-index:4; left:10px; bottom:10px; padding:7px 9px; border-radius:999px; background:rgba(15,15,15,.9); color:#fff; font-size:11px; font-weight:800; backdrop-filter:blur(8px); }
     .interest-button { width:100%; margin-top:12px; padding:10px 14px; display:flex; align-items:center; justify-content:center; gap:8px; border:1px solid #e50914; border-radius:999px; background:#e50914; color:#fff; font-weight:800; cursor:pointer; }
     .interest-button b { min-width:24px; padding:2px 6px; border-radius:999px; background:rgba(0,0,0,.22); font-size:11px; }

@@ -88,6 +88,11 @@ class Movie extends Model
         return $this->hasMany(MovieInterest::class);
     }
 
+    public function searchEvents()
+    {
+        return $this->hasMany(MovieSearch::class);
+    }
+
     public function showtimes()
     {
         return $this->hasMany(Showtime::class);
