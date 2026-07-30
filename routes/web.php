@@ -282,6 +282,7 @@ Route::middleware(['auth', 'moderator'])->prefix('moderator')->name('moderator.'
 
     // API - Get available time slots
     Route::get('/api/available-time-slots', [ModeratorController::class, 'getAvailableTimeSlots'])->name('api.availableTimeSlots');
+    Route::get('/api/showtime-price-analysis', [ModeratorController::class, 'getShowtimePriceAnalysis'])->name('api.showtimePriceAnalysis');
 });
 
 // ==================== COUNTER STAFF ROUTES ====================

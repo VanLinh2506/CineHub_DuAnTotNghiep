@@ -87,8 +87,7 @@
                                     data-screen-id="{{ $showtime['screen_id'] }}"
                                     data-show-date="{{ \Carbon\Carbon::parse($showtime['show_date'])->toDateString() }}"
                                     data-show-time="{{ date('H:i', strtotime($showtime['show_time'])) }}"
-                                    data-price="{{ $showtime['price'] }}"
-                                    data-contract-price-type="{{ $showtime['contract_price_type'] ?? 'bestseller' }}">
+                                    data-price="{{ $showtime['price'] }}">
                                 <i class="fas fa-edit"></i> Sửa
                             </button>
                             <a href="?route=moderator/showtimesDelete&id={{ $showtime['id'] }}"
@@ -116,8 +115,8 @@
                 <div class="col-md-6"><label class="form-label">Từ ngày</label><input type="date" id="bulk_date_from" name="date_from" min="{{ now()->toDateString() }}" class="form-control" required></div>
                 <div class="col-md-6"><label class="form-label">Đến ngày</label><input type="date" id="bulk_date_to" name="date_to" min="{{ now()->toDateString() }}" class="form-control" required></div>
                 <div class="col-12"><label class="form-label">Các giờ chiếu</label><div id="bulkTimeSlots" class="d-flex flex-wrap gap-2"><small class="text-muted">Chọn phim, phòng và khoảng ngày để xem giờ trống.</small></div><small class="text-muted">Chỉ hiển thị các khung giờ còn trống trong tất cả ngày đã chọn.</small></div>
-                <div class="col-md-6"><label class="form-label">Nhóm giá hợp đồng</label><select name="contract_price_type" class="form-select" required><option value="bestseller">Phim bán chạy</option><option value="new_release">Phim mới phát hành</option><option value="hot_movie">Phim hot</option></select></div>
-                <div class="col-md-6"><label class="form-label">Giá vé</label><input type="number" name="price" min="0" step="1000" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label">Nhóm giá do hệ thống phân tích</label><input id="bulk_contract_price_label" class="form-control" value="Chọn phim và ngày chiếu" readonly><small id="bulkContractPriceHelp" class="text-muted">Nhà rạp không thể tự chọn nhóm giá.</small></div>
+                <div class="col-md-6"><label class="form-label">Giá vé</label><input id="bulk_price" type="number" name="price" min="0" step="1000" class="form-control" required></div>
             </div></div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button><button class="btn btn-success" type="submit">Tạo hàng loạt</button></div>
         </form>
@@ -173,13 +172,9 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="contract_price_type" class="form-label">Nhóm giá hợp đồng <span class="text-danger">*</span></label>
-                        <select name="contract_price_type" id="contract_price_type" class="form-select" required>
-                            <option value="bestseller">Phim bán chạy</option>
-                            <option value="new_release">Phim mới phát hành</option>
-                            <option value="hot_movie">Phim hot</option>
-                        </select>
-                        <small id="contractPriceHelp" class="text-muted">Chọn ngày chiếu để áp dụng hợp đồng.</small>
+                        <label for="contract_price_label" class="form-label">Nhóm giá do hệ thống phân tích</label>
+                        <input id="contract_price_label" class="form-control" value="Chọn phim và ngày chiếu" readonly>
+                        <small id="contractPriceHelp" class="text-muted">Nhà rạp không thể tự chọn nhóm giá.</small>
                     </div>
                     <div class="mb-3">
                         <label for="price" class="form-label">Giá vé (VNĐ) <span class="text-danger">*</span></label>
@@ -237,12 +232,9 @@
                         <input type="time" name="show_time" id="edit_show_time" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label for="edit_contract_price_type" class="form-label">Nhóm giá hợp đồng <span class="text-danger">*</span></label>
-                        <select name="contract_price_type" id="edit_contract_price_type" class="form-select" required>
-                            <option value="bestseller">Phim bán chạy</option>
-                            <option value="new_release">Phim mới phát hành</option>
-                            <option value="hot_movie">Phim hot</option>
-                        </select>
+                        <label for="edit_contract_price_label" class="form-label">Nhóm giá do hệ thống phân tích</label>
+                        <input id="edit_contract_price_label" class="form-control" readonly>
+                        <small id="editContractPriceHelp" class="text-muted">Hệ thống tự cập nhật theo dữ liệu phim.</small>
                     </div>
                     <div class="mb-3">
                         <label for="edit_price" class="form-label">Giá vé (VNĐ) <span class="text-danger">*</span></label>
@@ -325,43 +317,72 @@
 #timeSlotsContainer .btn-outline-primary { background-color: #007bff !important; color: #fff !important; border: 2px solid #007bff !important; padding: 0.5rem 1rem !important; font-weight: 600 !important; border-radius: 8px !important; min-width: 80px !important; }
 #timeSlotsContainer .btn-primary { background-color: #28a745 !important; color: #fff !important; border: 2px solid #28a745 !important; font-weight: 700 !important; }
 #timeSlotsContainer .btn.disabled-slot { opacity: 0.3 !important; cursor: not-allowed !important; pointer-events: none !important; }
+#bulkTimeSlots { max-height: 16rem; overflow-y: auto; }
+@media (max-width: 767.98px) {
+    #bulkShowtimeModal .modal-dialog { margin: 0; width: 100%; max-width: none; min-height: 100%; }
+    #bulkShowtimeModal .modal-content { min-height: 100vh; border: 0; border-radius: 0; }
+    #bulkShowtimeModal .modal-body { padding: 1rem; overflow-x: hidden; }
+    #bulkShowtimeModal .modal-footer { position: sticky; bottom: 0; background: #fff; z-index: 2; }
+    #bulkTimeSlots { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #bulkTimeSlots .btn { width: 100%; white-space: normal; }
+}
+@media (max-width: 575.98px) {
+    .d-flex.justify-content-between.align-items-center.mb-4 { align-items: flex-start !important; flex-direction: column; gap: .75rem; }
+    .d-flex.justify-content-between.align-items-center.mb-4 > div { display: grid; grid-template-columns: 1fr; gap: .5rem; width: 100%; }
+    .d-flex.justify-content-between.align-items-center.mb-4 .btn { width: 100%; margin: 0 !important; }
+}
 </style>
 @endpush
 
 @push('scripts')
 <script>
-const contractPrices = @json($contractPrices);
+async function analyzeShowtimePrice({ movieId, date, label, priceInput, help, ignoreShowtimeId = null }) {
+    if (!movieId || !date || !label || !priceInput || !help) return;
+    help.className = 'text-muted';
+    help.textContent = 'Hệ thống đang phân tích nhóm và mặt bằng giá...';
+    const params = new URLSearchParams({ movie_id: movieId, show_date: date });
+    if (ignoreShowtimeId) params.set('ignore_showtime_id', ignoreShowtimeId);
 
-function applyContractPrice() {
-    const date = document.getElementById('show_date')?.value;
-    const type = document.getElementById('contract_price_type')?.value || 'bestseller';
-    const priceInput = document.getElementById('price');
-    const help = document.getElementById('contractPriceHelp');
-    if (!date || !priceInput || !help) return;
+    try {
+        const response = await fetch(`{{ route('moderator.api.showtimePriceAnalysis') }}?${params}`, {
+            headers: { Accept: 'application/json' }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(Object.values(data.errors || {})[0]?.[0] || data.message || 'Không thể phân tích giá.');
 
-    const contract = contractPrices.find(item => date >= item.start_date && date <= item.end_date);
-    if (!contract) {
+        label.value = data.price_type_label;
+        priceInput.min = data.minimum;
+        priceInput.max = data.maximum;
+        if (!priceInput.value || Number(priceInput.value) < data.minimum || Number(priceInput.value) > data.maximum) {
+            priceInput.value = data.market_average
+                ? Math.min(data.maximum, Math.max(data.minimum, Math.round(data.market_average / 1000) * 1000))
+                : data.minimum;
+        }
+        const averageText = data.market_average
+            ? ` Trung bình các rạp khác: ${Number(data.market_average).toLocaleString('vi-VN')} VNĐ; chỉ được chênh ±5.000 VNĐ.`
+            : ' Chưa có rạp khác làm giá tham chiếu.';
+        help.className = 'text-success';
+        help.textContent = `${data.contract_code}: giá hợp lệ ${Number(data.minimum).toLocaleString('vi-VN')} - ${Number(data.maximum).toLocaleString('vi-VN')} VNĐ.${averageText}`;
+    } catch (error) {
+        label.value = 'Chưa phân tích được';
         priceInput.value = '';
         help.className = 'text-danger';
-        help.textContent = 'Ngày này không có hợp đồng còn thời hạn.';
-        return;
+        help.textContent = error.message;
     }
+}
 
-    const ranges = {
-        bestseller: [contract.bestseller_price_min, contract.bestseller_price_max],
-        new_release: [contract.new_release_price_min, contract.new_release_price_max],
-        hot_movie: [contract.hot_movie_price_min, contract.hot_movie_price_max],
-    };
-    const [minimum, maximum] = (ranges[type] || ranges.bestseller).map(Number);
-    priceInput.min = minimum;
-    priceInput.max = maximum;
-    priceInput.value = minimum;
-    help.className = 'text-success';
-    help.textContent = `${contract.contract_code}: ${minimum.toLocaleString('vi-VN')} - ${maximum.toLocaleString('vi-VN')} VNĐ/vé`;
+function applyContractPrice() {
+    return analyzeShowtimePrice({
+        movieId: document.getElementById('movie_id')?.value,
+        date: document.getElementById('show_date')?.value,
+        label: document.getElementById('contract_price_label'),
+        priceInput: document.getElementById('price'),
+        help: document.getElementById('contractPriceHelp')
+    });
 }
 
 document.getElementById('show_date')?.addEventListener('change', applyContractPrice);
-document.getElementById('contract_price_type')?.addEventListener('change', applyContractPrice);
+document.getElementById('movie_id')?.addEventListener('change', applyContractPrice);
 
 document.addEventListener('DOMContentLoaded', function() {
     // Edit showtime modal
@@ -374,9 +395,26 @@ document.addEventListener('DOMContentLoaded', function() {
             editShowtimeModal.querySelector('#edit_screen_id').value = button.getAttribute('data-screen-id');
             editShowtimeModal.querySelector('#edit_show_date').value = button.getAttribute('data-show-date');
             editShowtimeModal.querySelector('#edit_show_time').value = button.getAttribute('data-show-time');
-            editShowtimeModal.querySelector('#edit_contract_price_type').value = button.getAttribute('data-contract-price-type') || 'bestseller';
             editShowtimeModal.querySelector('#edit_price').value = button.getAttribute('data-price');
+            analyzeShowtimePrice({
+                movieId: button.getAttribute('data-movie-id'),
+                date: button.getAttribute('data-show-date'),
+                label: editShowtimeModal.querySelector('#edit_contract_price_label'),
+                priceInput: editShowtimeModal.querySelector('#edit_price'),
+                help: editShowtimeModal.querySelector('#editContractPriceHelp'),
+                ignoreShowtimeId: button.getAttribute('data-id')
+            });
         });
+        const refreshEditPrice = () => analyzeShowtimePrice({
+            movieId: editShowtimeModal.querySelector('#edit_movie_id').value,
+            date: editShowtimeModal.querySelector('#edit_show_date').value,
+            label: editShowtimeModal.querySelector('#edit_contract_price_label'),
+            priceInput: editShowtimeModal.querySelector('#edit_price'),
+            help: editShowtimeModal.querySelector('#editContractPriceHelp'),
+            ignoreShowtimeId: editShowtimeModal.querySelector('#edit_showtime_id').value
+        });
+        editShowtimeModal.querySelector('#edit_movie_id').addEventListener('change', refreshEditPrice);
+        editShowtimeModal.querySelector('#edit_show_date').addEventListener('change', refreshEditPrice);
     }
 
     // Add showtime modal — available time slots
@@ -595,6 +633,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const from = document.getElementById('bulk_date_from');
     const to = document.getElementById('bulk_date_to');
     const container = document.getElementById('bulkTimeSlots');
+    const priceLabel = document.getElementById('bulk_contract_price_label');
+    const priceInput = document.getElementById('bulk_price');
+    const priceHelp = document.getElementById('bulkContractPriceHelp');
     let selected = new Set();
     let commonSlots = [];
 
@@ -657,6 +698,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!dates.length || dates.length > 31) {
             container.innerHTML = '<small class="text-danger">Khoảng ngày tối đa là 31 ngày.</small>';
             return;
+        }
+        await analyzeShowtimePrice({
+            movieId: movie.value,
+            date: from.value,
+            label: priceLabel,
+            priceInput,
+            help: priceHelp
+        });
+        if (from.value !== to.value && priceHelp.classList.contains('text-success')) {
+            priceHelp.textContent += ' Giá sẽ được máy chủ kiểm tra lại cho từng ngày trong khoảng đã chọn.';
         }
         container.innerHTML = '<small class="text-muted">Đang tải các khung giờ trống...</small>';
         try {

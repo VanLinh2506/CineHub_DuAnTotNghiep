@@ -16,7 +16,6 @@ class TheaterContract extends Model
     public const PRICE_TYPE_BESTSELLER = 'bestseller';
     public const PRICE_TYPE_NEW_RELEASE = 'new_release';
     public const PRICE_TYPE_HOT_MOVIE = 'hot_movie';
-    public const HOT_MOVIE_INTER_THEATER_PRICE_GAP = 20000;
 
     protected $fillable = [
         'contract_code',

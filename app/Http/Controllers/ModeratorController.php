@@ -11,6 +11,7 @@ use App\Models\Ticket;
 use App\Models\FoodItem;
 use App\Models\Transaction;
 use App\Models\TheaterContract;
+use App\Services\ShowtimePricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -232,15 +233,12 @@ class ModeratorController extends Controller
             'show_date' => 'required|date',
             'show_time' => ['required', 'date_format:H:i', 'regex:/^(?:[01]\d|2[0-3]):(?:00|15|30|45)$/'],
             'price' => 'required|numeric|min:0',
-            'contract_price_type' => 'required|in:bestseller,new_release,hot_movie',
         ]);
 
         $showtimePrice = (int) $request->price;
-        $contract = $this->validateShowtimeContractPrice(
-            $request->show_date,
-            $request->movie_id,
-            $request->contract_price_type,
-            $showtimePrice
+        $movie = Movie::findOrFail($request->movie_id);
+        $pricing = app(ShowtimePricingService::class)->validatePrice(
+            (int) $this->theaterId, $movie, $request->show_date, $showtimePrice
         );
         
         // Kiểm tra screen thuộc theater
@@ -249,7 +247,6 @@ class ModeratorController extends Controller
             ->firstOrFail();
         
         // Lấy thông tin phim để biết thời lượng
-        $movie = Movie::findOrFail($request->movie_id);
         if (!$movie->canPlayInScreen($screen)) {
             return redirect()->back()->withInput()->with('error',
                 "Phim {$movie->projection_format} chỉ được xếp vào phòng {$movie->projection_format}."
@@ -291,12 +288,12 @@ class ModeratorController extends Controller
         Showtime::create([
             'movie_id' => $request->movie_id,
             'theater_id' => $this->theaterId,
-            'theater_contract_id' => $contract->id,
+            'theater_contract_id' => $pricing['contract']->id,
             'screen_id' => $request->screen_id,
             'show_date' => $request->show_date,
             'show_time' => $request->show_time,
             'price' => $showtimePrice,
-            'contract_price_type' => $request->contract_price_type,
+            'contract_price_type' => $pricing['priceType'],
             'available_seats' => $screen->total_seats, // Set available seats based on screen capacity
         ]);
         
@@ -316,7 +313,6 @@ class ModeratorController extends Controller
             'show_times' => 'required|array|min:1|max:64',
             'show_times.*' => ['required', 'date_format:H:i', 'regex:/^(?:[01]\d|2[0-3]):(?:00|15|30|45)$/'],
             'price' => 'required|numeric|min:0',
-            'contract_price_type' => 'required|in:bestseller,new_release,hot_movie',
         ]);
 
         $from = \Carbon\Carbon::parse($data['date_from'])->startOfDay();
@@ -341,7 +337,7 @@ class ModeratorController extends Controller
         DB::transaction(function () use ($from, $to, $times, $data, $screen, $movie, &$created, &$skipped) {
             foreach (\Carbon\CarbonPeriod::create($from, $to) as $date) {
                 $dateString = $date->toDateString();
-                $contract = $this->validateShowtimeContractPrice($dateString, (int) $data['movie_id'], $data['contract_price_type'], (int) $data['price']);
+                $pricing = app(ShowtimePricingService::class)->validatePrice((int) $this->theaterId, $movie, $dateString, (int) $data['price']);
                 foreach ($times as $time) {
                     $start = \Carbon\Carbon::parse("{$dateString} {$time}");
                     if ($start->lte(now())) { $skipped++; continue; }
@@ -356,9 +352,9 @@ class ModeratorController extends Controller
 
                     Showtime::create([
                         'movie_id' => $movie->id, 'theater_id' => $this->theaterId,
-                        'theater_contract_id' => $contract->id, 'screen_id' => $screen->id,
+                        'theater_contract_id' => $pricing['contract']->id, 'screen_id' => $screen->id,
                         'show_date' => $dateString, 'show_time' => $time, 'price' => (int) $data['price'],
-                        'contract_price_type' => $data['contract_price_type'], 'available_seats' => $screen->total_seats,
+                        'contract_price_type' => $pricing['priceType'], 'available_seats' => $screen->total_seats,
                     ]);
                     $created++;
                 }
@@ -383,7 +379,6 @@ class ModeratorController extends Controller
             'show_date' => 'required|date',
             'show_time' => ['required', 'date_format:H:i', 'regex:/^(?:[01]\d|2[0-3]):(?:00|15|30|45)$/'],
             'price' => 'required|numeric|min:0',
-            'contract_price_type' => 'nullable|in:bestseller,new_release,hot_movie',
         ]);
 
         $screen = Screen::where('id', $request->screen_id)
@@ -397,17 +392,9 @@ class ModeratorController extends Controller
             );
         }
 
-        $contractPriceType = $request->input(
-            'contract_price_type',
-            $showtime->contract_price_type ?: TheaterContract::PRICE_TYPE_BESTSELLER
-        );
         $showtimePrice = (int) $request->price;
-        $contract = $this->validateShowtimeContractPrice(
-            $request->show_date,
-            $request->movie_id,
-            $contractPriceType,
-            $showtimePrice,
-            $showtime->id
+        $pricing = app(ShowtimePricingService::class)->validatePrice(
+            (int) $this->theaterId, $movie, $request->show_date, $showtimePrice, $showtime->id
         );
 
         $start = \Carbon\Carbon::parse($request->show_date.' '.$request->show_time);
@@ -433,8 +420,8 @@ class ModeratorController extends Controller
             'show_date' => $request->show_date,
             'show_time' => $request->show_time,
             'price' => $showtimePrice,
-            'contract_price_type' => $contractPriceType,
-            'theater_contract_id' => $contract->id,
+            'contract_price_type' => $pricing['priceType'],
+            'theater_contract_id' => $pricing['contract']->id,
         ]);
         
         return redirect()->route('moderator.showtimes')
@@ -944,52 +931,34 @@ class ModeratorController extends Controller
         ));
     }
     
-    private function validateShowtimeContractPrice(string $showDate, int $movieId, string $priceType, int $price, ?int $ignoreShowtimeId = null): TheaterContract
+    public function getShowtimePriceAnalysis(Request $request)
     {
-        $contract = TheaterContract::where('theater_id', $this->theaterId)
-            ->whereIn('status', [TheaterContract::STATUS_ACTIVE, TheaterContract::STATUS_PENDING])
-            ->whereDate('start_date', '<=', $showDate)
-            ->whereDate('end_date', '>=', $showDate)
-            ->orderByDesc('start_date')
-            ->first();
+        if ($error = $this->checkPermission()) return $error;
 
-        if (!$contract) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'show_date' => 'Ngày chiếu không nằm trong thời hạn hợp đồng của rạp.',
-            ]);
-        }
+        $data = $request->validate([
+            'movie_id' => 'required|exists:movies,id',
+            'show_date' => 'required|date',
+            'ignore_showtime_id' => 'nullable|integer|exists:showtimes,id',
+        ]);
+        $analysis = app(ShowtimePricingService::class)->analyze(
+            (int) $this->theaterId,
+            Movie::findOrFail($data['movie_id']),
+            $data['show_date'],
+            isset($data['ignore_showtime_id']) ? (int) $data['ignore_showtime_id'] : null
+        );
 
-        [$minimumPrice, $maximumPrice] = $contract->listedPriceRange($priceType);
-        if ($price < $minimumPrice || $price > $maximumPrice) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'price' => 'Giá suất chiếu phải từ ' . number_format($minimumPrice) . ' đến ' . number_format($maximumPrice) . ' VNĐ theo hợp đồng ' . $contract->contract_code . '.',
-            ]);
-        }
-
-        if ($priceType === TheaterContract::PRICE_TYPE_HOT_MOVIE) {
-            $query = Showtime::where('movie_id', $movieId)
-                ->whereDate('show_date', $showDate)
-                ->where('contract_price_type', TheaterContract::PRICE_TYPE_HOT_MOVIE)
-                ->where('theater_id', '!=', $this->theaterId);
-
-            if ($ignoreShowtimeId) {
-                $query->where('id', '!=', $ignoreShowtimeId);
-            }
-
-            $referencePrices = $query->pluck('price')->map(fn ($value) => (int) $value);
-            if ($referencePrices->isNotEmpty()) {
-                $lowestAllowed = $referencePrices->min() - TheaterContract::HOT_MOVIE_INTER_THEATER_PRICE_GAP;
-                $highestAllowed = $referencePrices->max() + TheaterContract::HOT_MOVIE_INTER_THEATER_PRICE_GAP;
-
-                if ($price < $lowestAllowed || $price > $highestAllowed) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
-                        'price' => 'Giá phim hot không được chênh quá ' . number_format(TheaterContract::HOT_MOVIE_INTER_THEATER_PRICE_GAP) . ' VNĐ so với cùng phim, cùng ngày chiếu ở rạp khác.',
-                    ]);
-                }
-            }
-        }
-
-        return $contract;
+        return response()->json([
+            'price_type' => $analysis['priceType'],
+            'price_type_label' => match ($analysis['priceType']) {
+                TheaterContract::PRICE_TYPE_NEW_RELEASE => 'Phim mới phát hành',
+                TheaterContract::PRICE_TYPE_HOT_MOVIE => 'Phim hot',
+                default => 'Phim bán chạy',
+            },
+            'market_average' => $analysis['marketAverage'],
+            'minimum' => $analysis['minimum'],
+            'maximum' => $analysis['maximum'],
+            'contract_code' => $analysis['contract']->contract_code,
+        ]);
     }
 
     // Helper methods
