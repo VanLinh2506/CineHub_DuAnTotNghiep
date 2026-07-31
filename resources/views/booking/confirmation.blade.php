@@ -41,7 +41,7 @@
         </div>
 
         <div class="confirmation-actions">
-            <a href="{{ route('booking.history') }}" class="btn btn-primary">
+            <a href="{{ route('profile.index') }}#tickets" class="btn btn-primary">
                 <i class="fas fa-ticket-alt"></i> Xem vé của tôi
             </a>
             <a href="{{ route('movies.theater') }}" class="btn btn-secondary">

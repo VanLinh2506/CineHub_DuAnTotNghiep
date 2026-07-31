@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\WatchHistory;
+use App\Models\Booking;
 use App\Models\Ticket;
 use App\Models\Subscription;
 use App\Models\Transaction;
@@ -155,12 +156,20 @@ class ProfileController extends Controller
             ->limit(10)
             ->get();
 
-        // Lấy vé đã đặt
-        $tickets = Ticket::with(['showtime.movie', 'showtime.theater', 'showtime.screen'])
+        // Dữ liệu cho tab "Vé của tôi" trong hồ sơ.
+        $bookings = Booking::with(['showtime.movie', 'showtime.theater', 'showtime.screen', 'tickets'])
             ->where('user_id', $user->id)
-            ->where('status', 'Đã đặt')
+            ->where(function ($query) {
+                $query->where('status', 'completed')
+                    ->orWhere(function ($pending) {
+                        $pending->where('status', 'pending')
+                            ->where('expires_at', '>', now());
+                    });
+            })
             ->orderByDesc('created_at')
-            ->get();
+            ->paginate(20)
+            ->withQueryString()
+            ->fragment('tickets');
 
         // Lấy thông tin subscription
         $subscription = $user->subscription;
@@ -197,7 +206,7 @@ class ProfileController extends Controller
         return view('profile.index', compact(
             'user',
             'history',
-            'tickets',
+            'bookings',
             'subscription',
             'allSubscriptions',
             'userRole',

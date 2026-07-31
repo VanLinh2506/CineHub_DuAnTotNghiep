@@ -2350,21 +2350,11 @@ class BookingController extends Controller
             return redirect()->route('login');
         }
         
-        // Include active VNPay bookings so users can resume payment after
-        // leaving the payment gateway.
-        $bookings = Booking::with(['showtime.movie', 'showtime.theater', 'showtime.screen', 'tickets'])
-            ->where('user_id', Auth::id())
-            ->where(function ($query) {
-                $query->where('status', 'completed')
-                    ->orWhere(function ($pending) {
-                        $pending->where('status', 'pending')
-                            ->where('expires_at', '>', now());
-                    });
-            })
-            ->orderByDesc('created_at')
-            ->paginate(20);
-        
-        return view('booking.my-tickets', compact('bookings'));
+        $query = request()->getQueryString();
+
+        return redirect()->to(
+            route('profile.index') . ($query ? '?' . $query : '') . '#tickets'
+        );
     }
 
     /**

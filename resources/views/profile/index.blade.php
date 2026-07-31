@@ -48,6 +48,10 @@
                         <span>Phim tôi quan tâm</span>
                         <b class="interest-nav-count">{{ ($interestedMovies ?? collect())->count() }}</b>
                     </a>
+                    <a href="#tickets" class="profile-nav-item" onclick="switchProfileTab('tickets', event)">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Vé của tôi</span>
+                    </a>
                     <a href="#wallet" class="profile-nav-item" onclick="switchProfileTab('wallet', event)">
                         <i class="fas fa-wallet"></i>
                         <span>Ví điểm</span>
@@ -191,6 +195,11 @@
                 </form>
             </div>
             
+            <!-- My Tickets Section -->
+            <div id="tickets" class="profile-section" style="display: none;">
+                @include('profile.partials.tickets')
+            </div>
+
             <!-- Wallet Section -->
             <div id="wallet" class="profile-section" style="display: none;">
                 <div class="section-header">
