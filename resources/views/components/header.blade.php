@@ -61,11 +61,11 @@
             <a href="{{ route('movies.phimbo') }}" class="nav-link-new">
                 Phim bộ
             </a>
-            <div class="nav-dropdown nav-dropdown-mega">
+            <div class="nav-dropdown nav-dropdown-mega nav-dropdown-categories">
                 <span class="nav-link-new dropdown-trigger">
                     Thể loại <i class="fas fa-chevron-down"></i>
                 </span>
-                <div class="dropdown-menu mega-menu" aria-label="Danh sách thể loại">
+                <div class="dropdown-menu mega-menu category-mega-menu" aria-label="Danh sách thể loại">
                     <div class="mega-menu-grid">
                         @foreach ($categoryMenuChunks as $categoryChunk)
                             <div class="mega-menu-column">
@@ -79,11 +79,11 @@
                     </div>
                 </div>
             </div>
-            <div class="nav-dropdown nav-dropdown-mega">
+            <div class="nav-dropdown nav-dropdown-mega nav-dropdown-countries">
                 <span class="nav-link-new dropdown-trigger">
                     Quốc gia <i class="fas fa-chevron-down"></i>
                 </span>
-                <div class="dropdown-menu mega-menu" aria-label="Danh sách quốc gia">
+                <div class="dropdown-menu mega-menu country-mega-menu" aria-label="Danh sách quốc gia">
                     <div class="mega-menu-grid">
                         @foreach ($countryMenuChunks as $countryChunk)
                             <div class="mega-menu-column">

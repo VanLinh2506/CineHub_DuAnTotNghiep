@@ -2435,6 +2435,66 @@ body.dark-bg {
   box-shadow: 0 24px 65px rgba(0, 0, 0, 0.58);
 }
 
+/* Genre menu: anchored beneath its trigger and styled as compact frosted glass. */
+.nav-dropdown-categories .category-mega-menu,
+.nav-dropdown-countries .country-mega-menu {
+  left: -24px;
+  width: max-content;
+  min-width: 0;
+  max-width: calc(100vw - 32px);
+  padding: 8px;
+  transform: translateY(-10px);
+  background: linear-gradient(
+    135deg,
+    rgba(28, 28, 34, 0.72),
+    rgba(13, 13, 18, 0.62)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+  backdrop-filter: blur(22px) saturate(145%);
+}
+
+/* Keep the country dropdown tightly wrapped even when generic mega-menu rules apply. */
+.nav-dropdown-countries > .country-mega-menu {
+  width: max-content !important;
+  min-width: 0 !important;
+  max-width: calc(100vw - 32px) !important;
+}
+
+.nav-dropdown.nav-dropdown-categories:hover > .category-mega-menu,
+.nav-dropdown.nav-dropdown-categories .category-mega-menu:hover,
+.nav-dropdown.nav-dropdown-countries:hover > .country-mega-menu,
+.nav-dropdown.nav-dropdown-countries .country-mega-menu:hover {
+  transform: translateY(0) !important;
+}
+
+.category-mega-menu .mega-menu-grid,
+.country-mega-menu .mega-menu-grid {
+  grid-template-columns: repeat(3, max-content);
+  column-gap: 24px;
+  row-gap: 0;
+}
+
+.category-mega-menu .mega-menu-column,
+.country-mega-menu .mega-menu-column {
+  gap: 0;
+  padding: 2px;
+}
+
+.category-mega-menu .dropdown-item,
+.country-mega-menu .dropdown-item {
+  padding: 6px 8px;
+}
+
+.category-mega-menu .dropdown-item:hover,
+.category-mega-menu .dropdown-item:focus-visible,
+.country-mega-menu .dropdown-item:hover,
+.country-mega-menu .dropdown-item:focus-visible {
+  padding-left: 10px;
+}
+
 .nav-dropdown-mega:hover > .mega-menu,
 .nav-dropdown-mega .mega-menu:hover {
   transform: translate(-50%, 0) !important;
@@ -2480,6 +2540,13 @@ body.dark-bg {
   .nav-dropdown-mega .mega-menu {
     width: min(620px, calc(100vw - 28px));
     min-width: 520px;
+  }
+
+  .nav-dropdown-categories .category-mega-menu,
+  .nav-dropdown-countries .country-mega-menu {
+    width: max-content;
+    min-width: 0;
+    max-width: calc(100vw - 28px);
   }
 }
 
