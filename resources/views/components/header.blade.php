@@ -308,7 +308,7 @@
                     <i class="fas fa-user-circle"></i>
                     <span>Hồ sơ của tôi</span>
                 </a>
-                <a href="{{ route('booking.history') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+                <a href="{{ route('profile.index') }}#tickets" class="mobile-menu-link" onclick="closeMobileMenu()">
                     <i class="fas fa-ticket-alt"></i>
                     <span>Vé của tôi</span>
                 </a>

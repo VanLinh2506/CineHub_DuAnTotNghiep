@@ -73,7 +73,7 @@
                                 <i class="fas fa-qrcode"></i>
                                 Xem Mã QR
                             </a>
-                            <a href="{{ route('booking.history') }}" class="btn-action secondary">
+                            <a href="{{ route('profile.index') }}#tickets" class="btn-action secondary">
                                 <i class="fas fa-list"></i>
                                 Vé Của Tôi
                             </a>
@@ -85,7 +85,7 @@
                     <i class="fas fa-exclamation-triangle"></i>
                     <h2>Không tìm thấy vé</h2>
                     <p>Vé bạn yêu cầu không tồn tại</p>
-                    <a href="{{ route('booking.history') }}" class="btn-link">
+                    <a href="{{ route('profile.index') }}#tickets" class="btn-link">
                         Quay lại vé của tôi
                     </a>
                 </div>
