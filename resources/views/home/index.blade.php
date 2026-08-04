@@ -236,7 +236,7 @@
             <h2 class="section-title">Phim bộ nổi bật</h2>
             <a href="{{ route('movies.index') }}?type=phimbo" class="view-all-link">Xem tất cả</a>
         </div>
-        <div class="movies-grid-style-2 featured-series-row">
+        <div class="movies-grid-style-2 featured-series-row" data-card-slider aria-label="Phim bộ nổi bật">
             @foreach ($phimBo->take(8) as $movie)
                 @include('components.movie-card', ['movie' => $movie])
             @endforeach
@@ -275,7 +275,7 @@
                 </div>
 
                 @if($genreLayout === 1)
-                    <div class="genre-cinema-row">
+                    <div class="genre-cinema-row" data-card-slider aria-label="Phim {{ $categoryName }}">
                         @foreach($genreMovies->take(7) as $movie)
                             <a href="{{ route('movies.introduce', $movie->id) }}" class="genre-cinema-card">
                                 <div class="genre-image">
@@ -385,8 +385,9 @@
         overflow-x: auto;
         overflow-y: hidden;
         padding-bottom: 15px;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(229, 9, 20, 0.6) rgba(255, 255, 255, 0.1);
+        scrollbar-width: none;
+        cursor: grab;
+        user-select: none;
     }
 
     .movies-grid-style-2 > * {
@@ -394,21 +395,7 @@
     }
 
     .movies-grid-style-2::-webkit-scrollbar {
-        height: 8px;
-    }
-
-    .movies-grid-style-2::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-    }
-
-    .movies-grid-style-2::-webkit-scrollbar-thumb {
-        background: rgba(229, 9, 20, 0.6);
-        border-radius: 10px;
-    }
-
-    .movies-grid-style-2::-webkit-scrollbar-thumb:hover {
-        background: rgba(229, 9, 20, 0.9);
+        display: none;
     }
 
     /* Style 3: Featured first + 4 smaller */
@@ -471,13 +458,19 @@
         overflow-y: hidden;
         padding: 0.5rem 0.25rem 1.5rem;
         scroll-snap-type: x proximity;
-        scrollbar-width: thin;
-        scrollbar-color: #e50914 rgba(255,255,255,.08);
+        scrollbar-width: none;
+        cursor: grab;
+        user-select: none;
     }
 
-    .ranking-row::-webkit-scrollbar { height: 7px; }
-    .ranking-row::-webkit-scrollbar-track { background: rgba(255,255,255,.08); border-radius: 20px; }
-    .ranking-row::-webkit-scrollbar-thumb { background: linear-gradient(90deg, #e50914, #ff5060); border-radius: 20px; }
+    .ranking-row::-webkit-scrollbar { display: none; }
+
+    .movies-grid-style-2.is-dragging,
+    .ranking-row.is-dragging,
+    .genre-cinema-row.is-dragging {
+        cursor: grabbing;
+        scroll-snap-type: none;
+    }
 
     .ranking-card {
         position: relative;
@@ -627,7 +620,12 @@
         overflow-x: auto;
         padding: .25rem .1rem 1rem;
         scroll-snap-type: x proximity;
+        scrollbar-width: none;
+        cursor: grab;
+        user-select: none;
     }
+
+    .genre-cinema-row::-webkit-scrollbar { display: none; }
 
     .genre-cinema-card {
         flex: 0 0 175px;
@@ -982,5 +980,100 @@
     setInterval(() => {
         changeSlide(1);
     }, 5000);
+
+    // Auto-scroll horizontal movie rows while keeping every card inside its section.
+    document.querySelectorAll('[data-ranking-slider], [data-card-slider], .genre-cinema-row').forEach((slider) => {
+        let autoSlideTimer = null;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartScrollLeft = 0;
+        let hasDragged = false;
+
+        const getSlideStep = () => {
+            const firstCard = slider.querySelector('.ranking-card') || slider.firstElementChild;
+            if (!firstCard) return 0;
+
+            const styles = window.getComputedStyle(slider);
+            const gap = parseFloat(styles.columnGap || styles.gap) || 0;
+            return firstCard.getBoundingClientRect().width + gap;
+        };
+
+        const moveToNextCard = () => {
+            const step = getSlideStep();
+            const maxScroll = slider.scrollWidth - slider.clientWidth;
+            if (!step || maxScroll <= 1) return;
+
+            const isAtEnd = slider.scrollLeft >= maxScroll - Math.max(2, step / 3);
+            slider.scrollTo({
+                left: isAtEnd ? 0 : Math.min(slider.scrollLeft + step, maxScroll),
+                behavior: 'smooth'
+            });
+        };
+
+        const stopAutoSlide = () => {
+            if (autoSlideTimer) {
+                window.clearInterval(autoSlideTimer);
+                autoSlideTimer = null;
+            }
+        };
+
+        const startAutoSlide = () => {
+            stopAutoSlide();
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            autoSlideTimer = window.setInterval(moveToNextCard, 1500);
+        };
+
+        slider.addEventListener('pointerdown', (event) => {
+            if (event.pointerType !== 'mouse' || event.button !== 0) return;
+
+            isDragging = true;
+            hasDragged = false;
+            dragStartX = event.clientX;
+            dragStartScrollLeft = slider.scrollLeft;
+            slider.classList.add('is-dragging');
+            slider.setPointerCapture(event.pointerId);
+            stopAutoSlide();
+        });
+
+        slider.addEventListener('pointermove', (event) => {
+            if (!isDragging) return;
+
+            const distance = event.clientX - dragStartX;
+            if (Math.abs(distance) > 4) hasDragged = true;
+            slider.scrollLeft = dragStartScrollLeft - distance;
+        });
+
+        const finishDragging = (event) => {
+            if (!isDragging) return;
+            isDragging = false;
+            slider.classList.remove('is-dragging');
+            if (slider.hasPointerCapture(event.pointerId)) {
+                slider.releasePointerCapture(event.pointerId);
+            }
+        };
+
+        slider.addEventListener('pointerup', finishDragging);
+        slider.addEventListener('pointercancel', finishDragging);
+        slider.addEventListener('dragstart', (event) => event.preventDefault());
+        slider.addEventListener('click', (event) => {
+            if (!hasDragged) return;
+            event.preventDefault();
+            event.stopPropagation();
+            hasDragged = false;
+        }, true);
+
+        slider.addEventListener('mouseenter', stopAutoSlide);
+        slider.addEventListener('mouseleave', startAutoSlide);
+        slider.addEventListener('focusin', stopAutoSlide);
+        slider.addEventListener('focusout', startAutoSlide);
+        slider.addEventListener('touchstart', stopAutoSlide, { passive: true });
+        slider.addEventListener('touchend', startAutoSlide, { passive: true });
+
+        document.addEventListener('visibilitychange', () => {
+            document.hidden ? stopAutoSlide() : startAutoSlide();
+        });
+
+        startAutoSlide();
+    });
 </script>
 @endsection
