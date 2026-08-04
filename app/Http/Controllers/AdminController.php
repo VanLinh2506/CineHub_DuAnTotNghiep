@@ -960,6 +960,10 @@ class AdminController extends Controller
 
     private function platformRevenueSources(?Carbon $start = null, ?Carbon $end = null)
     {
+        $subscriptionSourceNameSql = DB::connection()->getDriverName() === 'sqlite'
+            ? "COALESCE(subscriptions.name, 'Gói đã xóa') || ' · ' || COALESCE(transactions.method, 'Không rõ')"
+            : "CONCAT(COALESCE(subscriptions.name, 'Gói đã xóa'), ' · ', COALESCE(transactions.method, 'Không rõ'))";
+
         $tickets = DB::table('tickets')
             ->leftJoin('showtimes', 'showtimes.id', '=', 'tickets.showtime_id')
             ->join('theaters', 'theaters.id', '=', 'showtimes.theater_id')
@@ -981,7 +985,7 @@ class AdminController extends Controller
             ->where('transactions.type', 'subscription')->where('transactions.status', 'Thành công')
             ->when($start && $end, fn ($query) => $query->whereBetween('transactions.created_at', [$start, $end]))
             ->groupBy('subscriptions.id', 'subscriptions.name', 'transactions.method')
-            ->selectRaw("'subscription' as source_type, CONCAT(COALESCE(subscriptions.name, 'Gói đã xóa'), ' · ', COALESCE(transactions.method, 'Không rõ')) as source_name, COUNT(*) as transaction_count, SUM(transactions.amount) as revenue")
+            ->selectRaw("'subscription' as source_type, {$subscriptionSourceNameSql} as source_name, COUNT(*) as transaction_count, SUM(transactions.amount) as revenue")
             ->get();
 
         return $tickets->concat($subscriptions)->sortByDesc('revenue')->values();

@@ -390,6 +390,7 @@
             max-height: 1rem;
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/admin-luxury.css') }}">
     @stack('styles')
 </head>
 <body>

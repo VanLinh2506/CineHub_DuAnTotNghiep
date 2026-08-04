@@ -45,6 +45,7 @@
         }
         @media screen and (min-width: 769px) { .mobile-menu-toggle { display: none !important; } }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/admin-luxury.css') }}">
     @stack('styles')
 </head>
 <body>
