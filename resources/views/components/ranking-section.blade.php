@@ -4,7 +4,7 @@
         <a href="{{ route('movies.index', ['category' => $rankedMovies->first()->category_id]) }}" class="view-all-link">Xem tất cả</a>
     </div>
 
-    <div class="ranking-row">
+    <div class="ranking-row" data-ranking-slider aria-label="Top {{ $categoryName }}">
         @foreach ($rankedMovies as $rank => $movie)
             <a href="{{ route('movies.introduce', $movie->id) }}" class="ranking-card">
                 <span class="ranking-number" data-rank="{{ $rank + 1 }}">{{ $rank + 1 }}</span>
