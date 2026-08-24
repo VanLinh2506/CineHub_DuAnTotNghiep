@@ -749,8 +749,10 @@ function filterScreensByMovie(movieSelectId, screenSelectId) {
 
         Array.from(screenSelect.options).forEach(option => {
             if (!option.value) return;
-            const levels = { '2D': 1, '3D': 2, '4D': 3, '4DX': 3 };
-            const compatible = !format || (levels[option.dataset.format] || 0) >= (levels[format] || 0);
+            const normalizeFormat = value => (value || '2D').trim().toUpperCase() === '4D'
+                ? '4DX'
+                : (value || '2D').trim().toUpperCase();
+            const compatible = !format || normalizeFormat(option.dataset.format) === normalizeFormat(format);
             option.hidden = !compatible;
             option.disabled = !compatible;
             if (compatible && option.selected) selectedStillValid = true;

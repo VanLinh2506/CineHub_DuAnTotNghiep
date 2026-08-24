@@ -154,12 +154,15 @@
         min-height: 28px;
         padding: 0 9px;
         border-radius: 999px;
-        background: rgba(229, 9, 20, 0.94);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(20, 20, 20, 0.22);
         color: #fff;
         font-size: 12px;
         font-weight: 800;
         line-height: 1;
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.26);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 8px 18px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(12px) saturate(110%);
+        -webkit-backdrop-filter: blur(12px) saturate(110%);
     }
 
     .rating-badge i {

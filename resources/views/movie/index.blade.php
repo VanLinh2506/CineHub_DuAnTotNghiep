@@ -178,6 +178,43 @@
         </section>
         @endif
 
+        @if($search && !empty($actorResults) && $actorResults->isNotEmpty())
+        <section class="actor-search-results" aria-labelledby="actorSearchTitle">
+            <div class="actor-search-heading">
+                <span><i class="fas fa-user"></i> Diễn viên phù hợp</span>
+                <h2 id="actorSearchTitle">Thông tin diễn viên và phim có trên CineHub</h2>
+            </div>
+            <div class="actor-result-list">
+                @foreach($actorResults as $actor)
+                <article class="actor-result-card">
+                    <div class="actor-result-profile">
+                        <span class="actor-result-avatar"><i class="fas fa-user"></i></span>
+                        <div>
+                            <h3>{{ $actor['name'] }}</h3>
+                            <p>{{ $actor['movie_count'] }} phim hiện có trên CineHub</p>
+                        </div>
+                    </div>
+                    <div class="actor-movie-list">
+                        @foreach($actor['movies'] as $actorMovie)
+                        <a href="{{ $actorMovie['url'] }}" class="actor-movie-item">
+                            @if($actorMovie['thumbnail'])
+                            <img src="{{ $actorMovie['thumbnail'] }}" alt="{{ $actorMovie['title'] }}" loading="lazy">
+                            @else
+                            <span class="actor-movie-empty"><i class="fas fa-film"></i></span>
+                            @endif
+                            <span>
+                                <strong>{{ $actorMovie['title'] }}</strong>
+                                <small>@if($actorMovie['year']){{ $actorMovie['year'] }} · @endif<i class="fas fa-star"></i> {{ $actorMovie['rating'] }}</small>
+                            </span>
+                        </a>
+                        @endforeach
+                    </div>
+                </article>
+                @endforeach
+            </div>
+        </section>
+        @endif
+
         <h2 class="section-title">
             <i class="fas fa-video"></i>
             @if($search)
@@ -356,6 +393,25 @@
 </section>
 
 <style>
+    .actor-search-results { margin:0 0 2rem; padding:1.25rem; border:1px solid rgba(255,255,255,.12); border-radius:20px; background:rgba(255,255,255,.06); box-shadow:0 18px 45px rgba(0,0,0,.18); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+    .actor-search-heading span { color:#bbb; font-size:.76rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .actor-search-heading h2 { margin:.35rem 0 1rem; color:#fff; font-size:1.35rem; }
+    .actor-result-list { display:grid; gap:12px; }
+    .actor-result-card { display:grid; grid-template-columns:minmax(210px,.7fr) minmax(0,2fr); gap:18px; padding:14px; border:1px solid rgba(255,255,255,.1); border-radius:16px; background:rgba(10,10,10,.2); }
+    .actor-result-profile { display:flex; align-items:center; gap:12px; }
+    .actor-result-avatar { flex:0 0 52px; width:52px; height:52px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.25); border-radius:50%; color:#fff; background:rgba(255,255,255,.1); backdrop-filter:blur(10px); }
+    .actor-result-profile h3 { margin:0 0 4px; color:#fff; font-size:1rem; }
+    .actor-result-profile p { margin:0; color:#999; font-size:.78rem; }
+    .actor-movie-list { display:flex; gap:9px; overflow-x:auto; scrollbar-width:thin; }
+    .actor-movie-item { flex:0 0 190px; display:grid; grid-template-columns:42px minmax(0,1fr); gap:9px; align-items:center; padding:7px; border:1px solid rgba(255,255,255,.08); border-radius:11px; color:#fff; background:rgba(255,255,255,.05); text-decoration:none; }
+    .actor-movie-item:hover { color:#fff; border-color:rgba(255,255,255,.22); background:rgba(255,255,255,.1); }
+    .actor-movie-item img,.actor-movie-empty { width:42px; height:58px; object-fit:cover; border-radius:7px; }
+    .actor-movie-empty { display:grid; place-items:center; background:rgba(255,255,255,.08); }
+    .actor-movie-item strong { display:block; overflow:hidden; font-size:.78rem; text-overflow:ellipsis; white-space:nowrap; }
+    .actor-movie-item small { color:#999; font-size:.68rem; }
+    .actor-movie-item small i { color:#ffd166; }
+    @media(max-width:768px) { .actor-result-card { grid-template-columns:1fr; } }
+
     .movie-grid {
         grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
         gap: 22px;

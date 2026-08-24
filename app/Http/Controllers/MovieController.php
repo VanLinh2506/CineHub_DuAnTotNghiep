@@ -22,6 +22,7 @@ class MovieController extends Controller
     public function searchSuggestions(Request $request)
     {
         $keyword = trim((string) $request->input('q', ''));
+        $actors = $keyword !== '' ? $this->matchingActors($keyword, 3) : collect();
         $history = collect($request->input('history', []))
             ->filter(fn ($item) => is_string($item) && trim($item) !== '')
             ->map(fn ($item) => mb_substr(trim($item), 0, 80))
@@ -103,7 +104,10 @@ class MovieController extends Controller
                 return $movie;
             });
 
-        return response()->json(['movies' => $movies]);
+        return response()->json([
+            'actors' => $actors,
+            'movies' => $movies,
+        ]);
     }
 
     public function index(Request $request)
@@ -209,6 +213,7 @@ class MovieController extends Controller
                 ->toArray();
         }
         $watchProgressByMovie = $this->watchProgressByMovie();
+        $actorResults = $search !== '' ? $this->matchingActors($search, 6) : collect();
 
         return view('movie.index', compact(
             'movies',
@@ -221,7 +226,8 @@ class MovieController extends Controller
             'type',
             'minRating',
             'favorites',
-            'watchProgressByMovie'
+            'watchProgressByMovie',
+            'actorResults'
         ));
     }
 
@@ -1004,6 +1010,84 @@ class MovieController extends Controller
         $value = Str::ascii($value, 'vi');
 
         return trim(preg_replace('/\s+/', ' ', $value) ?? $value);
+    }
+
+    /**
+     * Build actor search results from the cast of movies currently available
+     * on CineHub. This keeps actor results tied to content users can open.
+     */
+    private function matchingActors(string $keyword, int $limit = 6)
+    {
+        $needle = $this->normalizeSearchText($keyword);
+        if ($needle === '') {
+            return collect();
+        }
+
+        $actors = [];
+        $movies = Movie::query()
+            ->whereIn('status', Movie::onlineStatuses())
+            ->whereNotNull('actors')
+            ->where('actors', '!=', '')
+            ->orderByDesc('rating')
+            ->get(['id', 'title', 'thumbnail', 'rating', 'publish_date', 'actors']);
+
+        foreach ($movies as $movie) {
+            foreach ($this->splitActorNames($movie->actors) as $actorName) {
+                if (!str_contains($this->normalizeSearchText($actorName), $needle)) {
+                    continue;
+                }
+
+                $key = $this->normalizeSearchText($actorName);
+                $actors[$key] ??= [
+                    'name' => $actorName,
+                    'url' => route('search', ['search' => $actorName]),
+                    'movies' => [],
+                ];
+
+                $actors[$key]['movies'][] = [
+                    'id' => $movie->id,
+                    'title' => $movie->title,
+                    'thumbnail' => $movie->thumbnail,
+                    'rating' => number_format((float) ($movie->rating ?? 0), 1),
+                    'year' => optional($movie->publish_date)->format('Y'),
+                    'url' => route('movies.introduce', $movie->id),
+                ];
+            }
+        }
+
+        return collect($actors)
+            ->map(function (array $actor) {
+                $actor['movie_count'] = count($actor['movies']);
+                $actor['movies'] = array_slice($actor['movies'], 0, 6);
+                return $actor;
+            })
+            ->sortByDesc('movie_count')
+            ->take($limit)
+            ->values();
+    }
+
+    private function splitActorNames(?string $value): array
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return [];
+        }
+
+        $decoded = json_decode($value, true);
+        $names = is_array($decoded) ? $decoded : preg_split('/[,;|\r\n]+/u', $value);
+
+        return collect($names ?: [])
+            ->map(function ($name) {
+                if (is_array($name)) {
+                    return trim((string) ($name['name'] ?? $name['original_name'] ?? ''));
+                }
+
+                return trim((string) $name);
+            })
+            ->filter()
+            ->unique(fn ($name) => $this->normalizeSearchText($name))
+            ->values()
+            ->all();
     }
 
     private const LEVEL_HIERARCHY = [

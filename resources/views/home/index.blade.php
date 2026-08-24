@@ -528,6 +528,7 @@
         -webkit-text-stroke: 3px rgba(255,255,255,.92);
         filter: drop-shadow(7px 8px 0 rgba(229,9,20,.62));
         user-select: none;
+        pointer-events: none;
     }
 
     .ranking-poster {
@@ -565,10 +566,13 @@
         bottom: 9px;
         padding: 5px 9px;
         border-radius: 999px;
-        background: rgba(229,9,20,.94);
+        border: 1px solid rgba(255,255,255,.3);
+        background: rgba(20,20,20,.22);
         font-size: .74rem;
         font-weight: 800;
-        box-shadow: 0 5px 15px rgba(0,0,0,.35);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 5px 15px rgba(0,0,0,.24);
+        backdrop-filter: blur(12px) saturate(110%);
+        -webkit-backdrop-filter: blur(12px) saturate(110%);
     }
 
     .ranking-rating i { color: #ffd84d; }
@@ -947,7 +951,8 @@
 
     .promo-btn-vertical {
         display: inline-block;
-        background: #e50914;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.1);
         color: #fff;
         padding: 0.7rem 1.8rem;
         border-radius: 25px;
@@ -956,12 +961,16 @@
         transition: all 0.3s ease;
         align-self: flex-start;
         text-transform: capitalize;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 24px rgba(0, 0, 0, 0.18);
+        backdrop-filter: blur(14px) saturate(110%);
+        -webkit-backdrop-filter: blur(14px) saturate(110%);
     }
 
     .promo-banner-vertical:hover .promo-btn-vertical {
-        background: #ff1f1f;
+        border-color: rgba(255, 255, 255, 0.46);
+        background: rgba(255, 255, 255, 0.18);
         transform: scale(1.08);
-        box-shadow: 0 5px 15px rgba(229, 9, 20, 0.5);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26), 0 10px 26px rgba(0, 0, 0, 0.24);
     }
 
     @media (max-width: 1200px) {
@@ -1152,7 +1161,6 @@
             dragStartX = event.clientX;
             dragStartScrollLeft = slider.scrollLeft;
             slider.classList.add('is-dragging');
-            slider.setPointerCapture(event.pointerId);
             stopAutoSlide();
         });
 
@@ -1160,7 +1168,10 @@
             if (!isDragging) return;
 
             const distance = event.clientX - dragStartX;
-            if (Math.abs(distance) > 4) hasDragged = true;
+            if (Math.abs(distance) > 4 && !hasDragged) {
+                hasDragged = true;
+                slider.setPointerCapture(event.pointerId);
+            }
             slider.scrollLeft = dragStartScrollLeft - distance;
         });
 

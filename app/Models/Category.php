@@ -9,6 +9,10 @@ class Category extends Model
 {
     use HasFactory;
 
+    // The existing categories table is a legacy table without timestamp
+    // columns, so Eloquent must not write created_at/updated_at.
+    public $timestamps = false;
+
     protected $fillable = [
         'name',
         'slug',

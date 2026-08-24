@@ -80,7 +80,7 @@
 <div class="modal fade" id="addCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ url('?route=admin/categories/store') }}" method="POST">
+            <form action="{{ route('admin.categories.store') }}" method="POST">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Thêm thể loại mới</h5>
@@ -114,9 +114,9 @@
 <div class="modal fade" id="editCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ url('?route=admin/categories/update') }}" method="POST">
+            <form action="" method="POST" id="editCategoryForm" data-action-template="{{ route('admin.categories.update', ['id' => '__ID__']) }}">
                 @csrf
-                <input type="hidden" name="id" id="edit_id">
+                @method('PUT')
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Sửa thể loại</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -149,9 +149,9 @@
 <div class="modal fade" id="deleteCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ url('?route=admin/categories/delete') }}" method="POST">
+            <form action="" method="POST" id="deleteCategoryForm" data-action-template="{{ route('admin.categories.destroy', ['id' => '__ID__']) }}">
                 @csrf
-                <input type="hidden" name="id" id="delete_id">
+                @method('DELETE')
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-trash me-2"></i>Xóa thể loại</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -171,14 +171,16 @@
 
 <script>
     function editCategory(category) {
-        document.getElementById('edit_id').value = category.id;
+        const form = document.getElementById('editCategoryForm');
+        form.action = form.dataset.actionTemplate.replace('__ID__', category.id);
         document.getElementById('edit_name').value = category.name;
         document.getElementById('edit_parent_id').value = category.parent_id || '';
         new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
     }
 
     function deleteCategory(id, name) {
-        document.getElementById('delete_id').value = id;
+        const form = document.getElementById('deleteCategoryForm');
+        form.action = form.dataset.actionTemplate.replace('__ID__', id);
         document.getElementById('delete_name').textContent = name;
         new bootstrap.Modal(document.getElementById('deleteCategoryModal')).show();
     }

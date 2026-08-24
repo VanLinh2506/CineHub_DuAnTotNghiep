@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th7 30, 2026 lúc 04:19 PM
+-- Thời gian đã tạo: Th8 24, 2026 lúc 06:12 PM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -122,7 +122,10 @@ CREATE TABLE `ai_conversations` (
 --
 
 INSERT INTO `ai_conversations` (`id`, `user_id`, `title`, `created_at`, `updated_at`) VALUES
-(1, 3, 'CineBot', '2026-07-17 03:15:22', '2026-07-28 12:37:23');
+(1, 3, 'CineBot', '2026-07-17 03:15:22', '2026-07-28 12:37:23'),
+(2, 9, 'CineBot', '2026-08-04 13:19:28', '2026-08-24 09:48:48'),
+(3, 19, 'CineBot', '2026-08-24 08:41:47', '2026-08-24 08:41:49'),
+(4, 42, 'CineBot', '2026-08-24 09:43:56', '2026-08-24 09:45:22');
 
 -- --------------------------------------------------------
 
@@ -156,7 +159,41 @@ INSERT INTO `ai_messages` (`id`, `conversation_id`, `role`, `content`, `metadata
 (9, 1, 'user', 'Hôm nay xem gì?', NULL, '2026-07-18 15:15:37', '2026-07-18 15:15:37'),
 (10, 1, 'assistant', 'Hôm nay CineBot chọn nhanh những phim này cho bạn:', '{\"movies\":[{\"id\":51,\"title\":\"Pha\\u0300m Nh\\u00e2n Tu Ti\\u00ean\",\"thumbnail\":null,\"rating\":0,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/51\\/introduce\"},{\"id\":28,\"title\":\"H\\u01b0\\u01a1ng V\\u1ecb T\\u00ecnh Th\\u00e2n (Ph\\u1ea7n 1)\",\"thumbnail\":\"\\/storage\\/data\\/img\\/huong_vi_tinh_than_p1_img.jpg\",\"rating\":8.4,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/28\\/introduce\"},{\"id\":33,\"title\":\"Phim ng\\u1eafn: 20 N\\u0103m 20 M\\u00f3n \\u0102n\",\"thumbnail\":\"\\/storage\\/data\\/img\\/20_nam.webp\",\"rating\":7,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/33\\/introduce\"},{\"id\":37,\"title\":\"Phim ng\\u1eafn: Ng\\u00e3 Ba \\u0110\\u1ed3ng L\\u1ed9c\",\"thumbnail\":\"\\/storage\\/data\\/img\\/nga_ba_dong_loc_img.jpg\",\"rating\":8.2,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/37\\/introduce\"}]}', '2026-07-18 15:15:37', '2026-07-18 15:15:37'),
 (11, 1, 'user', 'hé lô', NULL, '2026-07-28 12:37:20', '2026-07-28 12:37:20'),
-(12, 1, 'assistant', 'Chào bạn! Mình là CineBot, rất vui được hỗ trợ bạn. Bạn đang muốn tìm phim thuộc thể loại nào để giải trí hôm nay (như Hành động, Tình cảm, Phiêu lưu hay Hài)? Đây là một vài gợi ý phim hay miễn phí dành riêng cho bạn:', '{\"movies\":[{\"id\":1,\"title\":\"Avengers: Endgame\",\"thumbnail\":\"\\/storage\\/data\\/img\\/avengers_end_game_img.jpg\",\"rating\":9.2,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/1\\/introduce\"},{\"id\":2,\"title\":\"Titanic\",\"thumbnail\":\"\\/storage\\/data\\/img\\/titanic.jpg\",\"rating\":8.8,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/2\\/introduce\"},{\"id\":28,\"title\":\"H\\u01b0\\u01a1ng V\\u1ecb T\\u00ecnh Th\\u00e2n (Ph\\u1ea7n 1)\",\"thumbnail\":\"\\/storage\\/data\\/img\\/huong_vi_tinh_than_p1_img.jpg\",\"rating\":8.4,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/28\\/introduce\"},{\"id\":37,\"title\":\"Phim ng\\u1eafn: Ng\\u00e3 Ba \\u0110\\u1ed3ng L\\u1ed9c\",\"thumbnail\":\"\\/storage\\/data\\/img\\/nga_ba_dong_loc_img.jpg\",\"rating\":8.2,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/37\\/introduce\"}]}', '2026-07-28 12:37:23', '2026-07-28 12:37:23');
+(12, 1, 'assistant', 'Chào bạn! Mình là CineBot, rất vui được hỗ trợ bạn. Bạn đang muốn tìm phim thuộc thể loại nào để giải trí hôm nay (như Hành động, Tình cảm, Phiêu lưu hay Hài)? Đây là một vài gợi ý phim hay miễn phí dành riêng cho bạn:', '{\"movies\":[{\"id\":1,\"title\":\"Avengers: Endgame\",\"thumbnail\":\"\\/storage\\/data\\/img\\/avengers_end_game_img.jpg\",\"rating\":9.2,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/1\\/introduce\"},{\"id\":2,\"title\":\"Titanic\",\"thumbnail\":\"\\/storage\\/data\\/img\\/titanic.jpg\",\"rating\":8.8,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/2\\/introduce\"},{\"id\":28,\"title\":\"H\\u01b0\\u01a1ng V\\u1ecb T\\u00ecnh Th\\u00e2n (Ph\\u1ea7n 1)\",\"thumbnail\":\"\\/storage\\/data\\/img\\/huong_vi_tinh_than_p1_img.jpg\",\"rating\":8.4,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/28\\/introduce\"},{\"id\":37,\"title\":\"Phim ng\\u1eafn: Ng\\u00e3 Ba \\u0110\\u1ed3ng L\\u1ed9c\",\"thumbnail\":\"\\/storage\\/data\\/img\\/nga_ba_dong_loc_img.jpg\",\"rating\":8.2,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/37\\/introduce\"}]}', '2026-07-28 12:37:23', '2026-07-28 12:37:23'),
+(13, 2, 'user', 'hello', NULL, '2026-08-04 13:19:28', '2026-08-04 13:19:28'),
+(14, 2, 'assistant', 'Chào bạn! Mình là CineBot từ CineHub. Bạn đang muốn tìm phim thuộc thể loại nào hôm nay? Mình có một số gợi ý hấp dẫn dành cho bạn đây!', '{\"movies\":[{\"id\":1,\"title\":\"Avengers: Endgame\",\"thumbnail\":\"\\/storage\\/data\\/img\\/avengers_end_game_img.jpg\",\"rating\":9.2,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/1\\/introduce\"},{\"id\":2,\"title\":\"Titanic\",\"thumbnail\":\"\\/storage\\/data\\/img\\/titanic.jpg\",\"rating\":8.8,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/2\\/introduce\"},{\"id\":8,\"title\":\"Game of Thrones\",\"thumbnail\":\"\\/storage\\/data\\/img\\/game_of_thrones_img.webp\",\"rating\":9.3,\"level\":\"Premium\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/8\\/introduce\"},{\"id\":5,\"title\":\"Toy Story 4\",\"thumbnail\":\"\\/storage\\/data\\/img\\/toy_story_img.jpg\",\"rating\":null,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/5\\/introduce\"}]}', '2026-08-04 13:19:32', '2026-08-04 13:19:32'),
+(15, 2, 'user', 'tao là ai', NULL, '2026-08-04 13:19:40', '2026-08-04 13:19:40'),
+(16, 2, 'assistant', 'Bạn là người dùng yêu quý của CineHub, đang sử dụng gói Premium. Hôm nay bạn muốn xem phim gì nào? Gói của bạn có thể xem trọn bộ các phim cực hay này nhé!', '{\"movies\":[{\"id\":8,\"title\":\"Game of Thrones\",\"thumbnail\":\"\\/storage\\/data\\/img\\/game_of_thrones_img.webp\",\"rating\":9.3,\"level\":\"Premium\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/8\\/introduce\"},{\"id\":1,\"title\":\"Avengers: Endgame\",\"thumbnail\":\"\\/storage\\/data\\/img\\/avengers_end_game_img.jpg\",\"rating\":9.2,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/1\\/introduce\"},{\"id\":9,\"title\":\"Breaking Bad\",\"thumbnail\":\"\\/storage\\/data\\/img\\/breaking_bad_img.jpg\",\"rating\":9.5,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/9\\/introduce\"},{\"id\":2,\"title\":\"Titanic\",\"thumbnail\":\"\\/storage\\/data\\/img\\/titanic.jpg\",\"rating\":8.8,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/2\\/introduce\"}]}', '2026-08-04 13:19:43', '2026-08-04 13:19:43'),
+(17, 2, 'user', 'hi', NULL, '2026-08-24 05:25:44', '2026-08-24 05:25:44'),
+(18, 2, 'assistant', 'Gemini đang phản hồi chậm, nhưng CineBot đã chọn nhanh một vài phim phù hợp từ kho CineHub cho bạn:', '{\"movies\":[{\"id\":51,\"title\":\"Pha\\u0300m Nh\\u00e2n Tu Ti\\u00ean\",\"thumbnail\":\"\\/storage\\/posters\\/V7ZPSN3AoJ6aLu8oTLYttQJ3nW0IjOoR2iBmEaf9.jpg\",\"rating\":0,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/51\\/introduce\"},{\"id\":28,\"title\":\"H\\u01b0\\u01a1ng V\\u1ecb T\\u00ecnh Th\\u00e2n (Ph\\u1ea7n 1)\",\"thumbnail\":\"\\/storage\\/data\\/img\\/huong_vi_tinh_than_p1_img.jpg\",\"rating\":8.4,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/28\\/introduce\"},{\"id\":33,\"title\":\"Phim ng\\u1eafn: 20 N\\u0103m 20 M\\u00f3n \\u0102n\",\"thumbnail\":\"\\/storage\\/data\\/img\\/20_nam.webp\",\"rating\":7,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/33\\/introduce\"},{\"id\":37,\"title\":\"Phim ng\\u1eafn: Ng\\u00e3 Ba \\u0110\\u1ed3ng L\\u1ed9c\",\"thumbnail\":\"\\/storage\\/data\\/img\\/nga_ba_dong_loc_img.jpg\",\"rating\":8.2,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/37\\/introduce\"}]}', '2026-08-24 05:25:47', '2026-08-24 05:25:47'),
+(19, 2, 'user', 'hellp', NULL, '2026-08-24 07:23:28', '2026-08-24 07:23:28'),
+(20, 2, 'assistant', 'Gemini đang phản hồi chậm, nhưng CineBot đã chọn nhanh một vài phim phù hợp từ kho CineHub cho bạn:', '{\"movies\":[{\"id\":51,\"title\":\"Pha\\u0300m Nh\\u00e2n Tu Ti\\u00ean\",\"thumbnail\":\"\\/storage\\/posters\\/V7ZPSN3AoJ6aLu8oTLYttQJ3nW0IjOoR2iBmEaf9.jpg\",\"rating\":0,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/51\\/introduce\"},{\"id\":28,\"title\":\"H\\u01b0\\u01a1ng V\\u1ecb T\\u00ecnh Th\\u00e2n (Ph\\u1ea7n 1)\",\"thumbnail\":\"\\/storage\\/data\\/img\\/huong_vi_tinh_than_p1_img.jpg\",\"rating\":8.4,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/28\\/introduce\"},{\"id\":33,\"title\":\"Phim ng\\u1eafn: 20 N\\u0103m 20 M\\u00f3n \\u0102n\",\"thumbnail\":\"\\/storage\\/data\\/img\\/20_nam.webp\",\"rating\":7,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/33\\/introduce\"},{\"id\":37,\"title\":\"Phim ng\\u1eafn: Ng\\u00e3 Ba \\u0110\\u1ed3ng L\\u1ed9c\",\"thumbnail\":\"\\/storage\\/data\\/img\\/nga_ba_dong_loc_img.jpg\",\"rating\":8.2,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/37\\/introduce\"}]}', '2026-08-24 07:23:29', '2026-08-24 07:23:29'),
+(21, 2, 'user', 'hello', NULL, '2026-08-24 07:25:23', '2026-08-24 07:25:23'),
+(22, 2, 'assistant', 'Chào bạn! Rất vui được gặp lại. Với gói Premium, bạn có thể thưởng thức trọn vẹn các phim hành động, tình cảm, phiêu lưu và hoạt hình chất lượng 4K. Bạn muốn bắt đầu với siêu phẩm nào hôm nay?', '{\"movies\":[{\"id\":8,\"title\":\"Game of Thrones\",\"thumbnail\":\"\\/storage\\/data\\/img\\/game_of_thrones_img.webp\",\"rating\":9.3,\"level\":\"Premium\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/8\\/introduce\"},{\"id\":13,\"title\":\"The Crown\",\"thumbnail\":\"\\/storage\\/data\\/img\\/the_crown.jpg\",\"rating\":8.6,\"level\":\"Premium\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/13\\/introduce\"},{\"id\":32,\"title\":\"Th\\u01b0\\u01a1ng Ng\\u00e0y N\\u1eafng V\\u1ec1 (Ph\\u1ea7n 2)\",\"thumbnail\":\"\\/storage\\/data\\/img\\/thuong_ngay_nang_ve_img.jpg\",\"rating\":8.5,\"level\":\"Premium\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/32\\/introduce\"},{\"id\":51,\"title\":\"Pha\\u0300m Nh\\u00e2n Tu Ti\\u00ean\",\"thumbnail\":\"\\/storage\\/posters\\/V7ZPSN3AoJ6aLu8oTLYttQJ3nW0IjOoR2iBmEaf9.jpg\",\"rating\":0,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/51\\/introduce\"}]}', '2026-08-24 07:25:25', '2026-08-24 07:25:25'),
+(23, 2, 'user', 'xem phim gì hay', NULL, '2026-08-24 08:15:27', '2026-08-24 08:15:27'),
+(24, 2, 'assistant', 'Với gói Premium, mình gợi ý bạn những siêu phẩm hành động và tình cảm cực hay này: Game of Thrones, Breaking Bad, The Crown và Về Nhà Đi Con. Chúc bạn xem phim vui vẻ!', '{\"movies\":[{\"id\":8,\"title\":\"Game of Thrones\",\"thumbnail\":\"\\/storage\\/data\\/img\\/game_of_thrones_img.webp\",\"rating\":9.3,\"level\":\"Premium\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/8\\/introduce\"},{\"id\":9,\"title\":\"Breaking Bad\",\"thumbnail\":\"\\/storage\\/data\\/img\\/breaking_bad_img.jpg\",\"rating\":9.5,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/9\\/introduce\"},{\"id\":13,\"title\":\"The Crown\",\"thumbnail\":\"\\/storage\\/data\\/img\\/the_crown.jpg\",\"rating\":8.6,\"level\":\"Premium\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/13\\/introduce\"},{\"id\":29,\"title\":\"V\\u1ec1 Nh\\u00e0 \\u0110i Con\",\"thumbnail\":\"\\/storage\\/data\\/img\\/venhadicon_img.webp\",\"rating\":9,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/29\\/introduce\"}]}', '2026-08-24 08:15:30', '2026-08-24 08:15:30'),
+(25, 2, 'user', 'phim nào đánh nhau gayy', NULL, '2026-08-24 08:15:50', '2026-08-24 08:15:50'),
+(26, 2, 'assistant', 'Nếu bạn thích những pha hành động kịch tính và đánh nhau mãn nhãn, mình gợi ý các phim này nhé: Breaking Bad, Avengers: Endgame, Sherlock và John Wick (2014). Chúc bạn xem phim vui vẻ!', '{\"movies\":[{\"id\":9,\"title\":\"Breaking Bad\",\"thumbnail\":\"\\/storage\\/data\\/img\\/breaking_bad_img.jpg\",\"rating\":9.5,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/9\\/introduce\"},{\"id\":1,\"title\":\"Avengers: Endgame\",\"thumbnail\":\"\\/storage\\/data\\/img\\/avengers_end_game_img.jpg\",\"rating\":9.2,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/1\\/introduce\"},{\"id\":14,\"title\":\"Sherlock\",\"thumbnail\":\"\\/storage\\/data\\/img\\/Sherlock_img.jpg\",\"rating\":9.1,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/14\\/introduce\"},{\"id\":84,\"title\":\"John Wick (2014)\",\"thumbnail\":\"\\/storage\\/posters\\/ZpSp8Fd6Xak6AgUqEDzzYUodFrB4TmIsQv47Q9fQ.webp\",\"rating\":7,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/84\\/introduce\"}]}', '2026-08-24 08:15:52', '2026-08-24 08:15:52'),
+(27, 2, 'user', 'xem phim người lớn có tình tiết khiêu dâm', NULL, '2026-08-24 08:30:00', '2026-08-24 08:30:00'),
+(28, 2, 'assistant', 'Rất tiếc, CineHub không cung cấp các nội dung khiêu dâm. Mình có thể gợi ý những bộ phim hành động hoặc tình cảm kịch tính khác phù hợp với sở thích của bạn không?', '{\"movies\":[]}', '2026-08-24 08:30:01', '2026-08-24 08:30:01'),
+(29, 2, 'user', 'thế thì phim người lớn', NULL, '2026-08-24 08:30:13', '2026-08-24 08:30:13'),
+(30, 2, 'assistant', 'Rất tiếc, mình không có nội dung người lớn. Thay vào đó, mời bạn thưởng thức những bộ phim tình cảm và hành động kịch tính, hấp dẫn nhất trong gói Premium của bạn nhé!', '{\"movies\":[{\"id\":8,\"title\":\"Game of Thrones\",\"thumbnail\":\"\\/storage\\/data\\/img\\/game_of_thrones_img.webp\",\"rating\":9.3,\"level\":\"Premium\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/8\\/introduce\"},{\"id\":9,\"title\":\"Breaking Bad\",\"thumbnail\":\"\\/storage\\/data\\/img\\/breaking_bad_img.jpg\",\"rating\":9.5,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/9\\/introduce\"},{\"id\":13,\"title\":\"The Crown\",\"thumbnail\":\"\\/storage\\/data\\/img\\/the_crown.jpg\",\"rating\":8.6,\"level\":\"Premium\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/13\\/introduce\"},{\"id\":29,\"title\":\"V\\u1ec1 Nh\\u00e0 \\u0110i Con\",\"thumbnail\":\"\\/storage\\/data\\/img\\/venhadicon_img.webp\",\"rating\":9,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/29\\/introduce\"}]}', '2026-08-24 08:30:15', '2026-08-24 08:30:15'),
+(31, 2, 'user', 'thế phim trẻ em là phim gì', NULL, '2026-08-24 08:30:30', '2026-08-24 08:30:30'),
+(32, 2, 'assistant', 'CineHub có nhiều phim hoạt hình thú vị dành cho trẻ em và cả gia đình như Toy Story 4 hoặc phim ngắn 20 Năm 20 Món Ăn. Bạn có muốn mình phát ngay không?', '{\"movies\":[{\"id\":5,\"title\":\"Toy Story 4\",\"thumbnail\":\"\\/storage\\/data\\/img\\/toy_story_img.jpg\",\"rating\":null,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/5\\/introduce\"},{\"id\":33,\"title\":\"Phim ng\\u1eafn: 20 N\\u0103m 20 M\\u00f3n \\u0102n\",\"thumbnail\":\"\\/storage\\/data\\/img\\/20_nam.webp\",\"rating\":7,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/33\\/introduce\"}]}', '2026-08-24 08:30:32', '2026-08-24 08:30:32'),
+(33, 2, 'user', 'có phim người trung tuổi không', NULL, '2026-08-24 08:30:44', '2026-08-24 08:30:44'),
+(34, 2, 'assistant', 'Chào bạn, với khán giả trung tuổi, mình gợi ý những bộ phim có chiều sâu về tình cảm gia đình và tâm lý xã hội như Về Nhà Đi Con, Thương Ngày Nắng Về (Phần 2), Hương Vị Tình Thân hoặc The Crown. Đây đều là những tác phẩm rất đáng xem.', '{\"movies\":[{\"id\":29,\"title\":\"V\\u1ec1 Nh\\u00e0 \\u0110i Con\",\"thumbnail\":\"\\/storage\\/data\\/img\\/venhadicon_img.webp\",\"rating\":9,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/29\\/introduce\"},{\"id\":32,\"title\":\"Th\\u01b0\\u01a1ng Ng\\u00e0y N\\u1eafng V\\u1ec1 (Ph\\u1ea7n 2)\",\"thumbnail\":\"\\/storage\\/data\\/img\\/thuong_ngay_nang_ve_img.jpg\",\"rating\":8.5,\"level\":\"Premium\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/32\\/introduce\"},{\"id\":28,\"title\":\"H\\u01b0\\u01a1ng V\\u1ecb T\\u00ecnh Th\\u00e2n (Ph\\u1ea7n 1)\",\"thumbnail\":\"\\/storage\\/data\\/img\\/huong_vi_tinh_than_p1_img.jpg\",\"rating\":8.4,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/28\\/introduce\"},{\"id\":13,\"title\":\"The Crown\",\"thumbnail\":\"\\/storage\\/data\\/img\\/the_crown.jpg\",\"rating\":8.6,\"level\":\"Premium\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/13\\/introduce\"}]}', '2026-08-24 08:30:46', '2026-08-24 08:30:46'),
+(35, 2, 'user', 'phim người già 90 tuổi', NULL, '2026-08-24 08:31:02', '2026-08-24 08:31:02'),
+(36, 2, 'assistant', 'Chào bạn, với khán giả lớn tuổi, những bộ phim về tình cảm gia đình và các cột mốc cuộc đời như Về Nhà Đi Con, Thương Ngày Nắng Về, Hương Vị Tình Thân hoặc The Crown sẽ rất phù hợp với trải nghiệm sâu sắc của bạn. Bạn có muốn xem thử những bộ phim này không?', '{\"movies\":[{\"id\":29,\"title\":\"V\\u1ec1 Nh\\u00e0 \\u0110i Con\",\"thumbnail\":\"\\/storage\\/data\\/img\\/venhadicon_img.webp\",\"rating\":9,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/29\\/introduce\"},{\"id\":32,\"title\":\"Th\\u01b0\\u01a1ng Ng\\u00e0y N\\u1eafng V\\u1ec1 (Ph\\u1ea7n 2)\",\"thumbnail\":\"\\/storage\\/data\\/img\\/thuong_ngay_nang_ve_img.jpg\",\"rating\":8.5,\"level\":\"Premium\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/32\\/introduce\"},{\"id\":28,\"title\":\"H\\u01b0\\u01a1ng V\\u1ecb T\\u00ecnh Th\\u00e2n (Ph\\u1ea7n 1)\",\"thumbnail\":\"\\/storage\\/data\\/img\\/huong_vi_tinh_than_p1_img.jpg\",\"rating\":8.4,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/28\\/introduce\"},{\"id\":13,\"title\":\"The Crown\",\"thumbnail\":\"\\/storage\\/data\\/img\\/the_crown.jpg\",\"rating\":8.6,\"level\":\"Premium\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/13\\/introduce\"}]}', '2026-08-24 08:31:04', '2026-08-24 08:31:04'),
+(37, 2, 'user', 'phim tu tiên', NULL, '2026-08-24 08:31:29', '2026-08-24 08:31:29'),
+(38, 2, 'assistant', 'Chào bạn, với yêu cầu phim tu tiên, mình gợi ý bộ Phàm Nhân Tu Tiên. Đây là tác phẩm rất hấp dẫn kết hợp giữa hành động, tình cảm và hoạt hình, hiện đã có sẵn trong gói Premium của bạn để thưởng thức!', '{\"movies\":[{\"id\":51,\"title\":\"Pha\\u0300m Nh\\u00e2n Tu Ti\\u00ean\",\"thumbnail\":\"\\/storage\\/posters\\/V7ZPSN3AoJ6aLu8oTLYttQJ3nW0IjOoR2iBmEaf9.jpg\",\"rating\":0,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/51\\/introduce\"}]}', '2026-08-24 08:31:31', '2026-08-24 08:31:31'),
+(39, 3, 'user', 'phim tiên', NULL, '2026-08-24 08:41:47', '2026-08-24 08:41:47'),
+(40, 3, 'assistant', 'Chào bạn, với yêu cầu phim tiên hiệp, mình gợi ý bạn xem Phàm Nhân Tu Tiên. Đây là bộ phim rất hấp dẫn, tuy nhiên cần gói Gold để thưởng thức. Bạn có muốn nâng cấp gói để xem ngay không?', '{\"movies\":[{\"id\":51,\"title\":\"Pha\\u0300m Nh\\u00e2n Tu Ti\\u00ean\",\"thumbnail\":\"\\/storage\\/posters\\/V7ZPSN3AoJ6aLu8oTLYttQJ3nW0IjOoR2iBmEaf9.jpg\",\"rating\":0,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/51\\/introduce\"}]}', '2026-08-24 08:41:49', '2026-08-24 08:41:49'),
+(41, 4, 'user', 'tìm cho tôi vài phim freee\\', NULL, '2026-08-24 09:43:56', '2026-08-24 09:43:56'),
+(42, 4, 'assistant', 'Chào bạn, đây là những bộ phim miễn phí hấp dẫn bạn có thể xem ngay: Avengers: Endgame, Titanic, Toy Story 4 và Hương Vị Tình Thân. Chúc bạn xem phim vui vẻ!', '{\"movies\":[{\"id\":1,\"title\":\"Avengers: Endgame\",\"thumbnail\":\"\\/storage\\/data\\/img\\/avengers_end_game_img.jpg\",\"rating\":9.2,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/1\\/introduce\"},{\"id\":2,\"title\":\"Titanic\",\"thumbnail\":\"\\/storage\\/data\\/img\\/titanic.jpg\",\"rating\":8.8,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/2\\/introduce\"},{\"id\":5,\"title\":\"Toy Story 4\",\"thumbnail\":\"\\/storage\\/data\\/img\\/toy_story_img.jpg\",\"rating\":null,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/5\\/introduce\"},{\"id\":28,\"title\":\"H\\u01b0\\u01a1ng V\\u1ecb T\\u00ecnh Th\\u00e2n (Ph\\u1ea7n 1)\",\"thumbnail\":\"\\/storage\\/data\\/img\\/huong_vi_tinh_than_p1_img.jpg\",\"rating\":8.4,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/28\\/introduce\"}]}', '2026-08-24 09:43:57', '2026-08-24 09:43:57'),
+(43, 4, 'user', 'gợi ý cho tôi vài phim hay', NULL, '2026-08-24 09:45:20', '2026-08-24 09:45:20'),
+(44, 4, 'assistant', 'Chào bạn, với sở thích phim hành động, mình gợi ý bạn xem Avengers: Endgame, Die Hard hoặc [ADMIN TEST] Phim rạp lịch sử. Nếu muốn trải nghiệm các siêu phẩm như Breaking Bad hay Sherlock, bạn có thể cân nhắc nâng cấp lên gói Gold nhé!', '{\"movies\":[{\"id\":1,\"title\":\"Avengers: Endgame\",\"thumbnail\":\"\\/storage\\/data\\/img\\/avengers_end_game_img.jpg\",\"rating\":9.2,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/1\\/introduce\"},{\"id\":86,\"title\":\"Die Hard (1988)\",\"thumbnail\":\"\\/storage\\/posters\\/o73rezbHG1v6W5IOsyy1Y4wSMiLiKRVr3gjwf8JT.webp\",\"rating\":7.7,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/86\\/introduce\"},{\"id\":62,\"title\":\"[ADMIN TEST] Phim r\\u1ea1p l\\u1ecbch s\\u1eed\",\"thumbnail\":\"\\/storage\\/posters\\/9b7OHuvgX8hRbER5juiAjjmaGyZrT2Ck8TowBiaH.png\",\"rating\":8.1,\"level\":\"Free\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/62\\/introduce\"},{\"id\":9,\"title\":\"Breaking Bad\",\"thumbnail\":\"\\/storage\\/data\\/img\\/breaking_bad_img.jpg\",\"rating\":9.5,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/9\\/introduce\"}]}', '2026-08-24 09:45:22', '2026-08-24 09:45:22'),
+(45, 2, 'user', 'gợi ý phim theo sở thích của tôi', NULL, '2026-08-24 09:48:46', '2026-08-24 09:48:46'),
+(46, 2, 'assistant', 'Với sở thích hành động, tình cảm và phiêu lưu, mình gợi ý bạn xem Game of Thrones (phiêu lưu), Breaking Bad (hành động), Về Nhà Đi Con (tình cảm) và Phàm Nhân Tu Tiên (hành động, tình cảm, hoạt hình). Đây đều là những bộ phim cực kỳ chất lượng và phù hợp với gói Premium của bạn.', '{\"movies\":[{\"id\":8,\"title\":\"Game of Thrones\",\"thumbnail\":\"\\/storage\\/data\\/img\\/game_of_thrones_img.webp\",\"rating\":9.3,\"level\":\"Premium\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/8\\/introduce\"},{\"id\":9,\"title\":\"Breaking Bad\",\"thumbnail\":\"\\/storage\\/data\\/img\\/breaking_bad_img.jpg\",\"rating\":9.5,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/9\\/introduce\"},{\"id\":29,\"title\":\"V\\u1ec1 Nh\\u00e0 \\u0110i Con\",\"thumbnail\":\"\\/storage\\/data\\/img\\/venhadicon_img.webp\",\"rating\":9,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/29\\/introduce\"},{\"id\":51,\"title\":\"Pha\\u0300m Nh\\u00e2n Tu Ti\\u00ean\",\"thumbnail\":\"\\/storage\\/posters\\/V7ZPSN3AoJ6aLu8oTLYttQJ3nW0IjOoR2iBmEaf9.jpg\",\"rating\":0,\"level\":\"Gold\",\"url\":\"http:\\/\\/127.0.0.1:8000\\/movies\\/51\\/introduce\"}]}', '2026-08-24 09:48:48', '2026-08-24 09:48:48');
 
 -- --------------------------------------------------------
 
@@ -256,7 +293,8 @@ INSERT INTO `booking_food_items` (`id`, `ticket_id`, `booking_pending_id`, `food
 (84, NULL, 860, 3, 1, 150000.00, '2025-12-10 08:55:51'),
 (85, NULL, 865, 1, 1, 85000.00, '2025-12-12 02:05:25'),
 (86, NULL, 867, 1, 1, 85000.00, '2025-12-15 03:06:58'),
-(87, NULL, 870, 1, 1, 85000.00, '2025-12-29 14:37:36');
+(87, NULL, 870, 1, 1, 85000.00, '2025-12-29 14:37:36'),
+(88, NULL, 985, 21, 1, 50000.00, '2026-08-24 06:40:59');
 
 -- --------------------------------------------------------
 
@@ -358,7 +396,56 @@ INSERT INTO `booking_pending` (`id`, `user_id`, `customer_name`, `customer_phone
 (933, 7, 'Khách kiểm thử 5', '0900000029', 41875, '[\"A1\",\"A2\"]', NULL, 'admin-test-29@cinehub.local', 180000.00, 'ADMINTEST2026061229', 'ADMIN-TEST-20260612-29', 'completed', '2026-06-12 11:15:00', '2026-06-12 11:30:00', 'ADMIN-TEST-QR-29'),
 (934, 8, 'Khách kiểm thử 6', '0900000030', 41948, '[\"D1\",\"D2\"]', NULL, 'admin-test-30@cinehub.local', 240000.00, 'ADMINTEST2026061130', 'ADMIN-TEST-20260611-30', 'completed', '2026-06-11 11:15:00', '2026-06-11 11:30:00', 'ADMIN-TEST-QR-30'),
 (935, 9, NULL, NULL, 50348, '[\"F5\",\"F4\",\"F6\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 585000.00, 'BKG9_1783727191', NULL, 'completed', '2026-07-10 23:46:31', '2026-07-10 23:56:21', 'BOOKING_CM97zo5QHEXbPZnFBk5Av8aZ'),
-(937, 9, NULL, NULL, 50362, '[\"G6\",\"G5\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 240000.00, 'BKG9_20260730210904598_0st0', NULL, 'pending', '2026-07-30 14:08:23', '2026-07-30 14:18:10', NULL);
+(937, 9, NULL, NULL, 50362, '[\"G6\",\"G5\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 240000.00, 'BKG9_20260730210904598_0st0', NULL, 'pending', '2026-07-30 14:08:23', '2026-07-30 14:18:10', NULL),
+(939, 2, 'Khách test biểu đồ', '0900000000', 50364, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\",\"B10\",\"B11\",\"B12\"]', '[]', 'chart-test@lotte.local', 1080000.00, 'LOTTE-CHART-TEST-TXN-20260811-0', 'LOTTE-CHART-TEST-20260811-0', 'completed', '2026-08-11 02:15:00', NULL, NULL),
+(940, 2, 'Khách test biểu đồ', '0900000000', 50365, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\"]', '[{\"name\":\"B\\u1eafp rang test\",\"quantity\":1,\"price\":45000}]', 'chart-test@lotte.local', 675000.00, 'LOTTE-CHART-TEST-TXN-20260811-1', 'LOTTE-CHART-TEST-20260811-1', 'completed', '2026-08-11 03:15:00', NULL, NULL),
+(941, 2, 'Khách test biểu đồ', '0900000000', 50366, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\"]', '[]', 'chart-test@lotte.local', 1080000.00, 'LOTTE-CHART-TEST-TXN-20260811-2', 'LOTTE-CHART-TEST-20260811-2', 'completed', '2026-08-11 04:15:00', NULL, NULL),
+(942, 2, 'Khách test biểu đồ', '0900000000', 50367, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\",\"B10\"]', '[]', 'chart-test@lotte.local', 900000.00, 'LOTTE-CHART-TEST-TXN-20260812-0', 'LOTTE-CHART-TEST-20260812-0', 'completed', '2026-08-12 02:15:00', NULL, NULL),
+(943, 2, 'Khách test biểu đồ', '0900000000', 50368, '[\"B1\",\"B2\",\"B3\",\"B4\"]', '[{\"name\":\"B\\u1eafp rang test\",\"quantity\":1,\"price\":45000}]', 'chart-test@lotte.local', 465000.00, 'LOTTE-CHART-TEST-TXN-20260812-1', 'LOTTE-CHART-TEST-20260812-1', 'completed', '2026-08-12 03:15:00', NULL, NULL),
+(944, 2, 'Khách test biểu đồ', '0900000000', 50369, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\"]', '[]', 'chart-test@lotte.local', 840000.00, 'LOTTE-CHART-TEST-TXN-20260812-2', 'LOTTE-CHART-TEST-20260812-2', 'completed', '2026-08-12 04:15:00', NULL, NULL),
+(945, 2, 'Khách test biểu đồ', '0900000000', 50370, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\"]', '[]', 'chart-test@lotte.local', 720000.00, 'LOTTE-CHART-TEST-TXN-20260813-0', 'LOTTE-CHART-TEST-20260813-0', 'completed', '2026-08-13 02:15:00', NULL, NULL),
+(946, 2, 'Khách test biểu đồ', '0900000000', 50371, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\",\"B10\",\"B11\"]', '[{\"name\":\"B\\u1eafp rang test\",\"quantity\":1,\"price\":45000}]', 'chart-test@lotte.local', 1200000.00, 'LOTTE-CHART-TEST-TXN-20260813-1', 'LOTTE-CHART-TEST-20260813-1', 'completed', '2026-08-13 03:15:00', NULL, NULL),
+(947, 2, 'Khách test biểu đồ', '0900000000', 50372, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\"]', '[]', 'chart-test@lotte.local', 600000.00, 'LOTTE-CHART-TEST-TXN-20260813-2', 'LOTTE-CHART-TEST-20260813-2', 'completed', '2026-08-13 04:15:00', NULL, NULL),
+(948, 2, 'Khách test biểu đồ', '0900000000', 50373, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\"]', '[]', 'chart-test@lotte.local', 540000.00, 'LOTTE-CHART-TEST-TXN-20260814-0', 'LOTTE-CHART-TEST-20260814-0', 'completed', '2026-08-14 02:15:00', NULL, NULL),
+(949, 2, 'Khách test biểu đồ', '0900000000', 50374, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\"]', '[{\"name\":\"B\\u1eafp rang test\",\"quantity\":1,\"price\":45000}]', 'chart-test@lotte.local', 990000.00, 'LOTTE-CHART-TEST-TXN-20260814-1', 'LOTTE-CHART-TEST-20260814-1', 'completed', '2026-08-14 03:15:00', NULL, NULL),
+(950, 2, 'Khách test biểu đồ', '0900000000', 50375, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\",\"B10\",\"B11\",\"B12\"]', '[]', 'chart-test@lotte.local', 1440000.00, 'LOTTE-CHART-TEST-TXN-20260814-2', 'LOTTE-CHART-TEST-20260814-2', 'completed', '2026-08-14 04:15:00', NULL, NULL),
+(951, 2, 'Khách test biểu đồ', '0900000000', 50376, '[\"B1\",\"B2\",\"B3\",\"B4\"]', '[]', 'chart-test@lotte.local', 360000.00, 'LOTTE-CHART-TEST-TXN-20260815-0', 'LOTTE-CHART-TEST-20260815-0', 'completed', '2026-08-15 02:15:00', NULL, NULL),
+(952, 2, 'Khách test biểu đồ', '0900000000', 50377, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\"]', '[{\"name\":\"B\\u1eafp rang test\",\"quantity\":1,\"price\":45000}]', 'chart-test@lotte.local', 780000.00, 'LOTTE-CHART-TEST-TXN-20260815-1', 'LOTTE-CHART-TEST-20260815-1', 'completed', '2026-08-15 03:15:00', NULL, NULL),
+(953, 2, 'Khách test biểu đồ', '0900000000', 50378, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\",\"B10\"]', '[]', 'chart-test@lotte.local', 1200000.00, 'LOTTE-CHART-TEST-TXN-20260815-2', 'LOTTE-CHART-TEST-20260815-2', 'completed', '2026-08-15 04:15:00', NULL, NULL),
+(954, 2, 'Khách test biểu đồ', '0900000000', 50379, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\",\"B10\",\"B11\"]', '[]', 'chart-test@lotte.local', 990000.00, 'LOTTE-CHART-TEST-TXN-20260816-0', 'LOTTE-CHART-TEST-20260816-0', 'completed', '2026-08-16 02:15:00', NULL, NULL),
+(955, 2, 'Khách test biểu đồ', '0900000000', 50380, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\"]', '[{\"name\":\"B\\u1eafp rang test\",\"quantity\":1,\"price\":45000}]', 'chart-test@lotte.local', 570000.00, 'LOTTE-CHART-TEST-TXN-20260816-1', 'LOTTE-CHART-TEST-20260816-1', 'completed', '2026-08-16 03:15:00', NULL, NULL),
+(956, 2, 'Khách test biểu đồ', '0900000000', 50381, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\"]', '[]', 'chart-test@lotte.local', 960000.00, 'LOTTE-CHART-TEST-TXN-20260816-2', 'LOTTE-CHART-TEST-20260816-2', 'completed', '2026-08-16 04:15:00', NULL, NULL),
+(957, 2, 'Khách test biểu đồ', '0900000000', 50382, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\"]', '[]', 'chart-test@lotte.local', 810000.00, 'LOTTE-CHART-TEST-TXN-20260817-0', 'LOTTE-CHART-TEST-20260817-0', 'completed', '2026-08-17 02:15:00', NULL, NULL),
+(958, 2, 'Khách test biểu đồ', '0900000000', 50383, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\",\"B10\",\"B11\",\"B12\"]', '[{\"name\":\"B\\u1eafp rang test\",\"quantity\":1,\"price\":45000}]', 'chart-test@lotte.local', 1305000.00, 'LOTTE-CHART-TEST-TXN-20260817-1', 'LOTTE-CHART-TEST-20260817-1', 'completed', '2026-08-17 03:15:00', NULL, NULL),
+(959, 2, 'Khách test biểu đồ', '0900000000', 50384, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\"]', '[]', 'chart-test@lotte.local', 720000.00, 'LOTTE-CHART-TEST-TXN-20260817-2', 'LOTTE-CHART-TEST-20260817-2', 'completed', '2026-08-17 04:15:00', NULL, NULL),
+(960, 2, 'Khách test biểu đồ', '0900000000', 50385, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\"]', '[]', 'chart-test@lotte.local', 630000.00, 'LOTTE-CHART-TEST-TXN-20260818-0', 'LOTTE-CHART-TEST-20260818-0', 'completed', '2026-08-18 02:15:00', NULL, NULL),
+(961, 2, 'Khách test biểu đồ', '0900000000', 50386, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\",\"B10\"]', '[{\"name\":\"B\\u1eafp rang test\",\"quantity\":1,\"price\":45000}]', 'chart-test@lotte.local', 1095000.00, 'LOTTE-CHART-TEST-TXN-20260818-1', 'LOTTE-CHART-TEST-20260818-1', 'completed', '2026-08-18 03:15:00', NULL, NULL),
+(962, 2, 'Khách test biểu đồ', '0900000000', 50387, '[\"B1\",\"B2\",\"B3\",\"B4\"]', '[]', 'chart-test@lotte.local', 480000.00, 'LOTTE-CHART-TEST-TXN-20260818-2', 'LOTTE-CHART-TEST-20260818-2', 'completed', '2026-08-18 04:15:00', NULL, NULL),
+(963, 2, 'Khách test biểu đồ', '0900000000', 50388, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\"]', '[]', 'chart-test@lotte.local', 450000.00, 'LOTTE-CHART-TEST-TXN-20260819-0', 'LOTTE-CHART-TEST-20260819-0', 'completed', '2026-08-19 02:15:00', NULL, NULL),
+(964, 2, 'Khách test biểu đồ', '0900000000', 50389, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\"]', '[{\"name\":\"B\\u1eafp rang test\",\"quantity\":1,\"price\":45000}]', 'chart-test@lotte.local', 885000.00, 'LOTTE-CHART-TEST-TXN-20260819-1', 'LOTTE-CHART-TEST-20260819-1', 'completed', '2026-08-19 03:15:00', NULL, NULL),
+(965, 2, 'Khách test biểu đồ', '0900000000', 50390, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\",\"B10\",\"B11\"]', '[]', 'chart-test@lotte.local', 1320000.00, 'LOTTE-CHART-TEST-TXN-20260819-2', 'LOTTE-CHART-TEST-20260819-2', 'completed', '2026-08-19 04:15:00', NULL, NULL),
+(966, 2, 'Khách test biểu đồ', '0900000000', 50391, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\",\"B10\",\"B11\",\"B12\"]', '[]', 'chart-test@lotte.local', 1080000.00, 'LOTTE-CHART-TEST-TXN-20260820-0', 'LOTTE-CHART-TEST-20260820-0', 'completed', '2026-08-20 02:15:00', NULL, NULL),
+(967, 2, 'Khách test biểu đồ', '0900000000', 50392, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\"]', '[{\"name\":\"B\\u1eafp rang test\",\"quantity\":1,\"price\":45000}]', 'chart-test@lotte.local', 675000.00, 'LOTTE-CHART-TEST-TXN-20260820-1', 'LOTTE-CHART-TEST-20260820-1', 'completed', '2026-08-20 03:15:00', NULL, NULL),
+(968, 2, 'Khách test biểu đồ', '0900000000', 50393, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\"]', '[]', 'chart-test@lotte.local', 1080000.00, 'LOTTE-CHART-TEST-TXN-20260820-2', 'LOTTE-CHART-TEST-20260820-2', 'completed', '2026-08-20 04:15:00', NULL, NULL),
+(969, 2, 'Khách test biểu đồ', '0900000000', 50394, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\",\"B10\"]', '[]', 'chart-test@lotte.local', 900000.00, 'LOTTE-CHART-TEST-TXN-20260821-0', 'LOTTE-CHART-TEST-20260821-0', 'completed', '2026-08-21 02:15:00', NULL, NULL),
+(970, 2, 'Khách test biểu đồ', '0900000000', 50395, '[\"B1\",\"B2\",\"B3\",\"B4\"]', '[{\"name\":\"B\\u1eafp rang test\",\"quantity\":1,\"price\":45000}]', 'chart-test@lotte.local', 465000.00, 'LOTTE-CHART-TEST-TXN-20260821-1', 'LOTTE-CHART-TEST-20260821-1', 'completed', '2026-08-21 03:15:00', NULL, NULL),
+(971, 2, 'Khách test biểu đồ', '0900000000', 50396, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\"]', '[]', 'chart-test@lotte.local', 840000.00, 'LOTTE-CHART-TEST-TXN-20260821-2', 'LOTTE-CHART-TEST-20260821-2', 'completed', '2026-08-21 04:15:00', NULL, NULL),
+(972, 2, 'Khách test biểu đồ', '0900000000', 50397, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\"]', '[]', 'chart-test@lotte.local', 720000.00, 'LOTTE-CHART-TEST-TXN-20260822-0', 'LOTTE-CHART-TEST-20260822-0', 'completed', '2026-08-22 02:15:00', NULL, NULL),
+(973, 2, 'Khách test biểu đồ', '0900000000', 50398, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\",\"B10\",\"B11\"]', '[{\"name\":\"B\\u1eafp rang test\",\"quantity\":1,\"price\":45000}]', 'chart-test@lotte.local', 1200000.00, 'LOTTE-CHART-TEST-TXN-20260822-1', 'LOTTE-CHART-TEST-20260822-1', 'completed', '2026-08-22 03:15:00', NULL, NULL),
+(974, 2, 'Khách test biểu đồ', '0900000000', 50399, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\"]', '[]', 'chart-test@lotte.local', 600000.00, 'LOTTE-CHART-TEST-TXN-20260822-2', 'LOTTE-CHART-TEST-20260822-2', 'completed', '2026-08-22 04:15:00', NULL, NULL),
+(975, 2, 'Khách test biểu đồ', '0900000000', 50400, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\"]', '[]', 'chart-test@lotte.local', 540000.00, 'LOTTE-CHART-TEST-TXN-20260823-0', 'LOTTE-CHART-TEST-20260823-0', 'completed', '2026-08-23 02:15:00', NULL, NULL),
+(976, 2, 'Khách test biểu đồ', '0900000000', 50401, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\"]', '[{\"name\":\"B\\u1eafp rang test\",\"quantity\":1,\"price\":45000}]', 'chart-test@lotte.local', 990000.00, 'LOTTE-CHART-TEST-TXN-20260823-1', 'LOTTE-CHART-TEST-20260823-1', 'completed', '2026-08-23 03:15:00', NULL, NULL),
+(977, 2, 'Khách test biểu đồ', '0900000000', 50402, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\",\"B10\",\"B11\",\"B12\"]', '[]', 'chart-test@lotte.local', 1440000.00, 'LOTTE-CHART-TEST-TXN-20260823-2', 'LOTTE-CHART-TEST-20260823-2', 'completed', '2026-08-23 04:15:00', NULL, NULL),
+(978, 2, 'Khách test biểu đồ', '0900000000', 50403, '[\"B1\",\"B2\",\"B3\",\"B4\"]', '[]', 'chart-test@lotte.local', 360000.00, 'LOTTE-CHART-TEST-TXN-20260824-0', 'LOTTE-CHART-TEST-20260824-0', 'completed', '2026-08-24 02:15:00', NULL, NULL),
+(979, 2, 'Khách test biểu đồ', '0900000000', 50404, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\"]', '[{\"name\":\"B\\u1eafp rang test\",\"quantity\":1,\"price\":45000}]', 'chart-test@lotte.local', 780000.00, 'LOTTE-CHART-TEST-TXN-20260824-1', 'LOTTE-CHART-TEST-20260824-1', 'completed', '2026-08-24 03:15:00', NULL, NULL),
+(980, 2, 'Khách test biểu đồ', '0900000000', 50405, '[\"B1\",\"B2\",\"B3\",\"B4\",\"B5\",\"B6\",\"B7\",\"B8\",\"B9\",\"B10\"]', '[]', 'chart-test@lotte.local', 1200000.00, 'LOTTE-CHART-TEST-TXN-20260824-2', 'LOTTE-CHART-TEST-20260824-2', 'completed', '2026-08-24 04:15:00', NULL, NULL),
+(981, 9, NULL, NULL, 50403, '[\"C3\",\"C2\",\"C1\"]', '{\"23\":\"1\"}', 'nguyenvanlinh25062006@gmail.com', 535000.00, 'BKG9_20260824125546880_dzhq', NULL, 'completed', '2026-08-24 05:55:46', '2026-08-24 05:56:27', 'BOOKING_nqBO1KHlYEwzO5RkY2DGzb7j'),
+(982, 9, NULL, NULL, 50405, '[\"D5\",\"D6\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 312000.00, 'BKG9_20260824130534752_9qic', NULL, 'pending', '2026-08-24 06:04:24', '2026-08-24 06:12:30', NULL),
+(983, 9, NULL, NULL, 50404, '[\"C6\",\"D6\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 310500.00, 'BKG9_20260824130933834_jlne', NULL, 'pending', '2026-08-24 06:09:33', '2026-08-24 06:19:21', NULL),
+(984, 9, NULL, NULL, 50404, '[\"E5\",\"E6\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 351000.00, 'BKG9_20260824131203648_fogw', NULL, 'pending', '2026-08-24 06:12:03', '2026-08-24 06:21:44', NULL),
+(985, 9, NULL, NULL, 50406, '[\"E5\",\"E6\"]', '{\"21\":\"1\"}', 'nguyenvanlinh25062006@gmail.com', 362000.00, 'BKG9_20260824134059087_dsgr', NULL, 'pending', '2026-08-24 06:40:59', '2026-08-24 06:49:29', NULL),
+(986, 9, NULL, NULL, 50407, '[\"D5\",\"D6\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 312000.00, 'BKG9_20260824141850765_fmlo', NULL, 'pending', '2026-08-24 07:14:04', '2026-08-24 07:23:33', NULL),
+(987, 9, NULL, NULL, 50421, '[\"C3\",\"C4\"]', '[]', 'nguyenvanlinh25062006@gmail.com', 240000.00, 'BKG9_20260824162521792_qqcl', NULL, 'completed', '2026-08-24 09:25:21', '2026-08-24 09:34:08', 'BOOKING_mmrt9cuDieIXFuiWi1ENxV1F');
 
 -- --------------------------------------------------------
 
@@ -514,7 +601,15 @@ INSERT INTO `booking_session_tracking` (`id`, `user_id`, `showtime_id`, `screen_
 (213, 9, 50318, 1, '2026-07-14 15:29:56', NULL, 361, 0, 0, 0, NULL, '2026-07-14 08:29:56'),
 (214, 41, 50318, 1, '2026-07-14 15:30:01', '2026-07-14 15:40:31', 631, 1, 0, 1, '2026-07-16 10:00:00', '2026-07-14 08:30:01'),
 (215, 9, 50319, 1, '2026-07-14 22:57:47', '2026-07-14 23:29:21', 1894, 1, 0, 1, '2026-07-17 10:00:00', '2026-07-14 15:57:47'),
-(216, 9, 50362, 11, '2026-07-30 21:07:40', NULL, 167, 0, 0, 0, NULL, '2026-07-30 14:07:40');
+(216, 9, 50362, 11, '2026-07-30 21:07:40', NULL, 167, 0, 0, 0, NULL, '2026-07-30 14:07:40'),
+(217, 9, 50403, 5, '2026-08-24 12:45:59', '2026-08-24 12:56:34', 635, 1, 0, 1, '2026-08-24 13:00:00', '2026-08-24 05:45:59'),
+(218, 9, 50405, 11, '2026-08-24 12:56:43', '2026-08-24 13:06:59', 617, 1, 0, 1, '2026-08-24 19:00:00', '2026-08-24 05:56:43'),
+(219, 9, 50404, 6, '2026-08-24 13:08:52', NULL, 220, 0, 0, 0, NULL, '2026-08-24 06:08:52'),
+(220, 9, 50406, 27, '2026-08-24 13:38:48', NULL, 173, 0, 0, 0, NULL, '2026-08-24 06:38:48'),
+(221, 9, 50407, 28, '2026-08-24 14:13:26', '2026-08-24 14:26:30', 785, 1, 0, 1, '2026-08-24 14:45:00', '2026-08-24 07:13:26'),
+(222, 9, 50408, 28, '2026-08-24 14:27:26', NULL, 243, 0, 0, 0, NULL, '2026-08-24 07:27:26'),
+(223, 23, 50421, 35, '2026-08-24 16:22:19', NULL, 280, 0, 0, 0, NULL, '2026-08-24 09:22:19'),
+(224, 9, 50421, 35, '2026-08-24 16:22:37', NULL, 378, 0, 0, 0, NULL, '2026-08-24 09:22:37');
 
 -- --------------------------------------------------------
 
@@ -566,7 +661,8 @@ INSERT INTO `categories` (`id`, `name`, `parent_id`) VALUES
 (7, 'Phiêu lưu', NULL),
 (8, 'Tài liệu', NULL),
 (9, 'Chiến tranh', NULL),
-(10, 'Thể thao', NULL);
+(10, 'Thể thao', NULL),
+(11, 'Tu tiên', NULL);
 
 -- --------------------------------------------------------
 
@@ -609,7 +705,14 @@ INSERT INTO `comments` (`id`, `user_id`, `movie_id`, `parent_id`, `content`, `st
 (14, 9, 8, 13, 'cut me may di', 'approved', 0, '2025-12-09 03:44:16', '2025-12-09 03:44:16', 0, 0),
 (15, 29, 28, NULL, 'Wao', 'approved', 0, '2025-12-11 08:56:34', '2025-12-11 08:56:34', 0, 0),
 (16, 3, 53, NULL, 'Hay quá', 'approved', 0, '2026-02-09 03:08:09', '2026-02-09 03:08:09', 0, 0),
-(17, 9, 51, NULL, 'hay', 'pending', 0, '2026-07-14 06:39:35', '2026-07-14 06:39:35', 0, 0);
+(17, 9, 51, NULL, 'hay', 'pending', 0, '2026-07-14 06:39:35', '2026-07-14 06:39:35', 0, 0),
+(18, 9, 84, NULL, 'cc', 'pending', 0, '2026-08-24 07:42:29', '2026-08-24 07:42:29', 0, 0),
+(19, 9, 84, NULL, 'dcmm', 'pending', 0, '2026-08-24 07:42:45', '2026-08-24 07:42:45', 0, 0),
+(20, 9, 51, NULL, 'xem full tại: https://yanhh3d.run/', 'pending', 0, '2026-08-24 08:33:23', '2026-08-24 08:33:23', 0, 0),
+(21, 9, 51, NULL, 'xem full tại: https://yanhh3d.run/', 'pending', 0, '2026-08-24 08:36:55', '2026-08-24 08:36:55', 0, 0),
+(22, 9, 51, NULL, 'xem full tại: https://yanhh3d.run/', 'pending', 1, '2026-08-24 08:38:48', '2026-08-24 08:38:48', 0, 0),
+(23, 9, 51, NULL, 'xem full tại: https://yanhh3d.run/', 'pending', 1, '2026-08-24 08:39:05', '2026-08-24 08:39:05', 0, 0),
+(24, 9, 51, NULL, 'xem full tại: https://yanhh3d.run/', 'pending', 1, '2026-08-24 09:12:01', '2026-08-24 09:12:01', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -633,6 +736,32 @@ INSERT INTO `comment_likes` (`id`, `comment_id`, `user_id`, `type`, `created_at`
 (2, 8, 9, 'like', '2025-12-04 20:13:07'),
 (3, 10, 3, 'like', '2025-12-09 01:57:09'),
 (5, 13, 9, 'like', '2025-12-09 03:46:20');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `comment_violations`
+--
+
+CREATE TABLE `comment_violations` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` int(10) UNSIGNED NOT NULL,
+  `moderator_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `content_type` varchar(20) NOT NULL,
+  `content_id` int(10) UNSIGNED NOT NULL,
+  `reason` varchar(500) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `comment_violations`
+--
+
+INSERT INTO `comment_violations` (`id`, `user_id`, `moderator_id`, `content_type`, `content_id`, `reason`, `created_at`, `updated_at`) VALUES
+(1, 9, NULL, 'comment', 22, 'Bình luận chứa đường dẫn hoặc liên kết không được phép', '2026-08-24 08:38:48', '2026-08-24 08:38:48'),
+(2, 9, NULL, 'comment', 23, 'Bình luận chứa đường dẫn hoặc liên kết không được phép', '2026-08-24 08:39:05', '2026-08-24 08:39:05'),
+(3, 9, NULL, 'comment', 24, 'Bình luận chứa đường dẫn hoặc liên kết không được phép', '2026-08-24 09:12:01', '2026-08-24 09:12:01');
 
 -- --------------------------------------------------------
 
@@ -1211,7 +1340,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (46, '2026_07_19_000002_add_projection_format_to_movies_table', 28),
 (47, '2026_07_21_090000_limit_projection_format_to_theater_movies', 29),
 (48, '2026_07_21_001844_add_is_hidden_to_reviews_and_comments', 30),
-(49, '2026_07_18_000001_add_seat_reselection_count_to_booking_session_tracking', 31);
+(49, '2026_07_18_000001_add_seat_reselection_count_to_booking_session_tracking', 31),
+(50, '2026_07_21_040000_add_comment_moderation', 32);
 
 -- --------------------------------------------------------
 
@@ -1328,7 +1458,7 @@ INSERT INTO `movies` (`id`, `title`, `category_id`, `level`, `duration`, `descri
 (53, 'Tiên nghịch', 1, 'Silver', NULL, '', 'Hàn Lập', 'Vương Lâm', '', 'data/phim/trailers/Ti__n_ngh___ch_trailer_1770606401.mp4', 'data/img/tiennghich.webp', 'Chiếu online', NULL, 0, '2026-02-09 03:06:41', 'published', NULL, NULL, 0, 'data/img/tiennghich.webp', 'Trung Quốc', 'Tiếng Trung, Tiếng Việt', '20', 'phimbo', NULL, NULL, 90000, 120000, 180000, NULL),
 (54, 'fds', NULL, 'Free', NULL, 'aa', 'Beau Willimona', 'Kevin Spacey, Robin Wright, Kate Mara, Michael Kelly', NULL, NULL, 'posters/9b7OHuvgX8hRbER5juiAjjmaGyZrT2Ck8TowBiaH.png', 'Chiếu online', NULL, 0, '2026-06-22 23:00:52', 'draft', NULL, NULL, 0, 'banners/zVfyPbwGhfgcJracXnl4A6RZNQXegoyM95SFk1MV.png', 'Vietnam', 'Aymara', '17', 'phimbo', NULL, NULL, 90000, 120000, 180000, NULL),
 (62, '[ADMIN TEST] Phim rạp lịch sử', 1, 'Free', 118, 'Phim dùng tạo dữ liệu booking và doanh thu lịch sử cho admin.', 'CineHub Test Studio', 'Test Cast', NULL, NULL, 'posters/9b7OHuvgX8hRbER5juiAjjmaGyZrT2Ck8TowBiaH.png', 'Chiếu rạp', NULL, 8.1, '2026-05-10 23:44:12', 'published', '2026-05-11 06:44:12', NULL, 0, 'banners/zVfyPbwGhfgcJracXnl4A6RZNQXegoyM95SFk1MV.png', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', '2D', NULL, 90000, 120000, 180000, NULL),
-(84, 'John Wick (2014)', 1, 'Gold', 100, 'Phim bổ sung cho thể loại Hành động. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/ZpSp8Fd6Xak6AgUqEDzzYUodFrB4TmIsQv47Q9fQ.webp', 'Chiếu online', NULL, 7.5, '2026-07-10 23:18:35', 'published', '2026-06-30 06:48:35', NULL, 0, 'banners/JMlXzsBCNDGuiQ6ln7JrzPsfxFIeBHDENf63QJJN.jpg', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, NULL, 90000, 120000, 180000, NULL),
+(84, 'John Wick (2014)', 1, 'Gold', 100, 'Phim bổ sung cho thể loại Hành động. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/ZpSp8Fd6Xak6AgUqEDzzYUodFrB4TmIsQv47Q9fQ.webp', 'Chiếu online', NULL, 7, '2026-07-10 23:18:35', 'published', '2026-06-30 06:48:35', NULL, 0, 'banners/JMlXzsBCNDGuiQ6ln7JrzPsfxFIeBHDENf63QJJN.jpg', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, NULL, 90000, 120000, 180000, NULL),
 (85, 'Mad Max: Fury Road (2015)', 1, 'Premium', 107, 'Phim bổ sung cho thể loại Hành động. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/DQDgqzHt76RwSWihjRZ7KqdteXYS2DXahH9ywX0v.webp', 'Chiếu online', NULL, 7.6, '2026-07-10 23:17:35', 'published', '2026-06-29 06:48:35', NULL, 0, 'banners/tH761AqrEhd8G4cyiYULIqTDEFErE0ZiK83aqPqL.jpg', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, NULL, 90000, 120000, 180000, NULL),
 (86, 'Die Hard (1988)', 1, 'Free', 114, 'Phim bổ sung cho thể loại Hành động. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/o73rezbHG1v6W5IOsyy1Y4wSMiLiKRVr3gjwf8JT.webp', 'Chiếu online', NULL, 7.7, '2026-07-10 23:16:35', 'published', '2026-06-28 06:48:35', NULL, 0, 'banners/LiSvFM14SiQLO94LkKEP3TAmyqnBdtYJlEsKi5Nq.jpg', 'Việt Nam', 'Tiếng Việt', 'T16', 'phimbo', NULL, NULL, 90000, 120000, 180000, NULL),
 (87, 'The Raid: Redemption (2011)', 1, 'Silver', 121, 'Phim bổ sung cho thể loại Hành động. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/FrfBiRLRqlZZlbKfi45qiCJrP9wjpN8dx9LNixf5.jpg', 'Chiếu online', NULL, 7.8, '2026-07-10 23:15:35', 'published', '2026-06-27 06:48:35', NULL, 0, 'banners/ran4r9atdn91E8KLnaw4Q4slicXxNlRTksEorsyd.webp', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, NULL, 90000, 120000, 180000, NULL),
@@ -1440,7 +1570,8 @@ INSERT INTO `movies` (`id`, `title`, `category_id`, `level`, `duration`, `descri
 (192, 'Top Gun: Maverick (2022)', 1, 'Gold', 128, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/mGI48vPLWlLqHFUzapuYToAFwYpnWdExG1PKprkL.webp', 'Chiếu online', NULL, 7.9, '2026-07-10 20:14:36', 'published', '2026-06-26 06:48:36', NULL, 0, 'banners/40FFbZi7HN44k1wz8VsCtLKxp3vVsiOxBgzlrsoW.jpg', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, NULL, 90000, 120000, 180000, NULL),
 (193, 'Bend It Like Beckham (2002)', 1, 'Gold', 128, 'Phim bổ sung cho thể loại Thể thao. Nội dung, hình ảnh và video sẽ được cập nhật sau.', 'Đang cập nhật', 'Đang cập nhật', NULL, NULL, 'posters/dLL1FBcai8hsSVdH4fDHoR0MUiYsCG5iTaVWit2R.jpg', 'Chiếu online', NULL, 7.9, '2026-07-10 21:02:54', 'published', '2026-06-26 07:36:54', NULL, 0, 'banners/K5YufZRrxPZqG5LXquziq7Uk6cUbWbsehIWl7Zej.jpg', 'Việt Nam', 'Tiếng Việt', 'T13', 'phimle', NULL, NULL, 90000, 120000, 180000, NULL),
 (194, 'Ngày xưa có một chuyện tình', 2, 'Gold', NULL, NULL, 'Viktor Vũ', 'Avin Lu, Ngọc Xuân, Đỗ Nhật Hoàng', NULL, NULL, 'posters/6gO0EDANoBdXMazgvLW9bDDHl6H003zFNHZrjVc9.jpg', 'Chiếu online', NULL, 0, '2026-07-15 16:33:11', 'published', '2026-07-18 13:30:00', NULL, 0, 'banners/GDDlmGCnXBJ0cRVUC2qXKeIViQJWqeTt1TM7RTSr.jpg', 'Vietnam', 'Vietnamese', '18', 'phimle', NULL, NULL, 90000, 120000, 180000, NULL),
-(195, 'Gà Mờ', 1, 'Free', NULL, NULL, 'Viktor Vũ', 'Kaity Nguyễn', NULL, NULL, 'posters/lg8x6DttdtUuKJjPaDMrk6DpUKTeMQUEwpXd5tYm.jpg', 'Chiếu online', NULL, 0, '2026-07-30 14:00:21', 'published', NULL, NULL, 0, 'banners/NkFF79ahigEOLZXpNwG4m969ifj8pTdHlDFmDeLF.jpg', 'Argentina', 'English', 'T16', 'phimle', NULL, NULL, 90000, 120000, 180000, NULL);
+(195, 'Gà Mờ', 1, 'Free', NULL, NULL, 'Viktor Vũ', 'Kaity Nguyễn', NULL, NULL, 'posters/lg8x6DttdtUuKJjPaDMrk6DpUKTeMQUEwpXd5tYm.jpg', 'Chiếu online', NULL, 0, '2026-07-30 14:00:21', 'published', NULL, NULL, 0, 'banners/NkFF79ahigEOLZXpNwG4m969ifj8pTdHlDFmDeLF.jpg', 'Argentina', 'English', 'T16', 'phimle', NULL, NULL, 90000, 120000, 180000, NULL),
+(196, 'spiderman brand new day', 1, 'Free', NULL, NULL, 'Nguyễn Lê Minh', 'Tom Hanks', NULL, NULL, 'posters/9Bmc4AsPCaGsgOiMHFj4APt4vbSDV0APwUwofhGq.jpg', 'Chiếu online', NULL, 0, '2026-08-24 09:14:03', 'published', '2026-08-24 16:15:00', NULL, 0, 'banners/7NuIxewko4i4TWOggXhDZfmwsA72vkmLd0l3KFpp.jpg', 'American Samoa', 'English', '17', 'phimle', NULL, NULL, 90000, 120000, 180000, NULL);
 
 -- --------------------------------------------------------
 
@@ -1778,7 +1909,11 @@ INSERT INTO `movie_category` (`id`, `movie_id`, `category_id`, `created_at`, `up
 (253, 194, 8, '2026-07-15 16:33:11', '2026-07-15 16:33:11'),
 (254, 195, 1, '2026-07-30 14:00:21', '2026-07-30 14:00:21'),
 (255, 195, 7, '2026-07-30 14:00:21', '2026-07-30 14:00:21'),
-(256, 195, 8, '2026-07-30 14:00:21', '2026-07-30 14:00:21');
+(256, 195, 8, '2026-07-30 14:00:21', '2026-07-30 14:00:21'),
+(257, 51, 11, '2026-08-24 08:48:32', '2026-08-24 08:48:32'),
+(258, 196, 1, '2026-08-24 09:14:03', '2026-08-24 09:14:03'),
+(259, 196, 2, '2026-08-24 09:14:03', '2026-08-24 09:14:03'),
+(260, 196, 6, '2026-08-24 09:14:03', '2026-08-24 09:14:03');
 
 -- --------------------------------------------------------
 
@@ -1800,7 +1935,8 @@ CREATE TABLE `movie_interests` (
 
 INSERT INTO `movie_interests` (`id`, `user_id`, `movie_id`, `created_at`, `updated_at`) VALUES
 (1, 3, 194, '2026-07-15 16:33:22', '2026-07-15 16:33:22'),
-(2, 9, 194, '2026-07-17 01:29:53', '2026-07-17 01:29:53');
+(2, 9, 194, '2026-07-17 01:29:53', '2026-07-17 01:29:53'),
+(3, 3, 196, '2026-08-24 09:14:18', '2026-08-24 09:14:18');
 
 -- --------------------------------------------------------
 
@@ -1815,6 +1951,24 @@ CREATE TABLE `movie_searches` (
   `keyword` varchar(255) NOT NULL,
   `searched_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `movie_searches`
+--
+
+INSERT INTO `movie_searches` (`id`, `movie_id`, `user_id`, `keyword`, `searched_at`) VALUES
+(1, NULL, 9, 'du thiên', '2026-08-24 07:59:22'),
+(2, NULL, 9, 'thành chaoas', '2026-08-24 07:59:50'),
+(3, NULL, 9, 'thành chaoas', '2026-08-24 08:01:02'),
+(4, NULL, 9, 'viktor vũ', '2026-08-24 08:13:19'),
+(5, NULL, 9, 'Đỗ Nhật Hoàng', '2026-08-24 08:13:54'),
+(6, NULL, 9, 'Đỗ Nhật Hoàng', '2026-08-24 08:14:06'),
+(7, NULL, 9, 'Đỗ Nhật Hoàng', '2026-08-24 08:14:10'),
+(8, NULL, 9, 'Ngọc Xuân', '2026-08-24 08:14:39'),
+(9, NULL, 9, 'Hàn lập', '2026-08-24 08:25:46'),
+(10, NULL, 9, 'người lớn', '2026-08-24 08:29:34'),
+(11, NULL, 9, 'kí sự gay trung niên', '2026-08-24 08:40:17'),
+(12, 51, 3, 'tu tiên', '2026-08-24 08:48:45');
 
 -- --------------------------------------------------------
 
@@ -1939,7 +2093,32 @@ INSERT INTO `movie_view_events` (`id`, `movie_id`, `user_id`, `episode_id`, `cre
 (110, 51, 3, 28, '2026-07-18 15:15:53'),
 (111, 194, 3, NULL, '2026-07-28 12:18:33'),
 (112, 195, 3, NULL, '2026-07-30 14:00:46'),
-(113, 195, 3, NULL, '2026-07-30 14:02:22');
+(113, 195, 3, NULL, '2026-07-30 14:02:22'),
+(114, 51, 9, 13, '2026-08-04 13:17:47'),
+(115, 51, 9, 29, '2026-08-04 13:17:53'),
+(116, 51, 9, 30, '2026-08-04 13:18:01'),
+(117, 194, 9, NULL, '2026-08-04 13:20:19'),
+(118, 51, 9, 30, '2026-08-24 05:08:17'),
+(119, 51, 9, 14, '2026-08-24 05:08:56'),
+(120, 51, 9, 26, '2026-08-24 05:08:59'),
+(121, 51, 9, 27, '2026-08-24 05:09:03'),
+(122, 51, 9, 28, '2026-08-24 05:09:07'),
+(123, 51, 9, 28, '2026-08-24 07:05:46'),
+(124, 84, 9, NULL, '2026-08-24 07:42:00'),
+(125, 84, 9, NULL, '2026-08-24 07:42:22'),
+(126, 84, 9, NULL, '2026-08-24 07:42:30'),
+(127, 84, 9, NULL, '2026-08-24 07:42:46'),
+(128, 51, 9, 28, '2026-08-24 07:51:33'),
+(129, 84, 9, NULL, '2026-08-24 07:58:14'),
+(130, 51, 9, 28, '2026-08-24 08:31:45'),
+(131, 51, 9, 28, '2026-08-24 08:33:26'),
+(132, 51, 9, 28, '2026-08-24 08:36:20'),
+(133, 51, 9, 28, '2026-08-24 08:36:38'),
+(134, 51, 9, 28, '2026-08-24 08:38:50'),
+(135, 51, 9, 28, '2026-08-24 08:39:09'),
+(136, 51, 9, 28, '2026-08-24 09:11:21'),
+(137, 51, 9, 28, '2026-08-24 09:12:02'),
+(138, 1, 42, NULL, '2026-08-24 09:44:07');
 
 -- --------------------------------------------------------
 
@@ -2049,7 +2228,14 @@ INSERT INTO `notifications` (`id`, `user_id`, `type`, `title`, `message`, `link`
 (48, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 3 vé xem phim \"Avengers: Endgame\" tại ghế G4, G6, G5. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 0, '2026-06-29 21:33:00'),
 (49, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 2 vé xem phim \"Avengers: Endgame\" tại ghế D5, D6. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 1, '2026-06-30 08:07:26'),
 (50, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 3 vé xem phim \"Tấm Cám: Chuyện Chưa Kể\" tại ghế G9, G8, G7. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 1, '2026-07-09 15:49:36'),
-(51, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 3 vé xem phim \"Hai Phượng\" tại ghế F5, F4, F6. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 0, '2026-07-10 23:46:31');
+(51, 9, 'success', 'Đặt vé thành công', 'Bạn đã đặt thành công 3 vé xem phim \"Hai Phượng\" tại ghế F5, F4, F6. Quét mã QR để check vé.', 'http://127.0.0.1:8000/booking/history', 0, '2026-07-10 23:46:31'),
+(52, 9, 'booking_success', 'Đặt vé thành công', 'Bạn đã đặt thành công 3 vé phim “Avengers: Endgame”, ghế C3, C2, C1, tại Lotte Cinema, phòng Phòng 1, lúc 13:00 ngày 24/08/2026. Tổng thanh toán: 535,000đ. Hãy dùng mã QR khi vào rạp.', 'http://127.0.0.1:8000/booking/history', 1, '2026-08-24 05:55:46'),
+(53, 9, 'comment_warning', 'Cảnh báo vi phạm bình luận', 'Nội dung của bạn đã bị ẩn vì vi phạm Điều khoản dịch vụ: Bình luận chứa đường dẫn hoặc liên kết không được phép. Số lần vi phạm trong 7 ngày: 1/3; quá 3 lần sẽ bị cấm bình luận 7 ngày.', 'http://127.0.0.1:8000/terms-of-service', 0, '2026-08-24 08:38:48'),
+(54, 9, 'comment_warning', 'Cảnh báo vi phạm bình luận', 'Nội dung của bạn đã bị ẩn vì vi phạm Điều khoản dịch vụ: Bình luận chứa đường dẫn hoặc liên kết không được phép. Số lần vi phạm trong 7 ngày: 2/3; quá 3 lần sẽ bị cấm bình luận 7 ngày.', 'http://127.0.0.1:8000/terms-of-service', 1, '2026-08-24 08:39:05'),
+(55, 9, 'comment_warning', 'Cảnh báo vi phạm bình luận', 'Nội dung của bạn đã bị ẩn vì vi phạm Điều khoản dịch vụ: Bình luận chứa đường dẫn hoặc liên kết không được phép. Số lần vi phạm trong 7 ngày: 3/3; quá 3 lần sẽ bị cấm bình luận 7 ngày.', 'http://127.0.0.1:8000/terms-of-service', 0, '2026-08-24 09:12:01'),
+(56, 9, 'booking_success', 'Đặt vé thành công', 'Bạn đã đặt thành công 2 vé phim “Avengers: Endgame”, ghế C3, C4, tại Beta Cinema Thanh Hóa, phòng Phòng 1, lúc 08:00 ngày 25/08/2026. Tổng thanh toán: 240,000đ. Hãy dùng mã QR khi vào rạp.', 'http://127.0.0.1:8000/booking/history', 1, '2026-08-24 09:26:02'),
+(57, 42, 'account_balance_changed', 'Số dư xu đã được quản trị viên cập nhật', 'Số dư thay đổi từ 0 xu thành 100,000 xu. Thao tác: đặt số dư.', 'http://127.0.0.1:8000/profile#wallet', 0, '2026-08-24 09:40:50'),
+(58, 42, 'deposit_success', 'Nạp xu thành công', 'Bạn đã nạp thành công 50,000 xu qua VNPay. Số dư mới: 150,000 xu.', 'http://127.0.0.1:8000/profile#wallet', 0, '2026-08-24 09:43:07');
 
 -- --------------------------------------------------------
 
@@ -2175,7 +2361,8 @@ INSERT INTO `reviews` (`id`, `user_id`, `movie_id`, `rating`, `comment`, `create
 (11, 21, 33, 5, '', '2025-12-09 01:33:22', 0, 0),
 (12, 21, 28, 5, '', '2025-12-09 01:35:25', 0, 0),
 (13, 26, 8, 1, '', '2025-12-09 03:43:08', 0, 0),
-(14, 3, 53, 5, '', '2026-02-09 03:08:02', 0, 0);
+(14, 3, 53, 5, '', '2026-02-09 03:08:02', 0, 0),
+(15, 9, 84, 7, '', '2026-08-24 07:42:21', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -2266,7 +2453,15 @@ CREATE TABLE `seat_reservations` (
 
 INSERT INTO `seat_reservations` (`id`, `showtime_id`, `seat`, `user_id`, `session_id`, `reserved_at`, `expires_at`) VALUES
 (1140, 50362, 'G6', 9, 'MMP48fX4yhMNkx7OB1QSunGOeqb3DMKGFpr4orzQ', '2026-07-30 14:08:10', '2026-07-30 14:18:10'),
-(1141, 50362, 'G5', 9, 'MMP48fX4yhMNkx7OB1QSunGOeqb3DMKGFpr4orzQ', '2026-07-30 14:08:10', '2026-07-30 14:18:10');
+(1141, 50362, 'G5', 9, 'MMP48fX4yhMNkx7OB1QSunGOeqb3DMKGFpr4orzQ', '2026-07-30 14:08:10', '2026-07-30 14:18:10'),
+(1151, 50404, 'E6', 9, 'QU3BAL9IIqqPsWJDVWYHsFB1glrSNa2suMK9go9X', '2026-08-24 06:11:44', '2026-08-24 06:21:44'),
+(1152, 50404, 'E5', 9, 'QU3BAL9IIqqPsWJDVWYHsFB1glrSNa2suMK9go9X', '2026-08-24 06:11:44', '2026-08-24 06:21:44'),
+(1153, 50406, 'E5', 9, 'QU3BAL9IIqqPsWJDVWYHsFB1glrSNa2suMK9go9X', '2026-08-24 06:39:29', '2026-08-24 06:49:29'),
+(1154, 50406, 'E6', 9, 'QU3BAL9IIqqPsWJDVWYHsFB1glrSNa2suMK9go9X', '2026-08-24 06:39:29', '2026-08-24 06:49:29'),
+(1157, 50408, 'D5', 9, 'xTIHnXBzkJ7oouzachCWCNstvA3YcVFTubATpWCo', '2026-08-24 07:27:30', '2026-08-24 07:37:30'),
+(1158, 50408, 'D6', 9, 'xTIHnXBzkJ7oouzachCWCNstvA3YcVFTubATpWCo', '2026-08-24 07:27:30', '2026-08-24 07:37:30'),
+(1163, 50421, 'D6', 23, 'EVv96xr0L3GgnjdnDuIHXeIrL3oVQZRtkzPrf4RM', '2026-08-24 09:26:53', '2026-08-24 09:36:53'),
+(1164, 50421, 'D5', 23, 'EVv96xr0L3GgnjdnDuIHXeIrL3oVQZRtkzPrf4RM', '2026-08-24 09:26:53', '2026-08-24 09:36:53');
 
 -- --------------------------------------------------------
 
@@ -2394,8 +2589,10 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('CdjqcQRjDA8IGakhI3BhQAde8ZIH7aBC5bUTkzeV', 3, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiYXlGS1JJRm9xdVFib2diU2tWSndQbDBTQ25tS2tWTXZQMm9SWVNFdyI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mzg6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9tb3ZpZXMvMTk1L3dhdGNoIjtzOjU6InJvdXRlIjtzOjEyOiJtb3ZpZXMud2F0Y2giO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTozO30=', 1785420143),
-('MMP48fX4yhMNkx7OB1QSunGOeqb3DMKGFpr4orzQ', 9, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0', 'YTo5OntzOjY6Il90b2tlbiI7czo0MDoiSHo5Q3I3SDF0R1pVd1FGbkNpTWpoa3lvWVVQS0RNZlR2SWtoSE1LaSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NDQ6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9tb3ZpZXMva2hvLXBoaW0vdHJlLWVtIjtzOjU6InJvdXRlIjtzOjE0OiJtb3ZpZXMubGlicmFyeSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjk7czoxMzoidXNlcl9sYXRpdHVkZSI7ZDoxOS45MzAwMDg4MjU5MDEwMzQ7czoxNDoidXNlcl9sb25naXR1ZGUiO2Q6MTA1LjU4MzQ4NjtzOjE4OiJwZW5kaW5nX2Jvb2tpbmdfaWQiO2k6OTM3O3M6MTE6InNob3d0aW1lX2lkIjtzOjU6IjUwMzYyIjtzOjE2OiJsYXN0X3BheW1lbnRfdXJsIjtzOjU3MDoiaHR0cHM6Ly9zYW5kYm94LnZucGF5bWVudC52bi9wYXltZW50djIvdnBjcGF5Lmh0bWw/dm5wX0Ftb3VudD0yNDAwMDAwMCZ2bnBfQ29tbWFuZD1wYXkmdm5wX0NyZWF0ZURhdGU9MjAyNjA3MzAyMTA5MDQmdm5wX0N1cnJDb2RlPVZORCZ2bnBfRXhwaXJlRGF0ZT0yMDI2MDczMDIxMjQwNCZ2bnBfSXBBZGRyPTEyNy4wLjAuMSZ2bnBfTG9jYWxlPXZuJnZucF9PcmRlckluZm89VGhhbmgrdG9hbit2ZSt4ZW0rcGhpbStCJUUxJUJCJTkxK0dpJUMzJUEwJnZucF9PcmRlclR5cGU9b3RoZXImdm5wX1JldHVyblVybD1odHRwJTNBJTJGJTJGMTI3LjAuMC4xJTNBODAwMCUyRnBheW1lbnQlMkZ2bnBheSUyRmNhbGxiYWNrJnZucF9UbW5Db2RlPU40TlFNTFBIJnZucF9UeG5SZWY9QktHOV8yMDI2MDczMDIxMDkwNDU5OF8wc3QwJnZucF9WZXJzaW9uPTIuMS4wJnZucF9TZWN1cmVIYXNoPWE0OWFjYTBjYzRkZjIyZGZiMWJiMDdhYjk5ZDU5MzY5N2U0MzM4Nzg2YmQwZGVlOTk2YjhiNzY4NGNjYzM2MjllMDFiMTQ0YzBmMjU5OGQzNmJjMzYxYzYwMzJiNGMwMDcxOGUxZTE4Yzg1MDIzNDE0YTgxYzk2ZTMxOTA2N2JmIjt9', 1785420751);
+('3C3WCB6zjp2cfbXqFAsIvt9gmBeF3Aj7xDGqD9z3', 3, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiWThHM1AzNnZscWJ5a0FYaGtOM2tMU01TTjh3OWwyNkVQUHp2OUlGWiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJuZXciO2E6MDp7fXM6Mzoib2xkIjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7czo0OiJob21lIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6Mzt9', 1787564504),
+('fnDlOkDpbyfT7Jx6fPMQJ6nlgvuwOb9ts9BkWCuy', 19, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiNWFUVVU4WmZ4Q1I4NVF5d0Uyb0tOREpZOFBOWHl0UGpjTFF4UXBjOSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MzQ6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9jb3VudGVyL3NjYW4iO3M6NToicm91dGUiO3M6MTI6ImNvdW50ZXIuc2NhbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjE5O30=', 1787563972),
+('qnFyswDY3sKxpM8jD2jjTbQZ4BAgUeiw96hhvPMq', 42, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoibk1zcGJuUlJ2d0dvRWlPaDZMZjRTeWdRb3ZuRTZ0U291VUl4SFVTVCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJuZXciO2E6MDp7fXM6Mzoib2xkIjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7czo0OiJob21lIjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6NDI7fQ==', 1787564905),
+('xTIHnXBzkJ7oouzachCWCNstvA3YcVFTubATpWCo', 9, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0', 'YTo3OntzOjY6Il90b2tlbiI7czo0MDoiakM4SnFyTXY1RjhvVWtwZTVGdUcxS0s5SXlJM2ZucVFEcGQxQnFyRCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mzc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9haS1jaGF0L2hpc3RvcnkiO3M6NToicm91dGUiO3M6MTA6ImFpLmhpc3RvcnkiO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTo5O3M6MTM6InVzZXJfbGF0aXR1ZGUiO2Q6MTkuNzc0NzQ0NTU7czoxNDoidXNlcl9sb25naXR1ZGUiO2Q6MTA1Ljc4MjUyODE0OTk5OTk4O3M6MTY6Imxhc3RfcGF5bWVudF91cmwiO3M6NTcwOiJodHRwczovL3NhbmRib3gudm5wYXltZW50LnZuL3BheW1lbnR2Mi92cGNwYXkuaHRtbD92bnBfQW1vdW50PTI0MDAwMDAwJnZucF9Db21tYW5kPXBheSZ2bnBfQ3JlYXRlRGF0ZT0yMDI2MDgyNDE2MjUyMSZ2bnBfQ3VyckNvZGU9Vk5EJnZucF9FeHBpcmVEYXRlPTIwMjYwODI0MTY0MDIxJnZucF9JcEFkZHI9MTI3LjAuMC4xJnZucF9Mb2NhbGU9dm4mdm5wX09yZGVySW5mbz1UaGFuaCt0b2FuK3ZlK3hlbStwaGltK0F2ZW5nZXJzJTNBK0VuZGdhbWUmdm5wX09yZGVyVHlwZT1vdGhlciZ2bnBfUmV0dXJuVXJsPWh0dHAlM0ElMkYlMkYxMjcuMC4wLjElM0E4MDAwJTJGcGF5bWVudCUyRnZucGF5JTJGY2FsbGJhY2smdm5wX1RtbkNvZGU9TjROUU1MUEgmdm5wX1R4blJlZj1CS0c5XzIwMjYwODI0MTYyNTIxNzkyX3FxY2wmdm5wX1ZlcnNpb249Mi4xLjAmdm5wX1NlY3VyZUhhc2g9NTk5ZDRlOTRlYjI3ZWQyMDI5YTk2MDBkNWVlYmY0NzNlYzc0MmE2Y2I2OTU5NGFiN2JlMjhiMTQ4NmRlNWNkNzdiZDNiZWVjODBjZDM1ZWE1YTc4MjAzMTQzNWY2MWJhNTEwMTA0ZjYwZDMyNmM5YmEwYjAyNDYwZTI2NzYxNDciO30=', 1787564928);
 
 -- --------------------------------------------------------
 
@@ -11192,7 +11389,65 @@ INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `theater_contract_id`, 
 (50359, 19, 4, NULL, '2026-07-15', '22:00:00', 90000.00, NULL, 120, '2026-07-10 23:44:12', 7),
 (50360, 19, 4, NULL, '2026-07-16', '22:00:00', 90000.00, NULL, 120, '2026-07-10 23:44:12', 7),
 (50361, 19, 4, NULL, '2026-07-17', '22:00:00', 90000.00, NULL, 120, '2026-07-10 23:44:12', 7),
-(50362, 20, 3, 4, '2026-07-30', '21:15:00', 120000.00, 'hot_movie', 144, '2026-07-30 14:06:15', 11);
+(50362, 20, 3, 4, '2026-07-30', '21:15:00', 120000.00, 'hot_movie', 144, '2026-07-30 14:06:15', 11),
+(50364, 2, 3, NULL, '2026-08-11', '13:00:00', 90000.00, NULL, 144, '2026-08-11 02:15:00', 5),
+(50365, 3, 3, NULL, '2026-08-11', '16:00:00', 105000.00, NULL, 144, '2026-08-11 03:15:00', 6),
+(50366, 1, 3, NULL, '2026-08-11', '19:00:00', 120000.00, NULL, 144, '2026-08-11 04:15:00', 11),
+(50367, 1, 3, NULL, '2026-08-12', '13:00:00', 90000.00, NULL, 144, '2026-08-12 02:15:00', 5),
+(50368, 2, 3, NULL, '2026-08-12', '16:00:00', 105000.00, NULL, 144, '2026-08-12 03:15:00', 6),
+(50369, 3, 3, NULL, '2026-08-12', '19:00:00', 120000.00, NULL, 144, '2026-08-12 04:15:00', 11),
+(50370, 3, 3, NULL, '2026-08-13', '13:00:00', 90000.00, NULL, 144, '2026-08-13 02:15:00', 5),
+(50371, 1, 3, NULL, '2026-08-13', '16:00:00', 105000.00, NULL, 144, '2026-08-13 03:15:00', 6),
+(50372, 2, 3, NULL, '2026-08-13', '19:00:00', 120000.00, NULL, 144, '2026-08-13 04:15:00', 11),
+(50373, 2, 3, NULL, '2026-08-14', '13:00:00', 90000.00, NULL, 144, '2026-08-14 02:15:00', 5),
+(50374, 3, 3, NULL, '2026-08-14', '16:00:00', 105000.00, NULL, 144, '2026-08-14 03:15:00', 6),
+(50375, 1, 3, NULL, '2026-08-14', '19:00:00', 120000.00, NULL, 144, '2026-08-14 04:15:00', 11),
+(50376, 1, 3, NULL, '2026-08-15', '13:00:00', 90000.00, NULL, 144, '2026-08-15 02:15:00', 5),
+(50377, 2, 3, NULL, '2026-08-15', '16:00:00', 105000.00, NULL, 144, '2026-08-15 03:15:00', 6),
+(50378, 3, 3, NULL, '2026-08-15', '19:00:00', 120000.00, NULL, 144, '2026-08-15 04:15:00', 11),
+(50379, 3, 3, NULL, '2026-08-16', '13:00:00', 90000.00, NULL, 144, '2026-08-16 02:15:00', 5),
+(50380, 1, 3, NULL, '2026-08-16', '16:00:00', 105000.00, NULL, 144, '2026-08-16 03:15:00', 6),
+(50381, 2, 3, NULL, '2026-08-16', '19:00:00', 120000.00, NULL, 144, '2026-08-16 04:15:00', 11),
+(50382, 2, 3, NULL, '2026-08-17', '13:00:00', 90000.00, NULL, 144, '2026-08-17 02:15:00', 5),
+(50383, 3, 3, NULL, '2026-08-17', '16:00:00', 105000.00, NULL, 144, '2026-08-17 03:15:00', 6),
+(50384, 1, 3, NULL, '2026-08-17', '19:00:00', 120000.00, NULL, 144, '2026-08-17 04:15:00', 11),
+(50385, 1, 3, NULL, '2026-08-18', '13:00:00', 90000.00, NULL, 144, '2026-08-18 02:15:00', 5),
+(50386, 2, 3, NULL, '2026-08-18', '16:00:00', 105000.00, NULL, 144, '2026-08-18 03:15:00', 6),
+(50387, 3, 3, NULL, '2026-08-18', '19:00:00', 120000.00, NULL, 144, '2026-08-18 04:15:00', 11),
+(50388, 3, 3, NULL, '2026-08-19', '13:00:00', 90000.00, NULL, 144, '2026-08-19 02:15:00', 5),
+(50389, 1, 3, NULL, '2026-08-19', '16:00:00', 105000.00, NULL, 144, '2026-08-19 03:15:00', 6),
+(50390, 2, 3, NULL, '2026-08-19', '19:00:00', 120000.00, NULL, 144, '2026-08-19 04:15:00', 11),
+(50391, 2, 3, NULL, '2026-08-20', '13:00:00', 90000.00, NULL, 144, '2026-08-20 02:15:00', 5),
+(50392, 3, 3, NULL, '2026-08-20', '16:00:00', 105000.00, NULL, 144, '2026-08-20 03:15:00', 6),
+(50393, 1, 3, NULL, '2026-08-20', '19:00:00', 120000.00, NULL, 144, '2026-08-20 04:15:00', 11),
+(50394, 1, 3, NULL, '2026-08-21', '13:00:00', 90000.00, NULL, 144, '2026-08-21 02:15:00', 5),
+(50395, 2, 3, NULL, '2026-08-21', '16:00:00', 105000.00, NULL, 144, '2026-08-21 03:15:00', 6),
+(50396, 3, 3, NULL, '2026-08-21', '19:00:00', 120000.00, NULL, 144, '2026-08-21 04:15:00', 11),
+(50397, 3, 3, NULL, '2026-08-22', '13:00:00', 90000.00, NULL, 144, '2026-08-22 02:15:00', 5),
+(50398, 1, 3, NULL, '2026-08-22', '16:00:00', 105000.00, NULL, 144, '2026-08-22 03:15:00', 6),
+(50399, 2, 3, NULL, '2026-08-22', '19:00:00', 120000.00, NULL, 144, '2026-08-22 04:15:00', 11),
+(50400, 2, 3, NULL, '2026-08-23', '13:00:00', 90000.00, NULL, 144, '2026-08-23 02:15:00', 5),
+(50401, 3, 3, NULL, '2026-08-23', '16:00:00', 105000.00, NULL, 144, '2026-08-23 03:15:00', 6),
+(50402, 1, 3, NULL, '2026-08-23', '19:00:00', 120000.00, NULL, 144, '2026-08-23 04:15:00', 11),
+(50403, 1, 3, NULL, '2026-08-24', '13:00:00', 90000.00, NULL, 144, '2026-08-24 02:15:00', 5),
+(50404, 2, 3, NULL, '2026-08-24', '16:00:00', 105000.00, NULL, 144, '2026-08-24 03:15:00', 6),
+(50405, 3, 3, NULL, '2026-08-24', '19:00:00', 120000.00, NULL, 144, '2026-08-24 04:15:00', 11),
+(50406, 18, 3, 4, '2026-08-24', '13:45:00', 90000.00, 'bestseller', 144, '2026-08-24 06:37:53', 27),
+(50407, 20, 3, 4, '2026-08-24', '14:45:00', 120000.00, 'hot_movie', 144, '2026-08-24 07:12:35', 28),
+(50408, 20, 3, 4, '2026-08-25', '08:00:00', 120000.00, 'hot_movie', 144, '2026-08-24 07:27:16', 28),
+(50409, 1, 3, 4, '2026-08-25', '08:00:00', 120000.00, 'hot_movie', 144, '2026-08-24 09:18:46', 11),
+(50410, 1, 3, 4, '2026-08-25', '11:30:00', 120000.00, 'hot_movie', 144, '2026-08-24 09:18:46', 11),
+(50411, 1, 3, 4, '2026-08-25', '17:30:00', 120000.00, 'hot_movie', 144, '2026-08-24 09:18:46', 11),
+(50412, 1, 3, 4, '2026-08-25', '21:45:00', 120000.00, 'hot_movie', 144, '2026-08-24 09:18:46', 11),
+(50413, 1, 3, 4, '2026-08-26', '08:00:00', 120000.00, 'hot_movie', 144, '2026-08-24 09:18:46', 11),
+(50414, 1, 3, 4, '2026-08-26', '11:30:00', 120000.00, 'hot_movie', 144, '2026-08-24 09:18:46', 11),
+(50415, 1, 3, 4, '2026-08-26', '17:30:00', 120000.00, 'hot_movie', 144, '2026-08-24 09:18:46', 11),
+(50416, 1, 3, 4, '2026-08-26', '21:45:00', 120000.00, 'hot_movie', 144, '2026-08-24 09:18:46', 11),
+(50417, 1, 3, 4, '2026-08-27', '08:00:00', 120000.00, 'hot_movie', 144, '2026-08-24 09:18:46', 11),
+(50418, 1, 3, 4, '2026-08-27', '11:30:00', 120000.00, 'hot_movie', 144, '2026-08-24 09:18:46', 11),
+(50419, 1, 3, 4, '2026-08-27', '17:30:00', 120000.00, 'hot_movie', 144, '2026-08-24 09:18:46', 11),
+(50420, 1, 3, 4, '2026-08-27', '21:45:00', 120000.00, 'hot_movie', 144, '2026-08-24 09:18:46', 11),
+(50421, 1, 7, 6, '2026-08-25', '08:00:00', 120000.00, 'hot_movie', 144, '2026-08-24 09:21:23', 35);
 
 -- --------------------------------------------------------
 
@@ -11785,7 +12040,349 @@ INSERT INTO `tickets` (`id`, `user_id`, `showtime_id`, `booking_pending_id`, `se
 (6209, 8, 41948, 934, 'D2', 'vip', 'ADMIN-TEST-20260611-30-D2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-06-11 18:35:00', NULL, '2026-06-11 11:15:00'),
 (6210, 9, 50348, 935, 'F5', 'vip', 'TICKET_kbBS0BEOfyuGbWpjhhb5DHs2', 195000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-07-10 23:46:31'),
 (6211, 9, 50348, 935, 'F4', 'vip', 'TICKET_ToPk9R5JgsXuxchvdEZ37yGi', 195000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-07-10 23:46:31'),
-(6212, 9, 50348, 935, 'F6', 'vip', 'TICKET_ws7feLxob6zdbsZswN9NkSDu', 195000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-07-10 23:46:31');
+(6212, 9, 50348, 935, 'F6', 'vip', 'TICKET_ws7feLxob6zdbsZswN9NkSDu', 195000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-07-10 23:46:31'),
+(6213, 2, 50364, 939, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-0-1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 15:15:00', 2, '2026-08-11 02:15:00'),
+(6214, 2, 50364, 939, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-0-2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 15:15:00', 2, '2026-08-11 02:15:00'),
+(6215, 2, 50364, 939, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-0-3', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 15:15:00', 2, '2026-08-11 02:15:00'),
+(6216, 2, 50364, 939, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-0-4', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 15:15:00', 2, '2026-08-11 02:15:00'),
+(6217, 2, 50364, 939, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-0-5', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 15:15:00', 2, '2026-08-11 02:15:00'),
+(6218, 2, 50364, 939, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-0-6', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 15:15:00', 2, '2026-08-11 02:15:00'),
+(6219, 2, 50364, 939, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-0-7', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 15:15:00', 2, '2026-08-11 02:15:00'),
+(6220, 2, 50364, 939, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-0-8', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 15:15:00', 2, '2026-08-11 02:15:00'),
+(6221, 2, 50364, 939, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-0-9', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 15:15:00', 2, '2026-08-11 02:15:00'),
+(6222, 2, 50364, 939, 'B10', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-0-10', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-11 02:15:00'),
+(6223, 2, 50364, 939, 'B11', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-0-11', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-11 02:15:00'),
+(6224, 2, 50364, 939, 'B12', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-0-12', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-11 02:15:00'),
+(6225, 2, 50365, 940, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-1-1', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 16:15:00', 2, '2026-08-11 03:15:00'),
+(6226, 2, 50365, 940, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-1-2', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 16:15:00', 2, '2026-08-11 03:15:00'),
+(6227, 2, 50365, 940, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-1-3', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 16:15:00', 2, '2026-08-11 03:15:00'),
+(6228, 2, 50365, 940, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-1-4', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 16:15:00', 2, '2026-08-11 03:15:00'),
+(6229, 2, 50365, 940, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-1-5', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 16:15:00', 2, '2026-08-11 03:15:00'),
+(6230, 2, 50365, 940, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-1-6', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-11 03:15:00'),
+(6231, 2, 50366, 941, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-2-1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 17:15:00', 2, '2026-08-11 04:15:00'),
+(6232, 2, 50366, 941, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-2-2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 17:15:00', 2, '2026-08-11 04:15:00'),
+(6233, 2, 50366, 941, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-2-3', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 17:15:00', 2, '2026-08-11 04:15:00'),
+(6234, 2, 50366, 941, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-2-4', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-11 17:15:00', 2, '2026-08-11 04:15:00'),
+(6235, 2, 50366, 941, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-2-5', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-11 04:15:00'),
+(6236, 2, 50366, 941, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-2-6', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-11 04:15:00'),
+(6237, 2, 50366, 941, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-2-7', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-11 04:15:00'),
+(6238, 2, 50366, 941, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-2-8', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-11 04:15:00'),
+(6239, 2, 50366, 941, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260811-2-9', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-11 04:15:00'),
+(6240, 2, 50367, 942, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-0-1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-12 15:15:00', 2, '2026-08-12 02:15:00'),
+(6241, 2, 50367, 942, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-0-2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-12 15:15:00', 2, '2026-08-12 02:15:00'),
+(6242, 2, 50367, 942, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-0-3', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-12 15:15:00', 2, '2026-08-12 02:15:00'),
+(6243, 2, 50367, 942, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-0-4', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-12 15:15:00', 2, '2026-08-12 02:15:00'),
+(6244, 2, 50367, 942, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-0-5', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-12 15:15:00', 2, '2026-08-12 02:15:00'),
+(6245, 2, 50367, 942, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-0-6', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-12 15:15:00', 2, '2026-08-12 02:15:00');
+INSERT INTO `tickets` (`id`, `user_id`, `showtime_id`, `booking_pending_id`, `seat`, `seat_type`, `qr_code`, `price`, `status`, `is_counter_sale`, `sold_by`, `is_picked_up`, `picked_up_at`, `picked_up_by`, `created_at`) VALUES
+(6246, 2, 50367, 942, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-0-7', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-12 02:15:00'),
+(6247, 2, 50367, 942, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-0-8', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-12 02:15:00'),
+(6248, 2, 50367, 942, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-0-9', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-12 02:15:00'),
+(6249, 2, 50367, 942, 'B10', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-0-10', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-12 02:15:00'),
+(6250, 2, 50368, 943, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-1-1', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-12 16:15:00', 2, '2026-08-12 03:15:00'),
+(6251, 2, 50368, 943, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-1-2', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-12 16:15:00', 2, '2026-08-12 03:15:00'),
+(6252, 2, 50368, 943, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-1-3', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-12 16:15:00', 2, '2026-08-12 03:15:00'),
+(6253, 2, 50368, 943, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-1-4', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-12 03:15:00'),
+(6254, 2, 50369, 944, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-2-1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-12 17:15:00', 2, '2026-08-12 04:15:00'),
+(6255, 2, 50369, 944, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-2-2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-12 17:15:00', 2, '2026-08-12 04:15:00'),
+(6256, 2, 50369, 944, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-2-3', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-12 17:15:00', 2, '2026-08-12 04:15:00'),
+(6257, 2, 50369, 944, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-2-4', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-12 17:15:00', 2, '2026-08-12 04:15:00'),
+(6258, 2, 50369, 944, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-2-5', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-12 17:15:00', 2, '2026-08-12 04:15:00'),
+(6259, 2, 50369, 944, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-2-6', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-12 04:15:00'),
+(6260, 2, 50369, 944, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260812-2-7', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-12 04:15:00'),
+(6261, 2, 50370, 945, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-0-1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-13 15:15:00', 2, '2026-08-13 02:15:00'),
+(6262, 2, 50370, 945, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-0-2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-13 15:15:00', 2, '2026-08-13 02:15:00'),
+(6263, 2, 50370, 945, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-0-3', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-13 15:15:00', 2, '2026-08-13 02:15:00'),
+(6264, 2, 50370, 945, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-0-4', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-13 15:15:00', 2, '2026-08-13 02:15:00'),
+(6265, 2, 50370, 945, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-0-5', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-13 02:15:00'),
+(6266, 2, 50370, 945, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-0-6', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-13 02:15:00'),
+(6267, 2, 50370, 945, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-0-7', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-13 02:15:00'),
+(6268, 2, 50370, 945, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-0-8', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-13 02:15:00'),
+(6269, 2, 50371, 946, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-1-1', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-13 16:15:00', 2, '2026-08-13 03:15:00'),
+(6270, 2, 50371, 946, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-1-2', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-13 16:15:00', 2, '2026-08-13 03:15:00'),
+(6271, 2, 50371, 946, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-1-3', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-13 16:15:00', 2, '2026-08-13 03:15:00'),
+(6272, 2, 50371, 946, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-1-4', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-13 16:15:00', 2, '2026-08-13 03:15:00'),
+(6273, 2, 50371, 946, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-1-5', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-13 16:15:00', 2, '2026-08-13 03:15:00'),
+(6274, 2, 50371, 946, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-1-6', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-13 16:15:00', 2, '2026-08-13 03:15:00'),
+(6275, 2, 50371, 946, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-1-7', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-13 16:15:00', 2, '2026-08-13 03:15:00'),
+(6276, 2, 50371, 946, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-1-8', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-13 03:15:00'),
+(6277, 2, 50371, 946, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-1-9', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-13 03:15:00'),
+(6278, 2, 50371, 946, 'B10', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-1-10', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-13 03:15:00'),
+(6279, 2, 50371, 946, 'B11', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-1-11', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-13 03:15:00'),
+(6280, 2, 50372, 947, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-2-1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-13 17:15:00', 2, '2026-08-13 04:15:00'),
+(6281, 2, 50372, 947, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-2-2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-13 17:15:00', 2, '2026-08-13 04:15:00'),
+(6282, 2, 50372, 947, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-2-3', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-13 17:15:00', 2, '2026-08-13 04:15:00'),
+(6283, 2, 50372, 947, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-2-4', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-13 04:15:00'),
+(6284, 2, 50372, 947, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260813-2-5', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-13 04:15:00'),
+(6285, 2, 50373, 948, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-0-1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-14 15:15:00', 2, '2026-08-14 02:15:00'),
+(6286, 2, 50373, 948, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-0-2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-14 15:15:00', 2, '2026-08-14 02:15:00'),
+(6287, 2, 50373, 948, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-0-3', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-14 02:15:00'),
+(6288, 2, 50373, 948, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-0-4', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-14 02:15:00'),
+(6289, 2, 50373, 948, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-0-5', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-14 02:15:00'),
+(6290, 2, 50373, 948, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-0-6', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-14 02:15:00'),
+(6291, 2, 50374, 949, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-1-1', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-14 16:15:00', 2, '2026-08-14 03:15:00'),
+(6292, 2, 50374, 949, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-1-2', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-14 16:15:00', 2, '2026-08-14 03:15:00'),
+(6293, 2, 50374, 949, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-1-3', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-14 16:15:00', 2, '2026-08-14 03:15:00'),
+(6294, 2, 50374, 949, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-1-4', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-14 16:15:00', 2, '2026-08-14 03:15:00'),
+(6295, 2, 50374, 949, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-1-5', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-14 03:15:00'),
+(6296, 2, 50374, 949, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-1-6', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-14 03:15:00'),
+(6297, 2, 50374, 949, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-1-7', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-14 03:15:00'),
+(6298, 2, 50374, 949, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-1-8', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-14 03:15:00'),
+(6299, 2, 50374, 949, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-1-9', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-14 03:15:00'),
+(6300, 2, 50375, 950, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-2-1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-14 17:15:00', 2, '2026-08-14 04:15:00'),
+(6301, 2, 50375, 950, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-2-2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-14 17:15:00', 2, '2026-08-14 04:15:00'),
+(6302, 2, 50375, 950, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-2-3', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-14 17:15:00', 2, '2026-08-14 04:15:00'),
+(6303, 2, 50375, 950, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-2-4', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-14 17:15:00', 2, '2026-08-14 04:15:00'),
+(6304, 2, 50375, 950, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-2-5', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-14 17:15:00', 2, '2026-08-14 04:15:00'),
+(6305, 2, 50375, 950, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-2-6', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-14 17:15:00', 2, '2026-08-14 04:15:00'),
+(6306, 2, 50375, 950, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-2-7', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-14 17:15:00', 2, '2026-08-14 04:15:00'),
+(6307, 2, 50375, 950, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-2-8', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-14 04:15:00'),
+(6308, 2, 50375, 950, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-2-9', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-14 04:15:00'),
+(6309, 2, 50375, 950, 'B10', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-2-10', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-14 04:15:00'),
+(6310, 2, 50375, 950, 'B11', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-2-11', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-14 04:15:00'),
+(6311, 2, 50375, 950, 'B12', 'normal', 'LOTTE-CHART-TEST-TICKET-20260814-2-12', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-14 04:15:00'),
+(6312, 2, 50376, 951, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-0-1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-15 15:15:00', 2, '2026-08-15 02:15:00'),
+(6313, 2, 50376, 951, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-0-2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-15 15:15:00', 2, '2026-08-15 02:15:00'),
+(6314, 2, 50376, 951, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-0-3', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-15 15:15:00', 2, '2026-08-15 02:15:00'),
+(6315, 2, 50376, 951, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-0-4', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-15 02:15:00'),
+(6316, 2, 50377, 952, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-1-1', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-15 16:15:00', 2, '2026-08-15 03:15:00'),
+(6317, 2, 50377, 952, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-1-2', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-15 16:15:00', 2, '2026-08-15 03:15:00'),
+(6318, 2, 50377, 952, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-1-3', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-15 16:15:00', 2, '2026-08-15 03:15:00'),
+(6319, 2, 50377, 952, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-1-4', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-15 03:15:00'),
+(6320, 2, 50377, 952, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-1-5', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-15 03:15:00'),
+(6321, 2, 50377, 952, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-1-6', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-15 03:15:00'),
+(6322, 2, 50377, 952, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-1-7', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-15 03:15:00'),
+(6323, 2, 50378, 953, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-2-1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-15 17:15:00', 2, '2026-08-15 04:15:00'),
+(6324, 2, 50378, 953, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-2-2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-15 17:15:00', 2, '2026-08-15 04:15:00'),
+(6325, 2, 50378, 953, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-2-3', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-15 17:15:00', 2, '2026-08-15 04:15:00'),
+(6326, 2, 50378, 953, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-2-4', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-15 17:15:00', 2, '2026-08-15 04:15:00'),
+(6327, 2, 50378, 953, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-2-5', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-15 17:15:00', 2, '2026-08-15 04:15:00'),
+(6328, 2, 50378, 953, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-2-6', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-15 04:15:00'),
+(6329, 2, 50378, 953, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-2-7', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-15 04:15:00'),
+(6330, 2, 50378, 953, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-2-8', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-15 04:15:00'),
+(6331, 2, 50378, 953, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-2-9', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-15 04:15:00'),
+(6332, 2, 50378, 953, 'B10', 'normal', 'LOTTE-CHART-TEST-TICKET-20260815-2-10', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-15 04:15:00'),
+(6333, 2, 50379, 954, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-0-1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 15:15:00', 2, '2026-08-16 02:15:00'),
+(6334, 2, 50379, 954, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-0-2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 15:15:00', 2, '2026-08-16 02:15:00'),
+(6335, 2, 50379, 954, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-0-3', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 15:15:00', 2, '2026-08-16 02:15:00'),
+(6336, 2, 50379, 954, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-0-4', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 15:15:00', 2, '2026-08-16 02:15:00'),
+(6337, 2, 50379, 954, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-0-5', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 15:15:00', 2, '2026-08-16 02:15:00'),
+(6338, 2, 50379, 954, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-0-6', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 15:15:00', 2, '2026-08-16 02:15:00'),
+(6339, 2, 50379, 954, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-0-7', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 15:15:00', 2, '2026-08-16 02:15:00'),
+(6340, 2, 50379, 954, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-0-8', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 15:15:00', 2, '2026-08-16 02:15:00'),
+(6341, 2, 50379, 954, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-0-9', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-16 02:15:00'),
+(6342, 2, 50379, 954, 'B10', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-0-10', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-16 02:15:00'),
+(6343, 2, 50379, 954, 'B11', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-0-11', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-16 02:15:00'),
+(6344, 2, 50380, 955, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-1-1', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 16:15:00', 2, '2026-08-16 03:15:00'),
+(6345, 2, 50380, 955, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-1-2', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 16:15:00', 2, '2026-08-16 03:15:00'),
+(6346, 2, 50380, 955, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-1-3', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 16:15:00', 2, '2026-08-16 03:15:00'),
+(6347, 2, 50380, 955, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-1-4', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 16:15:00', 2, '2026-08-16 03:15:00'),
+(6348, 2, 50380, 955, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-1-5', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-16 03:15:00'),
+(6349, 2, 50381, 956, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-2-1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 17:15:00', 2, '2026-08-16 04:15:00'),
+(6350, 2, 50381, 956, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-2-2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 17:15:00', 2, '2026-08-16 04:15:00'),
+(6351, 2, 50381, 956, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-2-3', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-16 17:15:00', 2, '2026-08-16 04:15:00'),
+(6352, 2, 50381, 956, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-2-4', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-16 04:15:00'),
+(6353, 2, 50381, 956, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-2-5', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-16 04:15:00'),
+(6354, 2, 50381, 956, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-2-6', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-16 04:15:00'),
+(6355, 2, 50381, 956, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-2-7', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-16 04:15:00'),
+(6356, 2, 50381, 956, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260816-2-8', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-16 04:15:00'),
+(6357, 2, 50382, 957, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-0-1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 15:15:00', 2, '2026-08-17 02:15:00'),
+(6358, 2, 50382, 957, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-0-2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 15:15:00', 2, '2026-08-17 02:15:00'),
+(6359, 2, 50382, 957, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-0-3', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 15:15:00', 2, '2026-08-17 02:15:00'),
+(6360, 2, 50382, 957, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-0-4', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 15:15:00', 2, '2026-08-17 02:15:00'),
+(6361, 2, 50382, 957, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-0-5', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 15:15:00', 2, '2026-08-17 02:15:00'),
+(6362, 2, 50382, 957, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-0-6', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-17 02:15:00'),
+(6363, 2, 50382, 957, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-0-7', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-17 02:15:00'),
+(6364, 2, 50382, 957, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-0-8', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-17 02:15:00'),
+(6365, 2, 50382, 957, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-0-9', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-17 02:15:00'),
+(6366, 2, 50383, 958, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-1-1', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 16:15:00', 2, '2026-08-17 03:15:00'),
+(6367, 2, 50383, 958, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-1-2', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 16:15:00', 2, '2026-08-17 03:15:00'),
+(6368, 2, 50383, 958, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-1-3', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 16:15:00', 2, '2026-08-17 03:15:00'),
+(6369, 2, 50383, 958, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-1-4', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 16:15:00', 2, '2026-08-17 03:15:00'),
+(6370, 2, 50383, 958, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-1-5', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 16:15:00', 2, '2026-08-17 03:15:00'),
+(6371, 2, 50383, 958, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-1-6', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 16:15:00', 2, '2026-08-17 03:15:00'),
+(6372, 2, 50383, 958, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-1-7', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 16:15:00', 2, '2026-08-17 03:15:00'),
+(6373, 2, 50383, 958, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-1-8', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 16:15:00', 2, '2026-08-17 03:15:00'),
+(6374, 2, 50383, 958, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-1-9', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 16:15:00', 2, '2026-08-17 03:15:00'),
+(6375, 2, 50383, 958, 'B10', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-1-10', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-17 03:15:00'),
+(6376, 2, 50383, 958, 'B11', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-1-11', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-17 03:15:00'),
+(6377, 2, 50383, 958, 'B12', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-1-12', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-17 03:15:00'),
+(6378, 2, 50384, 959, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-2-1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 17:15:00', 2, '2026-08-17 04:15:00'),
+(6379, 2, 50384, 959, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-2-2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 17:15:00', 2, '2026-08-17 04:15:00'),
+(6380, 2, 50384, 959, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-2-3', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 17:15:00', 2, '2026-08-17 04:15:00'),
+(6381, 2, 50384, 959, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-2-4', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 17:15:00', 2, '2026-08-17 04:15:00'),
+(6382, 2, 50384, 959, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-2-5', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-17 17:15:00', 2, '2026-08-17 04:15:00'),
+(6383, 2, 50384, 959, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260817-2-6', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-17 04:15:00'),
+(6384, 2, 50385, 960, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-0-1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-18 15:15:00', 2, '2026-08-18 02:15:00'),
+(6385, 2, 50385, 960, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-0-2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-18 15:15:00', 2, '2026-08-18 02:15:00'),
+(6386, 2, 50385, 960, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-0-3', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-18 15:15:00', 2, '2026-08-18 02:15:00'),
+(6387, 2, 50385, 960, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-0-4', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-18 02:15:00'),
+(6388, 2, 50385, 960, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-0-5', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-18 02:15:00'),
+(6389, 2, 50385, 960, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-0-6', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-18 02:15:00'),
+(6390, 2, 50385, 960, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-0-7', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-18 02:15:00'),
+(6391, 2, 50386, 961, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-1-1', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-18 16:15:00', 2, '2026-08-18 03:15:00'),
+(6392, 2, 50386, 961, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-1-2', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-18 16:15:00', 2, '2026-08-18 03:15:00'),
+(6393, 2, 50386, 961, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-1-3', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-18 16:15:00', 2, '2026-08-18 03:15:00'),
+(6394, 2, 50386, 961, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-1-4', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-18 16:15:00', 2, '2026-08-18 03:15:00'),
+(6395, 2, 50386, 961, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-1-5', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-18 16:15:00', 2, '2026-08-18 03:15:00'),
+(6396, 2, 50386, 961, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-1-6', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-18 16:15:00', 2, '2026-08-18 03:15:00'),
+(6397, 2, 50386, 961, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-1-7', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-18 03:15:00'),
+(6398, 2, 50386, 961, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-1-8', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-18 03:15:00'),
+(6399, 2, 50386, 961, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-1-9', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-18 03:15:00'),
+(6400, 2, 50386, 961, 'B10', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-1-10', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-18 03:15:00'),
+(6401, 2, 50387, 962, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-2-1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-18 17:15:00', 2, '2026-08-18 04:15:00'),
+(6402, 2, 50387, 962, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-2-2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-18 17:15:00', 2, '2026-08-18 04:15:00'),
+(6403, 2, 50387, 962, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-2-3', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-18 17:15:00', 2, '2026-08-18 04:15:00'),
+(6404, 2, 50387, 962, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260818-2-4', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-18 04:15:00'),
+(6405, 2, 50388, 963, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-0-1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-19 15:15:00', 2, '2026-08-19 02:15:00'),
+(6406, 2, 50388, 963, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-0-2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-19 15:15:00', 2, '2026-08-19 02:15:00'),
+(6407, 2, 50388, 963, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-0-3', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-19 02:15:00'),
+(6408, 2, 50388, 963, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-0-4', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-19 02:15:00'),
+(6409, 2, 50388, 963, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-0-5', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-19 02:15:00'),
+(6410, 2, 50389, 964, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-1-1', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-19 16:15:00', 2, '2026-08-19 03:15:00'),
+(6411, 2, 50389, 964, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-1-2', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-19 16:15:00', 2, '2026-08-19 03:15:00'),
+(6412, 2, 50389, 964, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-1-3', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-19 16:15:00', 2, '2026-08-19 03:15:00'),
+(6413, 2, 50389, 964, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-1-4', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-19 16:15:00', 2, '2026-08-19 03:15:00'),
+(6414, 2, 50389, 964, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-1-5', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-19 03:15:00'),
+(6415, 2, 50389, 964, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-1-6', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-19 03:15:00'),
+(6416, 2, 50389, 964, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-1-7', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-19 03:15:00'),
+(6417, 2, 50389, 964, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-1-8', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-19 03:15:00'),
+(6418, 2, 50390, 965, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-2-1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-19 17:15:00', 2, '2026-08-19 04:15:00'),
+(6419, 2, 50390, 965, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-2-2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-19 17:15:00', 2, '2026-08-19 04:15:00'),
+(6420, 2, 50390, 965, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-2-3', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-19 17:15:00', 2, '2026-08-19 04:15:00'),
+(6421, 2, 50390, 965, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-2-4', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-19 17:15:00', 2, '2026-08-19 04:15:00'),
+(6422, 2, 50390, 965, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-2-5', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-19 17:15:00', 2, '2026-08-19 04:15:00'),
+(6423, 2, 50390, 965, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-2-6', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-19 17:15:00', 2, '2026-08-19 04:15:00'),
+(6424, 2, 50390, 965, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-2-7', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-19 17:15:00', 2, '2026-08-19 04:15:00'),
+(6425, 2, 50390, 965, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-2-8', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-19 04:15:00'),
+(6426, 2, 50390, 965, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-2-9', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-19 04:15:00'),
+(6427, 2, 50390, 965, 'B10', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-2-10', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-19 04:15:00'),
+(6428, 2, 50390, 965, 'B11', 'normal', 'LOTTE-CHART-TEST-TICKET-20260819-2-11', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-19 04:15:00'),
+(6429, 2, 50391, 966, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-0-1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 15:15:00', 2, '2026-08-20 02:15:00'),
+(6430, 2, 50391, 966, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-0-2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 15:15:00', 2, '2026-08-20 02:15:00'),
+(6431, 2, 50391, 966, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-0-3', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 15:15:00', 2, '2026-08-20 02:15:00'),
+(6432, 2, 50391, 966, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-0-4', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 15:15:00', 2, '2026-08-20 02:15:00'),
+(6433, 2, 50391, 966, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-0-5', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 15:15:00', 2, '2026-08-20 02:15:00'),
+(6434, 2, 50391, 966, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-0-6', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 15:15:00', 2, '2026-08-20 02:15:00'),
+(6435, 2, 50391, 966, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-0-7', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 15:15:00', 2, '2026-08-20 02:15:00'),
+(6436, 2, 50391, 966, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-0-8', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 15:15:00', 2, '2026-08-20 02:15:00'),
+(6437, 2, 50391, 966, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-0-9', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 15:15:00', 2, '2026-08-20 02:15:00'),
+(6438, 2, 50391, 966, 'B10', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-0-10', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 15:15:00', 2, '2026-08-20 02:15:00'),
+(6439, 2, 50391, 966, 'B11', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-0-11', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-20 02:15:00'),
+(6440, 2, 50391, 966, 'B12', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-0-12', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-20 02:15:00'),
+(6441, 2, 50392, 967, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-1-1', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 16:15:00', 2, '2026-08-20 03:15:00'),
+(6442, 2, 50392, 967, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-1-2', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 16:15:00', 2, '2026-08-20 03:15:00'),
+(6443, 2, 50392, 967, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-1-3', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-20 03:15:00'),
+(6444, 2, 50392, 967, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-1-4', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-20 03:15:00'),
+(6445, 2, 50392, 967, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-1-5', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-20 03:15:00'),
+(6446, 2, 50392, 967, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-1-6', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-20 03:15:00'),
+(6447, 2, 50393, 968, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-2-1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 17:15:00', 2, '2026-08-20 04:15:00'),
+(6448, 2, 50393, 968, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-2-2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 17:15:00', 2, '2026-08-20 04:15:00'),
+(6449, 2, 50393, 968, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-2-3', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 17:15:00', 2, '2026-08-20 04:15:00'),
+(6450, 2, 50393, 968, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-2-4', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-20 17:15:00', 2, '2026-08-20 04:15:00'),
+(6451, 2, 50393, 968, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-2-5', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-20 04:15:00'),
+(6452, 2, 50393, 968, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-2-6', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-20 04:15:00'),
+(6453, 2, 50393, 968, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-2-7', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-20 04:15:00'),
+(6454, 2, 50393, 968, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-2-8', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-20 04:15:00'),
+(6455, 2, 50393, 968, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260820-2-9', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-20 04:15:00'),
+(6456, 2, 50394, 969, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-0-1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-21 15:15:00', 2, '2026-08-21 02:15:00'),
+(6457, 2, 50394, 969, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-0-2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-21 15:15:00', 2, '2026-08-21 02:15:00'),
+(6458, 2, 50394, 969, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-0-3', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-21 15:15:00', 2, '2026-08-21 02:15:00'),
+(6459, 2, 50394, 969, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-0-4', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-21 15:15:00', 2, '2026-08-21 02:15:00'),
+(6460, 2, 50394, 969, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-0-5', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-21 15:15:00', 2, '2026-08-21 02:15:00'),
+(6461, 2, 50394, 969, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-0-6', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-21 15:15:00', 2, '2026-08-21 02:15:00'),
+(6462, 2, 50394, 969, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-0-7', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-21 15:15:00', 2, '2026-08-21 02:15:00'),
+(6463, 2, 50394, 969, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-0-8', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-21 02:15:00'),
+(6464, 2, 50394, 969, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-0-9', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-21 02:15:00'),
+(6465, 2, 50394, 969, 'B10', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-0-10', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-21 02:15:00'),
+(6466, 2, 50395, 970, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-1-1', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-21 16:15:00', 2, '2026-08-21 03:15:00'),
+(6467, 2, 50395, 970, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-1-2', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-21 16:15:00', 2, '2026-08-21 03:15:00'),
+(6468, 2, 50395, 970, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-1-3', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-21 16:15:00', 2, '2026-08-21 03:15:00'),
+(6469, 2, 50395, 970, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-1-4', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-21 03:15:00'),
+(6470, 2, 50396, 971, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-2-1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-21 17:15:00', 2, '2026-08-21 04:15:00'),
+(6471, 2, 50396, 971, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-2-2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-21 17:15:00', 2, '2026-08-21 04:15:00'),
+(6472, 2, 50396, 971, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-2-3', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-21 17:15:00', 2, '2026-08-21 04:15:00'),
+(6473, 2, 50396, 971, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-2-4', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-21 04:15:00'),
+(6474, 2, 50396, 971, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-2-5', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-21 04:15:00'),
+(6475, 2, 50396, 971, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-2-6', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-21 04:15:00'),
+(6476, 2, 50396, 971, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260821-2-7', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-21 04:15:00'),
+(6477, 2, 50397, 972, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-0-1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 15:15:00', 2, '2026-08-22 02:15:00'),
+(6478, 2, 50397, 972, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-0-2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 15:15:00', 2, '2026-08-22 02:15:00'),
+(6479, 2, 50397, 972, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-0-3', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 15:15:00', 2, '2026-08-22 02:15:00'),
+(6480, 2, 50397, 972, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-0-4', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 15:15:00', 2, '2026-08-22 02:15:00'),
+(6481, 2, 50397, 972, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-0-5', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 15:15:00', 2, '2026-08-22 02:15:00'),
+(6482, 2, 50397, 972, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-0-6', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-22 02:15:00'),
+(6483, 2, 50397, 972, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-0-7', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-22 02:15:00'),
+(6484, 2, 50397, 972, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-0-8', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-22 02:15:00'),
+(6485, 2, 50398, 973, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-1-1', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 16:15:00', 2, '2026-08-22 03:15:00'),
+(6486, 2, 50398, 973, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-1-2', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 16:15:00', 2, '2026-08-22 03:15:00'),
+(6487, 2, 50398, 973, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-1-3', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 16:15:00', 2, '2026-08-22 03:15:00'),
+(6488, 2, 50398, 973, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-1-4', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 16:15:00', 2, '2026-08-22 03:15:00'),
+(6489, 2, 50398, 973, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-1-5', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 16:15:00', 2, '2026-08-22 03:15:00'),
+(6490, 2, 50398, 973, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-1-6', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 16:15:00', 2, '2026-08-22 03:15:00'),
+(6491, 2, 50398, 973, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-1-7', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 16:15:00', 2, '2026-08-22 03:15:00'),
+(6492, 2, 50398, 973, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-1-8', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 16:15:00', 2, '2026-08-22 03:15:00'),
+(6493, 2, 50398, 973, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-1-9', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-22 03:15:00'),
+(6494, 2, 50398, 973, 'B10', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-1-10', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-22 03:15:00'),
+(6495, 2, 50398, 973, 'B11', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-1-11', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-22 03:15:00'),
+(6496, 2, 50399, 974, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-2-1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 17:15:00', 2, '2026-08-22 04:15:00'),
+(6497, 2, 50399, 974, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-2-2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 17:15:00', 2, '2026-08-22 04:15:00'),
+(6498, 2, 50399, 974, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-2-3', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 17:15:00', 2, '2026-08-22 04:15:00'),
+(6499, 2, 50399, 974, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-2-4', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-22 17:15:00', 2, '2026-08-22 04:15:00'),
+(6500, 2, 50399, 974, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260822-2-5', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-22 04:15:00'),
+(6501, 2, 50400, 975, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-0-1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 15:15:00', 2, '2026-08-23 02:15:00'),
+(6502, 2, 50400, 975, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-0-2', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 15:15:00', 2, '2026-08-23 02:15:00'),
+(6503, 2, 50400, 975, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-0-3', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 15:15:00', 2, '2026-08-23 02:15:00'),
+(6504, 2, 50400, 975, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-0-4', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-23 02:15:00'),
+(6505, 2, 50400, 975, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-0-5', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-23 02:15:00'),
+(6506, 2, 50400, 975, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-0-6', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-23 02:15:00'),
+(6507, 2, 50401, 976, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-1-1', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 16:15:00', 2, '2026-08-23 03:15:00'),
+(6508, 2, 50401, 976, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-1-2', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 16:15:00', 2, '2026-08-23 03:15:00'),
+(6509, 2, 50401, 976, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-1-3', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 16:15:00', 2, '2026-08-23 03:15:00'),
+(6510, 2, 50401, 976, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-1-4', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 16:15:00', 2, '2026-08-23 03:15:00'),
+(6511, 2, 50401, 976, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-1-5', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 16:15:00', 2, '2026-08-23 03:15:00'),
+(6512, 2, 50401, 976, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-1-6', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-23 03:15:00'),
+(6513, 2, 50401, 976, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-1-7', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-23 03:15:00'),
+(6514, 2, 50401, 976, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-1-8', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-23 03:15:00'),
+(6515, 2, 50401, 976, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-1-9', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-23 03:15:00'),
+(6516, 2, 50402, 977, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-2-1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 17:15:00', 2, '2026-08-23 04:15:00'),
+(6517, 2, 50402, 977, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-2-2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 17:15:00', 2, '2026-08-23 04:15:00'),
+(6518, 2, 50402, 977, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-2-3', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 17:15:00', 2, '2026-08-23 04:15:00'),
+(6519, 2, 50402, 977, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-2-4', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 17:15:00', 2, '2026-08-23 04:15:00'),
+(6520, 2, 50402, 977, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-2-5', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 17:15:00', 2, '2026-08-23 04:15:00'),
+(6521, 2, 50402, 977, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-2-6', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 17:15:00', 2, '2026-08-23 04:15:00'),
+(6522, 2, 50402, 977, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-2-7', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 17:15:00', 2, '2026-08-23 04:15:00'),
+(6523, 2, 50402, 977, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-2-8', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 17:15:00', 2, '2026-08-23 04:15:00'),
+(6524, 2, 50402, 977, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-2-9', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-23 17:15:00', 2, '2026-08-23 04:15:00'),
+(6525, 2, 50402, 977, 'B10', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-2-10', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-23 04:15:00'),
+(6526, 2, 50402, 977, 'B11', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-2-11', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-23 04:15:00'),
+(6527, 2, 50402, 977, 'B12', 'normal', 'LOTTE-CHART-TEST-TICKET-20260823-2-12', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-23 04:15:00'),
+(6528, 2, 50403, 978, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-0-1', 90000.00, 'Đã đặt', 0, NULL, 1, '2026-08-24 15:15:00', 2, '2026-08-24 02:15:00'),
+(6529, 2, 50403, 978, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-0-2', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-24 02:15:00'),
+(6530, 2, 50403, 978, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-0-3', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-24 02:15:00'),
+(6531, 2, 50403, 978, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-0-4', 90000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-24 02:15:00'),
+(6532, 2, 50404, 979, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-1-1', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-24 16:15:00', 2, '2026-08-24 03:15:00'),
+(6533, 2, 50404, 979, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-1-2', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-24 16:15:00', 2, '2026-08-24 03:15:00'),
+(6534, 2, 50404, 979, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-1-3', 105000.00, 'Đã đặt', 0, NULL, 1, '2026-08-24 16:15:00', 2, '2026-08-24 03:15:00'),
+(6535, 2, 50404, 979, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-1-4', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-24 03:15:00'),
+(6536, 2, 50404, 979, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-1-5', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-24 03:15:00'),
+(6537, 2, 50404, 979, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-1-6', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-24 03:15:00'),
+(6538, 2, 50404, 979, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-1-7', 105000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-24 03:15:00'),
+(6539, 2, 50405, 980, 'B1', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-2-1', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-24 17:15:00', 2, '2026-08-24 04:15:00'),
+(6540, 2, 50405, 980, 'B2', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-2-2', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-24 17:15:00', 2, '2026-08-24 04:15:00'),
+(6541, 2, 50405, 980, 'B3', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-2-3', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-24 17:15:00', 2, '2026-08-24 04:15:00'),
+(6542, 2, 50405, 980, 'B4', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-2-4', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-24 17:15:00', 2, '2026-08-24 04:15:00'),
+(6543, 2, 50405, 980, 'B5', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-2-5', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-24 17:15:00', 2, '2026-08-24 04:15:00'),
+(6544, 2, 50405, 980, 'B6', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-2-6', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-24 17:15:00', 2, '2026-08-24 04:15:00'),
+(6545, 2, 50405, 980, 'B7', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-2-7', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-24 04:15:00'),
+(6546, 2, 50405, 980, 'B8', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-2-8', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-24 04:15:00'),
+(6547, 2, 50405, 980, 'B9', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-2-9', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-24 04:15:00'),
+(6548, 2, 50405, 980, 'B10', 'normal', 'LOTTE-CHART-TEST-TICKET-20260824-2-10', 120000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-24 04:15:00'),
+(6549, 9, 50403, 981, 'C3', 'normal', 'TICKET_ZYrohDgvy5P5pBK63cbmnnHb', 160000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-24 05:55:46'),
+(6550, 9, 50403, 981, 'C2', 'normal', 'TICKET_Wi26GRAiDsnmJZR97zHQ7luV', 160000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-24 05:55:46'),
+(6551, 9, 50403, 981, 'C1', 'normal', 'TICKET_JFhhtMC9n7f4lcGTGFhyTkxm', 160000.00, 'Đã đặt', 0, NULL, 0, NULL, NULL, '2026-08-24 05:55:46'),
+(6552, 9, 50421, 987, 'C3', 'normal', 'TICKET_GMXRkTbrMV2oKD7AG7tQzA0H', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-24 16:34:30', 42, '2026-08-24 09:26:02'),
+(6553, 9, 50421, 987, 'C4', 'normal', 'TICKET_Pj4NEHH9ICmoWwsPqZKxgsAT', 120000.00, 'Đã đặt', 0, NULL, 1, '2026-08-24 16:34:30', 42, '2026-08-24 09:26:02');
 
 -- --------------------------------------------------------
 
@@ -11998,7 +12595,10 @@ INSERT INTO `transactions` (`id`, `user_id`, `type`, `related_id`, `amount`, `me
 (277, 7, 'ticket', 933, 180000.00, 'Cash', 'Thành công', '2026-06-12 11:15:00'),
 (278, 8, 'ticket', 934, 240000.00, 'Bank', 'Thành công', '2026-06-11 11:15:00'),
 (279, 9, 'ticket', 935, 585000.00, 'Bank', 'Thành công', '2026-07-10 23:46:31'),
-(280, 3, 'deposit', 1292767768, 10000.00, 'VNPay', 'Thành công', '2026-07-19 01:08:57');
+(280, 3, 'deposit', 1292767768, 10000.00, 'VNPay', 'Thành công', '2026-07-19 01:08:57'),
+(281, 9, 'ticket', 981, 535000.00, 'Bank', 'Thành công', '2026-08-24 05:55:46'),
+(282, 9, 'ticket', 987, 240000.00, 'Momo', 'Thành công', '2026-08-24 09:26:02'),
+(283, 42, 'deposit', 814856065, 50000.00, 'VNPay', 'Thành công', '2026-08-24 09:43:07');
 
 -- --------------------------------------------------------
 
@@ -12022,6 +12622,7 @@ CREATE TABLE `users` (
   `points` int(11) DEFAULT 0,
   `subscription_id` int(11) DEFAULT NULL,
   `status` enum('active','inactive','banned') DEFAULT 'active',
+  `comment_banned_until` timestamp NULL DEFAULT NULL,
   `email_verified` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
@@ -12037,47 +12638,48 @@ CREATE TABLE `users` (
 -- Đang đổ dữ liệu cho bảng `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `google_id`, `phone`, `password`, `remember_token`, `avatar`, `birthdate`, `address`, `rank`, `points`, `subscription_id`, `status`, `email_verified`, `created_at`, `updated_at`, `role`, `theater_id`, `is_active`, `last_login`, `newsletter`, `notifications_enabled`) VALUES
-(1, 'Tuan Anh', 'noble.toad.nict@letterguard.net', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-10 15:10:16', '2025-11-10 15:10:16', 'user', NULL, 1, NULL, 0, 1),
-(2, 'Super Admin', 'admin@cinehub.com', NULL, NULL, NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-11-10 16:41:17', '2025-11-10 16:45:54', 'admin', NULL, 1, NULL, 0, 1),
-(3, 'Admin Mới', 'admin2@cinehub.com', NULL, NULL, NULL, '$2y$12$/AeKoaDJ.CzbUovU0x9F1.U54BECa20QKSYuRc.O./WJZTt1b/bFG', NULL, 'avatars/avatar_3_1782296052.png', NULL, NULL, 'Bronze', 10000, 1, 'active', 0, '2025-11-12 02:39:06', '2026-07-19 01:08:57', 'admin', NULL, 1, NULL, 0, 1),
-(4, 'Nguyễn Văn A', 'nguyenvana@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, NULL, 'Silver', 500, 2, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
-(5, 'Trần Thị B', 'tranthib@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, NULL, 'Gold', 1200, 3, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
-(6, 'Lê Văn C', 'levanc@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, NULL, 'Bronze', 100, 1, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
-(7, 'Phạm Thị D', 'phamthid@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, NULL, 'Platinum', 2500, 4, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
-(8, 'Hoàng Văn E', 'hoangvane@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, NULL, 'Silver', 800, 2, 'active', 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
-(9, 'vanlinh', 'nguyenvanlinh25062006@gmail.com', NULL, NULL, NULL, '$2y$12$X9rtzLgIJYy3cWi4VLsth.GZaihA0lIw6ZXMQoK7CXyb6Xi3OrMQ2', NULL, 'avatars/avatar_9_1782064502.png', '2006-06-25', NULL, 'Bronze', 8199560, 5, 'active', 0, '2025-11-14 01:35:37', '2026-07-30 13:47:09', 'moderator', 3, 1, NULL, 0, 1),
-(10, 'Tuan_awh', 'tuanawh@gmail.com', NULL, NULL, NULL, '$2y$10$5NwNHefnp5jwjr1Vls5HG.dnt4SWC1newqSkuV8X4QTcwZ0Ok1JQ.', NULL, 'data/avatars/avatar_10_1765506885.jpg', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-14 01:45:51', '2026-07-12 12:42:14', 'moderator', 2, 1, NULL, 0, 1),
-(11, 'Hoang Son', 'hsson97805@gmail.com', NULL, NULL, NULL, '$2y$10$4OBk1HA71jEhbVPP7FA7VueQ8B30EgEy9eB9tAHRFmUvA8I7lwAPe', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-24 08:52:25', '2025-11-24 08:52:25', 'user', NULL, 1, NULL, 0, 1),
-(12, 'jack', 'jack@gmail.com', NULL, NULL, NULL, '$2y$10$4OPMx0NC7sXIg23/hWQt1u0t52jEDgc5grk/LZAOmmFw8a3DAy.BW', NULL, NULL, NULL, NULL, 'Bronze', 297000, 3, 'active', 0, '2025-11-25 02:20:46', '2025-11-25 02:27:04', 'user', NULL, 1, NULL, 0, 1),
-(13, 'huung', 'nguyenconghung954@gmail.com', NULL, NULL, NULL, '$2y$10$0aCzLlyOsSw4IZeDM8Vr8uC.1zWUY/F0SZTjwU8hrS9jxzvUvTgeG', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-25 12:43:00', '2025-11-25 12:43:00', 'user', NULL, 1, NULL, 0, 1),
-(14, 'bom', 'vlinh25062006@gmail.com', NULL, NULL, NULL, '$2y$10$SGQNRO1gcjuJy76tKCWx7e/9boVMyK2kkgK5D4PMepeswkveVa2qa', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-11-26 04:03:42', '2025-11-26 04:03:42', 'user', NULL, 1, NULL, 0, 1),
-(15, 'Hải Nam', 'natgao0001@gmail.com', NULL, NULL, NULL, '$2y$10$62PMj1vSUIjXo4.d8EJ8J.JJVrnO764zQvDZorn2BsfiT9ecJCzGe', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-04 18:01:00', '2025-12-04 18:01:00', 'user', NULL, 1, NULL, 0, 1),
-(16, 'Thanh', 'le3221981@gmail.com', NULL, NULL, NULL, '$2y$10$bomnjBXwqML823EJUbdDsOh22J4vmfXElcK0M.CMzk9X2NrcpIyGm', NULL, 'data/avatars/avatar_16_1764872833.jpeg', NULL, NULL, 'Bronze', 400000, 1, 'active', 0, '2025-12-04 18:22:20', '2025-12-04 18:30:11', 'user', NULL, 1, NULL, 0, 1),
-(17, 'Admin Rạp CGV Vincom', 'admin_rap1@cinehub.com', NULL, NULL, NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 14:43:27', '2026-07-12 12:42:14', 'moderator', 1, 1, NULL, 0, 1),
-(18, 'Nhân viên Quầy 1', 'nhanvien1@cinehub.com', NULL, NULL, NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 14:43:27', '2025-12-06 14:43:27', 'user', 1, 1, NULL, 0, 1),
-(19, 'Le Van Phat', 'plv@gmail.com', NULL, NULL, NULL, '$2y$12$sgkGlJx7H08Fi/uiIBtnGujFi5dbkr7Tdh1px6fPGJ7iAkS/G443u', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 15:08:04', '2026-06-15 20:00:42', 'user', 3, 1, NULL, 0, 1),
-(20, 'Tuan Anh', 'awhtuan@gmail.com', NULL, NULL, NULL, '$2y$10$Gs3zYtOxwS7L4M11Ad0dMOUADYr5Bg.oPl6TJHjqWKBD38FTGLK.u', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-06 17:27:56', '2025-12-06 17:27:56', 'user', 2, 1, NULL, 0, 1),
-(21, 'Nguyễn Hoàng Sơn', 'hson97805@gmail.com', NULL, NULL, NULL, '$2y$10$42gA6q4czX5DAA4JsKseSe0uFxBXkI4leaoL9Hbi.iQqdys9RF2q2', NULL, NULL, '2025-12-06', NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-08 04:08:50', '2025-12-08 04:10:34', 'user', NULL, 1, NULL, 0, 1),
-(22, 'Lotte', 'lotte@gmail.com', NULL, NULL, NULL, '$2y$12$GahLiz9nOpcP1wnKRNyeGu3TeUKBlcVT4Kcv3MWq9bg6sgASGNAum', NULL, 'avatars/avatar_22_1782808131.png', NULL, NULL, 'Bronze', 1000000, 1, 'active', 0, '2025-12-08 18:53:32', '2026-07-12 12:42:15', 'moderator', 6, 1, NULL, 0, 1),
-(23, 'betaTH', 'betath@gmail.com', NULL, NULL, NULL, '$2y$12$nvjw65xDMuV/0RC.jMM5H./9XPIB/Xm0lcH/MZGGfPYQdjk9XSF9u', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-08 18:54:08', '2026-07-12 12:42:15', 'moderator', 7, 1, NULL, 0, 1),
-(24, 'trang', 'thutrang1@gmail.com', NULL, NULL, NULL, '$2y$10$syT/.T7JUcAhEqFYLS9bfObvzSqkYvueKcalkYQBp5hZF1IA4Hwk.', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 02:30:58', '2025-12-09 02:30:58', 'user', NULL, 1, NULL, 0, 1),
-(25, 'Trùm thiên hạ', 'vanquan2006k@gmail.com', NULL, NULL, NULL, '$2y$10$Q1jFMT5RHDxdT7nijhzTMOlhOOkPWBrVj2nr2I/azcwg.Gmvt.8xC', NULL, 'data/avatars/avatar_25_1765294523.jpg', NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 03:33:26', '2025-12-10 02:30:40', 'user', NULL, 1, NULL, 0, 1),
-(26, 'FAN ANH JACK', 'khoiphuc255@gmail.com', NULL, NULL, NULL, '$2y$10$mBkdgi4XcgLU6rLbADRfeOmowDvXpsBgRND2L6D5dL8Z2a6dFr8ai', NULL, 'data/avatars/avatar_26_1765251965.jpg', NULL, NULL, 'Bronze', 9801000, 4, 'active', 0, '2025-12-09 03:36:19', '2025-12-09 03:46:05', 'user', NULL, 1, NULL, 0, 1),
-(27, 'trang', 'thutrang12@gmail.com', NULL, NULL, NULL, '$2y$10$wKoi2tCHC4qWkYxWyP6VZuMu36aN.04xRNQhdO/CcU1wNYjmW.M76', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 11:33:45', '2025-12-09 11:33:45', 'user', NULL, 1, NULL, 0, 1),
-(28, 'trang', 'trang12@gmail.com', NULL, NULL, NULL, '$2y$10$M5m.jX22AFNgTpKObCbyPeOwsI9Yk.M/vTChWKCwBKJYPxLWsJ4SG', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-09 12:35:23', '2025-12-09 12:35:23', 'user', NULL, 1, NULL, 0, 1),
-(29, 'Vũ Đình Tư', 'vtu8531@gmail.com', NULL, NULL, NULL, '$2y$10$bTIw0qpazioAhDk31ZXQNeRqaVA/qzau6ji0Gff9ucbuhwaP8Ebd6', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-11 08:55:37', '2025-12-11 08:55:37', 'user', NULL, 1, NULL, 0, 1),
-(30, 'Linh', 'nguyenvanlinh250606@gmail.com', NULL, NULL, NULL, '$2y$10$qGBli/hydJYruPcWlQ3KweLQhLsFXysE8vNsBQsuOtvndfppC80EG', NULL, 'data/avatars/avatar_30_1765767345.jpeg', NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2025-12-12 02:06:48', '2025-12-15 02:55:45', 'user', 6, 1, NULL, 0, 1),
-(31, 'Dương Hải Cường', 'sccuong5222@gmail.com', NULL, NULL, NULL, '$2y$10$UmMuWQ0pSc.PaoElXDS2m.h7h4oiPyCYzpoBXUzfLCmM7YQulr.KK', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2025-12-14 14:43:40', '2025-12-14 14:43:40', 'user', NULL, 1, NULL, 0, 1),
-(32, 'trung', 'ledinhtrung35@gmail.com', NULL, NULL, NULL, '$2y$10$/0rHIDMSPL6g3JJwW75CUOoU6H8Po9vLtQhUgCDzZavFUDW9T9RKu', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 12:36:40', '2026-01-27 12:36:40', 'user', NULL, 1, NULL, 0, 1),
-(33, 'coca', 'ledinhtrungkm35@gmail.com', NULL, NULL, NULL, '$2y$10$pzCzNTULdcpPXQaY5GlKlOGKPN/DwTLhGguEAtkBjM3rB5zfISGVy', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 13:34:52', '2026-01-27 13:34:52', 'user', NULL, 1, NULL, 0, 1),
-(34, 'Lê Đình Trung', 'ledinhtrung12a1@gmail.com', NULL, NULL, NULL, '$2y$10$3do8eryE78u/sJzquhBSaeTFsEmnUyC2tnfIR1CqibwCVEk4Bod76', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-01-27 13:45:23', '2026-01-27 13:45:23', 'user', NULL, 1, NULL, 0, 1),
-(36, 'Nhân viên Test', 'staff@test.com', NULL, NULL, NULL, '$2y$12$AdgTudGlcDVX9bZq8iy5mO86/U2FS99uOD4C3gfwpFheO7eyRSvze', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2026-06-15 20:25:51', '2026-06-15 20:25:51', 'user', 3, 1, NULL, 0, 1),
-(37, 'Test User', 'user@test.com', NULL, NULL, NULL, '$2y$12$g.mQB8igYCB0lret.NqjWuAeYu6/uBegOjPjFjcGNMeEGcIP0tD0C', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2026-06-22 23:21:50', '2026-06-22 23:21:50', 'user', NULL, 1, NULL, 0, 1),
-(38, 'PThien', 'phucthien3156@gmail.com', NULL, NULL, NULL, '$2y$12$zQe1zgi0tqAvzYVEjXrRFe9nwrs8DhZ.twwrO27hBqx2M9kXFa5Qi', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 0, '2026-07-09 01:25:03', '2026-07-09 01:25:03', 'user', NULL, 1, NULL, 0, 1),
-(39, 'Đại diện Beta TPHCM', 'beta.admin@cinehub.local', NULL, NULL, NULL, '$2y$12$3pqLyjuZ1I175ATeChVN3OpCD5Kg..h76AVqqDRgYsm/H9IMUU9Oa', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2026-07-12 12:32:26', '2026-07-12 12:32:26', 'user', NULL, 1, NULL, 0, 1),
-(40, 'Admin rạp kiểm thử hết hạn', 'expired.contract.test@cinehub.local', NULL, NULL, NULL, '$2y$12$roT2qUwaozy8Lxi9ocq9O.SsHUsP36h0C/0UuZ1/4rCGtCMde7SQS', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', 0, '2026-07-12 12:42:16', '2026-07-12 12:42:17', 'user', NULL, 1, NULL, 0, 1),
-(41, 'testuser', 'hanlii20225@gmail.com', '2026-07-13 20:07:39', NULL, NULL, '$2y$12$1AtgLYjxGkTXsjo2HaL/BuwGfn6EOHk4HIfDNUzg1IYlS/3AIGDYy', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', 1, '2026-07-13 20:07:39', '2026-07-13 20:07:39', 'user', NULL, 1, NULL, 0, 1);
+INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `google_id`, `phone`, `password`, `remember_token`, `avatar`, `birthdate`, `address`, `rank`, `points`, `subscription_id`, `status`, `comment_banned_until`, `email_verified`, `created_at`, `updated_at`, `role`, `theater_id`, `is_active`, `last_login`, `newsletter`, `notifications_enabled`) VALUES
+(1, 'Tuan Anh', 'noble.toad.nict@letterguard.net', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2025-11-10 15:10:16', '2025-11-10 15:10:16', 'user', NULL, 1, NULL, 0, 1),
+(2, 'Super Admin', 'admin@cinehub.com', NULL, NULL, NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', NULL, 0, '2025-11-10 16:41:17', '2025-11-10 16:45:54', 'admin', NULL, 1, NULL, 0, 1),
+(3, 'Admin Mới', 'admin2@cinehub.com', NULL, NULL, NULL, '$2y$12$/AeKoaDJ.CzbUovU0x9F1.U54BECa20QKSYuRc.O./WJZTt1b/bFG', NULL, 'avatars/avatar_3_1782296052.png', NULL, NULL, 'Bronze', 10000, 1, 'active', NULL, 0, '2025-11-12 02:39:06', '2026-07-19 01:08:57', 'admin', NULL, 1, NULL, 0, 1),
+(4, 'Nguyễn Văn A', 'nguyenvana@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, NULL, 'Silver', 500, 2, 'active', NULL, 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
+(5, 'Trần Thị B', 'tranthib@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, NULL, 'Gold', 1200, 3, 'active', NULL, 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
+(6, 'Lê Văn C', 'levanc@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, NULL, 'Bronze', 100, 1, 'active', NULL, 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
+(7, 'Phạm Thị D', 'phamthid@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, NULL, 'Platinum', 2500, 4, 'active', NULL, 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
+(8, 'Hoàng Văn E', 'hoangvane@example.com', NULL, NULL, NULL, '$2y$10$lOJtx0GSp2xgBlX1cKw1LuTf90z0qfuXcrVlz6fiGQn1QM3kwl.fW', NULL, NULL, NULL, NULL, 'Silver', 800, 2, 'active', NULL, 0, '2025-11-12 07:41:09', '2025-11-12 07:41:09', 'user', NULL, 1, NULL, 0, 1),
+(9, 'vanlinh', 'nguyenvanlinh25062006@gmail.com', NULL, '105451883143800424564', NULL, '$2y$12$X9rtzLgIJYy3cWi4VLsth.GZaihA0lIw6ZXMQoK7CXyb6Xi3OrMQ2', 'EPBLTh9RxCOdk5HPtMugakiKguGDNG7x6YxwacfYF94kTS4LYlVttW5NIgXb', 'avatars/avatar_9_1782064502.png', '2006-06-25', NULL, 'Bronze', 7664560, 5, 'active', NULL, 0, '2025-11-14 01:35:37', '2026-08-24 08:41:31', 'moderator', 3, 1, NULL, 0, 1),
+(10, 'Tuan_awh', 'tuanawh@gmail.com', NULL, NULL, NULL, '$2y$10$5NwNHefnp5jwjr1Vls5HG.dnt4SWC1newqSkuV8X4QTcwZ0Ok1JQ.', NULL, 'data/avatars/avatar_10_1765506885.jpg', NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2025-11-14 01:45:51', '2026-07-12 12:42:14', 'moderator', 2, 1, NULL, 0, 1),
+(11, 'Hoang Son', 'hsson97805@gmail.com', NULL, NULL, NULL, '$2y$10$4OBk1HA71jEhbVPP7FA7VueQ8B30EgEy9eB9tAHRFmUvA8I7lwAPe', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2025-11-24 08:52:25', '2025-11-24 08:52:25', 'user', NULL, 1, NULL, 0, 1),
+(12, 'jack', 'jack@gmail.com', NULL, NULL, NULL, '$2y$10$4OPMx0NC7sXIg23/hWQt1u0t52jEDgc5grk/LZAOmmFw8a3DAy.BW', NULL, NULL, NULL, NULL, 'Bronze', 297000, 3, 'active', NULL, 0, '2025-11-25 02:20:46', '2025-11-25 02:27:04', 'user', NULL, 1, NULL, 0, 1),
+(13, 'huung', 'nguyenconghung954@gmail.com', NULL, NULL, NULL, '$2y$10$0aCzLlyOsSw4IZeDM8Vr8uC.1zWUY/F0SZTjwU8hrS9jxzvUvTgeG', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2025-11-25 12:43:00', '2025-11-25 12:43:00', 'user', NULL, 1, NULL, 0, 1),
+(14, 'bom', 'vlinh25062006@gmail.com', NULL, NULL, NULL, '$2y$10$SGQNRO1gcjuJy76tKCWx7e/9boVMyK2kkgK5D4PMepeswkveVa2qa', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2025-11-26 04:03:42', '2025-11-26 04:03:42', 'user', NULL, 1, NULL, 0, 1),
+(15, 'Hải Nam', 'natgao0001@gmail.com', NULL, NULL, NULL, '$2y$10$62PMj1vSUIjXo4.d8EJ8J.JJVrnO764zQvDZorn2BsfiT9ecJCzGe', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2025-12-04 18:01:00', '2025-12-04 18:01:00', 'user', NULL, 1, NULL, 0, 1),
+(16, 'Thanh', 'le3221981@gmail.com', NULL, NULL, NULL, '$2y$10$bomnjBXwqML823EJUbdDsOh22J4vmfXElcK0M.CMzk9X2NrcpIyGm', NULL, 'data/avatars/avatar_16_1764872833.jpeg', NULL, NULL, 'Bronze', 400000, 1, 'active', NULL, 0, '2025-12-04 18:22:20', '2025-12-04 18:30:11', 'user', NULL, 1, NULL, 0, 1),
+(17, 'Admin Rạp CGV Vincom', 'admin_rap1@cinehub.com', NULL, NULL, NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', NULL, 0, '2025-12-06 14:43:27', '2026-07-12 12:42:14', 'moderator', 1, 1, NULL, 0, 1),
+(18, 'Nhân viên Quầy 1', 'nhanvien1@cinehub.com', NULL, NULL, NULL, '$2y$10$Q516uBkFiAAoP9sABaJJRebPWUFZjqKI9370ZLqFxlhtFE1L1r9ba', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', NULL, 0, '2025-12-06 14:43:27', '2025-12-06 14:43:27', 'user', 1, 1, NULL, 0, 1),
+(19, 'Le Van Phat', 'plv@gmail.com', NULL, NULL, NULL, '$2y$12$sgkGlJx7H08Fi/uiIBtnGujFi5dbkr7Tdh1px6fPGJ7iAkS/G443u', NULL, NULL, '2010-06-25', NULL, 'Bronze', 0, NULL, 'active', NULL, 0, '2025-12-06 15:08:04', '2026-08-24 07:45:44', 'user', 3, 1, NULL, 0, 1),
+(20, 'Tuan Anh', 'awhtuan@gmail.com', NULL, NULL, NULL, '$2y$10$Gs3zYtOxwS7L4M11Ad0dMOUADYr5Bg.oPl6TJHjqWKBD38FTGLK.u', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', NULL, 0, '2025-12-06 17:27:56', '2025-12-06 17:27:56', 'user', 2, 1, NULL, 0, 1),
+(21, 'Nguyễn Hoàng Sơn', 'hson97805@gmail.com', NULL, NULL, NULL, '$2y$10$42gA6q4czX5DAA4JsKseSe0uFxBXkI4leaoL9Hbi.iQqdys9RF2q2', NULL, NULL, '2025-12-06', NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2025-12-08 04:08:50', '2025-12-08 04:10:34', 'user', NULL, 1, NULL, 0, 1),
+(22, 'Lotte', 'lotte@gmail.com', NULL, NULL, NULL, '$2y$12$GahLiz9nOpcP1wnKRNyeGu3TeUKBlcVT4Kcv3MWq9bg6sgASGNAum', NULL, 'avatars/avatar_22_1782808131.png', NULL, NULL, 'Bronze', 1000000, 1, 'active', NULL, 0, '2025-12-08 18:53:32', '2026-07-12 12:42:15', 'moderator', 6, 1, NULL, 0, 1),
+(23, 'betaTH', 'betath@gmail.com', NULL, NULL, NULL, '$2y$12$nvjw65xDMuV/0RC.jMM5H./9XPIB/Xm0lcH/MZGGfPYQdjk9XSF9u', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2025-12-08 18:54:08', '2026-07-12 12:42:15', 'moderator', 7, 1, NULL, 0, 1),
+(24, 'trang', 'thutrang1@gmail.com', NULL, NULL, NULL, '$2y$10$syT/.T7JUcAhEqFYLS9bfObvzSqkYvueKcalkYQBp5hZF1IA4Hwk.', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2025-12-09 02:30:58', '2025-12-09 02:30:58', 'user', NULL, 1, NULL, 0, 1),
+(25, 'Trùm thiên hạ', 'vanquan2006k@gmail.com', NULL, NULL, NULL, '$2y$10$Q1jFMT5RHDxdT7nijhzTMOlhOOkPWBrVj2nr2I/azcwg.Gmvt.8xC', NULL, 'data/avatars/avatar_25_1765294523.jpg', NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2025-12-09 03:33:26', '2025-12-10 02:30:40', 'user', NULL, 1, NULL, 0, 1),
+(26, 'FAN ANH JACK', 'khoiphuc255@gmail.com', NULL, NULL, NULL, '$2y$10$mBkdgi4XcgLU6rLbADRfeOmowDvXpsBgRND2L6D5dL8Z2a6dFr8ai', NULL, 'data/avatars/avatar_26_1765251965.jpg', NULL, NULL, 'Bronze', 9801000, 4, 'active', NULL, 0, '2025-12-09 03:36:19', '2025-12-09 03:46:05', 'user', NULL, 1, NULL, 0, 1),
+(27, 'trang', 'thutrang12@gmail.com', NULL, NULL, NULL, '$2y$10$wKoi2tCHC4qWkYxWyP6VZuMu36aN.04xRNQhdO/CcU1wNYjmW.M76', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2025-12-09 11:33:45', '2025-12-09 11:33:45', 'user', NULL, 1, NULL, 0, 1),
+(28, 'trang', 'trang12@gmail.com', NULL, NULL, NULL, '$2y$10$M5m.jX22AFNgTpKObCbyPeOwsI9Yk.M/vTChWKCwBKJYPxLWsJ4SG', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2025-12-09 12:35:23', '2025-12-09 12:35:23', 'user', NULL, 1, NULL, 0, 1),
+(29, 'Vũ Đình Tư', 'vtu8531@gmail.com', NULL, NULL, NULL, '$2y$10$bTIw0qpazioAhDk31ZXQNeRqaVA/qzau6ji0Gff9ucbuhwaP8Ebd6', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2025-12-11 08:55:37', '2025-12-11 08:55:37', 'user', NULL, 1, NULL, 0, 1),
+(30, 'Linh', 'nguyenvanlinh250606@gmail.com', NULL, NULL, NULL, '$2y$10$qGBli/hydJYruPcWlQ3KweLQhLsFXysE8vNsBQsuOtvndfppC80EG', NULL, 'data/avatars/avatar_30_1765767345.jpeg', NULL, NULL, 'Bronze', 0, NULL, 'active', NULL, 0, '2025-12-12 02:06:48', '2025-12-15 02:55:45', 'user', 6, 1, NULL, 0, 1),
+(31, 'Dương Hải Cường', 'sccuong5222@gmail.com', NULL, NULL, NULL, '$2y$10$UmMuWQ0pSc.PaoElXDS2m.h7h4oiPyCYzpoBXUzfLCmM7YQulr.KK', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2025-12-14 14:43:40', '2025-12-14 14:43:40', 'user', NULL, 1, NULL, 0, 1),
+(32, 'trung', 'ledinhtrung35@gmail.com', NULL, NULL, NULL, '$2y$10$/0rHIDMSPL6g3JJwW75CUOoU6H8Po9vLtQhUgCDzZavFUDW9T9RKu', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2026-01-27 12:36:40', '2026-01-27 12:36:40', 'user', NULL, 1, NULL, 0, 1),
+(33, 'coca', 'ledinhtrungkm35@gmail.com', NULL, NULL, NULL, '$2y$10$pzCzNTULdcpPXQaY5GlKlOGKPN/DwTLhGguEAtkBjM3rB5zfISGVy', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2026-01-27 13:34:52', '2026-01-27 13:34:52', 'user', NULL, 1, NULL, 0, 1),
+(34, 'Lê Đình Trung', 'ledinhtrung12a1@gmail.com', NULL, NULL, NULL, '$2y$10$3do8eryE78u/sJzquhBSaeTFsEmnUyC2tnfIR1CqibwCVEk4Bod76', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2026-01-27 13:45:23', '2026-01-27 13:45:23', 'user', NULL, 1, NULL, 0, 1),
+(36, 'Nhân viên Test', 'staff@test.com', NULL, NULL, NULL, '$2y$12$AdgTudGlcDVX9bZq8iy5mO86/U2FS99uOD4C3gfwpFheO7eyRSvze', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', NULL, 0, '2026-06-15 20:25:51', '2026-06-15 20:25:51', 'user', 3, 1, NULL, 0, 1),
+(37, 'Test User', 'user@test.com', NULL, NULL, NULL, '$2y$12$g.mQB8igYCB0lret.NqjWuAeYu6/uBegOjPjFjcGNMeEGcIP0tD0C', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', NULL, 0, '2026-06-22 23:21:50', '2026-06-22 23:21:50', 'user', NULL, 1, NULL, 0, 1),
+(38, 'PThien', 'phucthien3156@gmail.com', NULL, NULL, NULL, '$2y$12$zQe1zgi0tqAvzYVEjXrRFe9nwrs8DhZ.twwrO27hBqx2M9kXFa5Qi', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 0, '2026-07-09 01:25:03', '2026-07-09 01:25:03', 'user', NULL, 1, NULL, 0, 1),
+(39, 'Đại diện Beta TPHCM', 'beta.admin@cinehub.local', NULL, NULL, NULL, '$2y$12$3pqLyjuZ1I175ATeChVN3OpCD5Kg..h76AVqqDRgYsm/H9IMUU9Oa', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', NULL, 0, '2026-07-12 12:32:26', '2026-07-12 12:32:26', 'user', NULL, 1, NULL, 0, 1),
+(40, 'Admin rạp kiểm thử hết hạn', 'expired.contract.test@cinehub.local', NULL, NULL, NULL, '$2y$12$roT2qUwaozy8Lxi9ocq9O.SsHUsP36h0C/0UuZ1/4rCGtCMde7SQS', NULL, NULL, NULL, NULL, 'Bronze', 0, NULL, 'active', NULL, 0, '2026-07-12 12:42:16', '2026-07-12 12:42:17', 'user', NULL, 1, NULL, 0, 1),
+(41, 'testuser', 'hanlii20225@gmail.com', '2026-07-13 20:07:39', NULL, NULL, '$2y$12$1AtgLYjxGkTXsjo2HaL/BuwGfn6EOHk4HIfDNUzg1IYlS/3AIGDYy', NULL, NULL, NULL, NULL, 'Bronze', 0, 1, 'active', NULL, 1, '2026-07-13 20:07:39', '2026-07-13 20:07:39', 'user', NULL, 1, NULL, 0, 1),
+(42, 'MEO MEO', 'teasungf3@gmail.com', NULL, NULL, NULL, '$2y$12$zBC1OGV433v5QwQ27Efcn.WHeED6L0pU8KUr3/c/DvrJXOJCpvu0u', NULL, NULL, '2013-06-26', NULL, 'Bronze', 150000, NULL, 'active', NULL, 0, '2026-08-24 09:33:46', '2026-08-24 09:43:07', 'user', 7, 1, NULL, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -12199,7 +12801,7 @@ INSERT INTO `watch_history` (`id`, `user_id`, `movie_id`, `episode_id`, `last_ti
 (191, 3, 9, NULL, 0, NULL, NULL, NULL, 0, '2025-12-15 02:43:01', NULL),
 (200, 3, 38, NULL, 0, NULL, NULL, NULL, 0, '2025-12-23 14:31:08', NULL),
 (202, 10, 33, NULL, 0, NULL, NULL, NULL, 0, '2025-12-26 18:17:59', NULL),
-(203, 9, 51, 13, 0, '2026-07-17 01:38:13', '2026-07-17 01:38:13', NULL, 0, '2026-02-09 02:58:53', '2026-07-17 01:38:13'),
+(203, 9, 51, 28, 0, '2026-08-24 09:12:12', '2026-08-24 09:12:12', NULL, 0, '2026-02-09 02:58:53', '2026-08-24 09:12:12'),
 (208, 32, 37, NULL, 0, NULL, NULL, NULL, 0, '2026-01-27 12:37:03', NULL),
 (209, 32, 33, NULL, 0, NULL, NULL, NULL, 0, '2026-01-27 12:37:33', NULL),
 (211, 32, 51, NULL, 0, NULL, NULL, NULL, 0, '2026-01-27 13:03:01', NULL),
@@ -12213,7 +12815,10 @@ INSERT INTO `watch_history` (`id`, `user_id`, `movie_id`, `episode_id`, `last_ti
 (238, 41, 51, NULL, 0, NULL, NULL, NULL, 0, '2026-07-13 20:15:46', '2026-07-13 20:15:46'),
 (239, 3, 85, NULL, 0, NULL, NULL, NULL, 0, '2026-07-18 15:15:13', '2026-07-18 15:15:13'),
 (240, 3, 194, NULL, 0, NULL, NULL, NULL, 0, '2026-07-28 12:18:33', '2026-07-28 12:18:33'),
-(241, 3, 195, NULL, 0, NULL, NULL, NULL, 0, '2026-07-30 14:00:46', '2026-07-30 14:00:46');
+(241, 3, 195, NULL, 0, NULL, NULL, NULL, 0, '2026-07-30 14:00:46', '2026-07-30 14:00:46'),
+(242, 9, 194, NULL, 0, NULL, NULL, NULL, 0, '2026-08-04 13:20:19', '2026-08-04 13:20:19'),
+(243, 9, 84, NULL, 0, NULL, NULL, NULL, 0, '2026-08-24 07:42:00', '2026-08-24 07:42:00'),
+(244, 42, 1, NULL, 0, '2026-08-24 09:44:17', NULL, NULL, 0, '2026-08-24 09:44:07', '2026-08-24 09:44:17');
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -12313,6 +12918,14 @@ ALTER TABLE `comment_likes`
   ADD UNIQUE KEY `unique_user_comment` (`user_id`,`comment_id`),
   ADD KEY `idx_comment_id` (`comment_id`),
   ADD KEY `idx_user_id` (`user_id`);
+
+--
+-- Chỉ mục cho bảng `comment_violations`
+--
+ALTER TABLE `comment_violations`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `comment_violations_content_type_content_id_unique` (`content_type`,`content_id`),
+  ADD KEY `comment_violations_user_id_created_at_index` (`user_id`,`created_at`);
 
 --
 -- Chỉ mục cho bảng `coupons`
@@ -12702,49 +13315,55 @@ ALTER TABLE `admin_logs`
 -- AUTO_INCREMENT cho bảng `ai_conversations`
 --
 ALTER TABLE `ai_conversations`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT cho bảng `ai_messages`
 --
 ALTER TABLE `ai_messages`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT cho bảng `booking_food_items`
 --
 ALTER TABLE `booking_food_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
 
 --
 -- AUTO_INCREMENT cho bảng `booking_pending`
 --
 ALTER TABLE `booking_pending`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=938;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=988;
 
 --
 -- AUTO_INCREMENT cho bảng `booking_session_tracking`
 --
 ALTER TABLE `booking_session_tracking`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=217;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=225;
 
 --
 -- AUTO_INCREMENT cho bảng `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT cho bảng `comments`
 --
 ALTER TABLE `comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT cho bảng `comment_likes`
 --
 ALTER TABLE `comment_likes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT cho bảng `comment_violations`
+--
+ALTER TABLE `comment_violations`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT cho bảng `coupons`
@@ -12804,7 +13423,7 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT cho bảng `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT cho bảng `moderator_permission_requests`
@@ -12816,7 +13435,7 @@ ALTER TABLE `moderator_permission_requests`
 -- AUTO_INCREMENT cho bảng `movies`
 --
 ALTER TABLE `movies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=196;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=197;
 
 --
 -- AUTO_INCREMENT cho bảng `movie_categories`
@@ -12828,25 +13447,25 @@ ALTER TABLE `movie_categories`
 -- AUTO_INCREMENT cho bảng `movie_category`
 --
 ALTER TABLE `movie_category`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=257;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=261;
 
 --
 -- AUTO_INCREMENT cho bảng `movie_interests`
 --
 ALTER TABLE `movie_interests`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT cho bảng `movie_searches`
 --
 ALTER TABLE `movie_searches`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT cho bảng `movie_view_events`
 --
 ALTER TABLE `movie_view_events`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=114;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=139;
 
 --
 -- AUTO_INCREMENT cho bảng `news`
@@ -12864,7 +13483,7 @@ ALTER TABLE `news_categories`
 -- AUTO_INCREMENT cho bảng `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
 
 --
 -- AUTO_INCREMENT cho bảng `permissions`
@@ -12882,7 +13501,7 @@ ALTER TABLE `promotions`
 -- AUTO_INCREMENT cho bảng `reviews`
 --
 ALTER TABLE `reviews`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT cho bảng `roles`
@@ -12900,7 +13519,7 @@ ALTER TABLE `role_permissions`
 -- AUTO_INCREMENT cho bảng `seat_reservations`
 --
 ALTER TABLE `seat_reservations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1142;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1165;
 
 --
 -- AUTO_INCREMENT cho bảng `seat_selection_logs`
@@ -12912,7 +13531,7 @@ ALTER TABLE `seat_selection_logs`
 -- AUTO_INCREMENT cho bảng `showtimes`
 --
 ALTER TABLE `showtimes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50363;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50422;
 
 --
 -- AUTO_INCREMENT cho bảng `subscriptions`
@@ -12960,19 +13579,19 @@ ALTER TABLE `theater_screens`
 -- AUTO_INCREMENT cho bảng `tickets`
 --
 ALTER TABLE `tickets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6213;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6554;
 
 --
 -- AUTO_INCREMENT cho bảng `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=281;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=284;
 
 --
 -- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT cho bảng `user_roles`
@@ -12984,7 +13603,7 @@ ALTER TABLE `user_roles`
 -- AUTO_INCREMENT cho bảng `watch_history`
 --
 ALTER TABLE `watch_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=242;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=245;
 
 --
 -- Các ràng buộc cho các bảng đã đổ

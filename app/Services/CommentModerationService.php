@@ -30,8 +30,10 @@ class CommentModerationService
         if (preg_match('/\b([a-z0-9]{2,})(?:\s+\1){3,}\b/i', $normalized)) {
             return 'Spam từ hoặc cụm từ lặp lại';
         }
-        if (preg_match_all('#https?://|www\.#i', $content) >= 2) {
-            return 'Spam liên kết';
+        // Community comments must not contain links. Detect explicit URLs as
+        // well as common bare domains such as example.com or cinehub.vn.
+        if (preg_match('~(?:https?://|www\.)\S+|\b(?:[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?\.)+(?:com|net|org|vn|io|me|tv|co|info|biz|xyz|link|top|app|dev)(?:[/?:#][^\s]*)?~iu', $content)) {
+            return 'Bình luận chứa đường dẫn hoặc liên kết không được phép';
         }
 
         $blockedPhrases = ['dit me', 'du ma', 'con me may', 'cut me may', 'dmm', 'dm may', 'lon', 'cac', 'fuck'];

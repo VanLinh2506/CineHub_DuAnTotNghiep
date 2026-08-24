@@ -139,7 +139,6 @@ class Movie extends Model
     {
         $screenType = $screen instanceof Screen ? $screen->screen_type : $screen;
 
-        $levels = ['2D' => 1, '3D' => 2, '4DX' => 3];
         $movieFormat = strtoupper(trim($this->projection_format ?? '2D'));
         $screenFormat = strtoupper(trim($screenType ?: '2D'));
 
@@ -147,8 +146,11 @@ class Movie extends Model
         $movieFormat = $movieFormat === '4D' ? '4DX' : $movieFormat;
         $screenFormat = $screenFormat === '4D' ? '4DX' : $screenFormat;
 
-        return isset($levels[$movieFormat], $levels[$screenFormat])
-            && $levels[$screenFormat] >= $levels[$movieFormat];
+        $formats = ['2D', '3D', '4DX'];
+
+        return in_array($movieFormat, $formats, true)
+            && in_array($screenFormat, $formats, true)
+            && $screenFormat === $movieFormat;
     }
 
     // URL Accessors for storage files

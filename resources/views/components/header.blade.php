@@ -47,7 +47,7 @@
                 <div class="header-search-dropdown" id="headerSearchDropdown" hidden>
                     <div class="search-history-block" id="headerSearchHistory"></div>
                     <div class="search-suggestion-block">
-                        <div class="search-dropdown-title"><span>Phim gợi ý</span><i class="fas fa-sparkles"></i></div>
+                        <div class="search-dropdown-title"><span>Kết quả phù hợp</span><i class="fas fa-sparkles"></i></div>
                         <div id="headerMovieSuggestions" class="header-movie-suggestions"></div>
                     </div>
                 </div>
@@ -159,6 +159,12 @@
     .search-history-item { max-width:100%; padding:6px 9px; border:1px solid rgba(255,255,255,.1); border-radius:999px; color:#ddd; background:rgba(255,255,255,.06); font-size:.78rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
     .search-history-item:hover { color:#fff; border-color:rgba(229,9,20,.55); background:rgba(229,9,20,.16); }
     .header-movie-suggestions { display:grid; gap:6px; }
+    .header-actor-suggestion { display:grid; grid-template-columns:42px minmax(0,1fr) auto; gap:10px; align-items:center; padding:8px; border:1px solid rgba(255,255,255,.08); border-radius:11px; color:#fff; background:rgba(255,255,255,.04); text-decoration:none; }
+    .header-actor-suggestion:hover { color:#fff; border-color:rgba(255,255,255,.2); background:rgba(255,255,255,.09); }
+    .header-actor-avatar { width:42px; height:42px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.2); border-radius:50%; background:rgba(255,255,255,.1); backdrop-filter:blur(10px); }
+    .header-actor-name { display:block; font-size:.84rem; font-weight:800; }
+    .header-actor-films { display:block; overflow:hidden; margin-top:3px; color:#999; font-size:.7rem; text-overflow:ellipsis; white-space:nowrap; }
+    .header-actor-count { color:#bbb; font-size:.68rem; white-space:nowrap; }
     .header-movie-suggestion { display:grid; grid-template-columns:42px minmax(0,1fr) auto; gap:10px; align-items:center; padding:7px; border-radius:11px; color:#fff; text-decoration:none; transition:background .18s ease, transform .18s ease; }
     .header-movie-suggestion:hover { color:#fff; background:rgba(255,255,255,.08); transform:translateX(2px); }
     .header-movie-poster { width:42px; height:58px; object-fit:cover; border-radius:8px; background:#292a30; }
@@ -1218,15 +1224,39 @@ document.addEventListener('DOMContentLoaded', function() {
             historyContainer.append(head, list);
         };
 
-        const renderMovies = function(movies) {
+        const renderMovies = function(movies, actors = []) {
             movieContainer.replaceChildren();
-            if (!movies.length) {
+            if (!movies.length && !actors.length) {
                 const empty = document.createElement('div');
                 empty.className = 'header-search-state';
                 empty.textContent = 'Chưa tìm thấy phim phù hợp';
                 movieContainer.appendChild(empty);
                 return;
             }
+
+            actors.forEach(function(actor) {
+                const link = document.createElement('a');
+                link.className = 'header-actor-suggestion';
+                link.href = actor.url;
+                link.addEventListener('click', () => saveSearchKeyword(actor.name));
+
+                const avatar = document.createElement('span');
+                avatar.className = 'header-actor-avatar';
+                avatar.innerHTML = '<i class="fas fa-user"></i>';
+                const info = document.createElement('span');
+                const name = document.createElement('strong');
+                name.className = 'header-actor-name';
+                name.textContent = actor.name;
+                const films = document.createElement('small');
+                films.className = 'header-actor-films';
+                films.textContent = actor.movies.map(movie => movie.title).join(', ');
+                info.append(name, films);
+                const count = document.createElement('span');
+                count.className = 'header-actor-count';
+                count.textContent = actor.movie_count + ' phim';
+                link.append(avatar, info, count);
+                movieContainer.appendChild(link);
+            });
 
             movies.forEach(function(movie) {
                 const link = document.createElement('a');
@@ -1290,7 +1320,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!response.ok) throw new Error('Suggestion request failed');
                     return response.json();
                 })
-                .then(data => renderMovies(Array.isArray(data.movies) ? data.movies : []))
+                .then(data => renderMovies(
+                    Array.isArray(data.movies) ? data.movies : [],
+                    Array.isArray(data.actors) ? data.actors : []
+                ))
                 .catch(error => {
                     if (error.name === 'AbortError') return;
                     movieContainer.innerHTML = '<div class="header-search-state">Không thể tải gợi ý lúc này</div>';
