@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -28,5 +30,16 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (TokenMismatchException $exception, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Phiên làm việc đã hết hạn. Vui lòng tải lại trang và thử lại.',
+                ], 419);
+            }
+
+            return redirect()->route('home')->with(
+                'error',
+                'Phiên làm việc đã hết hạn hoặc đã được thay thế. Vui lòng đăng nhập lại.'
+            );
+        });
     })->create();

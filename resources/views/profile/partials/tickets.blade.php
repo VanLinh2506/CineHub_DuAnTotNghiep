@@ -19,6 +19,9 @@
                 $pending = $booking->status === 'pending';
                 $showtime = $booking->showtime;
                 $ticketSeats = $pending ? ($booking->seats ?? []) : $booking->tickets->pluck('seat')->all();
+                $ticketTotal = (float) $booking->tickets->sum('price');
+                $foodDetails = $booking->foodDetails ?? collect();
+                $foodTotal = (float) $foodDetails->sum('subtotal');
                 $showAt = null;
                 if ($showtime?->show_date && $showtime?->show_time) {
                     try {
@@ -50,8 +53,19 @@
                         <span><i class="fas fa-calendar"></i> {{ $showAt?->format('d/m/Y') ?? 'N/A' }}</span>
                         <span><i class="fas fa-clock"></i> {{ $showAt?->format('H:i') ?? 'N/A' }}</span>
                         <span><i class="fas fa-couch"></i> Ghế {{ implode(', ', $ticketSeats) ?: 'N/A' }}</span>
-                        <span><i class="fas fa-money-bill-wave"></i> {{ number_format((float) $booking->total_amount, 0, ',', '.') }} ₫</span>
+                        <span><i class="fas fa-ticket-alt"></i> Tiền vé: {{ number_format($ticketTotal, 0, ',', '.') }} ₫</span>
+                        <span><i class="fas fa-money-bill-wave"></i> Tổng thanh toán: {{ number_format((float) $booking->total_amount, 0, ',', '.') }} ₫</span>
                     </div>
+
+                    @if ($foodDetails->isNotEmpty())
+                        <div class="profile-ticket-foods">
+                            <strong><i class="fas fa-utensils"></i> Combo & đồ ăn đã mua</strong>
+                            @foreach ($foodDetails as $food)
+                                <span>{{ $food['name'] }} × {{ $food['quantity'] }} <em>{{ number_format($food['unit_price'], 0, ',', '.') }} ₫/món</em><b>{{ number_format($food['subtotal'], 0, ',', '.') }} ₫</b></span>
+                            @endforeach
+                            <small>Tổng đồ ăn & nước: {{ number_format($foodTotal, 0, ',', '.') }} ₫</small>
+                        </div>
+                    @endif
 
                     @if ($pending)
                         <a href="{{ route('booking.payment', $booking->id) }}" class="btn-primary profile-ticket-action">
@@ -90,6 +104,11 @@
     .profile-ticket-status.expired { color: #d1d5db; background: rgba(107,114,128,.2); }
     .profile-ticket-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem 1.25rem; color: #d1d5db; }
     .profile-ticket-details i { width: 20px; color: #f59e0b; }
+    .profile-ticket-foods { display: grid; gap: .45rem; margin-top: 1rem; padding: .85rem 1rem; border: 1px solid rgba(245,158,11,.22); border-radius: 12px; background: rgba(245,158,11,.07); color: #e5e7eb; }
+    .profile-ticket-foods strong { color: #fcd34d; font-size: .88rem; }
+    .profile-ticket-foods span { display: flex; justify-content: space-between; gap: 1rem; font-size: .88rem; }
+    .profile-ticket-foods em { margin-left: auto; color: #cbd5e1; font-style: normal; }
+    .profile-ticket-foods small { color: #fcd34d; font-weight: 700; }
     .profile-ticket-action { display: inline-flex; margin-top: 1rem; }
     .profile-ticket-qr { width: 155px; flex: 0 0 155px; text-align: center; }
     .profile-ticket-qr img { width: 145px; max-width: 100%; padding: 7px; border-radius: 10px; background: white; }

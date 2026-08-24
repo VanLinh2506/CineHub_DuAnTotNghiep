@@ -194,20 +194,44 @@
     <!-- Promotion Banners Section - Vertical Layout -->
     <section class="promotion-banners-section">
         <div class="promo-banners-wrapper">
-            <a href="{{ route('profile.index') }}#subscription" class="promo-banner-vertical">
-                <img src="{{ storage_url('data/img/poster/poster_nangcap.jpg') }}" alt="Nâng cấp gói VIP">
-                <div class="promo-overlay-vertical">
-                    <h3 class="promo-title-vertical">Trải nghiệm ngay gói pro vip</h3>
-                    <p class="promo-desc-vertical">thoải mái xem phim bản quyền với chất lượng lên đến 4k.</p>
-                    <span class="promo-btn-vertical">Nâng cấp ngay</span>
+            <a href="{{ route('profile.index') }}#subscription" class="promo-banner-vertical promo-banner-left">
+                <div class="promo-benefits-panel" aria-label="Ưu đãi gói Pro VIP">
+                    <span class="promo-benefits-kicker">Pro VIP</span>
+                    <strong>Ưu đãi thành viên</strong>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Chất lượng xem phim đến 4K</li>
+                        <li><i class="fas fa-check"></i> Trải nghiệm không quảng cáo</li>
+                        <li><i class="fas fa-check"></i> Ưu đãi riêng cho thành viên</li>
+                    </ul>
+                    <span class="promo-benefits-hint">Xem gói <i class="fas fa-arrow-right"></i></span>
+                </div>
+                <div class="promo-poster-layer">
+                    <img src="{{ storage_url('data/img/poster/poster_nangcap.jpg') }}" alt="Nâng cấp gói VIP">
+                    <div class="promo-overlay-vertical">
+                        <h3 class="promo-title-vertical">Trải nghiệm ngay gói pro vip</h3>
+                        <p class="promo-desc-vertical">thoải mái xem phim bản quyền với chất lượng lên đến 4k.</p>
+                        <span class="promo-btn-vertical">Nâng cấp ngay</span>
+                    </div>
                 </div>
             </a>
-            <a href="{{ route('movies.theater') }}" class="promo-banner-vertical">
-                <img src="{{ storage_url('data/img/poster/poster_datve.jpg') }}" alt="Đặt vé online">
-                <div class="promo-overlay-vertical">
-                    <h3 class="promo-title-vertical">Đặt vé online</h3>
-                    <p class="promo-desc-vertical">đặt vé phim mọi lúc, mọi nơi chỉ với một bước nhấn chuột</p>
-                    <span class="promo-btn-vertical">Đặt vé ngay</span>
+            <a href="{{ route('movies.theater') }}" class="promo-banner-vertical promo-banner-right">
+                <div class="promo-benefits-panel" aria-label="Ưu đãi đặt vé online">
+                    <span class="promo-benefits-kicker">Đặt vé online</span>
+                    <strong>Tiện ích dành cho bạn</strong>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Chọn phim và suất chiếu nhanh</li>
+                        <li><i class="fas fa-check"></i> Chủ động chọn chỗ ngồi</li>
+                        <li><i class="fas fa-check"></i> Nhận ưu đãi tại rạp</li>
+                    </ul>
+                    <span class="promo-benefits-hint"><i class="fas fa-arrow-left"></i> Đặt vé ngay</span>
+                </div>
+                <div class="promo-poster-layer">
+                    <img src="{{ storage_url('data/img/poster/poster_datve.jpg') }}" alt="Đặt vé online">
+                    <div class="promo-overlay-vertical">
+                        <h3 class="promo-title-vertical">Đặt vé online</h3>
+                        <p class="promo-desc-vertical">đặt vé phim mọi lúc, mọi nơi chỉ với một bước nhấn chuột</p>
+                        <span class="promo-btn-vertical">Đặt vé ngay</span>
+                    </div>
                 </div>
             </a>
         </div>
@@ -780,24 +804,117 @@
         overflow: hidden;
         height: 700px;
         text-decoration: none;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background: linear-gradient(145deg, #172535, #0b111a);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
+        transition: box-shadow 0.35s ease;
     }
 
     .promo-banner-vertical:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 12px 35px rgba(229, 9, 20, 0.4);
+        box-shadow: 0 18px 38px rgba(0, 0, 0, 0.38);
     }
 
-    .promo-banner-vertical img {
+    .promo-poster-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        overflow: hidden;
+        transition: transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+        will-change: transform;
+    }
+
+    .promo-poster-layer img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         object-position: center;
-        transition: transform 0.5s ease;
     }
 
-    .promo-banner-vertical:hover img {
-        transform: scale(1.08);
+    .promo-benefits-panel {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        width: 56%;
+        padding: 2rem 1.25rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.9rem;
+        color: #eef5fa;
+        background: linear-gradient(145deg, #192c3c, #0d1621);
+        opacity: 0;
+        transition: opacity 0.28s ease 0.18s;
+        pointer-events: none;
+    }
+
+    .promo-banner-left .promo-benefits-panel {
+        left: auto;
+        right: 0;
+        padding-left: 1.55rem;
+    }
+
+    .promo-banner-right .promo-benefits-panel {
+        left: 0;
+        right: auto;
+        padding-right: 1.55rem;
+    }
+
+    .promo-benefits-kicker {
+        color: #b9d9ed;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    .promo-benefits-panel strong {
+        font-size: 1.15rem;
+        line-height: 1.25;
+    }
+
+    .promo-benefits-panel ul {
+        display: grid;
+        gap: 0.75rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: 0.78rem;
+        line-height: 1.45;
+    }
+
+    .promo-benefits-panel li {
+        display: flex;
+        gap: 0.45rem;
+        align-items: flex-start;
+    }
+
+    .promo-benefits-panel li i {
+        margin-top: 0.18rem;
+        color: #8ed0a5;
+        font-size: 0.68rem;
+    }
+
+    .promo-benefits-hint {
+        margin-top: 0.45rem;
+        color: #d2e7f4;
+        font-size: 0.76rem;
+        font-weight: 700;
+    }
+
+    @media (hover: hover) and (min-width: 769px) {
+        .promo-banner-left:hover .promo-poster-layer,
+        .promo-banner-left:focus-visible .promo-poster-layer {
+            transform: translateX(-54%);
+        }
+
+        .promo-banner-right:hover .promo-poster-layer,
+        .promo-banner-right:focus-visible .promo-poster-layer {
+            transform: translateX(54%);
+        }
+
+        .promo-banner-vertical:hover .promo-benefits-panel,
+        .promo-banner-vertical:focus-visible .promo-benefits-panel {
+            opacity: 1;
+        }
     }
 
     .promo-overlay-vertical {
@@ -860,6 +977,10 @@
     @media (max-width: 992px) {
         .promo-banners-wrapper {
             max-width: 80%;
+        }
+
+        .promo-benefits-panel {
+            display: none;
         }
 
         .movies-grid-style-1 {

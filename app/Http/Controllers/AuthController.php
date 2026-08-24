@@ -72,25 +72,29 @@ class AuthController extends Controller
                     return back()->withErrors(['email' => $error])->withInput($request->only('email'));
                 }
                 
-                // Kiểm tra xem user có phải admin không
-                $isAdmin = ($user->role === 'admin' || $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists());
+                // Super Admin and theater admins bypass the replacement OTP.
+                $isPrivilegedAdmin = $user->isAdmin() || $user->isModerator();
 
                 // Admins bypass login OTP. An existing session is replaced
                 // immediately so the one-session rule still remains enforced.
-                if ($isAdmin) {
+                if ($isPrivilegedAdmin) {
                     Auth::login($user, $remember);
                     $this->removeExcessLoginSessions($user, $request);
                     session()->forget(['login_user_id', 'login_otp', 'login_otp_expires_at', 'login_remember']);
                     $request->session()->regenerate();
 
+                    $redirectUrl = $user->isModerator()
+                        ? route('moderator.index')
+                        : route('admin.index');
+
                     if ($request->ajax()) {
                         return response()->json([
                             'success' => true,
-                            'redirect' => route('admin.index'),
+                            'redirect' => $redirectUrl,
                         ]);
                     }
 
-                    return redirect()->route('admin.index')
+                    return redirect($redirectUrl)
                         ->with('success', 'Đăng nhập thành công!');
                 }
 
@@ -443,13 +447,17 @@ class AuthController extends Controller
         // Complete pending admin logins created before the OTP bypass was
         // enabled. Their password was validated before this session was set.
         $pendingUser = User::find(session('login_user_id'));
-        if ($pendingUser && $pendingUser->isAdmin()) {
+        if ($pendingUser && ($pendingUser->isAdmin() || $pendingUser->isModerator())) {
             Auth::login($pendingUser, session('login_remember', false));
             $this->removeExcessLoginSessions($pendingUser, $request);
             session()->forget(['login_user_id', 'login_otp', 'login_otp_expires_at', 'login_remember']);
             $request->session()->regenerate();
 
-            return redirect()->route('admin.index')
+            $redirectUrl = $pendingUser->isModerator()
+                ? route('moderator.index')
+                : route('admin.index');
+
+            return redirect($redirectUrl)
                 ->with('success', 'Đăng nhập thành công!');
         }
 

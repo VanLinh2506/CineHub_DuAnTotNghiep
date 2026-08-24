@@ -307,7 +307,7 @@ if (!empty($episodes)) {
                                     @if(isset($review['comment']) && $review['comment'])
                                         <p style="margin: 0; color: #ccc;">{{ nl2br(htmlspecialchars($review['comment'])) }}</p>
                                     @endif
-                                    @if(isset($isAdmin) && $isAdmin)
+                                    @if($canModerateComments ?? false)
                                         <div style="margin-top: 10px;">
                                             <form method="POST" action="{{ route('reviews.destroy', $review['id']) }}" onsubmit="return confirm('Ẩn đánh giá này?')" style="display:inline;">
                                                 @csrf
@@ -399,7 +399,7 @@ if (!empty($episodes)) {
                                                     <i class="fas fa-reply"></i> Trả lời
                                                 </button>
                                             @endif
-                                            @if(isset($isAdmin) && $isAdmin)
+                                            @if($canModerateComments ?? false)
                                                 <form method="POST" action="{{ route('comments.destroy', $comment['id']) }}" onsubmit="return confirm('Bạn có chắc muốn ẩn bình luận này?')" style="margin: 0;">
                                                     @csrf
                                                     @method('DELETE')
@@ -468,7 +468,7 @@ if (!empty($episodes)) {
                                                         <button class="dislike-btn" onclick="likeComment({{ $reply['id'] ?? 0 }}, 'dislike')" style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.85rem; padding: 3px 8px; border-radius: 15px; transition: all 0.3s;" onmouseover="this.style.background='rgba(244, 67, 54, 0.2)'; this.style.color='#f44336'" onmouseout="this.style.background='none'; this.style.color='#666'">
                                                             <i class="far fa-thumbs-down"></i> <span id="dislikes-{{ $reply['id'] ?? 0 }}">{{ $reply['dislikes'] ?? 0 }}</span>
                                                         </button>
-                                                        @if(isset($isAdmin) && $isAdmin)
+                                                        @if($canModerateComments ?? false)
                                                             <form method="POST" action="{{ route('comments.destroy', $reply['id']) }}" onsubmit="return confirm('Bạn có chắc muốn ẩn trả lời này?')" style="margin: 0;">
                                                                 @csrf
                                                                 @method('DELETE')

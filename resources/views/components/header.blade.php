@@ -432,12 +432,12 @@
 <!-- Auth Modal (Login/Register) - Glassmorphism Design v2.1 -->
 <div id="authModal" class="modal-overlay" style="display: none;">
     <div class="modal-content-glass">
-        <span class="modal-close-glass" onclick="closeAuthModal()">×</span>
+        <button type="button" class="modal-close-glass" onclick="closeAuthModal()" aria-label="Đóng cửa sổ đăng nhập"></button>
         
         <!-- Tab Navigation -->
         <div class="auth-tabs-glass">
-            <button id="loginTabBtn" class="auth-tab-glass active" onclick="switchAuthTab('login')">Đăng nhập</button>
-            <button id="registerTabBtn" class="auth-tab-glass" onclick="switchAuthTab('register')">Đăng ký</button>
+            <button type="button" id="loginTabBtn" class="auth-tab-glass active" onclick="switchAuthTab('login')">Đăng nhập</button>
+            <button type="button" id="registerTabBtn" class="auth-tab-glass" onclick="switchAuthTab('register')">Đăng ký</button>
         </div>
         
         <!-- Login Form -->
@@ -501,12 +501,12 @@
                 </div>
 
                 {{-- Checkbox đồng ý điều khoản --}}
-                <div id="modalTosCheckGroup" style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px 14px;margin-bottom:4px;">
+                <div id="modalTosCheckGroup" style="display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,0.4);border:1.5px solid rgba(203,213,225,0.7);border-radius:12px;padding:11px 14px;margin-bottom:4px;">
                     <input type="checkbox" id="modal_agree_tos" name="agree_tos" value="1"
-                           style="width:17px;height:17px;flex-shrink:0;margin-top:2px;cursor:pointer;accent-color:#e50914;">
-                    <label for="modal_agree_tos" style="color:rgba(255,255,255,0.75);font-size:13px;line-height:1.6;cursor:pointer;">
+                           style="width:17px;height:17px;flex-shrink:0;margin-top:2px;cursor:pointer;accent-color:#64748b;">
+                    <label for="modal_agree_tos" style="color:#64748b;font-size:13px;line-height:1.6;cursor:pointer;">
                         Tôi đã đọc và đồng ý với
-                        <a href="#" id="modalOpenTos" style="color:#ff6b75;font-weight:600;text-decoration:none;">Điều khoản dịch vụ</a>
+                        <a href="#" id="modalOpenTos" style="color:#334155;font-weight:600;text-decoration:none;">Điều khoản dịch vụ</a>
                         của CineHub
                     </label>
                 </div>
@@ -578,11 +578,11 @@
     /* Glassmorphism Auth Modal Styles */
     #authModal.modal-overlay {
         background:
-            radial-gradient(circle at 18% 18%, rgba(229, 9, 20, 0.24), transparent 28%),
-            radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.14), transparent 24%),
-            rgba(5, 5, 8, 0.74);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+            radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.38), transparent 28%),
+            radial-gradient(circle at 84% 86%, rgba(210, 222, 232, 0.3), transparent 30%),
+            rgba(23, 30, 38, 0.5);
+        backdrop-filter: blur(6px) saturate(108%);
+        -webkit-backdrop-filter: blur(6px) saturate(108%);
         padding: 18px;
     }
 
@@ -592,11 +592,11 @@
         padding: 32px 28px;
         border-radius: 32px;
         overflow: hidden;
-        background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(18, 18, 24, 0.72));
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.22);
-        backdrop-filter: blur(26px) saturate(145%);
-        -webkit-backdrop-filter: blur(26px) saturate(145%);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(241, 245, 248, 0.42));
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        box-shadow: 0 24px 70px rgba(10, 20, 30, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(10px) saturate(120%);
+        -webkit-backdrop-filter: blur(10px) saturate(120%);
         transform: scale(0.94) translateY(22px);
         opacity: 0;
         transition: transform 0.32s ease, opacity 0.32s ease;
@@ -609,8 +609,8 @@
         inset: 0;
         pointer-events: none;
         background:
-            linear-gradient(120deg, rgba(255,255,255,0.2), transparent 35%, rgba(229,9,20,0.12)),
-            radial-gradient(circle at 50% 0%, rgba(255,255,255,0.2), transparent 34%);
+            linear-gradient(120deg, rgba(255,255,255,0.72), transparent 40%),
+            radial-gradient(circle at 100% 0%, rgba(222, 232, 240, 0.42), transparent 36%);
     }
 
     .modal-content-glass > * {
@@ -627,28 +627,39 @@
         position: absolute;
         top: 12px;
         right: 16px;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        color: rgba(255, 255, 255, 0.86);
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        color: #475569;
+        background: transparent;
         cursor: pointer;
-        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        transition: color 0.2s ease, background 0.2s ease;
     }
 
+    .modal-close-glass::before,
+    .modal-close-glass::after {
+        content: '';
+        position: absolute;
+        top: 13px;
+        left: 6px;
+        width: 16px;
+        height: 1.5px;
+        border-radius: 2px;
+        background: currentColor;
+    }
+
+    .modal-close-glass::before { transform: rotate(45deg); }
+    .modal-close-glass::after { transform: rotate(-45deg); }
+
     .modal-close-glass:hover {
-        color: #fff;
-        background: rgba(229, 9, 20, 0.72);
-        transform: rotate(90deg);
+        color: #1f2937;
+        background: rgba(255, 255, 255, 0.42);
+        border-radius: 50%;
     }
 
     .modal-title-glass {
-        color: #fff;
+        color: #1f2937;
         margin-bottom: 20px;
         text-align: center;
         font-size: 26px;
@@ -660,9 +671,29 @@
         gap: 6px;
         margin-bottom: 24px;
         padding: 4px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(203, 213, 225, 0.7);
         border-radius: 50px;
-        background: rgba(0, 0, 0, 0.18);
+        background: rgba(255, 255, 255, 0.4);
+        position: relative;
+        isolation: isolate;
+    }
+
+    .auth-tabs-glass::before {
+        content: '';
+        position: absolute;
+        z-index: 0;
+        top: 4px;
+        bottom: 4px;
+        left: 4px;
+        width: calc(50% - 5px);
+        border-radius: 50px;
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: 0 5px 14px rgba(71, 85, 105, 0.12);
+        transition: transform 0.28s ease;
+    }
+
+    .auth-tabs-glass.register-active::before {
+        transform: translateX(calc(100% + 6px));
     }
 
     .auth-tab-glass {
@@ -671,16 +702,18 @@
         border-radius: 50px;
         background: transparent;
         border: none;
-        color: rgba(255, 255, 255, 0.66);
+        color: #64748b;
         font-size: 15px;
         cursor: pointer;
-        transition: color 0.2s ease, background 0.2s ease;
+        position: relative;
+        z-index: 1;
+        transition: color 0.2s ease;
     }
 
     .auth-tab-glass.active {
-        color: #fff !important;
-        background: rgba(229, 9, 20, 0.78) !important;
-        box-shadow: 0 10px 22px rgba(229, 9, 20, 0.22) !important;
+        color: #1f2937 !important;
+        background: transparent !important;
+        box-shadow: none !important;
     }
 
     .form-group-glass {
@@ -690,24 +723,24 @@
     .input-glass {
         width: 100%;
         padding: 12px 16px;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid rgba(203, 213, 225, 0.75);
         border-radius: 50px;
-        color: #fff;
+        color: #1f2937;
         font-size: 15px;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
         transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     }
 
     .input-glass::placeholder {
-        color: rgba(255, 255, 255, 0.5);
+        color: #94a3b8;
     }
 
     .input-glass:focus {
         outline: none;
-        border-color: rgba(255, 85, 98, 0.9);
-        background: rgba(255, 255, 255, 0.14);
-        box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        border-color: rgba(100, 116, 139, 0.72);
+        background: rgba(255, 255, 255, 0.78);
+        box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9);
     }
 
     .form-options-glass {
@@ -719,7 +752,7 @@
     }
 
     .checkbox-glass {
-        color: rgba(255, 255, 255, 0.72);
+        color: #64748b;
         display: flex;
         align-items: center;
         cursor: pointer;
@@ -731,14 +764,14 @@
     }
 
     .forgot-link-glass {
-        color: #ff6b75;
+        color: #475569;
         text-decoration: none;
         font-weight: 700;
         transition: color 0.2s ease;
     }
 
     .forgot-link-glass:hover {
-        color: #ff8a92;
+        color: #0f172a;
     }
 
     .btn-glass {
@@ -757,16 +790,16 @@
     }
 
     .btn-primary-glass {
-        background: linear-gradient(135deg, #ff3340, #b7030c);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        color: white;
-        box-shadow: 0 12px 26px rgba(229, 9, 20, 0.3);
+        background: rgba(255, 255, 255, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.92);
+        color: #1f2937;
+        box-shadow: 0 10px 24px rgba(71, 85, 105, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.95);
     }
 
     .btn-primary-glass:hover {
-        filter: brightness(1.08);
+        background: rgba(255, 255, 255, 0.96);
         transform: translateY(-1px);
-        box-shadow: 0 16px 34px rgba(229, 9, 20, 0.38);
+        box-shadow: 0 14px 30px rgba(71, 85, 105, 0.22);
     }
 
     .btn-primary-glass:disabled {
@@ -794,7 +827,7 @@
         align-items: center;
         text-align: center;
         margin: 16px 0;
-        color: rgba(255, 255, 255, 0.4);
+        color: #94a3b8;
         font-size: 12px;
     }
 
@@ -802,7 +835,7 @@
     .divider-glass::after {
         content: '';
         flex: 1;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.34);
     }
 
     .divider-glass span {
@@ -812,19 +845,19 @@
     .modal-footer-glass {
         text-align: center;
         margin-top: 16px;
-        color: rgba(255, 255, 255, 0.72);
+        color: #64748b;
         font-size: 13px;
     }
 
     .modal-footer-glass a {
-        color: #ff6b75;
+        color: #475569;
         text-decoration: none;
         font-weight: 700;
         transition: color 0.2s ease;
     }
 
     .modal-footer-glass a:hover {
-        color: #ff8a92;
+        color: #0f172a;
     }
 
     .auth-tab-content {
@@ -894,7 +927,7 @@ document.addEventListener('DOMContentLoaded', function() {
         tosCheckbox.addEventListener('change', function() {
             if (this.checked && tosError) {
                 tosError.style.display = 'none';
-                if (tosGroup) tosGroup.style.borderColor = 'rgba(229,9,20,0.4)';
+                if (tosGroup) tosGroup.style.borderColor = 'rgba(100,116,139,0.55)';
             }
         });
     }
@@ -918,6 +951,7 @@ function switchAuthTab(tab) {
     const registerTab = document.getElementById('registerTab');
     const loginTabBtn = document.getElementById('loginTabBtn');
     const registerTabBtn = document.getElementById('registerTabBtn');
+    const authTabs = document.querySelector('#authModal .auth-tabs-glass');
     
     console.log('Elements found:', {
         loginTab: !!loginTab,
@@ -936,6 +970,7 @@ function switchAuthTab(tab) {
         // Update tab buttons
         loginTabBtn.classList.add('active');
         registerTabBtn.classList.remove('active');
+        authTabs?.classList.remove('register-active');
         console.log('Login tab activated');
     } else if (tab === 'register') {
         // Show/hide content
@@ -947,6 +982,7 @@ function switchAuthTab(tab) {
         // Update tab buttons
         loginTabBtn.classList.remove('active');
         registerTabBtn.classList.add('active');
+        authTabs?.classList.add('register-active');
         console.log('Register tab activated');
         console.log('Register button classes:', registerTabBtn.classList);
     }
@@ -1031,7 +1067,7 @@ function handleRegister(event) {
         return;
     }
     if (tosError) tosError.style.display = 'none';
-    if (tosGroup) tosGroup.style.borderColor = 'rgba(255,255,255,0.1)';
+    if (tosGroup) tosGroup.style.borderColor = 'rgba(203,213,225,0.7)';
 
     // Disable button
     submitBtn.disabled = true;

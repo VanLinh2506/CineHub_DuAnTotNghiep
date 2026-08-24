@@ -856,6 +856,7 @@ class MovieController extends Controller
 
         $isAdmin = $user && ($user->role === 'admin' ||
             $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists());
+        $canModerateComments = $user && ($user->isAdmin() || $user->isModerator());
 
         return view('movie.watch', compact(
             'movie',
@@ -866,6 +867,7 @@ class MovieController extends Controller
             'userRating',
             'relatedMovies',
             'isAdmin',
+            'canModerateComments',
             'resumeSeconds',
             'watchedEpisodeIds'
         ));

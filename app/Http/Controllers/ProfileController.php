@@ -10,6 +10,7 @@ use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Models\Movie;
 use App\Models\Notification;
+use App\Models\FoodItem;
 use App\Services\VNPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -170,6 +171,61 @@ class ProfileController extends Controller
             ->paginate(20)
             ->withQueryString()
             ->fragment('tickets');
+
+        $bookingIds = $bookings->getCollection()->pluck('id');
+        $foodByBooking = DB::table('booking_food_items as booking_food')
+            ->leftJoin('food_items as food', 'food.id', '=', 'booking_food.food_item_id')
+            ->whereIn('booking_food.booking_pending_id', $bookingIds)
+            ->orderBy('booking_food.id')
+            ->get([
+                'booking_food.booking_pending_id',
+                'food.name',
+                'booking_food.quantity',
+                'booking_food.price as unit_price',
+            ])
+            ->map(fn ($item) => [
+                'booking_id' => (int) $item->booking_pending_id,
+                'name' => $item->name ?? 'Sản phẩm không còn trong menu',
+                'quantity' => (int) $item->quantity,
+                'unit_price' => (float) $item->unit_price,
+                'subtotal' => (float) $item->unit_price * (int) $item->quantity,
+            ])
+            ->groupBy('booking_id');
+
+        $legacyFoodIds = $bookings->getCollection()
+            ->filter(fn (Booking $booking) => empty($foodByBooking->get($booking->id)))
+            ->flatMap(fn (Booking $booking) => array_keys($booking->food_items ?? []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique();
+        $legacyFoods = FoodItem::whereIn('id', $legacyFoodIds)->get()->keyBy('id');
+
+        $bookings->getCollection()->each(function (Booking $booking) use ($foodByBooking, $legacyFoods): void {
+            $foodDetails = collect($foodByBooking->get($booking->id, []));
+
+            // Vé tạo trước khi có bảng snapshot: hiển thị theo menu hiện hành
+            // để người dùng vẫn biết đã chọn món gì.
+            if ($foodDetails->isEmpty()) {
+                $foodDetails = collect($booking->food_items ?? [])
+                    ->map(function ($quantity, $foodId) use ($legacyFoods) {
+                        $food = $legacyFoods->get((int) $foodId);
+                        if (!$food || (int) $quantity < 1) {
+                            return null;
+                        }
+
+                        return [
+                            'name' => $food->name,
+                            'quantity' => (int) $quantity,
+                            'unit_price' => (float) $food->price,
+                            'subtotal' => (float) $food->price * (int) $quantity,
+                        ];
+                    })
+                    ->filter()
+                    ->values();
+            }
+
+            $booking->foodDetails = $foodDetails;
+        });
 
         // Lấy thông tin subscription
         $subscription = $user->subscription;

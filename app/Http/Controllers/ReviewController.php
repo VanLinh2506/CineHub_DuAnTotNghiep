@@ -172,8 +172,7 @@ class ReviewController extends Controller
     public function deleteComment(Request $request, $id)
     {
         $user = Auth::user();
-        $isAdmin = $user && ($user->role === 'admin' || 
-                   $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists());
+        $isAdmin = $user && ($user->isAdmin() || $user->isModerator());
         
         if (!$isAdmin) {
             return redirect()->back()->with('error', 'Bạn không có quyền thực hiện thao tác này!');
@@ -272,8 +271,7 @@ class ReviewController extends Controller
     public function delete(Request $request, $id)
     {
         $user = Auth::user();
-        $isAdmin = $user && ($user->role === 'admin' || 
-                   $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists());
+        $isAdmin = $user && ($user->isAdmin() || $user->isModerator());
         
         if (!$isAdmin) {
             return redirect()->back()->with('error', 'Bạn không có quyền thực hiện thao tác này!');

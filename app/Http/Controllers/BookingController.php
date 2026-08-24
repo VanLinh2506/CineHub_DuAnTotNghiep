@@ -541,8 +541,8 @@ class BookingController extends Controller
         
         $screenSurcharge = $this->getScreenTypeSurcharge($screenType);
         $normalPrice = $basePrice + $screenSurcharge;
-        $vipPrice = $basePrice + $screenSurcharge + ($basePrice * 0.3);
-        $couplePrice = $basePrice + $screenSurcharge + ($basePrice * 0.5);
+        $vipPrice = $normalPrice * 1.3;
+        $couplePrice = $normalPrice * 1.5;
         $vnpayConfigured = $this->isVnpayConfigured();
         
         // Generate dates (7 days)
@@ -1588,6 +1588,7 @@ class BookingController extends Controller
             // Add food items price
             $foodTotal = 0;
             $filteredFoodItems = [];
+            $foodItemRows = [];
             
             foreach ($foodItems as $foodId => $quantity) {
                 if ($quantity > 0) {
@@ -1598,6 +1599,11 @@ class BookingController extends Controller
                     if ($food) {
                         $foodTotal += $food->price * $quantity;
                         $filteredFoodItems[$foodId] = $quantity;
+                        $foodItemRows[] = [
+                            'food_item_id' => $food->id,
+                            'quantity' => (int) $quantity,
+                            'price' => $food->price,
+                        ];
                     }
                 }
             }
@@ -1639,6 +1645,20 @@ class BookingController extends Controller
                     'showtime_id' => $showtimeId,
                     'seats' => $seats,
                 ]);
+            }
+
+            // Lưu snapshot món và đơn giá theo booking để vé cũ luôn hiện đúng
+            // ngay cả khi rạp đổi menu hoặc điều chỉnh giá sau này.
+            DB::table('booking_food_items')->where('booking_pending_id', $booking->id)->delete();
+            if ($foodItemRows) {
+                DB::table('booking_food_items')->insert(array_map(
+                    fn (array $item) => $item + [
+                        'booking_pending_id' => $booking->id,
+                        'ticket_id' => null,
+                        'created_at' => now(),
+                    ],
+                    $foodItemRows
+                ));
             }
             
             // Save to session for VNPay

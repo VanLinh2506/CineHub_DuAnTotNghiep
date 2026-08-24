@@ -10,6 +10,7 @@
         selectedShowtimeId: @json($selectedShowtimeId ?? null),
         myReservedSeats: @json($myReservedSeats ?? []),
         basePrice: @json($basePrice ?? 90000),
+        screenSurcharge: @json($screenSurcharge ?? 0),
         csrfToken: @json(csrf_token()),
         ticketPurchaseCountdownSeconds: 600,
         routes: {
@@ -26,6 +27,7 @@
     };
 </script>
 @vite(['resources/js/booking.js'])
+<script src="{{ asset('js/booking-price-sync.js') }}?v={{ filemtime(public_path('js/booking-price-sync.js')) }}"></script>
 <script>
     (function() {
         function formatDate(date) {
@@ -125,7 +127,7 @@
                     }
 
                     showtimesContainer.innerHTML = data.showtimes.map(function(showtime) {
-                        return '<div class="showtime-btn" data-showtime-id="' + showtime.id + '">' +
+                        return '<div class="showtime-btn" data-showtime-id="' + showtime.id + '" data-price="' + showtime.price + '" data-screen-type="' + (showtime.screen_type || '2D') + '">' +
                             '<div>' + showtime.show_time + '</div>' +
                             '<div class="screen-info">' + (showtime.screen_name || 'N/A') + ' - ' + (showtime.screen_type || '2D') + '</div>' +
                             '</div>';

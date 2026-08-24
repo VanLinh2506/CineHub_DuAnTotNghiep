@@ -192,7 +192,8 @@ class ModeratorController extends Controller
         $showtimes = $showtimesQuery
             ->orderBy('show_date', 'asc')
             ->orderBy('show_time', 'asc')
-            ->get();
+            ->paginate(50)
+            ->withQueryString();
         
         $movies = Movie::where('status', 'Chiếu rạp')->orderBy('title')->get();
         $screens = Screen::where('theater_id', $this->theaterId)->orderBy('screen_name')->get();

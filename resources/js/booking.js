@@ -438,7 +438,7 @@ window.requestUserLocation = function() {
                     var html = '';
                     for (var i = 0; i < data.showtimes.length; i++) {
                         var showtime = data.showtimes[i];
-                        html += '<div class="showtime-btn" onclick="selectShowtime(' + showtime.id + ')" data-showtime-id="' + showtime.id + '">';
+                        html += '<div class="showtime-btn" onclick="selectShowtime(' + showtime.id + ')" data-showtime-id="' + showtime.id + '" data-price="' + showtime.price + '" data-screen-type="' + (showtime.screen_type || '2D') + '">';
                         html += '<div>' + showtime.show_time + '</div>';
                         html += '<div class="screen-info">' + (showtime.screen_name || 'N/A') + ' - ' + (showtime.screen_type || '2D') + '</div>';
                         html += '</div>';
@@ -476,6 +476,27 @@ window.requestUserLocation = function() {
         var selectedBtn = document.querySelector('.showtime-btn[data-showtime-id="' + showtimeId + '"]');
         if (selectedBtn) {
             selectedBtn.classList.add('selected');
+            var showtimeBasePrice = Number(selectedBtn.getAttribute('data-price'));
+            if (Number.isFinite(showtimeBasePrice) && showtimeBasePrice > 0) {
+                var selectedScreenType = selectedBtn.getAttribute('data-screen-type') || '2D';
+                var selectedSurcharge = selectedScreenType === 'IMAX' ? 50000
+                    : selectedScreenType === '3D' ? 30000
+                    : selectedScreenType === '4DX' ? 70000
+                    : 0;
+                var selectedNormalPrice = showtimeBasePrice + selectedSurcharge;
+
+                // Use the selected showtime's real price immediately. The seat-map
+                // response will subsequently confirm the same server-side prices.
+                bookingPageConfig.basePrice = showtimeBasePrice;
+                bookingPageConfig.screenSurcharge = selectedSurcharge;
+                currentSeatPrices = {
+                    base: showtimeBasePrice,
+                    normal: selectedNormalPrice,
+                    vip: selectedNormalPrice * 1.3,
+                    couple: selectedNormalPrice * 1.5
+                };
+                calculateSeatPriceNow();
+            }
             console.log('Showtime button marked as selected');
         }
 
@@ -491,6 +512,16 @@ window.requestUserLocation = function() {
             console.log('Set showtimeIdInput.value =', showtimeInput.value);
         } else {
             console.error('showtimeIdInput element not found!');
+        }
+
+        // Combo/đồ ăn thuộc về rạp đã chọn, không phụ thuộc vào việc khóa ghế.
+        // Hiển thị ngay khi có suất chiếu để khách có thể chọn song song với ghế.
+        var foodLauncher = document.getElementById('foodModalLauncher');
+        if (foodLauncher) {
+            foodLauncher.style.display = 'block';
+        }
+        if (window.selectedTheaterId && typeof window.loadFoodItemsForTheater === 'function') {
+            window.loadFoodItemsForTheater(window.selectedTheaterId);
         }
 
         // Load seat map and start the ticket purchase countdown for this screen/showtime.
@@ -896,16 +927,17 @@ window.requestUserLocation = function() {
         console.log('updateBookingSummaryFull called, seatsConfirmed:', window.seatsConfirmed);
 
         if (!window.seatsConfirmed) {
+            // Vẫn dựng đầy đủ bảng tạm tính khi khách chưa khóa ghế.
+            // Trước đây nhánh này chỉ cập nhật tổng, làm dòng "Tiền vé" còn 0 ₫.
             calculateSeatPriceNow();
-            return;
         }
 
         calculateSeatPriceNow();
 
-        var basePrice = Number(bookingPageConfig.basePrice || 90000);
-        var normalPrice = basePrice;
-        var vipPrice = Math.round(basePrice * 1.3);
-        var couplePrice = Math.round(basePrice * 1.5);
+        var basePrice = Number(bookingPageConfig.basePrice || 90000) + Number(bookingPageConfig.screenSurcharge || 0);
+        var normalPrice = Number(currentSeatPrices && currentSeatPrices.normal) || basePrice;
+        var vipPrice = Number(currentSeatPrices && currentSeatPrices.vip) || Math.round(normalPrice * 1.3);
+        var couplePrice = Number(currentSeatPrices && currentSeatPrices.couple) || Math.round(normalPrice * 1.5);
 
         var seatsTotal = 0;
 
@@ -915,7 +947,7 @@ window.requestUserLocation = function() {
                 var row = seat.charAt(0);
                 if (row === 'D' || row === 'E' || row === 'F') {
                     seatsTotal += vipPrice;
-                } else if (row === 'J') {
+                } else if (row === 'J' || row === 'K' || row === 'L') {
                     seatsTotal += couplePrice;
                 } else {
                     seatsTotal += normalPrice;
@@ -2307,10 +2339,10 @@ window.requestUserLocation = function() {
 
     // Calculate seat price
     function calculateSeatPriceNow() {
-        var basePrice = Number(bookingPageConfig.basePrice || 90000);
-        var normalPrice = basePrice;
-        var vipPrice = Math.round(basePrice * 1.3);
-        var couplePrice = Math.round(basePrice * 1.5);
+        var basePrice = Number(bookingPageConfig.basePrice || 90000) + Number(bookingPageConfig.screenSurcharge || 0);
+        var normalPrice = Number(currentSeatPrices && currentSeatPrices.normal) || basePrice;
+        var vipPrice = Number(currentSeatPrices && currentSeatPrices.vip) || Math.round(normalPrice * 1.3);
+        var couplePrice = Number(currentSeatPrices && currentSeatPrices.couple) || Math.round(normalPrice * 1.5);
 
         // Update price display
         var normalEl = document.getElementById('normalPriceDisplay');
@@ -2336,7 +2368,7 @@ window.requestUserLocation = function() {
                 if (row === 'D' || row === 'E' || row === 'F') {
                     totalPrice += vipPrice;
                     seatBreakdown.vip++;
-                } else if (row === 'J') {
+            } else if (row === 'J' || row === 'K' || row === 'L') {
                     totalPrice += couplePrice;
                     seatBreakdown.couple++;
                 } else {
@@ -3045,10 +3077,10 @@ function loadSeatMapNow(showtimeId, options) {
     };
 
     calculateSeatPriceNow = function() {
-        var basePrice = Number(bookingPageConfig.basePrice || 90000);
-        var normalPrice = basePrice;
-        var vipPrice = Math.round(basePrice * 1.3);
-        var couplePrice = Math.round(basePrice * 1.5);
+        var basePrice = Number(bookingPageConfig.basePrice || 90000) + Number(bookingPageConfig.screenSurcharge || 0);
+        var normalPrice = Number(currentSeatPrices && currentSeatPrices.normal) || basePrice;
+        var vipPrice = Number(currentSeatPrices && currentSeatPrices.vip) || Math.round(normalPrice * 1.3);
+        var couplePrice = Number(currentSeatPrices && currentSeatPrices.couple) || Math.round(normalPrice * 1.5);
         var selected = uniqueSeatList(window.selectedSeats || []);
 
         var normalEl = document.getElementById('normalPriceDisplay');
@@ -3073,7 +3105,7 @@ function loadSeatMapNow(showtimeId, options) {
             if (row === 'D' || row === 'E' || row === 'F') {
                 totalPrice += vipPrice;
                 breakdown.vip++;
-            } else if (row === 'J') {
+            } else if (row === 'J' || row === 'K' || row === 'L') {
                 totalPrice += couplePrice;
                 breakdown.couple++;
             } else {
@@ -3094,8 +3126,28 @@ function loadSeatMapNow(showtimeId, options) {
         var unitEl = document.getElementById('unitPrice');
         if (unitEl) unitEl.textContent = new Intl.NumberFormat('vi-VN').format(basePrice) + ' ₫';
 
+        // Keep the grand total in sync with the submitted form. Food quantities are
+        // sent to the backend and included in booking.total_amount, so displaying
+        // seat-only pricing here would show a lower amount than VNPay.
+        var foodTotal = 0;
+        var foodInputs = document.querySelectorAll('input[name^="food_items["]');
+        for (var j = 0; j < foodInputs.length; j++) {
+            var foodQty = parseInt(foodInputs[j].value, 10) || 0;
+            if (foodQty <= 0) continue;
+
+            var foodIdMatch = foodInputs[j].name.match(/\[(\d+)\]/);
+            var foodCard = foodIdMatch
+                ? document.querySelector('.food-item-card-compact[data-food-id="' + foodIdMatch[1] + '"]')
+                : null;
+            var foodPrice = foodCard ? (parseInt(foodCard.getAttribute('data-food-price'), 10) || 0) : 0;
+            foodTotal += foodPrice * foodQty;
+        }
+
         var totalEl = document.getElementById('totalPrice');
-        if (totalEl) totalEl.textContent = new Intl.NumberFormat('vi-VN').format(totalPrice) + ' ₫';
+        if (totalEl) totalEl.textContent = new Intl.NumberFormat('vi-VN').format(totalPrice + foodTotal) + ' ₫';
+
+        var seatsTotalEl = document.getElementById('seatsTotal');
+        if (seatsTotalEl) seatsTotalEl.textContent = new Intl.NumberFormat('vi-VN').format(totalPrice) + ' ₫';
 
         updatePayButtonState();
     };
@@ -3716,6 +3768,14 @@ function loadSeatMapNow(showtimeId, options) {
             card.classList.toggle('selected', card.getAttribute('data-theater-id') === window.selectedTheaterId);
         });
 
+        var foodLauncher = document.getElementById('foodModalLauncher');
+        if (foodLauncher) {
+            foodLauncher.style.display = 'block';
+        }
+        if (typeof window.loadFoodItemsForTheater === 'function') {
+            window.loadFoodItemsForTheater(window.selectedTheaterId);
+        }
+
         renderInitialDateTabs(initialDate);
 
         document.querySelectorAll('.date-tab').forEach(function(tab) {
@@ -3747,7 +3807,7 @@ function loadSeatMapNow(showtimeId, options) {
 
                     showtimesContainer.innerHTML = showtimes.map(function(showtime) {
                         var selectedClass = String(showtime.id) === String(initialShowtimeId) ? ' selected' : '';
-                        return '<div class="showtime-btn' + selectedClass + '" onclick="selectShowtime(' + showtime.id + ')" data-showtime-id="' + showtime.id + '">' +
+                        return '<div class="showtime-btn' + selectedClass + '" onclick="selectShowtime(' + showtime.id + ')" data-showtime-id="' + showtime.id + '" data-price="' + showtime.price + '" data-screen-type="' + (showtime.screen_type || '2D') + '">' +
                             '<div>' + showtime.show_time + '</div>' +
                             '<div class="screen-info">' + (showtime.screen_name || 'N/A') + ' - ' + (showtime.screen_type || '2D') + '</div>' +
                             '</div>';

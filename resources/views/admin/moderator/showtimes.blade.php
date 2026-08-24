@@ -22,10 +22,9 @@
         <div class="col-md-4">
             <input type="date" name="date" class="form-control" value="{{ $date ?? '' }}" onchange="this.form.submit()">
         </div>
-        <div class="col-md-2">
-            <label class="form-label small">Hoặc xem tất cả lịch chiếu</label>
-            <a href="{{ route('moderator.showtimes.index') }}?all=1" class="btn btn-outline-info w-100 btn-sm">
-                <i class="fas fa-list"></i> Tất cả
+        <div class="col-md-2 d-flex align-items-center">
+            <a href="{{ route('moderator.showtimes.index') }}?all=1" class="btn btn-outline-info w-100 showtime-all-filter" aria-label="Xem tất cả lịch chiếu">
+                <i class="fas fa-list"></i> Xem tất cả
             </a>
         </div>
         <div class="col-md-2">
@@ -48,7 +47,7 @@
                 </tr>
             </thead>
             <tbody>
-                @if(empty($showtimes))
+                @if($showtimes->isEmpty())
                     <tr><td colspan="8" class="text-center text-muted">Chưa có lịch chiếu nào</td></tr>
                 @else
                     @foreach($showtimes as $showtime)
@@ -56,10 +55,10 @@
                         <td>{{ $showtime['id'] }}</td>
                         <td>
                             <div class="d-flex align-items-center">
-                                @if(isset($showtime['thumbnail']) && $showtime['thumbnail'])
-                                    <img src="{{ $showtime['thumbnail'] }}" alt="" class="rounded me-2" style="width: 50px; height: 75px; object-fit: cover;">
+                                @if($showtime->movie?->thumbnail)
+                                    <img src="{{ $showtime->movie->thumbnail }}" alt="{{ $showtime->movie->title }}" class="rounded me-2" style="width: 50px; height: 75px; object-fit: cover;">
                                 @endif
-                                <span>{{ $showtime['movie_title'] }}</span>
+                                <span>{{ $showtime->movie?->title ?? 'Phim không còn tồn tại' }}</span>
                             </div>
                         </td>
                         <td>{{ $showtime['screen_name'] ?? 'Phòng ' . $showtime['screen_id'] }}</td>
@@ -102,6 +101,11 @@
             </tbody>
         </table>
     </div>
+    @if($showtimes->hasPages())
+        <div class="d-flex justify-content-center mt-3">
+            {{ $showtimes->links() }}
+        </div>
+    @endif
 </div>
 
 <!-- Bulk Showtime Modal -->
