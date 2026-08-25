@@ -2362,6 +2362,26 @@ class BookingController extends Controller
     }
 
     /**
+     * Download ticket PDF
+     */
+    public function downloadTicketPDF($bookingId)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        $booking = Booking::with(['showtime.movie', 'showtime.theater', 'showtime.screen', 'tickets', 'foodOrders.foodItem', 'user'])
+            ->where('id', $bookingId)
+            ->where('user_id', Auth::id())
+            ->where('status', 'completed')
+            ->firstOrFail();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('booking.pdf', compact('booking'));
+        
+        return $pdf->download('ve-phim-' . ($booking->qr_code ?: $booking->id) . '.pdf');
+    }
+
+    /**
      * My tickets page
      */
     public function myTickets()

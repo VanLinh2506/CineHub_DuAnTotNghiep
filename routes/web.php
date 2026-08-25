@@ -99,6 +99,7 @@ Route::middleware('auth')->prefix('booking')->name('booking.')->group(function (
     Route::get('/{bookingId}/payment', [BookingController::class, 'payment'])->name('payment');
     Route::get('/{bookingId}/confirmation', [BookingController::class, 'confirmation'])->name('confirmation');
     Route::post('/{bookingId}/cancel', [BookingController::class, 'cancel'])->name('cancel');
+    Route::get('/{bookingId}/pdf', [BookingController::class, 'downloadTicketPDF'])->name('pdf');
 });
 
 Route::post('/booking/location', [BookingController::class, 'saveLocation'])->name('booking.location');
