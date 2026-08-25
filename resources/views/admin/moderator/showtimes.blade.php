@@ -172,7 +172,7 @@
                         <input type="time" name="show_time" id="show_time" class="form-control" step="900" required>
                         <div id="availableTimeSlots" class="mt-2" style="display: none;">
                             <small class="text-muted d-block mb-2">Các khung giờ còn trống trong ngày:</small>
-                            <div id="timeSlotsContainer" class="d-flex flex-wrap gap-2"></div>
+                            <div id="timeSlotsContainer"></div>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -318,17 +318,124 @@
 
 @push('styles')
 <style>
-#timeSlotsContainer .btn-outline-primary { background-color: #007bff !important; color: #fff !important; border: 2px solid #007bff !important; padding: 0.5rem 1rem !important; font-weight: 600 !important; border-radius: 8px !important; min-width: 80px !important; }
-#timeSlotsContainer .btn-primary { background-color: #28a745 !important; color: #fff !important; border: 2px solid #28a745 !important; font-weight: 700 !important; }
-#timeSlotsContainer .btn.disabled-slot { opacity: 0.3 !important; cursor: not-allowed !important; pointer-events: none !important; }
-#bulkTimeSlots { max-height: 16rem; overflow-y: auto; }
+/* ====== Time Slot Buttons - Premium Card Style ====== */
+.time-slots-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+    width: 100%;
+}
+
+.time-slot-btn {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    padding: 10px 8px !important;
+    border: 2px solid #b6d4fe !important;
+    border-radius: 12px !important;
+    background-color: #f0f7ff !important;
+    background-image: none !important;
+    color: #084298 !important;
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+    cursor: pointer;
+    transition: all 0.2s ease !important;
+    white-space: normal !important;
+    text-align: center !important;
+    min-width: unset !important;
+    line-height: 1.3 !important;
+    box-shadow: 0 2px 5px rgba(13, 110, 253, 0.08) !important;
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+.time-slot-btn .slot-start-time {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: #052c65 !important;
+    letter-spacing: 0.5px;
+    line-height: 1;
+}
+
+.time-slot-btn .slot-end-time {
+    font-size: 0.7rem !important;
+    color: #6ea8fe !important;
+    font-weight: 500 !important;
+    opacity: 0.9;
+}
+
+.time-slot-btn .slot-icon {
+    font-size: 0.65rem !important;
+    color: #0d6efd !important;
+    margin-bottom: 1px;
+}
+
+.time-slot-btn:hover {
+    background-color: #d3e2f7 !important;
+    border-color: #8bb9fe !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.15) !important;
+    color: #052c65 !important;
+}
+
+.time-slot-btn.btn-primary {
+    background-color: #0d6efd !important;
+    border-color: #0a58ca !important;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3) !important;
+    color: #ffffff !important;
+}
+
+.time-slot-btn.btn-primary .slot-start-time {
+    color: #ffffff !important;
+}
+
+.time-slot-btn.btn-primary .slot-end-time {
+    color: #cfe2ff !important;
+}
+
+.time-slot-btn.btn-primary .slot-icon {
+    color: #ffffff !important;
+}
+
+.time-slot-btn.disabled-slot {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    transform: none !important;
+}
+
+.time-slot-btn.hidden-slot {
+    display: none !important;
+}
+
+/* Bulk time slots grid */
+#bulkTimeSlots {
+    max-height: 18rem;
+    overflow-y: auto;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+    padding: 4px 2px;
+}
+
+#bulkTimeSlots .time-slot-btn {
+    margin: 0 !important;
+}
+
+/* Scrollbar for bulk slots */
+#bulkTimeSlots::-webkit-scrollbar { width: 5px; }
+#bulkTimeSlots::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+#bulkTimeSlots::-webkit-scrollbar-thumb { background: #3a8eff; border-radius: 4px; }
+
 @media (max-width: 767.98px) {
     #bulkShowtimeModal .modal-dialog { margin: 0; width: 100%; max-width: none; min-height: 100%; }
     #bulkShowtimeModal .modal-content { min-height: 100vh; border: 0; border-radius: 0; }
     #bulkShowtimeModal .modal-body { padding: 1rem; overflow-x: hidden; }
     #bulkShowtimeModal .modal-footer { position: sticky; bottom: 0; background: #fff; z-index: 2; }
-    #bulkTimeSlots { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    #bulkTimeSlots .btn { width: 100%; white-space: normal; }
+    #bulkTimeSlots { grid-template-columns: repeat(2, 1fr); }
+    .time-slots-wrapper { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 575.98px) {
     .d-flex.justify-content-between.align-items-center.mb-4 { align-items: flex-start !important; flex-direction: column; gap: .75rem; }
@@ -445,7 +552,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function updateTimeSlotsVisibility(selectedTime) {
             if (!selectedTime) {
-                timeSlotButtons.forEach(btn => { btn.style.display = ''; btn.disabled = false; btn.classList.remove('disabled-slot'); });
+                timeSlotButtons.forEach(btn => { btn.style.display = ''; btn.disabled = false; btn.classList.remove('disabled-slot', 'hidden-slot'); });
                 return;
             }
             const parts = selectedTime.split(':');
@@ -453,10 +560,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const endTime = calculateEndTime(formattedTime, movieDuration);
             timeSlotButtons.forEach(btn => {
                 const slotTime = btn.dataset.time || btn.textContent.trim();
-                if (slotTime === formattedTime) { btn.style.display = ''; btn.disabled = false; btn.classList.remove('disabled-slot'); return; }
+                if (slotTime === formattedTime) { btn.style.display = ''; btn.disabled = false; btn.classList.remove('disabled-slot', 'hidden-slot'); return; }
                 if (isTimeInRange(slotTime, formattedTime, endTime)) {
-                    btn.style.display = 'none'; btn.disabled = true; btn.classList.add('disabled-slot');
-                } else { btn.style.display = ''; btn.disabled = false; btn.classList.remove('disabled-slot'); }
+                    btn.disabled = true; btn.classList.add('disabled-slot', 'hidden-slot');
+                } else { btn.style.display = ''; btn.disabled = false; btn.classList.remove('disabled-slot', 'hidden-slot'); }
             });
         }
 
@@ -504,15 +611,26 @@ document.addEventListener('DOMContentLoaded', function() {
                         data.slots.forEach((slot, index) => {
                             const button = document.createElement('button');
                             button.type = 'button';
-                            button.className = 'btn btn-sm btn-outline-primary me-2 mb-2 time-slot-btn';
-                            button.textContent = slot.label;
+                            button.className = 'btn btn-sm btn-outline-primary time-slot-btn';
                             button.dataset.time = slot.time;
-                            
+
+                            // Tách giờ bắt đầu và giờ kết thúc từ label
+                            // label format: "08:00 (kết thúc lúc 11:16:00)"
+                            const labelMatch = slot.label.match(/^(\d{2}:\d{2})(?:\s*\(kết thúc lúc\s*([\d:]+)\))?/);
+                            const startTime = labelMatch ? labelMatch[1] : slot.label;
+                            const endTime = labelMatch && labelMatch[2] ? labelMatch[2].substring(0, 5) : '';
+
+                            button.innerHTML = `
+                                <span class="slot-icon"><i class="fas fa-film"></i></span>
+                                <span class="slot-start-time">${startTime}</span>
+                                ${endTime ? `<span class="slot-end-time">→ ${endTime}</span>` : ''}
+                            `;
+
                             // Ẩn các button sau 8 cái đầu tiên
                             if (index >= 8) {
                                 button.classList.add('d-none', 'extra-slot');
                             }
-                            
+
                             button.onclick = function() {
                                 selectStartTime(slot.time, button);
                             };
@@ -673,9 +791,22 @@ document.addEventListener('DOMContentLoaded', () => {
             );
             const button = document.createElement('button');
             button.type = 'button';
-            button.className = `btn btn-sm ${isSelected ? 'btn-primary' : 'btn-outline-primary'}`;
-            button.textContent = slot.label;
+            button.className = `btn btn-sm time-slot-btn ${isSelected ? 'btn-primary' : 'btn-outline-primary'}`;
+            button.dataset.time = slot.time;
             button.disabled = overlaps;
+            // Parse start/end time from label
+            const labelMatch = (slot.label || '').match(/^(\d{2}:\d{2})(?:\s*\(kết thúc lúc\s*([\d:]+)\))?/);
+            const startTime = labelMatch ? labelMatch[1] : (slot.label || slot.time);
+            const endTime = labelMatch && labelMatch[2] ? labelMatch[2].substring(0, 5) : '';
+            button.innerHTML = `
+                <span class="slot-icon"><i class="fas fa-film"></i></span>
+                <span class="slot-start-time">${startTime}</span>
+                ${endTime ? `<span class="slot-end-time">→ ${endTime}</span>` : ''}
+            `;
+            if (overlaps) {
+                button.style.opacity = '0.3';
+                button.classList.add('hidden-slot');
+            }
             button.addEventListener('click', () => {
                 isSelected ? selected.delete(slot.time) : selected.add(slot.time);
                 render();
