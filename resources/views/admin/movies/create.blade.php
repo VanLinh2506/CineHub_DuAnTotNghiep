@@ -216,21 +216,16 @@
 
                 <!-- Upload Video (chỉ hiện cho phim lẻ) -->
                 <div class="col-md-6 mb-3" id="videoSection">
-                    <label for="video_file" class="form-label">Video phim</label>
-                    <div class="upload-box video-upload" id="videoUploadBox"
-                        onclick="document.getElementById('video_file').click()">
-                        <input type="file" class="form-control d-none" id="video_file" name="video_file" accept="video/*"
-                            onchange="previewVideo(this)">
-                        <div class="upload-placeholder" id="videoPlaceholder">
-                            <i class="fas fa-film fa-3x text-muted mb-2"></i>
-                            <p class="mb-1">Kéo thả hoặc click để chọn video</p>
-                            <small class="text-muted">MP4, AVI, MOV, MKV (Tối đa 500MB)</small>
-                        </div>
-                        <div id="videoInfo" class="d-none">
-                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                            <p class="mb-1 video-name"></p>
-                            <small class="text-muted video-size"></small>
-                        </div>
+                    <label class="form-label">Video phim theo độ phân giải</label>
+                    <div class="border rounded p-3">
+                        @foreach(['180p','240p','360p','480p','720p','1080p','1440p','2160p'] as $quality)
+                            <div class="input-group mb-2">
+                                <span class="input-group-text" style="min-width:72px;">{{ $quality === '2160p' ? '4K' : $quality }}</span>
+                                <input type="file" class="form-control movie-quality-input"
+                                    name="movie_video_{{ $quality }}" accept="video/*">
+                            </div>
+                        @endforeach
+                        <small class="text-muted">Mỗi độ phân giải là một file video riêng.</small>
                     </div>
                 </div>
 
@@ -506,14 +501,17 @@
         }
 
         function toggleOnlineSchedule() {
-            const visible = document.getElementById('type').value === 'phimle'
-                && document.getElementById('status').value === 'Sắp chiếu';
+            const isSingleMovie = document.getElementById('type').value === 'phimle';
+            const isUpcoming = document.getElementById('status').value === 'Sắp chiếu';
+            const visible = isSingleMovie && isUpcoming;
             const section = document.getElementById('onlineScheduleSection');
             const input = document.getElementById('publish_date');
             if (section) section.style.display = visible ? 'block' : 'none';
             if (input) input.required = visible;
             const videoSection = document.getElementById('videoSection');
-            if (videoSection && visible) videoSection.style.display = 'none';
+            const videoInputs = document.querySelectorAll('.movie-quality-input');
+            if (videoSection) videoSection.style.display = isSingleMovie && !isUpcoming ? 'block' : 'none';
+            videoInputs.forEach(videoInput => videoInput.disabled = !isSingleMovie || isUpcoming);
         }
 
         function toggleSeriesSection() {
@@ -593,11 +591,15 @@
                 <input type="text" class="form-control" name="new_episode_title_${episodeCount}" 
                        placeholder="VD: Tập ${nextEpisode}: Tên tập">
             </div>
-            <div class="col-md-4">
-                <label class="form-label">Video File</label>
-                <input type="file" class="form-control" name="new_episode_video_${episodeCount}" 
-                       accept="video/*">
-                <small class="text-muted">Có thể thêm video sau.</small>
+            <div class="col-12 mt-3">
+                <label class="form-label">Video theo chất lượng</label>
+                <div class="row g-2">
+                ${['180p','240p','360p','480p','720p','1080p','1440p','2160p'].map(quality =>
+                    '<div class="col-md-3"><div class="border rounded p-2 bg-white">' +
+                    '<strong class="d-block mb-1">' + (quality === '2160p' ? '4K' : quality) + '</strong>' +
+                    '<input type="file" class="form-control form-control-sm" name="new_episode_video_' + episodeCount + '_' + quality + '" accept="video/*">' +
+                    '</div></div>').join('')}
+                </div>
             </div>
             <div class="col-md-2">
                 <label class="form-label">&nbsp;</label>

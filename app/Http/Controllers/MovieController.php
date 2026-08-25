@@ -15,6 +15,7 @@ use App\Models\MovieSearch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class MovieController extends Controller
@@ -755,6 +756,11 @@ class MovieController extends Controller
                 ->with('showUpgradeModal', true);
         }
 
+        if ($movie->isPhimBo() && $movie->episodes->isEmpty()) {
+            return redirect()->route('movies.introduce', $movie->id)
+                ->with('error', 'Phim bộ này chưa có tập nào. Vui lòng quay lại sau.');
+        }
+
         $watchHistory = WatchHistory::firstOrCreate(
             ['user_id' => $user->id, 'movie_id' => $movie->id]
         );
@@ -822,6 +828,8 @@ class MovieController extends Controller
             ->map(fn ($episodeId) => (int) $episodeId)
             ->all();
 
+        $maxVideoQuality = $this->maxVideoQualityForUser($user);
+
         // Reviews and Comments
         $reviews = $movie->reviews()
             ->with('user')
@@ -875,8 +883,45 @@ class MovieController extends Controller
             'isAdmin',
             'canModerateComments',
             'resumeSeconds',
-            'watchedEpisodeIds'
+            'watchedEpisodeIds',
+            'maxVideoQuality'
         ));
+    }
+
+    public function streamVideo(string $kind, int $sourceId, string $quality)
+    {
+        $qualityValue = (int) $quality;
+        if ($qualityValue > $this->maxVideoQualityForUser(Auth::user())) {
+            abort(403, 'Gói hiện tại không hỗ trợ chất lượng video này.');
+        }
+
+        if ($kind === 'episode') {
+            $source = Episode::with('movie')->findOrFail($sourceId);
+            $movie = $source->movie;
+        } else {
+            $source = Movie::findOrFail($sourceId);
+            $movie = $source;
+        }
+
+        if (!$movie || !$this->checkMovieAccess(Auth::user(), $movie->level ?? 'Free')) {
+            abort(403, 'Gói hiện tại không có quyền xem phim này.');
+        }
+
+        $path = $source->video_sources[$quality] ?? null;
+        if (!$path) {
+            abort(404);
+        }
+
+        $disk = Storage::disk('local')->exists($path) ? Storage::disk('local') : Storage::disk('public');
+        if (!$disk->exists($path)) {
+            abort(404);
+        }
+
+        return response()->file($disk->path($path), [
+            'Content-Type' => $disk->mimeType($path) ?: 'video/mp4',
+            'Cache-Control' => 'private, max-age=3600',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function saveProgress(Request $request, $id)
@@ -916,9 +961,19 @@ class MovieController extends Controller
             $q->orderBy('episode_number');
         }])->findOrFail($movieId);
 
+        if ($movie->episodes->isEmpty()) {
+            return redirect()->route('movies.introduce', $movie->id)
+                ->with('error', 'Phim bộ này chưa có tập nào. Vui lòng quay lại sau.');
+        }
+
         $currentEpisode = $movie->episodes()
             ->where('episode_number', $episodeNumber)
-            ->firstOrFail();
+            ->first();
+
+        if (!$currentEpisode) {
+            return redirect()->route('movies.introduce', $movie->id)
+                ->with('error', "Tập {$episodeNumber} không tồn tại hoặc chưa được phát hành.");
+        }
 
         // Redirect to watch method with episode
         return redirect()->route('movies.watch', [
@@ -1126,6 +1181,23 @@ class MovieController extends Controller
         return $userLevel >= $requiredLevel;
     }
 
+    private function maxVideoQualityForUser($user): int
+    {
+        if (!$user) {
+            return 480;
+        }
+
+        if ($user->role === 'admin' || $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists()) {
+            return 2160;
+        }
+
+        if ($user->subscription_expires_at && $user->subscription_expires_at->isPast()) {
+            return 480;
+        }
+
+        return max(180, min(2160, (int) ($user->subscription?->max_video_quality ?? 480)));
+    }
+
     private function applyAudienceFilter($query, string $audience): void
     {
         if ($audience === 'mot-phim') {
@@ -1253,7 +1325,7 @@ class MovieController extends Controller
         $isInterested = $user
             ? MovieInterest::where('user_id', $user->id)->where('movie_id', $movie->id)->exists()
             : false;
-        $resumeEpisodeNumber = 1;
+        $resumeEpisodeNumber = (int) ($movie->episodes->first()?->episode_number ?? 0);
 
         if ($user && $movie->isPhimBo()) {
             $watchProgress = WatchHistory::with('episode')

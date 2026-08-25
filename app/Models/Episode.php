@@ -14,12 +14,14 @@ class Episode extends Model
         'episode_number',
         'title',
         'video_url',
+        'video_sources',
         'duration',
     ];
 
     protected $casts = [
         'episode_number' => 'integer',
         'duration' => 'integer',
+        'video_sources' => 'array',
     ];
 
     // Relationships

@@ -76,6 +76,10 @@ Route::prefix('movies')->name('movies.')->group(function () {
         Route::post('/{id}/interest', [MovieController::class, 'markInterested'])->name('interest');
         Route::delete('/{id}/interest', [MovieController::class, 'removeInterest'])->name('interest.remove');
         Route::get('/{id}/watch', [MovieController::class, 'watch'])->middleware('movie.age')->name('watch');
+        Route::get('/video/{kind}/{sourceId}/{quality}', [MovieController::class, 'streamVideo'])
+            ->whereIn('kind', ['movie', 'episode'])
+            ->where('quality', '^(180|240|360|480|720|1080|1440|2160)p$')
+            ->name('video');
         Route::post('/{id}/progress', [MovieController::class, 'saveProgress'])->name('progress');
         Route::get('/{movieId}/episode/{episodeNumber}', [MovieController::class, 'watchEpisode'])->middleware('movie.age')->name('watchEpisode');
     });
@@ -300,6 +304,7 @@ Route::middleware(['auth', 'counter_staff'])->prefix('counter')->name('counter.'
     Route::post('/process-sale', [CounterStaffController::class, 'processSale'])->name('processSale');
     Route::get('/sales', [CounterStaffController::class, 'salesHistory'])->name('sales');
     Route::get('/print', [CounterStaffController::class, 'printTickets'])->name('print');
+    Route::get('/ticket-pdf', [CounterStaffController::class, 'downloadTicketPdf'])->name('ticketPdf');
 
     // Showtimes
     Route::get('/showtimes', [CounterStaffController::class, 'showtimes'])->name('showtimes');

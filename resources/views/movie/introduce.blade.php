@@ -652,11 +652,15 @@ $bgImage = !empty($movie->banner) ? $movie->banner : $movie->thumbnail;
                                 <a href="{{ route('login') }}" class="btn-intro-watch"><i class="far fa-bell"></i> Quan tâm</a>
                                 @endauth
                                 <span class="intro-tag tag-year"><i class="far fa-calendar-alt"></i> {{ $movie->publish_date->format('d/m/Y H:i') }}</span>
-                            @elseif ($movie->isPhimBo())
+                            @elseif ($movie->isPhimBo() && $movie->episodes->isNotEmpty())
                             <a href="{{ route('movies.watchEpisode', [$movie->id, $resumeEpisodeNumber ?? 1]) }}" class="btn-intro-watch">
                                 <i class="fas fa-play"></i>
                                 {{ ($resumeEpisodeNumber ?? 1) > 1 ? 'Xem tiếp tập ' . $resumeEpisodeNumber : 'Xem ngay' }}
                             </a>
+                            @elseif ($movie->isPhimBo())
+                            <button type="button" class="btn-intro-watch" disabled title="Phim chưa có tập">
+                                <i class="fas fa-clock"></i> Chưa có tập
+                            </button>
                             @else
                             <a href="{{ route('movies.watch', $movie->id) }}" class="btn-intro-watch">
                                 <i class="fas fa-play"></i> Xem ngay

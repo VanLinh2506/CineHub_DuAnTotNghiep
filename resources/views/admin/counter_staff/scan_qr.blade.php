@@ -144,7 +144,9 @@ function displayTicketInfo(data) {
         });
         html += `</ul><p class="mt-2 text-success"><strong>Tổng đồ uống: ${new Intl.NumberFormat('vi-VN').format(data.food_total)}₫ — giao cùng lần quét này</strong></p><ul class="list-group d-none">`;
     }
-    html += `</ul><p class="mt-3"><strong>Tổng số vé:</strong> ${tickets.length}</p><p><strong>Đã xác nhận:</strong> ${data.updated_count} vé</p></div></div>`;
+    const pdfUrl = @json(route('counter.ticketPdf')) + '?booking_id=' + encodeURIComponent(booking.id);
+    html += `</ul><p class="mt-3"><strong>Tổng số vé:</strong> ${tickets.length}</p><p><strong>Đã xác nhận:</strong> ${data.updated_count} vé</p>
+        <a class="btn btn-danger mt-2" href="${pdfUrl}"><i class="fas fa-file-pdf"></i> Xuất vé PDF</a></div></div>`;
     document.getElementById('ticketDetails').innerHTML = html;
     document.getElementById('ticketInfo').style.display = 'block';
 }

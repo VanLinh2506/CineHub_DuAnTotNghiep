@@ -351,6 +351,7 @@ class AdminController extends Controller
         }
 
         $movie = Movie::create($data);
+        $this->storeMovieQualityFiles($movie, $request);
         $this->syncMovieCategories($movie, $categoryIds);
         $this->syncMovieEpisodesFromRequest($movie, $request);
 
@@ -463,6 +464,7 @@ class AdminController extends Controller
         }
 
         $movie->update($data);
+        $this->storeMovieQualityFiles($movie, $request);
         $this->syncMovieCategories($movie, $categoryIds);
         $this->syncMovieEpisodesFromRequest($movie, $request);
 
@@ -483,6 +485,9 @@ class AdminController extends Controller
         if ($movie->banner) Storage::disk('public')->delete($movie->banner);
         if ($movie->trailer_url) Storage::disk('public')->delete($movie->trailer_url);
         if ($movie->video_url) Storage::disk('public')->delete($movie->video_url);
+        foreach ($movie->video_sources ?? [] as $source) {
+            $this->deleteVideoSourcePath($source);
+        }
 
         $movie->delete();
 
@@ -496,6 +501,9 @@ class AdminController extends Controller
         // Delete video file if exists
         if ($episode->video_url) {
             Storage::disk('public')->delete($episode->video_url);
+        }
+        foreach ($episode->video_sources ?? [] as $source) {
+            $this->deleteVideoSourcePath($source);
         }
 
         $episode->delete();
@@ -533,6 +541,7 @@ class AdminController extends Controller
         }
 
         foreach ($movie->episodes as $episode) {
+            $this->storeEpisodeQualityFiles($movie, $episode, $request, 'episode_video_' . $episode->id . '_');
             $fileKey = 'episode_video_' . $episode->id;
 
             if (!$request->hasFile($fileKey)) {
@@ -589,6 +598,7 @@ class AdminController extends Controller
             }
 
             $episode->save();
+            $this->storeEpisodeQualityFiles($movie, $episode, $request, "new_episode_video_{$index}_");
         }
 
         foreach ($request->all() as $key => $value) {
@@ -603,7 +613,7 @@ class AdminController extends Controller
                 continue;
             }
 
-            Episode::firstOrCreate(
+            $episode = Episode::firstOrCreate(
                 [
                     'movie_id' => $movie->id,
                     'episode_number' => $episodeNumber,
@@ -612,12 +622,94 @@ class AdminController extends Controller
                     'title' => $request->input("new_episode_title_{$index}") ?: ('Tập ' . $episodeNumber),
                 ]
             );
+            $this->storeEpisodeQualityFiles($movie, $episode, $request, "new_episode_video_{$index}_");
         }
 
         if (DB::getSchemaBuilder()->hasColumn('movies', 'total_episodes')) {
             $movie->update([
                 'total_episodes' => max($movie->episodes()->count(), (int) $request->input('total_episodes', 0)),
             ]);
+        }
+    }
+
+    private function storeEpisodeQualityFiles(Movie $movie, Episode $episode, Request $request, string $prefix): void
+    {
+        $qualities = ['180p', '240p', '360p', '480p', '720p', '1080p', '1440p', '2160p'];
+        $sources = $episode->video_sources ?? [];
+
+        foreach ((array) $request->input("remove_episode_quality.{$episode->id}", []) as $quality) {
+            if (!in_array($quality, $qualities, true) || empty($sources[$quality])) {
+                continue;
+            }
+            $this->deleteVideoSourcePath($sources[$quality]);
+            unset($sources[$quality]);
+        }
+
+        foreach ($qualities as $quality) {
+            $key = $prefix . $quality;
+            if (!$request->hasFile($key)) {
+                continue;
+            }
+
+            if (!empty($sources[$quality])) {
+                $this->deleteVideoSourcePath($sources[$quality]);
+            }
+
+            $file = $request->file($key);
+            $filename = 'tap' . $episode->episode_number . '_' . $quality . '.' . $file->getClientOriginalExtension();
+            $sources[$quality] = $file->storeAs('protected-videos/phimbo/' . $movie->id, $filename, 'local');
+        }
+
+        if ($sources !== ($episode->video_sources ?? [])) {
+            uksort($sources, fn ($a, $b) => (int) $a <=> (int) $b);
+            $episode->video_sources = $sources;
+            $episode->video_url = $sources['720p'] ?? $sources['480p'] ?? ($sources ? end($sources) : null);
+            $episode->save();
+        }
+    }
+
+    private function storeMovieQualityFiles(Movie $movie, Request $request): void
+    {
+        if ($movie->type !== 'phimle' || $movie->status === 'Sắp chiếu') {
+            return;
+        }
+
+        $qualities = ['180p', '240p', '360p', '480p', '720p', '1080p', '1440p', '2160p'];
+        $sources = $movie->video_sources ?? [];
+
+        foreach ($qualities as $quality) {
+            $key = 'movie_video_' . $quality;
+            if (!$request->hasFile($key)) {
+                continue;
+            }
+
+            if (!empty($sources[$quality])) {
+                $this->deleteVideoSourcePath($sources[$quality]);
+            }
+
+            $file = $request->file($key);
+            $filename = 'phim_' . $movie->id . '_' . $quality . '.' . $file->getClientOriginalExtension();
+            $sources[$quality] = $file->storeAs('protected-videos/phimle/' . $movie->id, $filename, 'local');
+        }
+
+        if ($sources !== ($movie->video_sources ?? [])) {
+            uksort($sources, fn ($a, $b) => (int) $a <=> (int) $b);
+            $movie->video_sources = $sources;
+            $movie->video_url = $sources['720p'] ?? $sources['480p'] ?? end($sources);
+            $movie->save();
+        }
+    }
+
+    private function deleteVideoSourcePath(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+
+        foreach (['local', 'public'] as $disk) {
+            if (Storage::disk($disk)->exists($path)) {
+                Storage::disk($disk)->delete($path);
+            }
         }
     }
 

@@ -80,6 +80,36 @@
         background: #fff;
     }
 
+    .episode-quality-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 10px;
+        min-width: 430px;
+    }
+
+    .episode-quality-item {
+        padding: 10px;
+        border: 1px solid #e4e7ec;
+        border-radius: 10px;
+        background: #fff;
+    }
+
+    .episode-quality-item.has-source {
+        border-color: #a6e9d5;
+        background: #f0fdf9;
+    }
+
+    .episode-quality-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 7px;
+    }
+
+    .episode-quality-name { font-weight: 700; color: #344054; }
+    .episode-quality-file { font-size: .72rem; color: #667085; overflow-wrap: anywhere; }
+
     #seriesSection h6 {
         color: #333;
     }
@@ -566,15 +596,23 @@
             <div class="col-md-6 mb-3" id="videoSection"
                 style="display: {{ (($movie['type'] ?? 'phimle') == 'phimle') ? 'block' : 'none' }};">
 
-                <label for="video_file" class="form-label">
-                    Video phim
-                </label>
+                <label class="form-label">Video phim theo độ phân giải</label>
+                <div class="border rounded p-3">
+                    @foreach(['180p','240p','360p','480p','720p','1080p','1440p','2160p'] as $quality)
+                        <div class="input-group mb-2">
+                            <span class="input-group-text" style="min-width:72px;">{{ $quality === '2160p' ? '4K' : $quality }}</span>
+                            <input type="file" class="form-control movie-quality-input"
+                                name="movie_video_{{ $quality }}" accept="video/*">
+                        </div>
+                        @if(!empty(($movie['video_sources'] ?? [])[$quality]))
+                            <small class="d-block text-success mb-2"><i class="fas fa-check-circle"></i> {{ basename($movie['video_sources'][$quality]) }}</small>
+                        @endif
+                    @endforeach
+                    <small class="text-muted">Chỉ cần chọn lại chất lượng muốn thay thế.</small>
+                </div>
 
-                <div class="upload-box video-upload" id="videoUploadBox"
-                    onclick="document.getElementById('video_file').click()">
-
-                    <input type="file" class="form-control d-none" id="video_file" name="video_file" accept="video/*"
-                        onchange="previewVideo(this)">
+                {{-- Legacy preview retained for old single-source movies. --}}
+                <div class="d-none">
 
                     @if(!empty($movie['video_url']))
 
@@ -635,10 +673,6 @@
                     @endif
 
                 </div>
-
-                <small class="text-muted">
-                    Click để thay đổi video phim
-                </small>
 
                 @if(!empty($movie['video_url']))
                     <div class="mt-2">
@@ -799,8 +833,7 @@
                                 <tr>
                                     <th style="width:80px;">Số tập</th>
                                     <th>Tiêu đề</th>
-                                    <th style="width:200px;">Video hiện tại</th>
-                                    <th style="width:250px;">Upload/Thay đổi video</th>
+                                    <th>Video theo độ phân giải</th>
                                     <th style="width:100px;">Thời lượng</th>
                                     <th style="width:80px;">Thao tác</th>
                                 </tr>
@@ -821,41 +854,29 @@
                                                         </td>
 
                                                         <td>
-
-                                                            @if(!empty($episode['video_url']))
-
-                                                                <span class="text-success">
-
-                                                                    <i class="fas fa-check-circle"></i>
-
-                                                                    <a href="{{ $episode['video_url'] }}" target="_blank" class="text-success">
-
-                                                                        {{ basename($episode['video_url']) }}
-
-                                                                    </a>
-
-                                                                </span>
-
-                                                            @else
-
-                                                                <span class="text-warning">
-                                                                    <i class="fas fa-exclamation-triangle"></i>
-                                                                    Chưa có video
-                                                                </span>
-
-                                                            @endif
-
-                                                        </td>
-
-                                                        <td>
-
-                                                            <input type="file" class="form-control form-control-sm"
-                                                                name="episode_video_{{ $episode['id'] }}" accept="video/*"
-                                                                data-episode-id="{{ $episode['id'] }}">
-
-                                                            <small class="text-muted">
-                                                                Chọn file để thay đổi video
-                                                            </small>
+                                                            <div class="episode-quality-grid">
+                                                                @foreach(['180p','240p','360p','480p','720p','1080p','1440p','2160p'] as $quality)
+                                                                    @php $qualityPath = ($episode['video_sources'] ?? [])[$quality] ?? null; @endphp
+                                                                    <div class="episode-quality-item {{ $qualityPath ? 'has-source' : '' }}">
+                                                                        <div class="episode-quality-head">
+                                                                            <span class="episode-quality-name">{{ $quality === '2160p' ? '4K' : $quality }}</span>
+                                                                            <span class="badge {{ $qualityPath ? 'bg-success' : 'bg-secondary' }}">{{ $qualityPath ? 'Đã có' : 'Chưa có' }}</span>
+                                                                        </div>
+                                                                        @if($qualityPath)
+                                                                            <div class="episode-quality-file mb-2">{{ basename($qualityPath) }}</div>
+                                                                        @endif
+                                                                        <input type="file" class="form-control form-control-sm"
+                                                                            name="episode_video_{{ $episode['id'] }}_{{ $quality }}" accept="video/*">
+                                                                        @if($qualityPath)
+                                                                            <label class="form-check mt-2 mb-0 text-danger small">
+                                                                                <input class="form-check-input" type="checkbox"
+                                                                                    name="remove_episode_quality[{{ $episode['id'] }}][]" value="{{ $quality }}">
+                                                                                Xóa {{ $quality === '2160p' ? '4K' : $quality }}
+                                                                            </label>
+                                                                        @endif
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
 
                                                         </td>
 
@@ -1103,14 +1124,17 @@
         }
 
         function toggleOnlineSchedule() {
-            const visible = document.getElementById('type').value === 'phimle'
-                && document.getElementById('status').value === 'Sắp chiếu';
+            const isSingleMovie = document.getElementById('type').value === 'phimle';
+            const isUpcoming = document.getElementById('status').value === 'Sắp chiếu';
+            const visible = isSingleMovie && isUpcoming;
             const section = document.getElementById('onlineScheduleSection');
             const input = document.getElementById('publish_date');
             if (section) section.style.display = visible ? 'block' : 'none';
             if (input) input.required = visible;
             const videoSection = document.getElementById('videoSection');
-            if (videoSection && visible) videoSection.style.display = 'none';
+            const videoInputs = document.querySelectorAll('.movie-quality-input');
+            if (videoSection) videoSection.style.display = isSingleMovie && !isUpcoming ? 'block' : 'none';
+            videoInputs.forEach(videoInput => videoInput.disabled = !isSingleMovie || isUpcoming);
         }
 
         // Hiện/ẩn khu vực phim bộ
@@ -1262,21 +1286,15 @@
                             >
                         </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label">
-                                Video File
-                            </label>
-
-                            <input
-                                type="file"
-                                class="form-control"
-                                name="new_episode_video_${episodeCount}"
-                                accept="video/*"
-                            >
-
-                            <small class="text-muted">
-                                Có thể thêm video sau.
-                            </small>
+                        <div class="col-12 mt-3">
+                            <label class="form-label">Video theo chất lượng</label>
+                            <div class="row g-2">
+                            ${['180p','240p','360p','480p','720p','1080p','1440p','2160p'].map(quality =>
+                                '<div class="col-md-3"><div class="border rounded p-2 bg-white">' +
+                                '<strong class="d-block mb-1">' + (quality === '2160p' ? '4K' : quality) + '</strong>' +
+                                '<input type="file" class="form-control form-control-sm" name="new_episode_video_' + episodeCount + '_' + quality + '" accept="video/*">' +
+                                '</div></div>').join('')}
+                            </div>
                         </div>
 
                         <div class="col-md-2">

@@ -19,6 +19,7 @@ class Subscription extends Model
     protected $fillable = [
         'name',
         'access_level',
+        'max_video_quality',
         'price',
         'duration_months',
         'description',
@@ -28,6 +29,7 @@ class Subscription extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'duration_months' => 'integer',
+        'max_video_quality' => 'integer',
     ];
 
     // Relationships

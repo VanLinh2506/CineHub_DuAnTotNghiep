@@ -103,7 +103,23 @@ class CounterStaffController extends Controller
     public function verifyTicket(Request $request)
     {
         $bookingId = $request->input('booking_id');
-        $bookingCode = $request->input('booking_code');
+        $bookingCode = trim((string) $request->input('booking_code', ''));
+
+        // Accept the full ticket QR payload or the ticket token printed below it.
+        if (!$bookingId && $bookingCode !== '') {
+            $ticket = null;
+            if (preg_match('/^TICKET-(\d+)-[^-]+-(.+)$/', $bookingCode, $matches)) {
+                $ticket = Ticket::whereKey((int) $matches[1])
+                    ->where('qr_code', $matches[2])
+                    ->first();
+            } else {
+                $ticket = Ticket::where('qr_code', $bookingCode)->first();
+            }
+
+            if ($ticket) {
+                $bookingId = $ticket->booking_pending_id;
+            }
+        }
 
         if (!$bookingId && is_string($bookingCode) && str_starts_with($bookingCode, 'BOOKING-')) {
             $parts = explode('-', $bookingCode, 3);
@@ -178,8 +194,10 @@ class CounterStaffController extends Controller
                     'is_picked_up' => (bool) $ticket->is_picked_up,
                     'user_name' => $ticket->user->name ?? 'Khach le',
                     'movie_title' => $ticket->showtime->movie->title ?? 'N/A',
-                    'show_date' => $ticket->showtime->show_date ?? null,
-                    'show_time' => $ticket->showtime->show_time ?? null,
+                    'show_date' => optional($ticket->showtime?->show_date)->format('d/m/Y'),
+                    'show_time' => $ticket->showtime?->show_time
+                        ? date('H:i', strtotime($ticket->showtime->show_time))
+                        : null,
                     'screen_name' => $ticket->showtime->screen->screen_name ?? 'N/A',
                 ];
             })->values(),
@@ -588,6 +606,24 @@ class CounterStaffController extends Controller
             'tickets' => $tickets,
             'theater' => $booking->showtime->screen->theater,
         ]);
+    }
+
+    public function downloadTicketPdf(Request $request)
+    {
+        $booking = Booking::with([
+            'showtime.movie', 'showtime.screen.theater', 'tickets',
+            'foodOrders.foodItem', 'user',
+        ])
+            ->whereKey($request->integer('booking_id'))
+            ->whereHas('showtime.screen', function ($query) {
+                $query->where('theater_id', Auth::user()->theater_id);
+            })
+            ->firstOrFail();
+
+        $filename = 've-phim-' . ($booking->qr_code ?: $booking->id) . '.pdf';
+
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView('booking.pdf', compact('booking'))
+            ->download($filename);
     }
     
     // Helper methods

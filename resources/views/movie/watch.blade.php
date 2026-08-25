@@ -108,6 +108,45 @@ if (!empty($episodes)) {
                     }
                 }
 
+                $qualitySources = [];
+                $lockedQualities = [];
+                if ($isPhimBo && !empty($currentEpisode['video_sources'])) {
+                    foreach ($currentEpisode['video_sources'] as $quality => $source) {
+                        if (!empty($source)) {
+                            $qualitySources[$quality] = route('movies.video', [
+                                'kind' => 'episode', 'sourceId' => $currentEpisode['id'], 'quality' => $quality,
+                            ]);
+                            $lockedQualities[$quality] = (int) $quality > ($maxVideoQuality ?? 480);
+                        }
+                    }
+                    uksort($qualitySources, fn ($a, $b) => (int) $a <=> (int) $b);
+                } elseif (!$isPhimBo && !empty($movie['video_sources'])) {
+                    foreach ($movie['video_sources'] as $quality => $source) {
+                        if (!empty($source)) {
+                            $qualitySources[$quality] = route('movies.video', [
+                                'kind' => 'movie', 'sourceId' => $movie['id'], 'quality' => $quality,
+                            ]);
+                            $lockedQualities[$quality] = (int) $quality > ($maxVideoQuality ?? 480);
+                        }
+                    }
+                    uksort($qualitySources, fn ($a, $b) => (int) $a <=> (int) $b);
+                }
+
+                if (!empty($qualitySources)) {
+                    $hasAllowedQuality = false;
+                    foreach (array_reverse($qualitySources, true) as $quality => $source) {
+                        if (empty($lockedQualities[$quality])) {
+                            $finalVideoSrc = $source;
+                            $hasAllowedQuality = true;
+                            break;
+                        }
+                    }
+                    if (!$hasAllowedQuality) {
+                        $videoUrl = null;
+                        $noVideoMessage = 'Gói hiện tại chưa hỗ trợ các chất lượng đã có của video này.';
+                    }
+                }
+
                 $fullTrailerUrl = null;
                 if (($movie['type'] ?? 'phimle') !== 'phimbo' && !empty($movie['trailer_url'])) {
                     $fullTrailerUrl = $movie['trailer_url'];
@@ -117,7 +156,7 @@ if (!empty($episodes)) {
                 }
                 ?>
                 @if($videoUrl)
-                    <video id="videoPlayer" controls>
+                    <video id="videoPlayer" preload="metadata" playsinline>
                         <source src="{{ $finalVideoSrc }}" type="video/mp4">
                         Trình duyệt của bạn không hỗ trợ video.
                     </video>
@@ -132,7 +171,7 @@ if (!empty($episodes)) {
                         @endif
                     </div>
                 @elseif($fullTrailerUrl)
-                    <video id="videoPlayer" controls>
+                    <video id="videoPlayer" preload="metadata" playsinline>
                         <source src="/storage/{{ $fullTrailerUrl }}" type="video/mp4">
                         Trình duyệt của bạn không hỗ trợ video.
                     </video>
@@ -141,6 +180,67 @@ if (!empty($episodes)) {
                         <i class="fas fa-video"></i>
                         <p>Video chưa có sẵn</p>
                     </div>
+                @endif
+
+                @if($videoUrl || $fullTrailerUrl)
+                <div id="videoLoadingSpinner" class="video-loading-spinner" hidden><i class="fas fa-spinner fa-spin"></i></div>
+                <div class="cinehub-video-controls" aria-label="Điều khiển video">
+                    <input id="videoSeek" class="video-seek" type="range" min="0" max="100" value="0" step="0.1" aria-label="Tua video">
+                    <div class="video-controls-row">
+                        <div class="video-controls-group">
+                            <button type="button" id="videoPlayPause" class="video-control-button" title="Phát"><i class="fas fa-play"></i></button>
+                            <button type="button" id="videoMute" class="video-control-button" title="Tắt tiếng"><i class="fas fa-volume-up"></i></button>
+                            <input id="videoVolume" class="video-volume" type="range" min="0" max="1" value="1" step="0.05" aria-label="Âm lượng">
+                            <span class="video-time"><span id="videoCurrentTime">0:00</span> / <span id="videoDuration">0:00</span></span>
+                        </div>
+                        <div class="video-quality-control" aria-label="Cài đặt video">
+                    <div id="videoQualityMenu" class="video-quality-menu">
+                        <div class="video-quality-menu-title"><i class="fas fa-sliders-h"></i> Cài đặt</div>
+                        <button type="button" class="video-settings-section-toggle" data-panel="videoSpeedPanel" aria-expanded="false">
+                            <span><i class="fas fa-tachometer-alt"></i> Tốc độ phát</span>
+                            <span><strong id="currentSpeedLabel">Chuẩn</strong> <i class="fas fa-chevron-right"></i></span>
+                        </button>
+                        <div id="videoSpeedPanel" class="video-settings-panel">
+                        <div class="video-speed-options">
+                            @foreach([0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as $speed)
+                                <button type="button" class="video-speed-option {{ $speed == 1 ? 'active' : '' }}" data-speed="{{ $speed }}">
+                                    {{ $speed == 1 ? 'Chuẩn' : $speed . 'x' }}
+                                </button>
+                            @endforeach
+                        </div>
+                        </div>
+                        @if(!empty($qualitySources))
+                        <button type="button" class="video-settings-section-toggle" data-panel="videoQualityPanel" aria-expanded="false">
+                            <span><i class="fas fa-sliders-h"></i> Chất lượng</span>
+                            <span><strong id="currentQualityLabel">{{ isset($finalVideoSrc) ? (array_search($finalVideoSrc, $qualitySources, true) ?: 'Tự động') : 'Tự động' }}</strong> <i class="fas fa-chevron-right"></i></span>
+                        </button>
+                        <div id="videoQualityPanel" class="video-settings-panel">
+                        @foreach($qualitySources as $quality => $source)
+                            @php
+                                $isLockedQuality = !empty($lockedQualities[$quality]);
+                                $requiredPlan = (int) $quality <= 720 ? 'Silver' : ((int) $quality <= 1080 ? 'Gold' : 'Premium');
+                            @endphp
+                            <button type="button" class="video-quality-option {{ $source === ($finalVideoSrc ?? null) ? 'active' : '' }}"
+                                data-source="{{ $source }}" data-label="{{ $quality === '2160p' ? '4K' : $quality }}"
+                                {{ $isLockedQuality ? 'disabled' : '' }}>
+                                <span><i class="fas {{ $source === ($finalVideoSrc ?? null) ? 'fa-check' : 'fa-circle' }}"></i> {{ $quality === '2160p' ? '4K (2160p)' : $quality }}</span>
+                                @if($isLockedQuality)<small><i class="fas fa-lock"></i> {{ $requiredPlan }}</small>@endif
+                            </button>
+                        @endforeach
+                        </div>
+                        @endif
+                    </div>
+                    <button type="button" id="videoQualitySettings" class="video-settings-button"
+                        aria-expanded="false" aria-controls="videoQualityMenu" title="Cài đặt video">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button type="button" id="cinehubFullscreen" class="video-settings-button"
+                        title="Toàn màn hình" aria-label="Toàn màn hình">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+                    </div>
+                </div>
                 @endif
             </div>
 
@@ -523,6 +623,92 @@ if (!empty($episodes)) {
 </section>
 
 <style>
+.video-wrapper { position: relative; }
+.cinehub-video-controls {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 8;
+    padding: 34px 14px 10px;
+    background: linear-gradient(transparent, rgba(0,0,0,.88)); color: #fff;
+    transition: opacity .2s ease;
+}
+.video-controls-row, .video-controls-group, .video-quality-control {
+    display: flex; align-items: center;
+}
+.video-controls-row { justify-content: space-between; gap: 12px; }
+.video-controls-group, .video-quality-control { gap: 8px; }
+.video-control-button, .video-settings-button {
+    width: 38px; height: 38px; border: 0; border-radius: 50%;
+    background: transparent; color: #fff; font-size: 17px;
+    display: grid; place-items: center; cursor: pointer;
+}
+.video-control-button:hover, .video-settings-button:hover,
+.video-settings-button[aria-expanded="true"] { background: rgba(255,255,255,.18); }
+.video-seek, .video-volume { accent-color: #2f6fed; cursor: pointer; }
+.video-seek { width: 100%; height: 4px; margin: 0 0 7px; display: block; }
+.video-volume { width: 78px; }
+.video-time { font-size: 13px; white-space: nowrap; }
+.video-loading-spinner {
+    position: absolute; inset: 0; z-index: 7; display: grid; place-items: center;
+    color: #fff; font-size: 42px; background: rgba(0,0,0,.12); pointer-events: none;
+}
+.video-loading-spinner[hidden] { display: none; }
+.video-wrapper:fullscreen,
+.video-wrapper:-webkit-full-screen {
+    width: 100vw; height: 100vh; padding-top: 0; margin: 0; border-radius: 0; background: #000;
+}
+.video-wrapper:fullscreen video,
+.video-wrapper:-webkit-full-screen video {
+    width: 100%; height: 100%; object-fit: contain;
+}
+.video-quality-menu {
+    position: absolute; right: 0; bottom: 52px; width: 250px;
+    padding: 8px; border: 1px solid rgba(255,255,255,.14); border-radius: 12px;
+    background: rgba(18,18,22,.68); color: #fff;
+    box-shadow: 0 16px 42px rgba(0,0,0,.52);
+    backdrop-filter: blur(22px) saturate(145%); -webkit-backdrop-filter: blur(22px) saturate(145%);
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transform: translateY(10px) scale(.97); transform-origin: right bottom;
+    transition: opacity .2s ease, transform .24s cubic-bezier(.2,.8,.2,1), visibility .2s;
+}
+.video-quality-menu.is-open { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0) scale(1); }
+.video-quality-menu-title { padding: 8px 10px 10px; font-size: 14px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,.12); }
+.video-settings-section-toggle {
+    width: 100%; padding: 12px 10px; border: 0; border-radius: 9px; background: transparent;
+    color: #fff; display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; cursor: pointer; text-align: left;
+}
+.video-settings-section-toggle:hover, .video-settings-section-toggle[aria-expanded="true"] { background: rgba(255,255,255,.1); }
+.video-settings-section-toggle > span { display: flex; align-items: center; gap: 9px; }
+.video-settings-section-toggle strong { color: #c8ccd5; font-size: 12px; font-weight: 500; }
+.video-settings-section-toggle .fa-chevron-right { font-size: 11px; transition: transform .22s ease; }
+.video-settings-section-toggle[aria-expanded="true"] .fa-chevron-right { transform: rotate(90deg); }
+.video-settings-panel { max-height: 0; opacity: 0; overflow: hidden; transform: translateY(-5px); transition: max-height .3s ease, opacity .2s ease, transform .25s ease; }
+.video-settings-panel.is-open { max-height: 440px; opacity: 1; transform: translateY(0); }
+.video-speed-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 0 8px 4px; }
+.video-speed-option {
+    padding: 7px 3px; border: 0; border-radius: 7px; background: rgba(255,255,255,.07);
+    color: #fff; font-size: 12px; cursor: pointer;
+}
+.video-speed-option:hover { background: rgba(255,255,255,.16); }
+.video-speed-option.active { background: #2f6fed; color: #fff; }
+.video-quality-option {
+    width: 100%; padding: 9px 10px; border: 0; border-radius: 8px;
+    background: transparent; color: #fff; display: flex; align-items: center;
+    justify-content: space-between; gap: 10px; text-align: left; cursor: pointer;
+}
+.video-quality-option:hover { background: rgba(255,255,255,.1); }
+.video-quality-option.active { background: rgba(47,111,237,.28); color: #dce8ff; }
+.video-quality-option .fa-circle { font-size: 6px; opacity: .35; }
+.video-quality-option small { color: #aeb4bf; }
+.video-quality-option:disabled { opacity: .38; cursor: not-allowed; }
+.video-quality-option:disabled:hover { background: transparent; }
+.video-wrapper.controls-hidden { cursor: none; }
+.video-wrapper.controls-hidden .cinehub-video-controls { opacity: 0; pointer-events: none; }
+@media (max-width: 600px) {
+    .video-volume { width: 55px; }
+    .video-time { display: none; }
+    .cinehub-video-controls { padding-left: 8px; padding-right: 8px; }
+}
+
 /* Star Rating Styles */
 .star-rating {
     display: flex;
@@ -572,7 +758,216 @@ document.addEventListener('DOMContentLoaded', function () {
     const resumeSeconds = {{ (int) ($resumeSeconds ?? 0) }};
     const progressUrl = @json(route('movies.progress', $movie['id']));
     const episodeId = @json($currentEpisode['id'] ?? null);
+    const settingsButton = document.getElementById('videoQualitySettings');
+    const qualityMenu = document.getElementById('videoQualityMenu');
+    const qualityOptions = document.querySelectorAll('.video-quality-option:not(:disabled)');
+    const speedOptions = document.querySelectorAll('.video-speed-option');
+    const fullscreenButton = document.getElementById('cinehubFullscreen');
+    const videoWrapper = player.closest('.video-wrapper');
+    const playButton = document.getElementById('videoPlayPause');
+    const muteButton = document.getElementById('videoMute');
+    const volumeSlider = document.getElementById('videoVolume');
+    const seekSlider = document.getElementById('videoSeek');
+    const currentTimeLabel = document.getElementById('videoCurrentTime');
+    const durationLabel = document.getElementById('videoDuration');
+    const loadingSpinner = document.getElementById('videoLoadingSpinner');
     let lastSavedSecond = -1;
+    let controlsHideTimer = null;
+
+    const formatVideoTime = function (seconds) {
+        if (!Number.isFinite(seconds)) return '0:00';
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
+        return hours ? `${hours}:${minutes.toString().padStart(2, '0')}:${secs}` : `${minutes}:${secs}`;
+    };
+    const updatePlayButton = function () {
+        if (!playButton) return;
+        playButton.querySelector('i').className = player.paused ? 'fas fa-play' : 'fas fa-pause';
+        playButton.title = player.paused ? 'Phát' : 'Tạm dừng';
+    };
+    const updateVolumeButton = function () {
+        if (!muteButton) return;
+        const icon = player.muted || player.volume === 0 ? 'fa-volume-mute' : (player.volume < .5 ? 'fa-volume-down' : 'fa-volume-up');
+        muteButton.querySelector('i').className = `fas ${icon}`;
+    };
+
+    if (playButton) playButton.addEventListener('click', () => player.paused ? player.play() : player.pause());
+    player.addEventListener('click', () => player.paused ? player.play() : player.pause());
+    player.addEventListener('play', updatePlayButton);
+    player.addEventListener('pause', updatePlayButton);
+    player.addEventListener('timeupdate', function () {
+        if (seekSlider && Number.isFinite(player.duration) && player.duration > 0) seekSlider.value = (player.currentTime / player.duration) * 100;
+        if (currentTimeLabel) currentTimeLabel.textContent = formatVideoTime(player.currentTime);
+    });
+    player.addEventListener('durationchange', function () {
+        if (durationLabel) durationLabel.textContent = formatVideoTime(player.duration);
+    });
+    if (seekSlider) seekSlider.addEventListener('input', function () {
+        if (Number.isFinite(player.duration)) player.currentTime = (Number(this.value) / 100) * player.duration;
+    });
+    if (muteButton) muteButton.addEventListener('click', function () {
+        player.muted = !player.muted;
+        updateVolumeButton();
+    });
+    if (volumeSlider) volumeSlider.addEventListener('input', function () {
+        player.volume = Number(this.value);
+        player.muted = player.volume === 0;
+        updateVolumeButton();
+    });
+    player.addEventListener('volumechange', function () {
+        if (volumeSlider) volumeSlider.value = player.muted ? 0 : player.volume;
+        updateVolumeButton();
+    });
+    const showVideoControls = function () {
+        if (!videoWrapper) return;
+        videoWrapper.classList.remove('controls-hidden');
+        clearTimeout(controlsHideTimer);
+        if (!player.paused) controlsHideTimer = setTimeout(function () {
+            if (!qualityMenu || !qualityMenu.classList.contains('is-open')) videoWrapper.classList.add('controls-hidden');
+        }, 2500);
+    };
+    if (videoWrapper) {
+        videoWrapper.setAttribute('tabindex', '0');
+        videoWrapper.addEventListener('mousemove', showVideoControls);
+        videoWrapper.addEventListener('mouseleave', function () {
+            if (!player.paused && (!qualityMenu || !qualityMenu.classList.contains('is-open'))) videoWrapper.classList.add('controls-hidden');
+        });
+        videoWrapper.addEventListener('keydown', function (event) {
+            if (['INPUT', 'BUTTON'].includes(document.activeElement.tagName)) return;
+            if (event.code === 'Space' || event.key.toLowerCase() === 'k') {
+                event.preventDefault(); player.paused ? player.play() : player.pause();
+            } else if (event.key === 'ArrowRight') {
+                player.currentTime = Math.min(player.duration || Infinity, player.currentTime + 5);
+            } else if (event.key === 'ArrowLeft') {
+                player.currentTime = Math.max(0, player.currentTime - 5);
+            } else if (event.key.toLowerCase() === 'm') {
+                player.muted = !player.muted;
+            } else if (event.key.toLowerCase() === 'f' && fullscreenButton) {
+                fullscreenButton.click();
+            }
+        });
+    }
+    player.addEventListener('play', showVideoControls);
+    player.addEventListener('pause', showVideoControls);
+    ['waiting', 'seeking', 'loadstart'].forEach(eventName => player.addEventListener(eventName, () => {
+        if (loadingSpinner) loadingSpinner.hidden = false;
+    }));
+    ['playing', 'canplay', 'seeked', 'loadeddata'].forEach(eventName => player.addEventListener(eventName, () => {
+        if (loadingSpinner) loadingSpinner.hidden = true;
+    }));
+
+    if (fullscreenButton && videoWrapper) {
+        const currentFullscreenElement = function () {
+            return document.fullscreenElement || document.webkitFullscreenElement;
+        };
+
+        fullscreenButton.addEventListener('click', async function () {
+            try {
+                if (currentFullscreenElement() === videoWrapper) {
+                    const exitFullscreen = document.exitFullscreen || document.webkitExitFullscreen;
+                    if (exitFullscreen) await exitFullscreen.call(document);
+                } else {
+                    const requestFullscreen = videoWrapper.requestFullscreen || videoWrapper.webkitRequestFullscreen;
+                    if (requestFullscreen) await requestFullscreen.call(videoWrapper);
+                }
+            } catch (error) {
+                // Trình duyệt sẽ giữ nguyên chế độ hiện tại nếu không hỗ trợ Fullscreen API.
+            }
+        });
+
+        const updateFullscreenButton = function () {
+            const isFullscreen = currentFullscreenElement() === videoWrapper;
+            const icon = fullscreenButton.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('fa-expand', !isFullscreen);
+                icon.classList.toggle('fa-compress', isFullscreen);
+            }
+            fullscreenButton.title = isFullscreen ? 'Thoát toàn màn hình' : 'Toàn màn hình';
+            fullscreenButton.setAttribute('aria-label', fullscreenButton.title);
+        };
+
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+    }
+
+    if (settingsButton && qualityMenu) {
+        const sectionToggles = qualityMenu.querySelectorAll('.video-settings-section-toggle');
+        const closeSettingsMenu = function () {
+            qualityMenu.classList.remove('is-open');
+            settingsButton.setAttribute('aria-expanded', 'false');
+            showVideoControls();
+        };
+        settingsButton.addEventListener('click', function (event) {
+            event.stopPropagation();
+            const willOpen = !qualityMenu.classList.contains('is-open');
+            qualityMenu.classList.toggle('is-open', willOpen);
+            settingsButton.setAttribute('aria-expanded', String(willOpen));
+            if (willOpen) clearTimeout(controlsHideTimer); else showVideoControls();
+        });
+        qualityMenu.addEventListener('click', event => event.stopPropagation());
+        document.addEventListener('click', closeSettingsMenu);
+
+        sectionToggles.forEach(function (toggle) {
+            toggle.addEventListener('click', function () {
+                const panel = document.getElementById(this.dataset.panel);
+                const willOpen = panel && !panel.classList.contains('is-open');
+                sectionToggles.forEach(function (item) {
+                    const itemPanel = document.getElementById(item.dataset.panel);
+                    item.setAttribute('aria-expanded', 'false');
+                    if (itemPanel) itemPanel.classList.remove('is-open');
+                });
+                if (panel && willOpen) {
+                    panel.classList.add('is-open');
+                    this.setAttribute('aria-expanded', 'true');
+                }
+            });
+        });
+
+        qualityOptions.forEach(function (option) {
+            option.addEventListener('click', function () {
+                if (this.classList.contains('active')) {
+                    return;
+                }
+
+            const currentSecond = Number.isFinite(player.currentTime) ? player.currentTime : 0;
+            const shouldResume = !player.paused;
+            const playbackRate = player.playbackRate;
+
+            player.src = this.dataset.source;
+            player.load();
+            player.addEventListener('loadedmetadata', function restorePlaybackState() {
+                player.currentTime = Math.min(currentSecond, Math.max(0, player.duration - 0.1));
+                player.playbackRate = playbackRate;
+                if (shouldResume) player.play().catch(function () {});
+            }, { once: true });
+
+                qualityOptions.forEach(item => {
+                    item.classList.toggle('active', item === this);
+                    const icon = item.querySelector('.fas');
+                    if (icon) {
+                        icon.classList.toggle('fa-check', item === this);
+                        icon.classList.toggle('fa-circle', item !== this);
+                    }
+                });
+                const qualityLabel = document.getElementById('currentQualityLabel');
+                if (qualityLabel) qualityLabel.textContent = this.dataset.label;
+                document.getElementById('videoQualityPanel')?.classList.remove('is-open');
+                qualityMenu.querySelector('[data-panel="videoQualityPanel"]')?.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        speedOptions.forEach(function (option) {
+            option.addEventListener('click', function () {
+                player.playbackRate = Number(this.dataset.speed);
+                speedOptions.forEach(item => item.classList.toggle('active', item === this));
+                const speedLabel = document.getElementById('currentSpeedLabel');
+                if (speedLabel) speedLabel.textContent = Number(this.dataset.speed) === 1 ? 'Chuẩn' : `${this.dataset.speed}x`;
+                document.getElementById('videoSpeedPanel')?.classList.remove('is-open');
+                qualityMenu.querySelector('[data-panel="videoSpeedPanel"]')?.setAttribute('aria-expanded', 'false');
+            });
+        });
+    }
 
     player.addEventListener('loadedmetadata', function () {
         if (resumeSeconds >= 10 && resumeSeconds < player.duration - 10) {

@@ -21,6 +21,7 @@ class Movie extends Model
         'thumbnail',
         'banner',
         'video_url',
+        'video_sources',
         'trailer_url',
         'rating',
         'duration',
@@ -45,6 +46,7 @@ class Movie extends Model
         'rating' => 'float',
         'publish_date' => 'datetime',
         'duration' => 'integer',
+        'video_sources' => 'array',
     ];
 
     // Relationships

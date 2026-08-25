@@ -118,7 +118,7 @@
                 <div class="col-md-6"><label class="form-label">Phòng</label><select name="screen_id" id="bulk_screen_id" class="form-select" required><option value="">Chọn phòng</option>@foreach($screens as $screen)<option value="{{ $screen->id }}" data-format="{{ $screen->screen_type }}">{{ $screen->screen_name }} — {{ $screen->screen_type }}</option>@endforeach</select></div>
                 <div class="col-md-6"><label class="form-label">Từ ngày</label><input type="date" id="bulk_date_from" name="date_from" min="{{ now()->toDateString() }}" class="form-control" required></div>
                 <div class="col-md-6"><label class="form-label">Đến ngày</label><input type="date" id="bulk_date_to" name="date_to" min="{{ now()->toDateString() }}" class="form-control" required></div>
-                <div class="col-12"><label class="form-label">Các giờ chiếu</label><div id="bulkTimeSlots" class="d-flex flex-wrap gap-2"><small class="text-muted">Chọn phim, phòng và khoảng ngày để xem giờ trống.</small></div><small class="text-muted">Chỉ hiển thị các khung giờ còn trống trong tất cả ngày đã chọn.</small></div>
+                <div class="col-12"><label class="form-label">Các giờ chiếu</label><div id="bulkTimeSlots" class="d-flex flex-wrap gap-2"><small class="text-muted">Chọn phim, phòng và khoảng ngày để xem giờ trống.</small></div><small class="text-muted">Hiển thị giờ còn trống ở ít nhất một ngày. Hệ thống tự bỏ qua ngày bị trùng lịch.</small></div>
                 <div class="col-md-6"><label class="form-label">Nhóm giá do hệ thống phân tích</label><input id="bulk_contract_price_label" class="form-control" value="Chọn phim và ngày chiếu" readonly><small id="bulkContractPriceHelp" class="text-muted">Nhà rạp không thể tự chọn nhóm giá.</small></div>
                 <div class="col-md-6"><label class="form-label">Giá vé</label><input id="bulk_price" type="number" name="price" min="0" step="1000" class="form-control" required></div>
             </div></div>
@@ -422,6 +422,58 @@
 
 #bulkTimeSlots .time-slot-btn {
     margin: 0 !important;
+    min-height: 88px !important;
+    padding: 12px 10px !important;
+    border: 1px solid #d8dee9 !important;
+    border-radius: 999px !important;
+    background: #ffffff !important;
+    color: #344054 !important;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08) !important;
+}
+
+#bulkTimeSlots .time-slot-btn .slot-start-time {
+    color: #101828 !important;
+}
+
+#bulkTimeSlots .time-slot-btn .slot-end-time,
+#bulkTimeSlots .time-slot-btn small {
+    color: #667085 !important;
+    opacity: 1 !important;
+}
+
+#bulkTimeSlots .time-slot-btn .slot-icon {
+    color: #2f6fed !important;
+}
+
+#bulkTimeSlots .time-slot-btn:hover {
+    border-color: #84adff !important;
+    background: #f2f6ff !important;
+    box-shadow: 0 4px 12px rgba(47, 111, 237, 0.14) !important;
+}
+
+#bulkTimeSlots .time-slot-btn.btn-primary {
+    border-color: #2859c5 !important;
+    background: #2f6fed !important;
+    color: #ffffff !important;
+    box-shadow: 0 5px 14px rgba(47, 111, 237, 0.28) !important;
+}
+
+#bulkTimeSlots .time-slot-btn.btn-primary .slot-start-time,
+#bulkTimeSlots .time-slot-btn.btn-primary .slot-icon {
+    color: #ffffff !important;
+}
+
+#bulkTimeSlots .time-slot-btn.btn-primary .slot-end-time,
+#bulkTimeSlots .time-slot-btn.btn-primary small {
+    color: #e8efff !important;
+}
+
+#bulkTimeSlots .time-slot-btn:disabled {
+    border-color: #e4e7ec !important;
+    background: #f2f4f7 !important;
+    color: #98a2b3 !important;
+    opacity: 0.65 !important;
+    box-shadow: none !important;
 }
 
 /* Scrollbar for bulk slots */
@@ -780,7 +832,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const render = () => {
         container.innerHTML = '';
         if (!commonSlots.length) {
-            container.innerHTML = '<small class="text-warning">Không có khung giờ chung còn trống trong khoảng ngày này.</small>';
+            container.innerHTML = '<small class="text-warning">Không còn khung giờ trống trong khoảng ngày này.</small>';
             return;
         }
         const duration = Number(movie.options[movie.selectedIndex]?.dataset.duration || 120) + 15;
@@ -802,6 +854,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="slot-icon"><i class="fas fa-film"></i></span>
                 <span class="slot-start-time">${startTime}</span>
                 ${endTime ? `<span class="slot-end-time">→ ${endTime}</span>` : ''}
+                ${slot.availableDays ? `<small class="d-block">${slot.availableDays}/${slot.totalDays} ngày trống</small>` : ''}
             `;
             if (overlaps) {
                 button.style.opacity = '0.3';
@@ -849,11 +902,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const results = await Promise.all(dates.map(date =>
                 fetch(`{{ route('moderator.api.availableTimeSlots') }}?screen_id=${screen.value}&date=${date}&movie_id=${movie.value}`).then(response => response.json())
             ));
-            commonSlots = results[0]?.slots || [];
-            for (const result of results.slice(1)) {
-                const available = new Set((result.slots || []).map(slot => slot.time));
-                commonSlots = commonSlots.filter(slot => available.has(slot.time));
-            }
+            const slotsByTime = new Map();
+            results.forEach(result => {
+                (result.slots || []).forEach(slot => {
+                    const current = slotsByTime.get(slot.time) || { ...slot, availableDays: 0, totalDays: dates.length };
+                    current.availableDays++;
+                    slotsByTime.set(slot.time, current);
+                });
+            });
+            commonSlots = [...slotsByTime.values()].sort((a, b) => minutes(a.time) - minutes(b.time));
             render();
         } catch (error) {
             container.innerHTML = '<small class="text-danger">Không thể tải khung giờ. Vui lòng thử lại.</small>';
