@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -45,6 +46,7 @@ class User extends Authenticatable
         'banned_by',
         'status',
         'comment_banned_until',
+        'max_devices',
     ];
 
     /**
@@ -80,6 +82,7 @@ class User extends Authenticatable
             'name_changed_at' => 'datetime',
             'comment_banned_until' => 'datetime',
             'banned_at' => 'datetime',
+            'max_devices' => 'integer',
         ];
     }
 
