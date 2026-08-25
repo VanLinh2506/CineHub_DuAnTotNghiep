@@ -2162,6 +2162,38 @@ CREATE TABLE `news_categories` (
 -- Cấu trúc bảng cho bảng `notifications`
 --
 
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `personal_access_tokens`
+-- (Sanctum API tokens — dùng cho stream & quản lý thiết bị)
+--
+
+CREATE TABLE `personal_access_tokens` (
+  `id` bigint(20) unsigned NOT NULL,
+  `tokenable_type` varchar(255) NOT NULL,
+  `tokenable_id` bigint(20) unsigned NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `abilities` text DEFAULT NULL,
+  `last_used_at` timestamp NULL DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `personal_access_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
+  ADD KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`);
+
+ALTER TABLE `personal_access_tokens`
+  MODIFY `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT;
+
+-- --------------------------------------------------------
+
+--
+
 CREATE TABLE `notifications` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
@@ -11458,7 +11490,10 @@ INSERT INTO `showtimes` (`id`, `movie_id`, `theater_id`, `theater_contract_id`, 
 CREATE TABLE `subscriptions` (
   `id` int(11) NOT NULL,
   `name` varchar(50) NOT NULL,
+  `access_level` varchar(20) NOT NULL DEFAULT 'free',
+  `max_devices` int(10) unsigned NOT NULL DEFAULT 1,
   `price` decimal(10,2) DEFAULT 0.00,
+  `duration_months` smallint(5) unsigned NOT NULL DEFAULT 1,
   `description` text DEFAULT NULL,
   `benefits` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
@@ -11468,12 +11503,12 @@ CREATE TABLE `subscriptions` (
 -- Đang đổ dữ liệu cho bảng `subscriptions`
 --
 
-INSERT INTO `subscriptions` (`id`, `name`, `price`, `description`, `benefits`, `created_at`) VALUES
-(1, 'Free', 0.00, 'Xem trailer, phim miễn phí', 'Xem trailer, phim miễn phí, chất lượng SD', '2026-06-29 22:14:13'),
-(2, 'Basic', 49000.00, 'Gói cơ bản chất lượng SD', 'Xem phim không quảng cáo, chất lượng SD, 1 thiết bị', '2026-06-29 22:14:13'),
-(3, 'Silver', 79000.00, 'Xem phim HD không quảng cáo', 'Xem phim HD, 2 thiết bị, tải offline', '2026-06-29 22:14:13'),
-(4, 'Gold', 129000.00, 'Full HD, nội dung độc quyền', 'Full HD, 3 thiết bị, nội dung độc quyền', '2026-06-29 22:14:13'),
-(5, 'Premium', 199000.00, '4K, xem sớm, ưu đãi vé rạp', '4K, 4 thiết bị, xem sớm, giảm 20% vé rạp', '2026-06-29 22:14:13');
+INSERT INTO `subscriptions` (`id`, `name`, `access_level`, `max_devices`, `price`, `duration_months`, `description`, `benefits`, `created_at`) VALUES
+(1, 'Free',    'free',    1, 0.00,      1, 'Xem trailer, phim miễn phí',          'Xem trailer, phim miễn phí, chất lượng SD',              '2026-06-29 22:14:13'),
+(2, 'Basic',   'basic',   1, 49000.00,  1, 'Gói cơ bản chất lượng SD',            'Xem phim không quảng cáo, chất lượng SD, 1 thiết bị',    '2026-06-29 22:14:13'),
+(3, 'Silver',  'silver',  2, 79000.00,  1, 'Xem phim HD không quảng cáo',         'Xem phim HD, 2 thiết bị, tải offline',                   '2026-06-29 22:14:13'),
+(4, 'Gold',    'gold',    3, 129000.00, 1, 'Full HD, nội dung độc quyền',          'Full HD, 3 thiết bị, nội dung độc quyền',                '2026-06-29 22:14:13'),
+(5, 'Premium', 'premium', 4, 199000.00, 1, '4K, xem sớm, ưu đãi vé rạp',          '4K, 4 thiết bị, xem sớm, giảm 20% vé rạp',              '2026-06-29 22:14:13');
 
 -- --------------------------------------------------------
 
@@ -12621,6 +12656,9 @@ CREATE TABLE `users` (
   `rank` enum('Bronze','Silver','Gold','Platinum') DEFAULT 'Bronze',
   `points` int(11) DEFAULT 0,
   `subscription_id` int(11) DEFAULT NULL,
+  `max_devices` tinyint(3) unsigned NOT NULL DEFAULT 1,
+  `subscription_expires_at` timestamp NULL DEFAULT NULL,
+  `subscription_auto_renew` tinyint(1) NOT NULL DEFAULT 1,
   `status` enum('active','inactive','banned') DEFAULT 'active',
   `comment_banned_until` timestamp NULL DEFAULT NULL,
   `email_verified` tinyint(1) DEFAULT 0,
@@ -12629,6 +12667,10 @@ CREATE TABLE `users` (
   `role` varchar(50) DEFAULT 'user',
   `theater_id` int(11) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
+  `ban_reason` text DEFAULT NULL,
+  `banned_at` timestamp NULL DEFAULT NULL,
+  `banned_by` int(11) DEFAULT NULL,
+  `name_changed_at` timestamp NULL DEFAULT NULL,
   `last_login` datetime DEFAULT NULL,
   `newsletter` tinyint(1) NOT NULL DEFAULT 0,
   `notifications_enabled` tinyint(1) NOT NULL DEFAULT 1

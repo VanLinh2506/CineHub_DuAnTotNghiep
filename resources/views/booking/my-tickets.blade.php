@@ -104,6 +104,11 @@
                                 <strong>Mã QR check vé</strong>
                                 <span>Đưa mã này cho nhân viên để check tất cả {{ count($seats) }} ghế</span>
                             </div>
+                            <div class="mt-3 text-center" style="width: 100%;">
+                                <a href="{{ route('booking.pdf', $booking->id) }}" class="btn btn-outline-light btn-sm" target="_blank">
+                                    <i class="fas fa-file-pdf"></i> In vé PDF
+                                </a>
+                            </div>
                         </div>
                     @elseif ($qrShowing && $isExpired)
                         <div class="ticket-qr expired">

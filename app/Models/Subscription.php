@@ -9,6 +9,13 @@ class Subscription extends Model
 {
     use HasFactory;
 
+    /**
+     * Bảng subscriptions không có cột updated_at trong schema.
+     * Khai báo UPDATED_AT = null để Eloquent không cố ghi vào cột đó
+     * (tránh lỗi "Column not found: 1054 Unknown column 'updated_at'").
+     */
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'name',
         'access_level',
