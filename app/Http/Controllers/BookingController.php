@@ -448,6 +448,10 @@ class BookingController extends Controller
             })
             ->orderBy('title')
             ->get();
+        $bannerMovies = $allMovies
+            ->sortByDesc(fn (Movie $bannerMovie) => (float) ($bannerMovie->rating ?? 0))
+            ->take(6)
+            ->values();
         
         $theaters = [];
         $showtimes = [];
@@ -561,7 +565,8 @@ class BookingController extends Controller
             'selectedTheater', 'selectedDate', 'selectedShowtimeId', 'dates',
             'bookedSeats', 'reservedSeats', 'seatLayout', 'normalPrice', 'vipPrice',
             'couplePrice', 'foodItems', 'screenInfo', 'theaterInfo', 'screenType',
-            'basePrice', 'screenSurcharge', 'vnpayConfigured', 'myReservedSeats'
+            'basePrice', 'screenSurcharge', 'vnpayConfigured', 'myReservedSeats',
+            'bannerMovies'
         ));
     }
 
@@ -1422,6 +1427,41 @@ class BookingController extends Controller
         Log::info('Returning showtimes', ['count' => $result->count()]);
         
         return response()->json(['showtimes' => $result]);
+    }
+
+    public function getMovieContext(Request $request)
+    {
+        $movieId = (int) $request->validate([
+            'movie_id' => ['required', 'integer', 'exists:movies,id'],
+        ])['movie_id'];
+
+        $movie = Movie::with(['category', 'categories'])->findOrFail($movieId);
+        $theaters = Theater::query()
+            ->whereHas('showtimes', function ($query) use ($movieId) {
+                $query->where('movie_id', $movieId)
+                    ->where(function ($timeQuery) {
+                        $this->whereUpcomingShowtime($timeQuery);
+                    });
+            })
+            ->orderBy('location')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'movie' => [
+                'id' => $movie->id,
+                'title' => $movie->title,
+                'thumbnail' => $movie->thumbnail,
+            ],
+            'theaters' => $theaters->map(fn (Theater $theater) => [
+                'id' => $theater->id,
+                'name' => $theater->name,
+                'location' => $theater->location,
+                'address' => $theater->address,
+                'latitude' => $theater->latitude,
+                'longitude' => $theater->longitude,
+            ])->values(),
+        ]);
     }
     
     /**

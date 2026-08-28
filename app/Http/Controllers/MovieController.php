@@ -470,7 +470,47 @@ class MovieController extends Controller
             ],
         ];
 
-        return view('movie.library', compact('libraryGroups'));
+        $frequentlyWatchedMovies = collect();
+        if (Auth::check()) {
+            $frequentlyWatchedMovies = Movie::withCount([
+                    'viewEvents as personal_view_count' => fn ($query) => $query
+                        ->where('user_id', Auth::id()),
+                ])
+                ->whereHas('viewEvents', fn ($query) => $query
+                    ->where('user_id', Auth::id()))
+                ->where('status_admin', 'published')
+                ->whereIn('status', Movie::onlineStatuses())
+                ->orderByDesc('personal_view_count')
+                ->orderByDesc('rating')
+                ->limit(8)
+                ->get();
+        }
+
+        // Keep the carousel visible even when the current account has too few
+        // eligible history entries (for example, an older movie was unpublished).
+        // Personal history stays first; popular online movies only fill the gaps.
+        if ($frequentlyWatchedMovies->count() < 8) {
+            $fallbackMovies = Movie::withCount('viewEvents')
+                ->where('status_admin', 'published')
+                ->whereIn('status', Movie::onlineStatuses())
+                ->when(
+                    $frequentlyWatchedMovies->isNotEmpty(),
+                    fn ($query) => $query->whereNotIn('id', $frequentlyWatchedMovies->pluck('id'))
+                )
+                ->orderByDesc('view_events_count')
+                ->orderByDesc('rating')
+                ->limit(8 - $frequentlyWatchedMovies->count())
+                ->get()
+                ->each(function (Movie $movie) {
+                    $movie->setAttribute('personal_view_count', 0);
+                });
+
+            $frequentlyWatchedMovies = $frequentlyWatchedMovies
+                ->concat($fallbackMovies)
+                ->values();
+        }
+
+        return view('movie.library', compact('libraryGroups', 'frequentlyWatchedMovies'));
     }
 
     /**
@@ -559,6 +599,47 @@ class MovieController extends Controller
                 ->filter(fn (WatchHistory $history) => $history->movie);
         }
 
+        // A library may have no matching personal history yet. Fill the
+        // remaining carousel slots with popular titles from that same audience
+        // so the section is still present after choosing a library.
+        if ($frequentlyWatchedMovies->count() < 8) {
+            $audienceFallbackQuery = Movie::with(['category', 'categories'])
+                ->withCount('viewEvents')
+                ->where('status_admin', 'published')
+                ->whereIn('status', Movie::onlineStatuses())
+                ->when(
+                    $frequentlyWatchedMovies->isNotEmpty(),
+                    fn ($fallbackQuery) => $fallbackQuery->whereNotIn('id', $frequentlyWatchedMovies->pluck('id'))
+                );
+
+            $this->applyAudienceFilter($audienceFallbackQuery, $audience);
+
+            $audienceFallbackMovies = $audienceFallbackQuery
+                ->orderByDesc('view_events_count')
+                ->orderByDesc('rating')
+                ->limit(8 - $frequentlyWatchedMovies->count())
+                ->get()
+                ->each(fn (Movie $movie) => $movie->setAttribute('personal_view_count', 0));
+
+            $frequentlyWatchedMovies = $frequentlyWatchedMovies
+                ->concat($audienceFallbackMovies)
+                ->values();
+        }
+
+        $librarySliderQuery = Movie::with(['category', 'categories'])
+            ->withCount('viewEvents')
+            ->where('status_admin', 'published')
+            ->whereIn('status', Movie::onlineStatuses());
+
+        $this->applyAudienceFilter($librarySliderQuery, $audience);
+
+        $librarySliderMovies = $librarySliderQuery
+            ->orderByDesc('view_events_count')
+            ->orderByDesc('rating')
+            ->orderByDesc('created_at')
+            ->limit(8)
+            ->get();
+
         $search = '';
         $categoryId = null;
         $status = null;
@@ -582,6 +663,7 @@ class MovieController extends Controller
             'audienceTitle',
             'watchProgressByMovie',
             'frequentlyWatchedMovies',
+            'librarySliderMovies',
             'continueWatching'
         ));
     }
@@ -1158,11 +1240,10 @@ class MovieController extends Controller
 
     private function checkMovieAccess($user, $movieLevel)
     {
-        // Admin always has access
-        if (
-            $user->role === 'admin' ||
-            $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists()
-        ) {
+        // Only platform administrators may bypass subscription checks. Theater
+        // administrators are tied to a theater and must buy a viewing plan just
+        // like regular viewers.
+        if ($this->isPlatformAdmin($user)) {
             return true;
         }
 
@@ -1172,6 +1253,11 @@ class MovieController extends Controller
 
         $subscriptionName = $user->subscription->name ?? null;
         if (!$subscriptionName) {
+            return false;
+        }
+
+        if ($user->subscription?->accessRank() > 0 &&
+            (!$user->subscription_expires_at || $user->subscription_expires_at->lte(now()))) {
             return false;
         }
 
@@ -1187,7 +1273,7 @@ class MovieController extends Controller
             return 480;
         }
 
-        if ($user->role === 'admin' || $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists()) {
+        if ($this->isPlatformAdmin($user)) {
             return 2160;
         }
 
@@ -1196,6 +1282,14 @@ class MovieController extends Controller
         }
 
         return max(180, min(2160, (int) ($user->subscription?->max_video_quality ?? 480)));
+    }
+
+    private function isPlatformAdmin($user): bool
+    {
+        return $user && empty($user->theater_id) && (
+            $user->role === 'admin' ||
+            $user->roles()->whereIn('name', ['Super Admin', 'Admin'])->exists()
+        );
     }
 
     private function applyAudienceFilter($query, string $audience): void

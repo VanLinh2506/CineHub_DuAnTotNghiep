@@ -18,6 +18,8 @@
             <div class="stat-info">
                 <span class="stat-value">{{ number_format($todayStats['total_revenue'] ?? 0) }} đ</span>
                 <span class="stat-label">Doanh thu hôm nay</span>
+                <small>Vé: {{ number_format($todayStats['ticket_revenue'] ?? 0) }} đ</small>
+                <small>Combo: {{ number_format($todayStats['food_revenue'] ?? 0) }} đ</small>
             </div>
         </div>
     </div>

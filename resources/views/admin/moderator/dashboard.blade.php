@@ -62,7 +62,11 @@
                 </div>
                 <div class="stat-icon bg-success"><i class="fas fa-dollar-sign"></i></div>
             </div>
-            <div class="stat-trend mt-3"><i class="fas fa-chart-line text-success"></i><small class="text-muted ms-2">Tổng doanh thu từ khi bắt đầu</small></div>
+            <div class="stat-trend mt-3">
+                <small class="text-muted">Vé sau HH: {{ number_format($stats['total_ticket_net_revenue']) }}₫</small>
+                <small class="text-danger ms-3">Hoa hồng: {{ number_format($stats['total_commission']) }}₫</small>
+                <small class="text-info ms-3">Combo: {{ number_format($stats['total_food_revenue']) }}₫</small>
+            </div>
         </div>
     </div>
     <div class="col-md-6">
@@ -74,7 +78,11 @@
                 </div>
                 <div class="stat-icon bg-primary"><i class="fas fa-calendar-day"></i></div>
             </div>
-            <div class="stat-trend mt-3"><i class="fas fa-arrow-up text-primary"></i><small class="text-muted ms-2">Doanh thu trong ngày</small></div>
+            <div class="stat-trend mt-3">
+                <small class="text-muted">Vé sau HH: {{ number_format($stats['today_ticket_net_revenue']) }}₫</small>
+                <small class="text-danger ms-3">Hoa hồng: {{ number_format($stats['today_commission']) }}₫</small>
+                <small class="text-info ms-3">Combo: {{ number_format($stats['today_food_revenue']) }}₫</small>
+            </div>
         </div>
     </div>
 </div>

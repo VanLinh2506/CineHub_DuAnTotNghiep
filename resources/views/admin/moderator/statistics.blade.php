@@ -30,18 +30,21 @@
 .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:16px; border-bottom:2px solid #e9ecef; }
 .section-header h6 { margin:0; font-size:20px; font-weight:700; color:#2d1b3d; display:flex; align-items:center; gap:10px; }
 .section-header h6 i { color:#6c5ce7; }
+.statistics-page { overflow:visible !important; transform:none !important; }
+.statistics-page:hover { transform:none !important; box-shadow:var(--admin-shadow-soft) !important; border-color:var(--admin-line) !important; }
 </style>
 @endpush
 
-<div class="stat-card">
+<div class="stat-card statistics-page">
     <div class="section-header">
         <h6><i class="fas fa-chart-line"></i> Thống kê rạp</h6>
     </div>
 
     <div class="row g-3 mb-4">
-        <div class="col-md-4"><div class="chart-container mb-0"><small class="text-muted">Doanh thu vé</small><h4 class="mt-2 mb-0">{{ number_format($revenueSummary['tickets'] ?? 0) }}₫</h4></div></div>
-        <div class="col-md-4"><div class="chart-container mb-0"><small class="text-muted">Doanh thu nước / combo</small><h4 class="mt-2 mb-0 text-info">{{ number_format($revenueSummary['food'] ?? 0) }}₫</h4></div></div>
-        <div class="col-md-4"><div class="chart-container mb-0"><small class="text-muted">Tổng doanh thu đối soát</small><h4 class="mt-2 mb-0 text-success">{{ number_format($revenueSummary['total'] ?? 0) }}₫</h4></div></div>
+        <div class="col-md-3"><div class="chart-container mb-0"><small class="text-muted">Doanh thu vé gộp</small><h4 class="mt-2 mb-0">{{ number_format($revenueSummary['gross_tickets'] ?? 0) }}₫</h4></div></div>
+        <div class="col-md-3"><div class="chart-container mb-0"><small class="text-muted">Hoa hồng CineHub</small><h4 class="mt-2 mb-0 text-danger">-{{ number_format($revenueSummary['commission'] ?? 0) }}₫</h4></div></div>
+        <div class="col-md-3"><div class="chart-container mb-0"><small class="text-muted">Doanh thu nước / combo</small><h4 class="mt-2 mb-0 text-info">{{ number_format($revenueSummary['food'] ?? 0) }}₫</h4></div></div>
+        <div class="col-md-3"><div class="chart-container mb-0"><small class="text-muted">Rạp thực nhận</small><h4 class="mt-2 mb-0 text-success">{{ number_format($revenueSummary['total'] ?? 0) }}₫</h4></div></div>
     </div>
 
     <!-- Doanh thu theo phim -->
@@ -302,11 +305,14 @@ function applyFillRateFilters() {
     window.history.pushState({}, '', url.toString());
     const tableBody = document.querySelector('#fillRateTable tbody');
     if (tableBody) tableBody.innerHTML = '<tr><td colspan="7" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>';
-    const apiUrl = new URL('?route=moderator/getFillRateData', window.location.origin);
+    const apiUrl = new URL(@json(route('moderator.statistics.fill-rate')), window.location.origin);
     ['fill_rate_movie|'+movieFilter,'fill_rate_date|'+dateFilter,'fill_rate_screen|'+screenFilter,'fill_rate_time|'+timeFilter].forEach(p => {
         const [k,v] = p.split('|'); apiUrl.searchParams.set(k, v);
     });
-    fetch(apiUrl.toString()).then(r => r.json()).then(data => {
+    fetch(apiUrl.toString(), { headers: { 'Accept': 'application/json' } }).then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+    }).then(data => {
         if (data.success && data.data) updateFillRateTable(data.data);
         else if (tableBody) tableBody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-muted">Không có dữ liệu</td></tr>';
     }).catch(() => { if (tableBody) tableBody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-danger">Lỗi khi tải dữ liệu</td></tr>'; });

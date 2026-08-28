@@ -11,14 +11,18 @@
     $seatsPerGroupRow = count($layout['cols'] ?? []);
     $numRows = count($layout['rows'] ?? []);
     $numVipRows = count($layout['vip_rows'] ?? []);
+    $groupSeatCounts = [];
     if (!empty($layout['seat_groups'])) {
         $numGroups = count($layout['seat_groups']);
-        $seatsPerGroupRow = count($layout['seat_groups'][0]['cols'] ?? []);
+        $groupSeatCounts = array_map(fn ($group) => count($group['cols'] ?? []), $layout['seat_groups']);
+    } else {
+        $groupSeatCounts = [$seatsPerGroupRow ?: 12];
     }
 @endphp
 
-<form method="POST" action="?route=moderator/screenLayoutUpdate" id="screenEditForm">
-    <input type="hidden" name="screen_id" value="{{ $screen['id'] }}">
+<form method="POST" action="{{ route('moderator.screens.update', $screen['id']) }}" id="screenEditForm">
+    @csrf
+    @method('PUT')
     <div class="row">
         <div class="col-md-6">
             <div class="stat-card mb-4">
@@ -66,8 +70,9 @@
                 <input type="number" name="num_groups" id="num_groups" class="form-control" min="1" value="{{ $numGroups }}" required>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label">Số ghế trên 1 hàng của 1 nhóm <span class="text-danger">*</span></label>
-                <input type="number" name="seats_per_group_row" id="seats_per_group_row" class="form-control" min="1" value="{{ $seatsPerGroupRow }}" required>
+                <label class="form-label">Số ghế trên mỗi hàng của từng nhóm <span class="text-danger">*</span></label>
+                <div id="groupSeatCounts" class="row g-2"></div>
+                @error('group_seat_counts')<small class="text-danger">{{ $message }}</small>@enderror
             </div>
         </div>
         <div class="row">
@@ -116,17 +121,33 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const rowLetters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T'];
+    const initialGroupSeatCounts = @json(array_values(old('group_seat_counts', $groupSeatCounts)));
+
+    function syncGroupInputs() {
+        const container = document.getElementById('groupSeatCounts');
+        const numGroups = Math.max(parseInt(document.getElementById('num_groups').value) || 1, 1);
+        const currentValues = Array.from(container.querySelectorAll('input')).map(input => input.value);
+        container.innerHTML = '';
+        for (let group = 0; group < numGroups; group++) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'col-sm-6';
+            const value = currentValues[group] || initialGroupSeatCounts[group] || 12;
+            wrapper.innerHTML = `<label class="form-label small mb-1">Nhóm ${group + 1}</label><input type="number" name="group_seat_counts[]" class="form-control group-seat-count" min="1" value="${value}" required>`;
+            wrapper.querySelector('input').addEventListener('input', renderSeatPreview);
+            container.appendChild(wrapper);
+        }
+    }
 
     function renderSeatPreview() {
         const numGroups = parseInt(document.getElementById('num_groups').value) || 1;
-        const seatsPerGroupRow = parseInt(document.getElementById('seats_per_group_row').value) || 12;
+        const groupSeatCounts = Array.from(document.querySelectorAll('.group-seat-count')).map(input => parseInt(input.value) || 0);
         const numRows = parseInt(document.getElementById('num_rows').value) || 12;
         const numVipRows = parseInt(document.getElementById('num_vip_rows').value) || 0;
         const hasCoupleRow = document.getElementById('has_couple_row').value === '1';
         const seatMap = document.getElementById('seatMap');
         const seatSummary = document.getElementById('seatSummary');
         seatMap.innerHTML = '';
-        if (!numGroups || !seatsPerGroupRow || !numRows) { seatMap.innerHTML = '<p style="color:#fff;">Nhập thông tin để xem sơ đồ ghế</p>'; seatSummary.textContent = ''; return; }
+        if (!numGroups || groupSeatCounts.length !== numGroups || groupSeatCounts.some(count => count < 1) || !numRows) { seatMap.innerHTML = '<p style="color:#fff;">Nhập đầy đủ số ghế của từng nhóm để xem sơ đồ</p>'; seatSummary.textContent = ''; return; }
         const rows = rowLetters.slice(0, numRows);
         const middleStartIndex = Math.floor((numRows - numVipRows) / 2);
         const vipRows = rows.slice(middleStartIndex, middleStartIndex + numVipRows);
@@ -141,15 +162,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const isVip = vipRows.includes(rowLetter), isCouple = rowLetter === coupleRow;
             let seatNumber = 1;
             for (let g = 0; g < numGroups; g++) {
+                const seatsInGroup = groupSeatCounts[g];
                 if (isCouple) {
-                    for (let s = 0; s < seatsPerGroupRow; s += 2) {
+                    for (let s = 0; s < seatsInGroup; s += 2) {
                         const seat = document.createElement('div');
                         seat.style.cssText = 'width:50px;height:24px;background:#9c27b0;border-radius:3px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:bold;margin:1px;';
-                        seat.textContent = rowLetter + seatNumber + '-' + (seatNumber + 1);
-                        rowDiv.appendChild(seat); seatNumber += 2;
+                        seat.textContent = s + 1 < seatsInGroup ? rowLetter + seatNumber + '-' + (seatNumber + 1) : rowLetter + seatNumber;
+                        rowDiv.appendChild(seat); seatNumber += Math.min(2, seatsInGroup - s);
                     }
                 } else {
-                    for (let s = 0; s < seatsPerGroupRow; s++) {
+                    for (let s = 0; s < seatsInGroup; s++) {
                         const seat = document.createElement('div');
                         seat.style.cssText = `width:24px;height:24px;background:${isVip?'#ffc107':'#6c757d'};border-radius:3px;display:flex;align-items:center;justify-content:center;color:${isVip?'#000':'#fff'};font-size:9px;font-weight:bold;margin:1px;`;
                         seat.textContent = seatNumber;
@@ -160,16 +182,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             seatMap.appendChild(rowDiv);
         });
-        let totalSeats = numRows * seatsPerGroupRow * numGroups;
-        let vipSeats = numVipRows * seatsPerGroupRow * numGroups;
-        let coupleSeats = hasCoupleRow ? seatsPerGroupRow * numGroups : 0;
+        const seatsPerRow = groupSeatCounts.reduce((total, count) => total + count, 0);
+        let totalSeats = numRows * seatsPerRow;
+        let vipSeats = numVipRows * seatsPerRow;
+        let coupleSeats = hasCoupleRow ? seatsPerRow : 0;
         let normalSeats = totalSeats - vipSeats - coupleSeats;
-        if (hasCoupleRow && vipRows.includes(coupleRow)) vipSeats -= seatsPerGroupRow * numGroups;
-        seatSummary.innerHTML = `Tổng: <strong>${totalSeats}</strong> ghế | Thường: <strong>${normalSeats}</strong> | VIP: <strong>${vipSeats}</strong> | Đôi: <strong>${coupleSeats/2}</strong> cặp`;
+        if (hasCoupleRow && vipRows.includes(coupleRow)) vipSeats -= seatsPerRow;
+        seatSummary.innerHTML = `Tổng: <strong>${totalSeats}</strong> ghế | Thường: <strong>${normalSeats}</strong> | VIP: <strong>${vipSeats}</strong> | Đôi: <strong>${Math.floor(coupleSeats/2)}</strong> cặp${coupleSeats % 2 ? ' + 1 ghế lẻ' : ''}`;
     }
 
+    syncGroupInputs();
     renderSeatPreview();
-    ['num_groups','seats_per_group_row','num_rows','num_vip_rows'].forEach(id => {
+    document.getElementById('num_groups')?.addEventListener('input', function() {
+        syncGroupInputs();
+        renderSeatPreview();
+    });
+    ['num_rows','num_vip_rows'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', renderSeatPreview);
     });
     document.getElementById('has_couple_row')?.addEventListener('change', renderSeatPreview);

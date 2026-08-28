@@ -5377,7 +5377,7 @@ button.btn-location-detect span,
 }
 
 /* Mobile styles */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 1024px) {
   /* Hide desktop header on mobile */
   .header-desktop {
     display: none !important;
@@ -5399,6 +5399,27 @@ button.btn-location-detect span,
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+  }
+
+  .mobile-header-search {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    display: flex;
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 50%;
+    color: #fff;
+    background: rgba(20, 20, 22, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transform: translateY(-50%);
+    cursor: pointer;
   }
   
   .header-mobile .logo-new a {
@@ -5413,16 +5434,20 @@ button.btn-location-detect span,
   .mobile-bottom-nav {
     display: flex !important;
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    left: 12px;
+    right: 12px;
     z-index: 9999;
-    background: rgba(15, 15, 15, 0.98);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-    padding: 8px 0;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    overflow: hidden;
+    background: rgba(18, 18, 20, 0.68);
+    backdrop-filter: blur(18px) saturate(145%);
+    -webkit-backdrop-filter: blur(18px) saturate(145%);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 9999px;
+    padding: 7px 6px;
+    box-shadow:
+      0 10px 30px rgba(0, 0, 0, 0.38),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
   }
   
   .mobile-nav-item {
@@ -5441,7 +5466,7 @@ button.btn-location-detect span,
     cursor: pointer;
     transition: all 0.3s ease;
   }
-  
+
   .mobile-nav-item i {
     font-size: 18px;
   }
@@ -5742,14 +5767,38 @@ button.btn-location-detect span,
   
   /* Add padding to body for mobile nav */
   body {
-    padding-bottom: 70px;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
     padding-top: 50px;
   }
   
   /* Notification button position on mobile */
   .notification-wrapper-fixed {
-    bottom: 80px !important;
-    right: 15px !important;
+    top: 12px !important;
+    right: 64px !important;
+    bottom: auto !important;
+  }
+
+  .notification-btn-fixed {
+    width: 36px;
+    height: 36px;
+  }
+
+  .notification-btn-fixed i {
+    font-size: 1rem;
+  }
+
+  .notification-badge {
+    top: -4px;
+    right: -4px;
+    width: 18px;
+    height: 18px;
+    font-size: 0.62rem;
+  }
+
+  .notification-dropdown {
+    top: 46px;
+    right: -49px;
+    width: min(350px, calc(100vw - 24px));
   }
   
   /* Watch page adjustments for mobile */

@@ -13,6 +13,10 @@ import {
 var userLat = null;
 var userLng = null;
 var currentMovieId = bookingPageConfig.currentMovieId || null;
+window.setBookingMovieId = function(movieId) {
+    currentMovieId = movieId ? String(movieId) : null;
+    window.bookingPageConfig.currentMovieId = currentMovieId;
+};
 var selectedTheaterId = null;
 var selectedDate = null;
 var selectedShowtimeId = null;
@@ -1953,6 +1957,12 @@ window.requestUserLocation = function() {
     window.openFoodModal = function() {
         var foodSection = document.getElementById('foodSection');
         if (!foodSection) return;
+
+        var theaterInput = document.getElementById('theaterIdInput');
+        var theaterId = (theaterInput && theaterInput.value) || window.selectedTheaterId;
+        if (theaterId && typeof window.refreshFoodItemsForTheater === 'function') {
+            window.refreshFoodItemsForTheater(theaterId);
+        }
 
         foodSection.style.display = 'block';
         document.body.classList.add('food-modal-open');

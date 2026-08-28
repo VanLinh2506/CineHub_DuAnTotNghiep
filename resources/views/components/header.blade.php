@@ -24,6 +24,13 @@
     $countryMenuChunks = collect($countries)->chunk(
         max(1, (int) ceil(count($countries) / 3))
     );
+
+    $isPhimLeActive = request()->routeIs('movies.phimle');
+    $isPhimBoActive = request()->routeIs('movies.phimbo');
+    $isCategoryActive = request()->routeIs('movies.category');
+    $isCountryActive = request()->routeIs('movies.index') && request()->filled('country');
+    $isLibraryActive = request()->routeIs('movies.library', 'movies.library.index');
+    $isTheaterActive = request()->routeIs('movies.theater', 'booking.*');
 @endphp
 
 <!-- Desktop Header -->
@@ -55,14 +62,14 @@
         </div>
         
         <nav class="nav-new">
-            <a href="{{ route('movies.phimle') }}" class="nav-link-new">
+            <a href="{{ route('movies.phimle') }}" class="nav-link-new {{ $isPhimLeActive ? 'is-active' : '' }}" @if($isPhimLeActive) aria-current="page" @endif>
                 Phim lẻ
             </a>
-            <a href="{{ route('movies.phimbo') }}" class="nav-link-new">
+            <a href="{{ route('movies.phimbo') }}" class="nav-link-new {{ $isPhimBoActive ? 'is-active' : '' }}" @if($isPhimBoActive) aria-current="page" @endif>
                 Phim bộ
             </a>
             <div class="nav-dropdown nav-dropdown-mega nav-dropdown-categories">
-                <span class="nav-link-new dropdown-trigger">
+                <span class="nav-link-new dropdown-trigger {{ $isCategoryActive ? 'is-active' : '' }}">
                     Thể loại <i class="fas fa-chevron-down"></i>
                 </span>
                 <div class="dropdown-menu mega-menu category-mega-menu" aria-label="Danh sách thể loại">
@@ -80,7 +87,7 @@
                 </div>
             </div>
             <div class="nav-dropdown nav-dropdown-mega nav-dropdown-countries">
-                <span class="nav-link-new dropdown-trigger">
+                <span class="nav-link-new dropdown-trigger {{ $isCountryActive ? 'is-active' : '' }}">
                     Quốc gia <i class="fas fa-chevron-down"></i>
                 </span>
                 <div class="dropdown-menu mega-menu country-mega-menu" aria-label="Danh sách quốc gia">
@@ -97,10 +104,10 @@
                     </div>
                 </div>
             </div>
-            <a href="{{ route('movies.library.index') }}" class="nav-link-new">
+            <a href="{{ route('movies.library.index') }}" class="nav-link-new {{ $isLibraryActive ? 'is-active' : '' }}" @if($isLibraryActive) aria-current="page" @endif>
                 Kho phim của tôi
             </a>
-            <a href="{{ route('movies.theater') }}" class="nav-link-new" id="booking-link">
+            <a href="{{ route('movies.theater') }}" class="nav-link-new {{ $isTheaterActive ? 'is-active' : '' }}" id="booking-link" @if($isTheaterActive) aria-current="page" @endif>
                 Vé xem phim
             </a>
         </nav>
@@ -108,22 +115,22 @@
         <div class="header-right">
             @if ($user)
                 @if ($isAdmin)
-                    <a href="{{ route('admin.index') }}" class="sign-in-btn" style="background-color: #FFFFFF37;">
+                    <a href="{{ route('admin.index') }}" class="sign-in-btn header-role-btn" title="Admin Panel" style="background-color: #FFFFFF37;">
                         <i class="fas fa-cog"></i>
                         <span>Admin Panel</span>
                     </a>
                 @elseif ($isModerator)
-                    <a href="{{ route('moderator.index') }}" class="sign-in-btn">
+                    <a href="{{ route('moderator.index') }}" class="sign-in-btn header-role-btn" title="Quản lý rạp">
                         <i class="fas fa-building"></i>
                         <span>Quản lý rạp</span>
                     </a>
                 @elseif ($isCounterStaff)
-                    <a href="{{ route('counter.index') }}" class="sign-in-btn">
+                    <a href="{{ route('counter.index') }}" class="sign-in-btn header-role-btn" title="Quản lý quầy">
                         <i class="fas fa-user-tie"></i>
                         <span>Quản lý quầy</span>
                     </a>
                 @endif
-                <a href="{{ route('profile.index') }}" class="sign-in-btn">
+                <a href="{{ route('profile.index') }}" class="sign-in-btn header-account-btn" title="Tài khoản: {{ $user->name }}">
                     <i class="fas fa-user"></i>
                     <span>{{ $user->name }}</span>
                 </a>
@@ -140,8 +147,22 @@
 
 <style>
     .header-desktop .header-left { position:relative; z-index:3; transition: flex-basis .28s ease; }
+    .logo-new a { padding:0; border:0; color:rgba(255,255,255,.86); background:none; box-shadow:none; text-shadow:0 1px 0 rgba(255,255,255,.5),0 5px 18px rgba(0,0,0,.3); }
+    .logo-new a span,
+    .logo-new a i { color:transparent; background:linear-gradient(145deg,#fff 5%,rgba(255,255,255,.48) 48%,rgba(255,255,255,.92) 92%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; filter:drop-shadow(0 1px 0 rgba(255,255,255,.34)) drop-shadow(0 5px 10px rgba(0,0,0,.28)); }
+    .logo-new a:hover span,
+    .logo-new a:hover i { background:linear-gradient(145deg,#fff 10%,rgba(255,255,255,.68) 50%,#fff 95%); -webkit-background-clip:text; background-clip:text; }
+    .header-desktop .search-btn { border:1px solid rgba(255,255,255,.58); color:#fff; background:linear-gradient(145deg,rgba(255,255,255,.28),rgba(255,255,255,.08)); box-shadow:inset 0 1px 0 rgba(255,255,255,.38),0 7px 18px rgba(0,0,0,.2); backdrop-filter:blur(14px) saturate(120%); -webkit-backdrop-filter:blur(14px) saturate(120%); }
+    .header-desktop .search-btn:hover { background:linear-gradient(145deg,rgba(255,255,255,.4),rgba(255,255,255,.14)); }
     .header-desktop .header-left.search-expanded { flex-basis: 520px; }
     .header-desktop .nav-new { position:relative; z-index:1; transition:filter .25s ease, opacity .25s ease, transform .25s ease; }
+    .header-desktop .nav-link-new:hover,
+    .header-desktop .nav-link-new:not(.dropdown-trigger):hover { color:#fff !important; background:transparent !important; box-shadow:none; text-shadow:0 0 10px rgba(255,255,255,.55); transform:translateY(-4px); }
+    .header-desktop .nav-link-new.is-active { color:#fff !important; border-radius:999px; background:linear-gradient(180deg,#666,#4f4f4f) !important; box-shadow:0 8px 20px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.12); }
+    .header-desktop .nav-link-new.is-active:hover { background:linear-gradient(180deg,#727272,#575757) !important; }
+    .header-desktop .nav-link-new.is-active::after { display:none; }
+    .mobile-menu-link.is-active { color:#fff; border-color:rgba(255,255,255,.16); border-radius:999px; background:linear-gradient(180deg,#666,#4f4f4f); box-shadow:0 8px 20px rgba(0,0,0,.24); }
+    .mobile-menu-link.is-active i { color:#fff; }
     .header-desktop .search-bar { flex: 0 0 170px; width: 170px; max-width: 170px; transition: width .28s ease, max-width .28s ease, flex-basis .28s ease, transform .25s ease; z-index: 4; }
     .header-desktop .search-bar.search-active { flex-basis: 390px; width: 390px; max-width: 390px; z-index:20; transform:translateY(-3px); }
     .header-desktop .search-bar.search-active .search-input { background: rgba(21,22,27,.96); border-color: rgba(255,255,255,.35); box-shadow: 0 12px 35px rgba(0,0,0,.3); }
@@ -179,6 +200,40 @@
         .header-desktop .header-left.search-expanded { flex-basis:430px; }
         .header-desktop .search-bar.search-active { flex-basis:320px; width:320px; max-width:320px; }
     }
+
+    @media (min-width: 1025px) and (max-width: 1350px) {
+        .header-desktop .header-container {
+            gap: 10px;
+        }
+
+        .header-desktop .header-left {
+            min-width: 220px;
+            gap: 10px;
+        }
+
+        .header-desktop .nav-new {
+            gap: 4px;
+        }
+
+        .header-desktop .nav-link-new {
+            padding: 0.55rem 0.45rem;
+            font-size: 0.78rem;
+        }
+
+        .header-desktop .header-right .sign-in-btn {
+            flex: 0 0 40px;
+            width: 40px;
+            min-width: 40px;
+            height: 40px;
+            padding: 0;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .header-desktop .header-right .sign-in-btn span {
+            display: none;
+        }
+    }
 </style>
 
 <!-- Mobile Header (Top Bar) -->
@@ -190,12 +245,15 @@
                 <span>CineHub</span>
             </a>
         </div>
+        <button type="button" class="mobile-header-search" onclick="openMobileSearch()" aria-label="Tìm kiếm phim">
+            <i class="fas fa-search"></i>
+        </button>
     </div>
 </header>
 
 <!-- Mobile Bottom Navigation -->
 <style>
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 1024px) {
     .header-desktop { display: none !important; }
     .header-mobile { display: block !important; }
     .mobile-bottom-nav { display: flex !important; }
@@ -206,10 +264,10 @@
         <i class="fas fa-bars"></i>
         <span>Menu</span>
     </button>
-    <a href="{{ route('movies.index') }}" class="mobile-nav-item">
-        <i class="fas fa-search"></i>
-        <span>Tìm kiếm</span>
-    </a>
+    <button type="button" class="mobile-nav-item" onclick="document.querySelector('#cinebot .cinebot-toggle')?.click()">
+        <i class="fas fa-robot"></i>
+        <span>CineBot</span>
+    </button>
     <a href="{{ route('home') }}" class="mobile-nav-item mobile-nav-home">
         <i class="fas fa-home"></i>
         <span>Trang chủ</span>
@@ -267,19 +325,19 @@
     
     <div class="mobile-menu-content">
         <div class="mobile-menu-section">
-            <a href="{{ route('movies.phimle') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+            <a href="{{ route('movies.phimle') }}" class="mobile-menu-link {{ $isPhimLeActive ? 'is-active' : '' }}" onclick="closeMobileMenu()" @if($isPhimLeActive) aria-current="page" @endif>
                 <i class="fas fa-film"></i>
                 <span>Phim lẻ</span>
             </a>
-            <a href="{{ route('movies.phimbo') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+            <a href="{{ route('movies.phimbo') }}" class="mobile-menu-link {{ $isPhimBoActive ? 'is-active' : '' }}" onclick="closeMobileMenu()" @if($isPhimBoActive) aria-current="page" @endif>
                 <i class="fas fa-tv"></i>
                 <span>Phim bộ</span>
             </a>
-            <a href="{{ route('movies.library.index') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+            <a href="{{ route('movies.library.index') }}" class="mobile-menu-link {{ $isLibraryActive ? 'is-active' : '' }}" onclick="closeMobileMenu()" @if($isLibraryActive) aria-current="page" @endif>
                 <i class="fas fa-layer-group"></i>
                 <span>Kho phim của tôi</span>
             </a>
-            <a href="{{ route('movies.theater') }}" class="mobile-menu-link" onclick="closeMobileMenu()">
+            <a href="{{ route('movies.theater') }}" class="mobile-menu-link {{ $isTheaterActive ? 'is-active' : '' }}" onclick="closeMobileMenu()" @if($isTheaterActive) aria-current="page" @endif>
                 <i class="fas fa-ticket-alt"></i>
                 <span>Vé xem phim</span>
             </a>
@@ -374,6 +432,18 @@
         overlay.classList.remove('active');
         document.body.style.overflow = '';
     }
+
+    function openMobileSearch() {
+        const menu = document.getElementById('mobileSlideMenu');
+        const overlay = document.getElementById('mobileMenuOverlay');
+        const input = menu?.querySelector('.mobile-search-input');
+
+        menu?.classList.add('active');
+        overlay?.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        window.setTimeout(() => input?.focus(), 220);
+    }
+
 </script>
 
 @if ($user)
@@ -598,8 +668,8 @@
         padding: 32px 28px;
         border-radius: 32px;
         overflow: hidden;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(241, 245, 248, 0.42));
-        border: 1px solid rgba(255, 255, 255, 0.72);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.56), rgba(241, 245, 248, 0.32));
+        border: 1px solid rgba(255, 255, 255, 0.78);
         box-shadow: 0 24px 70px rgba(10, 20, 30, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.92);
         backdrop-filter: blur(10px) saturate(120%);
         -webkit-backdrop-filter: blur(10px) saturate(120%);
@@ -615,8 +685,8 @@
         inset: 0;
         pointer-events: none;
         background:
-            linear-gradient(120deg, rgba(255,255,255,0.72), transparent 40%),
-            radial-gradient(circle at 100% 0%, rgba(222, 232, 240, 0.42), transparent 36%);
+            linear-gradient(120deg, rgba(255,255,255,0.48), transparent 40%),
+            radial-gradient(circle at 100% 0%, rgba(222, 232, 240, 0.3), transparent 36%);
     }
 
     .modal-content-glass > * {
@@ -708,7 +778,7 @@
         border-radius: 50px;
         background: transparent;
         border: none;
-        color: #64748b;
+        color: #475569;
         font-size: 15px;
         cursor: pointer;
         position: relative;
@@ -729,7 +799,7 @@
     .input-glass {
         width: 100%;
         padding: 12px 16px;
-        background: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.42);
         border: 1px solid rgba(203, 213, 225, 0.75);
         border-radius: 50px;
         color: #1f2937;
@@ -739,7 +809,8 @@
     }
 
     .input-glass::placeholder {
-        color: #94a3b8;
+        color: #64748b;
+        opacity: 1;
     }
 
     .input-glass:focus {
@@ -758,7 +829,7 @@
     }
 
     .checkbox-glass {
-        color: #64748b;
+        color: #475569;
         display: flex;
         align-items: center;
         cursor: pointer;
@@ -796,9 +867,9 @@
     }
 
     .btn-primary-glass {
-        background: rgba(255, 255, 255, 0.78);
+        background: rgba(255, 255, 255, 0.68);
         border: 1px solid rgba(255, 255, 255, 0.92);
-        color: #1f2937;
+        color: #172033 !important;
         box-shadow: 0 10px 24px rgba(71, 85, 105, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.95);
     }
 
@@ -816,9 +887,9 @@
     }
 
     .btn-google-glass {
-        background: rgba(255, 255, 255, 0.92);
+        background: rgba(255, 255, 255, 0.76);
         border: 1px solid rgba(255, 255, 255, 0.45);
-        color: #333;
+        color: #172033 !important;
         box-shadow: 0 10px 24px rgba(0,0,0,0.18);
     }
 
@@ -833,7 +904,7 @@
         align-items: center;
         text-align: center;
         margin: 16px 0;
-        color: #94a3b8;
+        color: #526174;
         font-size: 12px;
     }
 
@@ -851,7 +922,7 @@
     .modal-footer-glass {
         text-align: center;
         margin-top: 16px;
-        color: #64748b;
+        color: #475569;
         font-size: 13px;
     }
 

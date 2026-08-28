@@ -30,6 +30,7 @@ class User extends Authenticatable
         'email_verified_at',
         'email_verified',
         'subscription_id',
+        'subscription_started_at',
         'subscription_expires_at',
         'subscription_auto_renew',
         'role',
@@ -77,6 +78,7 @@ class User extends Authenticatable
             'notifications_enabled' => 'boolean',
             'points' => 'integer',
             'subscription_expires_at' => 'datetime',
+            'subscription_started_at' => 'datetime',
             'subscription_auto_renew' => 'boolean',
             'birthdate' => 'date',
             'name_changed_at' => 'datetime',
@@ -216,5 +218,70 @@ class User extends Authenticatable
     public function hasSubscription(): bool
     {
         return !empty($this->subscription_id);
+    }
+
+    public function getSubscriptionRemainingDaysAttribute(): int
+    {
+        if (!$this->subscription_expires_at || $this->subscription_expires_at->lte(now())) {
+            return 0;
+        }
+
+        return (int) ceil(now()->diffInDays($this->subscription_expires_at, false));
+    }
+
+    /**
+     * Billing units for upgrading while preserving the current expiry.
+     * Full remaining months cost 100%; a remainder of 1-20 days costs 50%,
+     * and a remainder above 20 days costs 100%.
+     */
+    public function subscriptionUpgradeBillingUnits(): float
+    {
+        if (!$this->subscription_expires_at || $this->subscription_expires_at->lte(now())) {
+            return 0.5;
+        }
+
+        $cursor = now()->startOfSecond();
+        $expiresAt = $this->subscription_expires_at->copy()->startOfSecond();
+        $fullMonths = 0;
+
+        while ($cursor->copy()->addMonthNoOverflow()->lte($expiresAt)) {
+            $cursor->addMonthNoOverflow();
+            $fullMonths++;
+        }
+
+        $remainingDays = (int) ceil($cursor->diffInDays($expiresAt, false));
+        $partialUnit = $remainingDays > 20 ? 1 : ($remainingDays > 0 ? 0.5 : 0);
+
+        return max(0.5, $fullMonths + $partialUnit);
+    }
+
+    public function expireSubscriptionIfNeeded(): bool
+    {
+        if ($this->subscription?->accessRank() === 0) {
+            if ($this->subscription_started_at || $this->subscription_expires_at) {
+                $this->update([
+                    'subscription_started_at' => null,
+                    'subscription_expires_at' => null,
+                    'subscription_auto_renew' => false,
+                ]);
+            }
+
+            return false;
+        }
+
+        if (!$this->subscription_expires_at || $this->subscription_expires_at->isFuture()) {
+            return false;
+        }
+
+        $freePlanId = Subscription::query()->where('access_level', 'free')->value('id');
+        $this->update([
+            'subscription_id' => $freePlanId,
+            'subscription_started_at' => null,
+            'subscription_expires_at' => null,
+            'subscription_auto_renew' => false,
+        ]);
+        $this->unsetRelation('subscription');
+
+        return true;
     }
 }

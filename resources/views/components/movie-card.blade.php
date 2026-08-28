@@ -126,14 +126,17 @@
     .play-button {
         width: 50px;
         height: 50px;
-        background: #e50914;
+        border: 1px solid rgba(255, 255, 255, 0.58);
+        background: linear-gradient(145deg, rgba(255,255,255,.3), rgba(255,255,255,.08));
         border-radius: 50%;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         color: white;
         font-size: 18px;
-        box-shadow: 0 12px 24px rgba(229, 9, 20, 0.34);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 12px 24px rgba(0,0,0,.28);
+        backdrop-filter: blur(14px) saturate(120%);
+        -webkit-backdrop-filter: blur(14px) saturate(120%);
         text-decoration: none;
         transform: scale(0.88);
         transition: transform 0.22s ease, background 0.22s ease;

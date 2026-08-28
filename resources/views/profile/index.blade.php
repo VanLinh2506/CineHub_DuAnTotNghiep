@@ -343,9 +343,16 @@
                 <div class="subscription-info">
                     @if ($user && $user->subscription)
                         <p><strong>Gói hiện tại:</strong> {{ $user->subscription->name }}</p>
-                        @if($user->subscription_expires_at)
+                        @if($user->subscription->accessRank() === 0)
+                            <p><strong>Thời hạn:</strong> Vĩnh viễn</p>
+                        @elseif($user->subscription_expires_at)
+                            <p><strong>Ngày bắt đầu:</strong> {{ $user->subscription_started_at?->format('H:i d/m/Y') ?? 'Chưa xác định' }}</p>
                             <p><strong>Hết hạn:</strong> {{ $user->subscription_expires_at->format('H:i d/m/Y') }}</p>
-                            <p><strong>Tự động gia hạn:</strong> {{ $user->subscription_auto_renew ? 'Đang bật' : 'Đã tắt' }}</p>
+                            <p><strong>Thời gian còn lại:</strong>
+                                <span class="subscription-countdown"
+                                      data-expires-at="{{ $user->subscription_expires_at->toIso8601String() }}"
+                                      data-server-now="{{ now()->toIso8601String() }}">Đang tính...</span>
+                            </p>
                         @endif
                     @else
                         <p>Bạn chưa có gói dịch vụ nào. Hãy chọn một gói để tận hưởng các lợi ích.</p>
@@ -359,15 +366,23 @@
                             $currentPrice = (float) optional($user->subscription)->price;
                             $hasCurrentSubscription = $user->subscription !== null;
                             $isCurrent = $user->subscription_id === $package->id;
+                            $isRenewable = $isCurrent && $package->accessRank() > 0;
+                            $isPaidUpgrade = optional($user->subscription)->accessRank() > 0
+                                && $package->accessRank() > optional($user->subscription)->accessRank();
                             $isDowngrade = $hasCurrentSubscription && $package->price <= $currentPrice && !$isCurrent;
                             $userPoints = $user->points ?? 0;
-                            $upgradeCost = max((float) $package->price - $currentPrice, 0);
+                            $upgradeCost = $isRenewable ? (float) $package->price : max((float) $package->price - $currentPrice, 0);
+                            $remainingDays = $user->subscription_expires_at?->isFuture()
+                                ? (int) ceil(now()->diffInDays($user->subscription_expires_at, false)) : 0;
+                            $upgradeBillingUnits = $user->subscriptionUpgradeBillingUnits();
+                            $keepTimeCost = (int) ceil($upgradeCost * $upgradeBillingUnits);
+                            $resetCost = (int) $package->price;
                             $notEnoughPoints = $userPoints < $upgradeCost;
                         @endphp
-                        <div class="subscription-plan">
+                        <div class="subscription-plan plan-{{ strtolower($package->access_level ?? 'free') }} {{ $isCurrent ? 'is-current-plan' : '' }}">
                             <h3>{{ $package->name }}</h3>
-                            @if(!$isCurrent && !$isDowngrade)
-                                <p class="plan-upgrade-cost-clean">Phí nâng cấp: {{ number_format($upgradeCost, 0, ',', '.') }} điểm</p>
+                            @if(!$isDowngrade && (!$isCurrent || $isRenewable))
+                                <p class="plan-upgrade-cost-clean">{{ $isRenewable ? 'Phí gia hạn 1 tháng' : ($isPaidUpgrade ? 'Phí nâng cấp từ' : 'Giá mua') }}: {{ number_format($isPaidUpgrade ? $keepTimeCost : $upgradeCost, 0, ',', '.') }} điểm</p>
                             @endif
                             <p class="plan-price">{{ number_format((float) $package->price, 0, ',', '.') }} xu</p>
                             <p>{{ ($package->duration_months ?? 1) >= 12 ? 'Thanh toán theo năm' : 'Thanh toán theo tháng' }}</p>
@@ -377,21 +392,43 @@
                             @if($package->benefits)
                                 <p class="plan-benefits">{{ $package->benefits }}</p>
                             @endif
-                            @if($isCurrent)
-                                <button class="btn-secondary" type="button" disabled>Gói hiện tại</button>
-                            @elseif($isDowngrade)
-                                <button class="btn-secondary" type="button" disabled>Gói thấp hơn</button>
-                            @else
-                                <form method="POST" action="{{ route('profile.upgradeSubscription') }}" onsubmit="return confirmUpgrade(event, {{ $upgradeCost }}, {{ $userPoints }}, '{{ $package->name }}')">
+                            @if($isRenewable)
+                                <form method="POST" action="{{ route('profile.upgradeSubscription') }}" onsubmit="return confirmUpgrade(event, {{ $upgradeCost }}, {{ $userPoints }}, '{{ $package->name }}', true)">
                                     @csrf
                                     <input type="hidden" name="subscription_id" value="{{ $package->id }}">
                                     <button type="submit" class="btn-primary" @if($notEnoughPoints) disabled title="Không đủ điểm" @endif>
                                         @if($notEnoughPoints)
-                                            <i class="fas fa-lock"></i> Không đủ điểm
+                                            <i class="fas fa-lock"></i> Không đủ điểm gia hạn
                                         @else
-                                            Nâng cấp
+                                            Gia hạn thêm 1 tháng
                                         @endif
                                     </button>
+                                </form>
+                            @elseif($isCurrent)
+                                <button class="btn-secondary" type="button" disabled>Gói hiện tại</button>
+                            @elseif($isDowngrade)
+                                <button class="btn-secondary" type="button" disabled>Gói thấp hơn</button>
+                            @else
+                                <form class="upgrade-choice-form" method="POST" action="{{ route('profile.upgradeSubscription') }}"
+                                      onsubmit="return confirmUpgradeChoice(event, {{ $userPoints }}, '{{ $package->name }}')">
+                                    @csrf
+                                    <input type="hidden" name="subscription_id" value="{{ $package->id }}">
+                                    @if($isPaidUpgrade)
+                                        <button type="submit" name="purchase_mode" value="keep_time" class="btn-primary"
+                                                data-cost="{{ $keepTimeCost }}" @disabled($userPoints < $keepTimeCost)>
+                                            Giữ hạn cũ · {{ number_format($keepTimeCost, 0, ',', '.') }} điểm
+                                        </button>
+                                        <small>Còn {{ $remainingDays }} ngày: tính {{ rtrim(rtrim(number_format($upgradeBillingUnits, 1, ',', '.'), '0'), ',') }} tháng phí chênh lệch.</small>
+                                        <button type="submit" name="purchase_mode" value="reset" class="btn-secondary"
+                                                data-cost="{{ $resetCost }}" @disabled($userPoints < $resetCost)>
+                                            Mua mới 1 tháng · {{ number_format($resetCost, 0, ',', '.') }} điểm
+                                        </button>
+                                    @else
+                                        <button type="submit" name="purchase_mode" value="reset" class="btn-primary"
+                                                data-cost="{{ $resetCost }}" @disabled($userPoints < $resetCost)>
+                                            Mua gói · {{ number_format($resetCost, 0, ',', '.') }} điểm
+                                        </button>
+                                    @endif
                                 </form>
                             @endif
                         </div>
@@ -406,6 +443,23 @@
 
 <!-- Hidden Avatar Input -->
 <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="uploadAvatar(this.files[0])">
+
+<div class="profile-confirm-modal" id="profileConfirmModal" aria-hidden="true">
+    <div class="profile-confirm-backdrop" data-close-confirm></div>
+    <div class="profile-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="profileConfirmTitle">
+        <div class="profile-confirm-icon"><i class="fas fa-crown"></i></div>
+        <h3 id="profileConfirmTitle">Xác nhận thanh toán</h3>
+        <p id="profileConfirmMessage"></p>
+        <div class="profile-confirm-summary">
+            <div><span>Chi phí</span><strong id="profileConfirmCost"></strong></div>
+            <div><span>Số dư sau thanh toán</span><strong id="profileConfirmBalance"></strong></div>
+        </div>
+        <div class="profile-confirm-actions">
+            <button type="button" class="btn-secondary" data-close-confirm>Hủy</button>
+            <button type="button" class="btn-primary" id="profileConfirmSubmit">Xác nhận</button>
+        </div>
+    </div>
+</div>
 
 <style>
     /* Alert Messages */
@@ -751,25 +805,35 @@
     
     .form-control {
         min-height: 48px;
-        padding: 0.8rem 1rem;
-        background: #24262c;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 10px;
-        color: #fff;
+        padding: 0.8rem 1.15rem;
+        background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.045));
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: 999px;
+        color: #fff !important;
         font-size: 0.95rem;
-        transition: all 0.3s;
+        font-weight: 550;
+        text-shadow: 0 1px 2px rgba(0,0,0,.65);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 8px 24px rgba(0,0,0,.18);
+        backdrop-filter: blur(14px) saturate(135%);
+        -webkit-backdrop-filter: blur(14px) saturate(135%);
+        color-scheme: dark;
+        transition: border-color .25s, box-shadow .25s, background .25s;
     }
+
+    .form-control::placeholder { color: rgba(255,255,255,.68); opacity: 1; }
+    select.form-control option { background: #202127; color: #fff; }
     
     .form-control:focus {
         outline: none;
         border-color: #e50914;
-        box-shadow: 0 0 10px rgba(229, 9, 20, 0.3);
+        background: linear-gradient(135deg, rgba(255,255,255,.16), rgba(229,9,20,.08));
+        box-shadow: 0 0 0 3px rgba(229,9,20,.13), inset 0 1px 0 rgba(255,255,255,.12), 0 10px 28px rgba(0,0,0,.24);
     }
     
     .form-control:disabled {
-        background: #1d1f24;
-        border-color: rgba(255,255,255,.08);
-        color: #b8bbc4;
+        background: rgba(255,255,255,.055);
+        border-color: rgba(255,255,255,.13);
+        color: #d5d7de !important;
         opacity: 1;
         cursor: not-allowed;
     }
@@ -828,7 +892,7 @@
         gap: .5rem;
         min-width: 145px;
         border: 1px solid rgba(229,9,20,.55);
-        border-radius: 10px;
+        border-radius: 999px;
         padding: 0 1rem;
         color: #fff;
         background: rgba(229,9,20,.14);
@@ -910,10 +974,71 @@
     }
 
     .subscription-plan {
-        background: #202020;
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        background: linear-gradient(145deg, #242529, #18191d);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
+        border-radius: 16px;
         padding: 1.25rem;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 12px 30px rgba(0,0,0,.24);
+        transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+    }
+
+    .subscription-plan:hover {
+        transform: translateY(-4px);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 18px 38px rgba(0,0,0,.34);
+    }
+
+    .subscription-plan::after {
+        content: '';
+        position: absolute;
+        z-index: -1;
+        top: -70%;
+        left: -35%;
+        width: 55%;
+        height: 220%;
+        opacity: .22;
+        transform: rotate(24deg);
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.7), transparent);
+        transition: left .55s ease;
+        pointer-events: none;
+    }
+    .subscription-plan:hover::after { left: 115%; }
+
+    .subscription-plan.plan-basic {
+        border-color: rgba(96,165,250,.34);
+        background: linear-gradient(145deg, rgba(30,58,95,.88), rgba(20,25,36,.96));
+    }
+    .subscription-plan.plan-basic h3 { color: #93c5fd; }
+
+    .subscription-plan.plan-silver {
+        border-color: rgba(226,232,240,.48);
+        background: linear-gradient(145deg, rgba(91,101,117,.78), rgba(28,31,38,.97));
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 12px 30px rgba(0,0,0,.28);
+    }
+    .subscription-plan.plan-silver h3 { color: #f1f5f9; text-shadow: 0 0 14px rgba(226,232,240,.32); }
+
+    .subscription-plan.plan-gold {
+        border-color: rgba(250,204,21,.58);
+        background: radial-gradient(circle at 90% 5%, rgba(250,204,21,.2), transparent 38%), linear-gradient(145deg, #493815, #1e1b16 72%);
+        box-shadow: inset 0 1px 0 rgba(255,225,115,.22), 0 14px 34px rgba(120,82,0,.28);
+    }
+    .subscription-plan.plan-gold h3 { color: #fde047; text-shadow: 0 0 16px rgba(250,204,21,.38); }
+
+    .subscription-plan.plan-premium {
+        border-color: rgba(192,132,252,.6);
+        background: radial-gradient(circle at 92% 4%, rgba(236,72,153,.25), transparent 38%), linear-gradient(145deg, #3b1760, #1b1428 70%);
+        box-shadow: inset 0 1px 0 rgba(233,213,255,.2), 0 16px 38px rgba(88,28,135,.34);
+    }
+    .subscription-plan.plan-premium h3 {
+        color: #f0abfc;
+        text-shadow: 0 0 18px rgba(217,70,239,.48);
+    }
+
+    .subscription-plan.is-current-plan {
+        outline: 2px solid rgba(255,255,255,.15);
+        outline-offset: -5px;
     }
 
     .subscription-plan h3 {
@@ -950,6 +1075,110 @@
         opacity: 0.5;
         cursor: not-allowed;
     }
+
+    .upgrade-choice-form {
+        display: grid;
+        gap: .55rem;
+        margin-top: .75rem;
+    }
+
+    .upgrade-choice-form .btn-primary,
+    .upgrade-choice-form .btn-secondary {
+        width: 100%;
+        min-height: 34px;
+        padding: .48rem .7rem;
+        border-radius: 999px;
+        font-size: .76rem;
+        font-weight: 700;
+        line-height: 1.25;
+        align-self: stretch;
+        white-space: normal;
+        text-align: center;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 5px 14px rgba(0,0,0,.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .upgrade-choice-form .btn-primary {
+        background: linear-gradient(135deg, rgba(229,9,20,.88), rgba(172,5,14,.76));
+        border: 1px solid rgba(255,255,255,.18);
+    }
+
+    .upgrade-choice-form .btn-secondary {
+        color: #f4f4f5;
+        background: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.07));
+        border-color: rgba(255,255,255,.3);
+    }
+
+    .upgrade-choice-form small {
+        display: block;
+        color: #e5e7eb;
+        font-size: .72rem;
+        line-height: 1.4;
+        text-align: center;
+    }
+
+    .profile-confirm-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: grid;
+        place-items: center;
+        padding: 1rem;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity .2s ease, visibility .2s ease;
+    }
+    .profile-confirm-modal.is-open { visibility: visible; opacity: 1; }
+    .profile-confirm-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(3,4,7,.72);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+    .profile-confirm-dialog {
+        position: relative;
+        width: min(440px, 100%);
+        padding: 1.6rem;
+        border: 1px solid rgba(255,255,255,.22);
+        border-radius: 24px;
+        color: #fff;
+        background: linear-gradient(145deg, rgba(39,40,47,.94), rgba(17,18,22,.9));
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 28px 70px rgba(0,0,0,.55);
+        backdrop-filter: blur(22px) saturate(135%);
+        -webkit-backdrop-filter: blur(22px) saturate(135%);
+        transform: translateY(10px) scale(.98);
+        transition: transform .2s ease;
+    }
+    .profile-confirm-modal.is-open .profile-confirm-dialog { transform: none; }
+    .profile-confirm-icon {
+        display: grid;
+        place-items: center;
+        width: 46px;
+        height: 46px;
+        margin-bottom: 1rem;
+        border-radius: 50%;
+        color: #ffd24a;
+        background: rgba(255,193,7,.13);
+        border: 1px solid rgba(255,210,74,.3);
+    }
+    .profile-confirm-dialog h3 { margin: 0 0 .65rem; font-size: 1.25rem; }
+    .profile-confirm-dialog > p { margin: 0 0 1.15rem; color: #d7d9df; line-height: 1.55; }
+    .profile-confirm-summary {
+        display: grid;
+        gap: .65rem;
+        padding: 1rem;
+        border-radius: 16px;
+        background: rgba(255,255,255,.065);
+        border: 1px solid rgba(255,255,255,.1);
+    }
+    .profile-confirm-summary div { display: flex; justify-content: space-between; gap: 1rem; }
+    .profile-confirm-summary span { color: #b9bdc7; }
+    .profile-confirm-summary strong { color: #ffd24a; text-align: right; }
+    .profile-confirm-actions { display: flex; justify-content: flex-end; gap: .65rem; margin-top: 1.25rem; }
+    .profile-confirm-actions .btn-primary,
+    .profile-confirm-actions .btn-secondary { border-radius: 999px; padding: .65rem 1.15rem; }
     
     .wallet-balance {
         margin-bottom: 2rem;
@@ -1005,15 +1234,132 @@
         margin: 0 0 1.5rem 0;
         font-size: 1.1rem;
     }
-    
+
+    /* Unified rounded profile design */
+    .profile-luxury-container {
+        width: min(1880px, calc(100vw - 32px));
+        max-width: none;
+        padding: 6.25rem 0 2rem;
+    }
+
+    .profile-luxury-container > .row {
+        display: grid;
+        grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+        gap: 24px;
+        margin: 0;
+    }
+
+    .profile-luxury-container > .row > .col-lg-3,
+    .profile-luxury-container > .row > .col-lg-9 {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+    }
+
+    .profile-luxury-sidebar,
+    .profile-section {
+        border: 1px solid rgba(255,255,255,.13);
+        border-radius: 30px;
+        background: linear-gradient(145deg,rgba(39,39,41,.94),rgba(17,18,21,.96));
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.08),0 24px 60px rgba(0,0,0,.32);
+        backdrop-filter: blur(22px) saturate(120%);
+        -webkit-backdrop-filter: blur(22px) saturate(120%);
+    }
+
+    .profile-luxury-sidebar { padding: 28px; }
+    .profile-section { min-height: 540px; padding: 34px 36px; }
+    .profile-avatar-wrapper { width: 132px; height: 132px; }
+    .profile-avatar-container { border-width: 5px; border-color: rgba(255,255,255,.22); }
+
+    .profile-nav-menu { gap: 10px; }
+    .profile-nav-item,
+    .profile-logout-btn,
+    .interest-shortcut,
+    .location-button,
+    .confirm-age-button,
+    .btn-edit,
+    .profile-luxury-container .btn-primary,
+    .profile-luxury-container .btn-secondary,
+    .remove-interest-button,
+    .empty-interest-state a {
+        border-radius: 999px !important;
+    }
+
+    .profile-nav-item {
+        min-height: 54px;
+        padding: 0 20px;
+        border: 1px solid transparent;
+        background: transparent;
+    }
+
+    .profile-nav-item:hover {
+        color: #fff;
+        border-color: rgba(255,255,255,.16);
+        background: rgba(255,255,255,.08);
+        transform: translateX(4px);
+    }
+
+    .profile-nav-item.active {
+        color: #fff;
+        border-color: rgba(255,255,255,.2);
+        background: linear-gradient(135deg,rgba(255,255,255,.17),rgba(255,255,255,.07));
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.12),0 10px 24px rgba(0,0,0,.2);
+    }
+
+    .profile-nav-interest { border-color: transparent; background: transparent; }
+    .profile-nav-item i { width: 20px; text-align: center; }
+    .interest-nav-count,
+    .interest-shortcut b,
+    .profile-ticket-status { border-radius: 999px !important; }
+
+    .profile-form { gap: 24px; }
+    .form-row { gap: 24px; }
+    .form-control {
+        min-height: 58px;
+        padding: 0 22px;
+        border-radius: 999px !important;
+        background: linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.055));
+    }
+    textarea.form-control { min-height: 130px; padding-top: 18px; border-radius: 30px !important; }
+    .form-control:focus {
+        border-color: rgba(255,255,255,.52);
+        background: linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.08));
+        box-shadow: 0 0 0 4px rgba(255,255,255,.08),inset 0 1px 0 rgba(255,255,255,.14),0 12px 30px rgba(0,0,0,.25);
+    }
+
+    .location-button { min-width: 170px; padding-inline: 24px; }
+    .btn-edit { width: 52px; height: 52px; padding: 0; display:grid; place-items:center; border:1px solid rgba(255,255,255,.24); background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.07)); }
+    .interest-shortcut { min-height:48px; padding-inline:18px; }
+    .profile-logout-btn { min-height: 52px; border:1px solid rgba(255,255,255,.14); background:linear-gradient(135deg,rgba(255,255,255,.13),rgba(255,255,255,.055)); }
+    .profile-logout-btn:hover { background:rgba(255,255,255,.14); }
+
+    .form-actions { border-radius:999px; }
+    .profile-luxury-container .btn-primary,
+    .profile-luxury-container .btn-secondary { min-height:46px; padding:0 22px; display:inline-flex; align-items:center; justify-content:center; }
+    .checkbox-label { min-height:54px; padding:0 18px; border:1px solid rgba(255,255,255,.12); border-radius:999px; background:rgba(255,255,255,.05); }
+    .checkbox-label input[type="checkbox"] { width:22px; height:22px; border-radius:50%; accent-color:#fff; }
+
+    .interest-movie-card,
+    .subscription-plan,
+    .subscription-info,
+    .balance-card,
+    .deposit-form,
+    .profile-ticket-card,
+    .profile-ticket-empty,
+    .profile-ticket-foods {
+        border-radius: 28px !important;
+    }
+    .interest-poster,
+    .profile-ticket-qr img { border-radius:22px !important; }
+    .alert { border-radius:999px; }
+
     @media (max-width: 768px) {
         .profile-luxury-container {
             padding: 5.5rem 1rem 2rem;
         }
         
-        .row {
-            flex-direction: column-reverse;
-        }
+        .profile-luxury-container { width:calc(100vw - 20px); padding-inline:0; }
+        .profile-luxury-container > .row { display:flex; flex-direction:column-reverse; gap:14px; }
         
         .col-lg-3,
         .col-lg-9 {
@@ -1026,7 +1372,9 @@
         }
         
         .profile-section {
-            padding: 1rem;
+            min-height:0;
+            padding: 1.25rem;
+            border-radius:24px;
         }
 
         .profile-section .form-row {
@@ -1035,6 +1383,7 @@
 
         .address-input-group { grid-template-columns: 1fr; }
         .location-button { min-height: 46px; }
+        .profile-luxury-sidebar { padding:20px; border-radius:24px; }
     }
 </style>
 
@@ -1179,17 +1528,130 @@
         }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 300000 });
     }
 
-    function confirmUpgrade(event, upgradeCost, userPoints, packageName) {
+    function confirmUpgrade(event, upgradeCost, userPoints, packageName, isRenewal = false) {
+        event.preventDefault();
         const packagePrice = upgradeCost;
+        const action = isRenewal ? 'gia hạn thêm 1 tháng' : 'nâng cấp';
         if (userPoints < packagePrice) {
-            event.preventDefault();
-            const shortage = packagePrice - userPoints;
-            alert(`❌ Không đủ điểm!\n\nPhí nâng cấp gói "${packageName}": ${packagePrice.toLocaleString('vi-VN')} điểm\nBạn có: ${userPoints.toLocaleString('vi-VN')} điểm\nThiếu: ${shortage.toLocaleString('vi-VN')} điểm\n\nVui lòng nạp thêm điểm để nâng cấp!`);
+            openProfileConfirm(event.currentTarget, {
+                title: 'Không đủ điểm',
+                message: `Bạn chưa đủ điểm để ${action} gói "${packageName}".`,
+                cost: packagePrice,
+                balance: userPoints - packagePrice,
+                canSubmit: false,
+            });
             return false;
         }
-        
-        return confirm(`Xác nhận nâng cấp lên gói "${packageName}"?\n\nPhí nâng cấp: ${packagePrice.toLocaleString('vi-VN')} điểm\nSố dư sau khi nâng cấp: ${(userPoints - packagePrice).toLocaleString('vi-VN')} điểm`);
+
+        openProfileConfirm(event.currentTarget, {
+            message: `Xác nhận ${action} gói "${packageName}"?`,
+            cost: packagePrice,
+            balance: userPoints - packagePrice,
+        });
+        return false;
     }
+
+    function confirmUpgradeChoice(event, userPoints, packageName) {
+        event.preventDefault();
+        const button = event.submitter;
+        const cost = Number(button?.dataset.cost || 0);
+        const keepTime = button?.value === 'keep_time';
+        const action = keepTime
+            ? 'nâng cấp và giữ nguyên ngày hết hạn hiện tại'
+            : 'hủy thời hạn gói cũ và mua mới 1 tháng';
+
+        if (userPoints < cost) {
+            openProfileConfirm(event.currentTarget, {
+                title: 'Không đủ điểm',
+                message: `Bạn chưa đủ điểm để ${action} lên gói "${packageName}".`,
+                cost,
+                balance: userPoints - cost,
+                canSubmit: false,
+            });
+            return false;
+        }
+
+        openProfileConfirm(event.currentTarget, {
+            message: `Xác nhận ${action} lên gói "${packageName}"?`,
+            cost,
+            balance: userPoints - cost,
+            purchaseMode: button?.value,
+        });
+        return false;
+    }
+
+    const profileConfirmModal = document.getElementById('profileConfirmModal');
+    const profileConfirmSubmit = document.getElementById('profileConfirmSubmit');
+    let pendingProfileForm = null;
+
+    function openProfileConfirm(form, options) {
+        pendingProfileForm = options.canSubmit === false ? null : form;
+        document.getElementById('profileConfirmTitle').textContent = options.title || 'Xác nhận thanh toán';
+        document.getElementById('profileConfirmMessage').textContent = options.message;
+        document.getElementById('profileConfirmCost').textContent = `${Number(options.cost).toLocaleString('vi-VN')} điểm`;
+        document.getElementById('profileConfirmBalance').textContent = options.balance >= 0
+            ? `${Number(options.balance).toLocaleString('vi-VN')} điểm`
+            : `Thiếu ${Math.abs(options.balance).toLocaleString('vi-VN')} điểm`;
+        profileConfirmSubmit.hidden = options.canSubmit === false;
+
+        const oldMode = form.querySelector('input[data-confirm-purchase-mode]');
+        oldMode?.remove();
+        if (options.purchaseMode) {
+            const mode = document.createElement('input');
+            mode.type = 'hidden';
+            mode.name = 'purchase_mode';
+            mode.value = options.purchaseMode;
+            mode.dataset.confirmPurchaseMode = 'true';
+            form.appendChild(mode);
+        }
+
+        profileConfirmModal.classList.add('is-open');
+        profileConfirmModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        if (options.canSubmit !== false) profileConfirmSubmit.focus();
+    }
+
+    function closeProfileConfirm() {
+        profileConfirmModal.classList.remove('is-open');
+        profileConfirmModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        pendingProfileForm = null;
+    }
+
+    document.querySelectorAll('[data-close-confirm]').forEach(button => button.addEventListener('click', closeProfileConfirm));
+    profileConfirmSubmit.addEventListener('click', () => {
+        if (!pendingProfileForm) return;
+        const form = pendingProfileForm;
+        closeProfileConfirm();
+        HTMLFormElement.prototype.submit.call(form);
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && profileConfirmModal.classList.contains('is-open')) closeProfileConfirm();
+    });
+
+    document.querySelectorAll('.subscription-countdown').forEach(element => {
+        const expiresAt = new Date(element.dataset.expiresAt).getTime();
+        const serverNow = new Date(element.dataset.serverNow).getTime();
+        const clockOffset = serverNow - Date.now();
+
+        const renderCountdown = () => {
+            const remaining = Math.max(0, expiresAt - (Date.now() + clockOffset));
+            if (remaining <= 0) {
+                element.textContent = 'Đã hết hạn';
+                return;
+            }
+
+            const totalSeconds = Math.floor(remaining / 1000);
+            const days = Math.floor(totalSeconds / 86400);
+            const hours = Math.floor((totalSeconds % 86400) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            element.textContent = `${days} ngày ${hours} giờ ${minutes} phút ${seconds} giây`;
+        };
+
+        renderCountdown();
+        window.setInterval(renderCountdown, 1000);
+    });
     
     function uploadAvatar(file) {
         if (!file) return;

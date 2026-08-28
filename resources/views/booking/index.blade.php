@@ -14,28 +14,268 @@
         csrfToken: @json(csrf_token()),
         ticketPurchaseCountdownSeconds: 600,
         routes: {
-            bookingLocation: "{{ route('booking.location') }}",
-            bookingShowtimes: "{{ route('api.booking.showtimes') }}",
-            bookingSeatMap: "{{ route('api.booking.seatMap') }}",
-            bookingFoodItems: "{{ route('api.booking.foodItems') }}",
-            bookingReserveSeats: "{{ route('booking.reservations.reserve') }}",
-            bookingReleaseSeats: "{{ route('booking.reservations.release') }}",
-            bookingExtendSeats: "{{ route('booking.reservations.extend') }}",
+            bookingLocation: "{{ route('booking.location', [], false) }}",
+            bookingMovieContext: "{{ route('api.booking.movieContext', [], false) }}",
+            bookingShowtimes: "{{ route('api.booking.showtimes', [], false) }}",
+            bookingSeatMap: "{{ route('api.booking.seatMap', [], false) }}",
+            bookingFoodItems: "{{ route('api.booking.foodItems', [], false) }}",
+            bookingReserveSeats: "{{ route('booking.reservations.reserve', [], false) }}",
+            bookingReleaseSeats: "{{ route('booking.reservations.release', [], false) }}",
+            bookingExtendSeats: "{{ route('booking.reservations.extend', [], false) }}",
         },
         flashError: @json(session('error')),
         validationError: @json($errors->any() ? $errors->first() : null),
     };
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-cinema-banner]').forEach(function (banner) {
+            var slides = Array.from(banner.querySelectorAll('[data-banner-slide]'));
+            var dots = Array.from(banner.querySelectorAll('[data-banner-dot]'));
+            if (slides.length < 2) return;
+            var current = 0;
+            var timer;
+            var show = function (index) {
+                current = (index + slides.length) % slides.length;
+                slides.forEach(function (slide, slideIndex) {
+                    slide.classList.toggle('is-active', slideIndex === current);
+                });
+                dots.forEach(function (dot, dotIndex) {
+                    dot.classList.toggle('is-active', dotIndex === current);
+                });
+            };
+            var start = function () {
+                window.clearInterval(timer);
+                timer = window.setInterval(function () { show(current + 1); }, 3500);
+            };
+            dots.forEach(function (dot, index) {
+                dot.addEventListener('click', function () { show(index); start(); });
+            });
+            start();
+        });
+
+        document.addEventListener('click', function (event) {
+            var movieLink = event.target.closest('[data-booking-movie-id]');
+            if (!movieLink) return;
+
+            event.preventDefault();
+            var movieId = movieLink.getAttribute('data-booking-movie-id');
+            var contextRoute = window.bookingPageConfig?.routes?.bookingMovieContext;
+            if (!movieId || !contextRoute || movieLink.dataset.loading === 'true') return;
+
+            movieLink.dataset.loading = 'true';
+            movieLink.setAttribute('aria-busy', 'true');
+            fetch(contextRoute + '?movie_id=' + encodeURIComponent(movieId), {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Movie context request failed');
+                    return response.json();
+                })
+                .then(function (data) {
+                    window.setBookingMovieId?.(movieId);
+                    window.bookingPageConfig.currentMovieId = String(movieId);
+                    window.bookingDynamicMovieMode = true;
+                    window.selectedTheaterId = null;
+                    window.selectedDate = null;
+                    window.selectedShowtimeId = null;
+
+                    var workflow = document.getElementById('bookingWorkflow');
+                    var picker = document.getElementById('bookingMoviePicker');
+                    var title = document.querySelector('.booking-form-title');
+                    if (picker) picker.style.display = 'none';
+                    if (workflow) workflow.style.display = 'block';
+                    if (title) title.textContent = 'Chọn lịch chiếu & ghế · ' + (data.movie?.title || 'Phim');
+
+                    var theaterInput = document.getElementById('theaterIdInput');
+                    var theaterGroup = theaterInput?.closest('.form-group');
+                    var container = document.getElementById('theatersContainer');
+                    if (!container && theaterGroup) {
+                        container = document.createElement('div');
+                        container.id = 'theatersContainer';
+                        container.className = 'theaters-grid';
+                        theaterGroup.appendChild(container);
+                    }
+                    if (container) {
+                        container.innerHTML = '';
+                        container.style.display = 'grid';
+                        container.style.gridTemplateColumns = 'repeat(auto-fill,minmax(280px,1fr))';
+                        container.style.gap = '15px';
+                        (data.theaters || []).forEach(function (theater) {
+                            var card = document.createElement('div');
+                            card.className = 'theater-card';
+                            card.dataset.theaterId = theater.id;
+                            card.dataset.lat = theater.latitude || '';
+                            card.dataset.lng = theater.longitude || '';
+                            card.dataset.location = theater.location || '';
+                            card.setAttribute('role', 'button');
+                            card.tabIndex = 0;
+                            card.innerHTML = '<div class="theater-card-inner"><span class="theater-icon"><i class="fas fa-film"></i></span><span class="theater-copy"><h5></h5><p class="theater-location"><i class="fas fa-map-marker-alt"></i> <span></span></p><small></small></span><span class="theater-check"><i class="fas fa-check"></i></span></div>';
+                            card.querySelector('h5').textContent = theater.name || '';
+                            card.querySelector('.theater-location span').textContent = theater.location || '';
+                            card.querySelector('small').textContent = theater.address || '';
+                            container.appendChild(card);
+                        });
+                    }
+
+                    ['dateSelectionSection','showtimeSelectionSection','seatSelectionSection','emailSection'].forEach(function (id) {
+                        var section = document.getElementById(id);
+                        if (section) section.style.display = 'none';
+                    });
+                    var showtimeInput = document.getElementById('showtimeIdInput');
+                    if (showtimeInput) showtimeInput.value = '';
+                    if (theaterInput) theaterInput.value = '';
+                    history.pushState({ movie: movieId }, '', movieLink.href || ('?movie=' + movieId));
+                    workflow?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                })
+                .catch(function () {
+                    window.showToast?.('Không thể tải lịch chiếu của phim lúc này.', 'error');
+                })
+                .finally(function () {
+                    movieLink.dataset.loading = 'false';
+                    movieLink.removeAttribute('aria-busy');
+                });
+        });
+    });
 </script>
 @vite(['resources/js/booking.js'])
 <script src="{{ asset('js/booking-price-sync.js') }}?v={{ filemtime(public_path('js/booking-price-sync.js')) }}"></script>
 <script>
     (function() {
+        var lastMobileSelectionAt = 0;
+
         function formatDate(date) {
             var year = date.getFullYear();
             var month = String(date.getMonth() + 1).padStart(2, '0');
             var day = String(date.getDate()).padStart(2, '0');
             return year + '-' + month + '-' + day;
         }
+
+        function refreshFoodItemsForTheater(theaterId) {
+            var container = document.getElementById('foodItemsContainer');
+            var route = window.bookingPageConfig?.routes?.bookingFoodItems;
+            if (!container || !route || !theaterId) {
+                return;
+            }
+
+            container.innerHTML = '<div style="grid-column:1/-1;padding:22px;text-align:center;color:#aaa;">Đang tải combo...</div>';
+
+            fetch(route + '?theater_id=' + encodeURIComponent(theaterId), {
+                headers: { Accept: 'application/json' }
+            })
+                .then(function(response) {
+                    if (!response.ok) throw new Error('Food items request failed');
+                    return response.json();
+                })
+                .then(function(data) {
+                    var items = Array.isArray(data.foodItems) ? data.foodItems : [];
+                    container.innerHTML = '';
+
+                    if (!items.length) {
+                        var selectedCard = document.querySelector('.theater-card[data-theater-id="' + theaterId + '"]');
+                        var theaterName = selectedCard?.querySelector('h5')?.textContent.trim() || 'đã chọn';
+                        container.innerHTML = '<div style="grid-column:1/-1;padding:22px;text-align:center;color:#aaa;"><i class="fas fa-store-slash" style="font-size:28px;margin-bottom:10px;"></i><p style="margin:0;">Rạp <strong style="color:#fff;"></strong> hiện chưa có combo.</p><small>Combo được quản lý riêng theo từng rạp.</small></div>';
+                        container.querySelector('strong').textContent = theaterName;
+                        return;
+                    }
+
+                    items.forEach(function(item) {
+                        var card = document.createElement('div');
+                        card.className = 'food-item-card-compact';
+                        card.dataset.foodId = item.id;
+                        card.dataset.foodPrice = item.price;
+                        card.innerHTML = '<div class="food-item-media"></div><h6></h6><p class="food-item-price"></p><div class="quantity-control"><button type="button" class="btn-quantity-compact btn-quantity-minus" aria-label="Giảm số lượng">−</button><input type="number" min="0" max="10" inputmode="numeric"><button type="button" class="btn-quantity-compact btn-quantity-plus" aria-label="Tăng số lượng">+</button></div>';
+
+                        var media = card.querySelector('.food-item-media');
+                        if (item.image_url) {
+                            var image = document.createElement('img');
+                            image.src = item.image_url;
+                            image.alt = item.name;
+                            media.appendChild(image);
+                        } else {
+                            media.innerHTML = '<i class="fas fa-utensils"></i>';
+                        }
+
+                        card.querySelector('h6').textContent = item.name;
+                        card.querySelector('.food-item-price').textContent = Number(item.price).toLocaleString('vi-VN') + ' ₫';
+                        var input = card.querySelector('input');
+                        input.name = 'food_items[' + item.id + ']';
+                        input.id = 'food_' + item.id;
+                        input.value = '0';
+                        card.querySelector('.btn-quantity-minus').addEventListener('click', function() {
+                            window.updateFoodQuantity?.(item.id, -1);
+                        });
+                        card.querySelector('.btn-quantity-plus').addEventListener('click', function() {
+                            window.updateFoodQuantity?.(item.id, 1);
+                        });
+                        container.appendChild(card);
+                    });
+                })
+                .catch(function() {
+                    container.innerHTML = '<div style="grid-column:1/-1;padding:22px;text-align:center;color:#ffb4b4;">Không thể tải combo. Vui lòng thử lại.</div>';
+                });
+        }
+
+        window.refreshFoodItemsForTheater = refreshFoodItemsForTheater;
+
+        function closeFoodComboModal() {
+            var foodSection = document.getElementById('foodSection');
+            if (foodSection) foodSection.style.display = 'none';
+            document.body.classList.remove('food-modal-open');
+        }
+
+        function openFoodComboModal() {
+            var foodSection = document.getElementById('foodSection');
+            if (!foodSection) return;
+
+            var theaterInput = document.getElementById('theaterIdInput');
+            var theaterId = theaterInput?.value || window.selectedTheaterId || window.bookingPageConfig?.selectedTheaterId;
+            if (theaterId) refreshFoodItemsForTheater(theaterId);
+
+            var header = foodSection.querySelector('.food-iframe-header');
+            if (header && !header.querySelector('.food-modal-close-btn')) {
+                var closeButton = document.createElement('button');
+                closeButton.type = 'button';
+                closeButton.className = 'food-modal-close-btn';
+                closeButton.setAttribute('aria-label', 'Đóng cửa sổ combo');
+                closeButton.innerHTML = '<i class="fas fa-times"></i>';
+                closeButton.addEventListener('click', closeFoodComboModal);
+                header.appendChild(closeButton);
+            }
+
+            foodSection.style.display = 'flex';
+            document.body.classList.add('food-modal-open');
+        }
+
+        window.openFoodModal = openFoodComboModal;
+        window.closeFoodModal = closeFoodComboModal;
+
+        document.addEventListener('click', function(event) {
+            var launcher = event.target.closest('.food-modal-launcher-btn');
+            if (!launcher) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            var theaterInput = document.getElementById('theaterIdInput');
+            var theaterId = theaterInput?.value || window.selectedTheaterId || window.bookingPageConfig?.selectedTheaterId;
+            if (theaterId) {
+                refreshFoodItemsForTheater(theaterId);
+            }
+            openFoodComboModal();
+        }, false);
+
+        document.addEventListener('click', function(event) {
+            var foodSection = document.getElementById('foodSection');
+            if (foodSection && event.target === foodSection) closeFoodComboModal();
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && document.body.classList.contains('food-modal-open')) {
+                closeFoodComboModal();
+            }
+        });
 
         function fallbackSelectTheater(theaterId) {
             document.querySelectorAll('.theater-card').forEach(function(card) {
@@ -48,6 +288,7 @@
             }
 
             window.selectedTheaterId = theaterId;
+            refreshFoodItemsForTheater(theaterId);
             window.selectedDate = null;
             window.selectedShowtimeId = null;
 
@@ -90,7 +331,7 @@
         }
 
         function fallbackSelectDate(dateValue) {
-            if (typeof window.selectDate === 'function') {
+            if (!window.bookingDynamicMovieMode && typeof window.selectDate === 'function') {
                 window.selectDate(dateValue);
                 return;
             }
@@ -139,6 +380,10 @@
         }
 
         document.addEventListener('click', function(event) {
+            if (Date.now() - lastMobileSelectionAt < 600) {
+                return;
+            }
+
             if (event.bookingTheaterHandled) {
                 return;
             }
@@ -147,8 +392,9 @@
             if (theaterCard) {
                 event.preventDefault();
                 var theaterId = theaterCard.getAttribute('data-theater-id');
-                if (typeof window.selectTheaterDirect === 'function') {
+                if (!window.bookingDynamicMovieMode && typeof window.selectTheaterDirect === 'function') {
                     window.selectTheaterDirect(theaterId);
+                    refreshFoodItemsForTheater(theaterId);
                 } else {
                     fallbackSelectTheater(theaterId);
                 }
@@ -175,6 +421,76 @@
                 }
             }
         });
+
+        document.addEventListener('pointerup', function(event) {
+            if (event.pointerType !== 'touch' && event.pointerType !== 'pen') {
+                return;
+            }
+
+            var theaterCard = event.target.closest('.theater-card');
+            if (theaterCard) {
+                event.preventDefault();
+                lastMobileSelectionAt = Date.now();
+                var theaterId = theaterCard.getAttribute('data-theater-id');
+                if (!window.bookingDynamicMovieMode && typeof window.selectTheaterDirect === 'function') {
+                    window.selectTheaterDirect(theaterId);
+                    refreshFoodItemsForTheater(theaterId);
+                } else {
+                    fallbackSelectTheater(theaterId);
+                }
+                return;
+            }
+
+            var dateTab = event.target.closest('.date-tab');
+            if (dateTab) {
+                event.preventDefault();
+                lastMobileSelectionAt = Date.now();
+                fallbackSelectDate(dateTab.getAttribute('data-date'));
+                return;
+            }
+
+            var showtimeBtn = event.target.closest('.showtime-btn');
+            if (showtimeBtn && typeof window.selectShowtime === 'function') {
+                event.preventDefault();
+                lastMobileSelectionAt = Date.now();
+                window.selectShowtime(showtimeBtn.getAttribute('data-showtime-id'));
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', function(event) {
+            if (Date.now() - lastMobileSelectionAt < 350) {
+                return;
+            }
+
+            var theaterCard = event.target.closest('.theater-card');
+            if (theaterCard) {
+                event.preventDefault();
+                lastMobileSelectionAt = Date.now();
+                var theaterId = theaterCard.getAttribute('data-theater-id');
+                if (!window.bookingDynamicMovieMode && typeof window.selectTheaterDirect === 'function') {
+                    window.selectTheaterDirect(theaterId);
+                    refreshFoodItemsForTheater(theaterId);
+                } else {
+                    fallbackSelectTheater(theaterId);
+                }
+                return;
+            }
+
+            var dateTab = event.target.closest('.date-tab');
+            if (dateTab) {
+                event.preventDefault();
+                lastMobileSelectionAt = Date.now();
+                fallbackSelectDate(dateTab.getAttribute('data-date'));
+                return;
+            }
+
+            var showtimeBtn = event.target.closest('.showtime-btn');
+            if (showtimeBtn && typeof window.selectShowtime === 'function') {
+                event.preventDefault();
+                lastMobileSelectionAt = Date.now();
+                window.selectShowtime(showtimeBtn.getAttribute('data-showtime-id'));
+            }
+        }, { passive: false });
     })();
 </script>
 @endpush
@@ -190,6 +506,35 @@ $meta_og_description = $meta_description;
 @section('content')
 <section class="booking-page-section">
     <div class="container-fluid px-4">
+        @if(!empty($bannerMovies) && $bannerMovies->isNotEmpty())
+        <section class="cinema-banner" data-cinema-banner aria-label="Phim đang chiếu nổi bật">
+            @foreach($bannerMovies as $bannerMovie)
+            <article class="cinema-banner-slide {{ $loop->first ? 'is-active' : '' }}" data-banner-slide>
+                <div class="cinema-banner-backdrop" style="background-image:url('{{ $bannerMovie->banner ?: $bannerMovie->thumbnail }}')"></div>
+                <div class="cinema-banner-shade"></div>
+                <div class="cinema-banner-content">
+                    <span class="cinema-banner-kicker"><i class="fas fa-clapperboard"></i> Đang chiếu tại CineHub</span>
+                    <h1>{{ $bannerMovie->title }}</h1>
+                    <div class="cinema-banner-meta">
+                        @if($bannerMovie->rating)<span><i class="fas fa-star"></i> {{ number_format($bannerMovie->rating, 1) }}/10</span>@endif
+                        @if($bannerMovie->duration)<span><i class="far fa-clock"></i> {{ $bannerMovie->duration }} phút</span>@endif
+                        @if($bannerMovie->age_rating)<span>{{ $bannerMovie->age_rating }}</span>@endif
+                    </div>
+                    <p>{{ \Illuminate\Support\Str::limit(strip_tags($bannerMovie->description ?: 'Đặt vé và chọn suất chiếu phù hợp ngay hôm nay.'), 150) }}</p>
+                    <a href="{{ route('booking.index', ['movie' => $bannerMovie->id]) }}" class="cinema-banner-action" data-booking-movie-id="{{ $bannerMovie->id }}">
+                        <i class="fas fa-ticket-alt"></i> Chọn lịch chiếu
+                    </a>
+                </div>
+            </article>
+            @endforeach
+            <div class="cinema-banner-dots" role="tablist" aria-label="Chọn phim trên banner">
+                @foreach($bannerMovies as $bannerMovie)
+                <button type="button" class="{{ $loop->first ? 'is-active' : '' }}" data-banner-dot="{{ $loop->index }}" aria-label="Hiện {{ $bannerMovie->title }}"></button>
+                @endforeach
+            </div>
+        </section>
+        @endif
+
         <div class="row g-4">
             <!-- Left Column: Movie Info -->
             <div class="col-lg-5">
@@ -303,7 +648,7 @@ $meta_og_description = $meta_description;
 
                     @if(!isset($movie) && isset($allMovies))
                     <!-- Movies List - Display when no movie selected -->
-                    <div class="booking-step mb-4">
+                    <div class="booking-step mb-4" id="bookingMoviePicker">
                         <label class="booking-label">
                             <i class="fas fa-film me-2"></i>Danh sách phim đang chiếu
                         </label>
@@ -317,6 +662,7 @@ $meta_og_description = $meta_description;
                             @foreach($allMovies as $m)
                             <a href="{{ route('booking.index', ['movie' => $m->id]) }}"
                                 class="movie-card-booking"
+                                data-booking-movie-id="{{ $m->id }}"
                                 style="display: block; text-decoration: none; border: 2px solid #ddd; border-radius: 24px; overflow: hidden; transition: all 0.3s; background: white; cursor: pointer;"
                                 onmouseover="this.style.borderColor='#e50914'; this.style.transform='translateY(-5px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)';"
                                 onmouseout="this.style.borderColor='#ddd'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
@@ -345,7 +691,9 @@ $meta_og_description = $meta_description;
                         </div>
                         @endif
                     </div>
-                    @else
+                    @endif
+
+                    <div id="bookingWorkflow" @if(!isset($movie)) style="display:none" @endif>
 
                     <form id="bookingForm" method="POST" action="{{ route('booking.processBooking') }}" class="booking-form" novalidate onsubmit="return validateFormBeforeSubmit()">
                         @csrf
@@ -384,7 +732,10 @@ $meta_og_description = $meta_description;
                                     data-lat="{{ $theater->latitude ?? '' }}"
                                     data-lng="{{ $theater->longitude ?? '' }}"
                                     data-location="{{ $theater->location ?? '' }}"
-                                    style="border: 2px solid #ddd; border-radius: 12px; padding: 15px; cursor: pointer; transition: all 0.3s; background: white; position: relative; z-index: 1;">
+                                    role="button"
+                                    tabindex="0"
+                                    onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.click(); }"
+                                    style="border: 2px solid #ddd; border-radius: 12px; padding: 15px; cursor: pointer; transition: all 0.3s; background: white; position: relative; z-index: 1; touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
 
                                     <div class="d-flex align-items-start" style="pointer-events: none;">
                                         <div class="theater-icon" style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
@@ -883,19 +1234,18 @@ $meta_og_description = $meta_description;
                             }
 
                             #foodSection {
-                                position: fixed !important;
-                                inset: 0;
-                                z-index: 10050;
-                                margin: 0 !important;
-                                padding: 20px;
-                                background: rgba(0, 0, 0, 0.72);
-                                backdrop-filter: blur(8px);
-                                align-items: center;
-                                justify-content: center;
+                                position: relative !important;
+                                inset: auto;
+                                z-index: 30;
+                                width: 100%;
+                                margin: 12px 0 0 !important;
+                                padding: 0;
+                                background: transparent;
+                                backdrop-filter: none;
                             }
 
-                            #foodSection[style*="display: block"] {
-                                display: flex !important;
+                            body.food-modal-open #foodSection {
+                                display: block !important;
                             }
 
                             #foodSection > .form-label {
@@ -903,7 +1253,7 @@ $meta_og_description = $meta_description;
                             }
 
                             #foodSection .food-iframe-shell {
-                                width: min(680px, 100%);
+                                width: 100%;
                                 max-height: min(560px, calc(100vh - 40px));
                                 display: flex;
                                 flex-direction: column;
@@ -1100,7 +1450,7 @@ $meta_og_description = $meta_description;
                             }
 
                             body.food-modal-open {
-                                overflow: hidden;
+                                overflow: auto;
                             }
 
                             @media (max-width: 980px) {
@@ -1108,13 +1458,22 @@ $meta_og_description = $meta_description;
 
                             @media (max-width: 640px) {
                                 #foodSection {
+                                    position: fixed !important;
+                                    inset: 0;
+                                    z-index: 10050;
+                                    margin: 0 !important;
                                     padding: 10px;
+                                    background: rgba(0,0,0,.72);
+                                    backdrop-filter: blur(8px);
                                 }
 
-                                #foodSection[style*="display: block"] {
+                                body.food-modal-open #foodSection {
+                                    display: flex !important;
                                     align-items: stretch;
                                     flex-direction: column;
                                 }
+
+                                body.food-modal-open { overflow:hidden; }
 
                                 #foodSection .food-items-grid {
                                     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -1256,7 +1615,7 @@ $meta_og_description = $meta_description;
                             Tiếp tục thanh toán
                         </button>
                     </form>
-                    @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -1435,6 +1794,13 @@ $meta_og_description = $meta_description;
         border-radius: 14px !important;
         background: #222327 !important;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+        pointer-events: auto !important;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .booking-form-container .theater-card:active {
+        transform: scale(0.985);
     }
 
     .booking-form-container .theater-card:hover {
@@ -1816,12 +2182,74 @@ $meta_og_description = $meta_description;
         color: #ffd649;
     }
 
+    .booking-page-section { padding-top:6.25rem; background:radial-gradient(circle at 12% 0%,rgba(255,255,255,.08),transparent 28%),linear-gradient(180deg,#111214,#08090b); }
+    .booking-page-section > .container-fluid { max-width:1880px; margin:auto; }
+    .cinema-banner { position:relative; height:clamp(310px,35vw,560px); margin:0 0 28px; overflow:hidden; border:1px solid rgba(255,255,255,.13); border-radius:32px; background:#17181b; box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 28px 70px rgba(0,0,0,.4); }
+    .cinema-banner-slide { position:absolute; inset:0; opacity:0; visibility:hidden; transform:scale(1.035); transition:opacity .85s ease,transform 5s ease,visibility .85s; }
+    .cinema-banner-slide.is-active { opacity:1; visibility:visible; transform:scale(1); }
+    .cinema-banner-backdrop { position:absolute; inset:0; background-size:cover; background-position:center 28%; }
+    .cinema-banner-shade { position:absolute; inset:0; background:linear-gradient(90deg,rgba(5,6,8,.96) 0%,rgba(8,9,11,.76) 38%,rgba(8,9,11,.14) 72%),linear-gradient(0deg,rgba(5,6,8,.72),transparent 58%); }
+    .cinema-banner-content { position:absolute; z-index:2; left:clamp(28px,5vw,86px); top:50%; width:min(600px,62%); color:#fff; transform:translateY(-50%); }
+    .cinema-banner-kicker { display:inline-flex; align-items:center; gap:8px; padding:9px 14px; border:1px solid rgba(255,255,255,.22); border-radius:999px; background:rgba(255,255,255,.1); backdrop-filter:blur(14px); font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .cinema-banner-content h1 { margin:18px 0 10px; font-size:clamp(30px,4vw,64px); line-height:1.04; text-shadow:0 8px 26px rgba(0,0,0,.45); }
+    .cinema-banner-meta { display:flex; flex-wrap:wrap; gap:9px; }
+    .cinema-banner-meta span { padding:7px 11px; border:1px solid rgba(255,255,255,.18); border-radius:999px; background:rgba(15,16,19,.38); backdrop-filter:blur(10px); font-size:12px; }
+    .cinema-banner-meta .fa-star { color:#ffd45b; }
+    .cinema-banner-content p { margin:15px 0 20px; color:rgba(255,255,255,.76); line-height:1.55; }
+    .cinema-banner-action { display:inline-flex; align-items:center; gap:9px; padding:13px 20px; border:1px solid rgba(255,255,255,.42); border-radius:999px; color:#fff; background:linear-gradient(145deg,rgba(255,255,255,.24),rgba(255,255,255,.08)); box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 12px 28px rgba(0,0,0,.28); backdrop-filter:blur(16px); text-decoration:none; font-weight:800; }
+    .cinema-banner-action:hover { color:#fff; background:rgba(255,255,255,.24); transform:translateY(-2px); }
+    .cinema-banner-dots { position:absolute; z-index:4; right:28px; bottom:24px; display:flex; gap:7px; }
+    .cinema-banner-dots button { width:10px; height:10px; padding:0; border:1px solid rgba(255,255,255,.6); border-radius:999px; background:rgba(255,255,255,.22); transition:width .25s,background .25s; }
+    .cinema-banner-dots button.is-active { width:34px; background:#fff; }
+
+    .booking-form-container,.booking-movie-info { border:1px solid rgba(255,255,255,.12); border-radius:30px; background:linear-gradient(145deg,rgba(35,36,40,.94),rgba(17,18,21,.96)); box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 24px 55px rgba(0,0,0,.3); backdrop-filter:blur(20px); }
+    .booking-form-container { padding:32px !important; }
+    /* A backdrop-filter ancestor turns fixed descendants into locally positioned
+       elements. Keep the form unfiltered so the combo modal is fixed to viewport. */
+    .booking-form-container { backdrop-filter:none; -webkit-backdrop-filter:none; }
+    .booking-movie-info { padding:24px; }
+    .movie-card-booking { border:1px solid rgba(255,255,255,.13) !important; border-radius:26px !important; color:#fff !important; background:linear-gradient(145deg,#25262a,#17181b) !important; box-shadow:0 14px 30px rgba(0,0,0,.2); }
+    .movie-card-booking:hover { border-color:rgba(255,255,255,.5) !important; box-shadow:0 20px 38px rgba(0,0,0,.34) !important; }
+    .movie-card-booking h4 { color:#fff !important; }
+    .movie-card-booking span { color:#bbb !important; }
+    .movie-card-booking img { height:240px !important; }
+    .booking-page-section .alert { border-radius:999px; }
+    .theater-card { border:1px solid rgba(255,255,255,.14) !important; border-radius:999px !important; color:#fff; background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.05)) !important; }
+    .theater-card h5 { color:#fff !important; }
+    .theater-card p { color:#aaa !important; }
+    .theater-card-inner { display:flex; align-items:center; gap:13px; padding:15px 20px; pointer-events:none; }
+    .theater-card-inner .theater-icon { flex:0 0 44px; width:44px; height:44px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.22); border-radius:50%; background:rgba(255,255,255,.1); }
+    .theater-card-inner .theater-copy { min-width:0; flex:1; }
+    .theater-card-inner h5 { margin:0 0 4px; font-size:15px; }
+    .theater-card-inner p,.theater-card-inner small { display:block; margin:0; color:#aaa; font-size:12px; }
+    .theater-card-inner .theater-check { width:26px; height:26px; display:none; place-items:center; border-radius:50%; color:#111; background:#fff; }
+    .theater-card.selected .theater-card-inner .theater-check { display:grid; }
+    .dates-tabs .date-tab,.showtimes-grid .showtime-btn,.booking-page-section .form-control,.btn-confirm-seats { border-radius:999px !important; }
+    .movie-poster-large,.movie-poster-large img { border-radius:24px !important; }
+
     @media (max-width: 768px) {
+        .booking-page-section { padding-top:5.25rem; }
+        .cinema-banner { height:430px; border-radius:24px; }
+        .cinema-banner-content { left:22px; width:calc(100% - 44px); }
+        .cinema-banner-content p { display:none; }
+        .cinema-banner-shade { background:linear-gradient(0deg,rgba(5,6,8,.95),rgba(5,6,8,.18) 78%); }
+        .cinema-banner-dots { right:18px; bottom:16px; }
+        .booking-movie-info {
+            position: static !important;
+            z-index: auto;
+        }
+
+        .booking-page-section .col-lg-7 {
+            position: relative;
+            z-index: 20;
+        }
+
         .booking-form-container {
             padding: 1rem;
             position: static;
             max-height: none;
             overflow: visible;
+            pointer-events: auto !important;
         }
 
         .booking-movie-details {

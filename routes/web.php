@@ -110,6 +110,7 @@ Route::post('/booking/location', [BookingController::class, 'saveLocation'])->na
 
 // API routes for getting data (can be public or require auth based on your needs)
 Route::get('/api/booking/showtimes', [BookingController::class, 'getShowtimesByDate'])->name('api.booking.showtimes');
+Route::get('/api/booking/movie-context', [BookingController::class, 'getMovieContext'])->name('api.booking.movieContext');
 Route::get('/api/booking/seat-map', [BookingController::class, 'getSeatMap'])->name('api.booking.seatMap');
 Route::get('/api/booking/food-items', [BookingController::class, 'getFoodItems'])->name('api.booking.foodItems');
 
@@ -284,6 +285,7 @@ Route::middleware(['auth', 'moderator'])->prefix('moderator')->name('moderator.'
 
     // Statistics
     Route::get('/statistics', [ModeratorController::class, 'statistics'])->name('statistics');
+    Route::get('/statistics/fill-rate', [ModeratorController::class, 'fillRateData'])->name('statistics.fill-rate');
 
     // API - Get available time slots
     Route::get('/api/available-time-slots', [ModeratorController::class, 'getAvailableTimeSlots'])->name('api.availableTimeSlots');
@@ -302,9 +304,11 @@ Route::middleware(['auth', 'counter_staff'])->prefix('counter')->name('counter.'
     // Sell Tickets at Counter
     Route::get('/sell', [CounterStaffController::class, 'sellTicket'])->name('sell');
     Route::post('/process-sale', [CounterStaffController::class, 'processSale'])->name('processSale');
+    Route::get('/api/showtimes/{showtime}/seat-status', [CounterStaffController::class, 'seatStatus'])->name('api.seatStatus');
     Route::get('/sales', [CounterStaffController::class, 'salesHistory'])->name('sales');
     Route::get('/print', [CounterStaffController::class, 'printTickets'])->name('print');
     Route::get('/ticket-pdf', [CounterStaffController::class, 'downloadTicketPdf'])->name('ticketPdf');
+    Route::get('/ticket-pdf/{ticket}', [CounterStaffController::class, 'renderTicketPdf'])->name('ticketPdf.file');
 
     // Showtimes
     Route::get('/showtimes', [CounterStaffController::class, 'showtimes'])->name('showtimes');

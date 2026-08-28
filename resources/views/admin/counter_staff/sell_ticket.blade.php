@@ -99,6 +99,7 @@
             <div class="legend-item"><span class="seat vip"></span> VIP</div>
             <div class="legend-item"><span class="seat couple"></span> Đôi</div>
             <div class="legend-item"><span class="seat booked"></span> Đã đặt</div>
+            <div class="legend-item"><span class="seat reserved"></span> Đang giữ online</div>
             <div class="legend-item"><span class="seat selected"></span> Đang chọn</div>
         </div>
         <div class="customer-info">
@@ -153,14 +154,20 @@
 <style>
 .sell-ticket-container { padding: 20px; }
 .showtime-selection { margin-bottom: 30px; }
-.showtimes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 15px; }
-.showtime-card { background: #2a2a2a; border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s; border: 2px solid transparent; }
-.showtime-card:hover { border-color: #e50914; }
-.showtime-card.selected { border-color: #e50914; background: #3a2a2a; }
+.showtime-selection > .form-group { margin-bottom: 18px; }
+.showtime-selection > .form-group label { color: #4b5563; font-size: 14px; font-weight: 700; margin: 0 0 8px; }
+.showtime-selection #selectDate { height: 52px; padding: 0 18px; border: 1px solid #cbd5e1; background: rgba(255,255,255,.82); color: #172033; box-shadow: 0 8px 24px rgba(15,23,42,.06); }
+.showtimes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 0; }
+.showtime-card { min-height: 148px; background: #202225; border-radius: 8px; padding: 18px; cursor: pointer; transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease; border: 1px solid #34373c; box-shadow: 0 8px 20px rgba(15,23,42,.10); }
+.showtime-card:hover { transform: translateY(-2px); border-color: #717782; background: #272a2e; box-shadow: 0 12px 26px rgba(15,23,42,.16); }
+.showtime-card.selected { border-color: #ef233c; background: #292326; box-shadow: inset 4px 0 0 #ef233c, 0 12px 28px rgba(239,35,60,.14); }
 .showtime-card .movie-info { display: flex; gap: 15px; }
 .showtime-card img { width: 80px; height: 120px; object-fit: cover; border-radius: 5px; }
-.showtime-card .details h4 { margin: 0 0 10px 0; color: #fff; font-size: 16px; }
-.showtime-card .details p { margin: 5px 0; color: #aaa; font-size: 14px; }
+.showtime-card .details { min-width: 0; }
+.showtime-card .details h4 { margin: 0 0 14px; color: #f8fafc !important; font-size: 16px; line-height: 1.35; font-weight: 700 !important; }
+.showtime-card .details p { display: flex; align-items: center; gap: 7px; margin: 7px 0; color: #c2c7d0; font-size: 14px; }
+.showtime-card .details p i { width: 16px; color: #9da4af; text-align: center; }
+.showtime-card.selected .details p i { color: #ff6478; }
 .seat-selection-section { background: #1a1a1a; border-radius: 15px; padding: 30px; margin-top: 20px; }
 .screen-display { text-align: center; margin-bottom: 30px; }
 .screen-label { background: linear-gradient(180deg, #fff 0%, #ccc 100%); color: #333; padding: 10px 50px; border-radius: 5px; display: inline-block; font-weight: bold; }
@@ -174,8 +181,9 @@
 .seat.vip { background: #ffd700; color: #333; }
 .seat.couple { background: #ff69b4; color: #fff; width: 75px; }
 .seat.booked { background: #666; color: #999; cursor: not-allowed; }
+.seat.reserved { background: #7c3aed; color: #fff; cursor: not-allowed; }
 .seat.selected { background: #e50914 !important; color: #fff !important; transform: scale(1.1); }
-.seat:not(.booked):hover { transform: scale(1.1); }
+.seat:not(.booked):not(.reserved):hover { transform: scale(1.1); }
 .seat-legend { display: flex; justify-content: center; gap: 20px; margin: 30px 0; flex-wrap: wrap; }
 .legend-item { display: flex; align-items: center; gap: 8px; color: #fff; }
 .legend-item .seat { width: 25px; height: 25px; cursor: default; }
@@ -200,6 +208,11 @@
 .btn-primary { background: #e50914; border: none; color: #fff; border-radius: 5px; cursor: pointer; }
 .btn-primary:disabled { background: #666; cursor: not-allowed; }
 .no-data { color: #aaa; text-align: center; padding: 20px; }
+@media (max-width: 768px) {
+    .sell-ticket-container { padding: 8px; }
+    .showtimes-grid { grid-template-columns: 1fr; }
+    .showtime-card { min-height: auto; }
+}
 </style>
 @endpush
 
@@ -208,6 +221,11 @@
 let selectedSeats = [];
 let selectedFood = {};
 let showtimeId = {{ $selectedShowtime ? $selectedShowtime->id : 'null' }};
+let seatStatusUrl = showtimeId
+    ? @json(route('counter.api.seatStatus', ['showtime' => '__SHOWTIME__'])).replace('__SHOWTIME__', showtimeId)
+    : null;
+let seatStatusTimer = null;
+let seatRealtimeChannel = null;
 let prices = {
     normal: {{ $selectedShowtime ? $selectedShowtime->price : 0 }},
     vip: {{ $selectedShowtime ? ($selectedShowtime->price * 1.5) : 0 }},
@@ -230,6 +248,7 @@ document.getElementById('selectDate')?.addEventListener('change', function() {
 });
 
 function toggleSeat(element) {
+    if (element.classList.contains('booked') || element.classList.contains('reserved')) return;
     const seat = element.dataset.seat;
     const type = element.dataset.type;
     
@@ -250,6 +269,74 @@ function toggleSeat(element) {
     
     updateSummary();
 }
+
+function uniqueSeats(seats) {
+    return [...new Set((seats || []).map(String).filter(Boolean))];
+}
+
+function applySeatStatus(bookedSeats, reservedSeats) {
+    const booked = uniqueSeats(bookedSeats);
+    const reserved = uniqueSeats(reservedSeats).filter(seat => !booked.includes(seat));
+    const unavailable = new Set([...booked, ...reserved]);
+    const removedSeats = [];
+
+    document.querySelectorAll('#seatMap .seat[data-seat]').forEach(element => {
+        const seat = String(element.dataset.seat);
+        const isBooked = booked.includes(seat);
+        const isReserved = reserved.includes(seat);
+
+        if (unavailable.has(seat) && element.classList.contains('selected')) {
+            removedSeats.push(seat);
+            selectedSeats = selectedSeats.filter(item => item.seat !== seat);
+        }
+
+        element.classList.toggle('booked', isBooked);
+        element.classList.toggle('reserved', isReserved);
+        element.classList.toggle('selected', !unavailable.has(seat) && selectedSeats.some(item => item.seat === seat));
+        element.onclick = unavailable.has(seat) ? null : () => toggleSeat(element);
+    });
+
+    updateSummary();
+    if (removedSeats.length) {
+        alert('Ghế ' + removedSeats.join(', ') + ' vừa được khách online giữ hoặc đặt. Vui lòng chọn ghế khác.');
+    }
+}
+
+function refreshSeatStatus() {
+    if (!seatStatusUrl) return;
+    fetch(seatStatusUrl, { headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+        .then(response => {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(data => applySeatStatus(data.bookedSeats, data.reservedSeats))
+        .catch(error => console.warn('Không thể đồng bộ ghế tại quầy:', error));
+}
+
+function startSeatRealtime() {
+    if (!showtimeId) return;
+    refreshSeatStatus();
+    seatStatusTimer = window.setInterval(refreshSeatStatus, 3000);
+
+    if (!window.Echo || typeof window.Echo.private !== 'function') return;
+    seatRealtimeChannel = 'booking.showtime.' + showtimeId;
+    const handleSeatChange = event => {
+        if (event && String(event.showtimeId) === String(showtimeId)) {
+            applySeatStatus(event.bookedSeats, event.reservedSeats);
+        }
+    };
+    window.Echo.private(seatRealtimeChannel)
+        .listen('.seat:selected', handleSeatChange)
+        .listen('.seat:released', handleSeatChange)
+        .listen('.seat:paid', handleSeatChange)
+        .listen('.seat:expired', handleSeatChange);
+}
+
+window.addEventListener('load', startSeatRealtime);
+window.addEventListener('beforeunload', () => {
+    if (seatStatusTimer) window.clearInterval(seatStatusTimer);
+    if (seatRealtimeChannel && window.Echo) window.Echo.leave(seatRealtimeChannel);
+});
 
 function changeFoodQty(foodId, delta) {
     const input = document.getElementById('foodQty' + foodId);
@@ -336,6 +423,7 @@ function processSale() {
             window.location.reload();
         } else {
             alert('Lỗi: ' + data.message);
+            refreshSeatStatus();
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-cash-register"></i> Xác nhận bán vé';
         }

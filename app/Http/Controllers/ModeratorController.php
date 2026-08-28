@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Storage;
 
 class ModeratorController extends Controller
 {
+    private const DEFAULT_TICKET_COMMISSION_PERCENTAGE = 5;
+
     private $theaterId;
 
     public function contracts()
@@ -87,6 +89,17 @@ class ModeratorController extends Controller
         // Get theater info
         $theater = Theater::findOrFail($this->theaterId);
         
+        $totalTicketRevenue = $this->theaterTicketRevenue();
+        $todayTicketRevenue = $this->theaterTicketRevenue(today()->toDateString());
+        $totalCommission = $this->theaterTicketCommission();
+        $todayCommission = $this->theaterTicketCommission(today()->toDateString());
+        $totalNetTicketRevenue = max(0, $totalTicketRevenue - $totalCommission);
+        $todayNetTicketRevenue = max(0, $todayTicketRevenue - $todayCommission);
+        $totalFoodRevenue = $this->theaterFoodRevenue();
+        $todayFoodRevenue = $this->theaterFoodRevenue(today()->toDateString());
+        $totalBookingRevenue = $totalNetTicketRevenue + $totalFoodRevenue;
+        $todayBookingRevenue = $todayNetTicketRevenue + $todayFoodRevenue;
+
         $stats = [
             'total_showtimes' => Showtime::whereHas('screen', function($q) {
                 $q->where('theater_id', $this->theaterId);
@@ -104,25 +117,24 @@ class ModeratorController extends Controller
                 $q->where('theater_id', $this->theaterId);
             })->whereDate('created_at', today())->count(),
             
-            'total_revenue' => Ticket::whereHas('showtime.screen', function($q) {
-                $q->where('theater_id', $this->theaterId);
-            })->where('status', 'Đã đặt')->sum('price'),
-            
-            'today_revenue' => Ticket::whereHas('showtime.screen', function($q) {
-                $q->where('theater_id', $this->theaterId);
-            })->where('status', 'Đã đặt')->whereDate('created_at', today())->sum('price'),
+            'total_revenue' => $totalBookingRevenue,
+            'total_ticket_revenue' => $totalTicketRevenue,
+            'total_ticket_net_revenue' => $totalNetTicketRevenue,
+            'total_commission' => $totalCommission,
+            'total_food_revenue' => $totalFoodRevenue,
+            'today_revenue' => $todayBookingRevenue,
+            'today_ticket_revenue' => $todayTicketRevenue,
+            'today_ticket_net_revenue' => $todayNetTicketRevenue,
+            'today_commission' => $todayCommission,
+            'today_food_revenue' => $todayFoodRevenue,
         ];
         
         // Doanh thu 7 ngày
         $revenueByDay = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i)->toDateString();
-            $revenue = Ticket::whereHas('showtime.screen', function($q) {
-                    $q->where('theater_id', $this->theaterId);
-                })
-                ->where('status', 'Đã đặt')
-                ->whereDate('created_at', $date)
-                ->sum('price');
+            $revenue = max(0, $this->theaterTicketRevenue($date) - $this->theaterTicketCommission($date))
+                + $this->theaterFoodRevenue($date);
             
             $revenueByDay[] = ['date' => $date, 'revenue' => $revenue];
         }
@@ -130,17 +142,25 @@ class ModeratorController extends Controller
         // Top phim
         $topMovies = Movie::join('showtimes', 'movies.id', '=', 'showtimes.movie_id')
             ->join('theater_screens', 'showtimes.screen_id', '=', 'theater_screens.id')
-            ->leftJoin('tickets', function($join) {
-                $join->on('showtimes.id', '=', 'tickets.showtime_id')
-                     ->where('tickets.status', 'Đã đặt');
+            ->leftJoin('booking_pending as bookings', function ($join) {
+                $join->on('showtimes.id', '=', 'bookings.showtime_id')
+                    ->where('bookings.status', 'completed');
             })
             ->where('theater_screens.theater_id', $this->theaterId)
             ->groupBy('movies.id', 'movies.title')
             ->select('movies.id', 'movies.title')
-            ->selectRaw('COUNT(tickets.id) as ticket_count, COALESCE(SUM(tickets.price), 0) as revenue')
-            ->orderByDesc('ticket_count')
+            ->selectRaw('COUNT(DISTINCT bookings.id) as booking_count, COALESCE(SUM(bookings.total_amount), 0) as revenue')
+            ->orderByDesc('revenue')
             ->limit(5)
-            ->get();
+            ->get()
+            ->map(function ($movie) {
+                $movie->ticket_count = Ticket::whereHas('showtime', fn ($query) => $query->where('movie_id', $movie->id))
+                    ->whereHas('showtime.screen', fn ($query) => $query->where('theater_id', $this->theaterId))
+                    ->where('status', 'Đã đặt')
+                    ->count();
+
+                return $movie;
+            });
         
         // Upcoming showtimes
         $upcomingShowtimes = Showtime::with(['movie', 'screen'])
@@ -158,6 +178,95 @@ class ModeratorController extends Controller
             ->get();
         
         return view('admin.moderator.dashboard', compact('theater', 'stats', 'revenueByDay', 'topMovies', 'upcomingShowtimes'));
+    }
+
+    private function theaterBookingRevenue(?string $date = null): float
+    {
+        return (float) DB::table('booking_pending as bookings')
+            ->join('showtimes', 'showtimes.id', '=', 'bookings.showtime_id')
+            ->join('theater_screens', 'theater_screens.id', '=', 'showtimes.screen_id')
+            ->where('theater_screens.theater_id', $this->theaterId)
+            ->where('bookings.status', 'completed')
+            ->when($date, fn ($query) => $query->whereDate('bookings.created_at', $date))
+            ->sum('bookings.total_amount');
+    }
+
+    private function theaterTicketRevenue(?string $date = null): float
+    {
+        return (float) Ticket::whereHas('showtime.screen', fn ($query) => $query->where('theater_id', $this->theaterId))
+            ->where('status', 'Đã đặt')
+            ->when($date, fn ($query) => $query->whereDate('created_at', $date))
+            ->sum('price');
+    }
+
+    private function theaterTicketCommission(?string $date = null, ?int $movieId = null): float
+    {
+        return (float) DB::table('tickets')
+            ->join('showtimes', 'showtimes.id', '=', 'tickets.showtime_id')
+            ->join('theater_screens', 'theater_screens.id', '=', 'showtimes.screen_id')
+            ->leftJoin('theater_contracts as showtime_contracts', 'showtime_contracts.id', '=', 'showtimes.theater_contract_id')
+            ->leftJoin('theater_contracts as active_contracts', function ($join) {
+                $join->on('active_contracts.theater_id', '=', 'showtimes.theater_id')
+                    ->where('active_contracts.status', '=', TheaterContract::STATUS_ACTIVE)
+                    ->whereColumn('active_contracts.start_date', '<=', 'showtimes.show_date')
+                    ->whereColumn('active_contracts.end_date', '>=', 'showtimes.show_date');
+            })
+            ->where('theater_screens.theater_id', $this->theaterId)
+            ->where('tickets.status', 'Đã đặt')
+            ->when($date, fn ($query) => $query->whereDate('tickets.created_at', $date))
+            ->when($movieId, fn ($query) => $query->where('showtimes.movie_id', $movieId))
+            ->sum(DB::raw(
+                'tickets.price * COALESCE(showtime_contracts.commission_percentage, active_contracts.commission_percentage, '
+                . self::DEFAULT_TICKET_COMMISSION_PERCENTAGE . ') / 100'
+            ));
+    }
+
+    private function theaterFoodRevenue(?string $date = null, ?int $movieId = null): float
+    {
+        $snapshotRevenue = (float) DB::table('booking_food_items as booking_food')
+            ->join('booking_pending as bookings', 'bookings.id', '=', 'booking_food.booking_pending_id')
+            ->join('showtimes', 'showtimes.id', '=', 'bookings.showtime_id')
+            ->join('theater_screens', 'theater_screens.id', '=', 'showtimes.screen_id')
+            ->where('theater_screens.theater_id', $this->theaterId)
+            ->where('bookings.status', 'completed')
+            ->when($date, fn ($query) => $query->whereDate('bookings.created_at', $date))
+            ->when($movieId, fn ($query) => $query->where('showtimes.movie_id', $movieId))
+            ->sum(DB::raw('booking_food.quantity * booking_food.price'));
+
+        $legacyBookings = DB::table('booking_pending as bookings')
+            ->join('showtimes', 'showtimes.id', '=', 'bookings.showtime_id')
+            ->join('theater_screens', 'theater_screens.id', '=', 'showtimes.screen_id')
+            ->where('theater_screens.theater_id', $this->theaterId)
+            ->where('bookings.status', 'completed')
+            ->whereNotNull('bookings.food_items')
+            ->whereNotExists(function ($query) {
+                $query->selectRaw('1')
+                    ->from('booking_food_items')
+                    ->whereColumn('booking_food_items.booking_pending_id', 'bookings.id');
+            })
+            ->when($date, fn ($query) => $query->whereDate('bookings.created_at', $date))
+            ->when($movieId, fn ($query) => $query->where('showtimes.movie_id', $movieId))
+            ->pluck('bookings.food_items');
+
+        if ($legacyBookings->isEmpty()) {
+            return $snapshotRevenue;
+        }
+
+        $foodPrices = FoodItem::where('theater_id', $this->theaterId)->pluck('price', 'id');
+        $legacyRevenue = $legacyBookings->sum(function ($foodItems) use ($foodPrices) {
+            $quantities = is_array($foodItems) ? $foodItems : json_decode((string) $foodItems, true);
+            if (!is_array($quantities)) return 0;
+
+            $bookingFoodRevenue = 0;
+            foreach ($quantities as $foodId => $quantity) {
+                $bookingFoodRevenue += max(0, (int) $quantity)
+                    * (float) ($foodPrices[(int) $foodId] ?? 0);
+            }
+
+            return $bookingFoodRevenue;
+        });
+
+        return $snapshotRevenue + (float) $legacyRevenue;
     }
     
     /**
@@ -565,12 +674,17 @@ class ModeratorController extends Controller
             'screen_name' => 'required|string|max:255',
             'screen_type' => 'required|string',
             'num_groups' => 'required|integer|min:1',
-            'seats_per_group_row' => 'required|integer|min:1',
+            'group_seat_counts' => 'required|array|min:1',
+            'group_seat_counts.*' => 'required|integer|min:1',
             'num_rows' => 'required|integer|min:1',
             'num_vip_rows' => 'required|integer|min:0',
         ]);
 
-        $totalSeats = (int) $request->num_groups * (int) $request->seats_per_group_row * (int) $request->num_rows;
+        $groupSeatCounts = array_slice(array_map('intval', $request->input('group_seat_counts', [])), 0, (int) $request->num_groups);
+        if (count($groupSeatCounts) !== (int) $request->num_groups) {
+            return back()->withErrors(['group_seat_counts' => 'Vui lòng nhập số ghế cho đầy đủ từng nhóm.'])->withInput();
+        }
+        $totalSeats = array_sum($groupSeatCounts) * (int) $request->num_rows;
         
         $screen->update([
             'screen_name' => $request->screen_name,
@@ -766,11 +880,12 @@ class ModeratorController extends Controller
         
         $revenueByDate = $revenueByDateRaw;
         $revenueSummary = [
-            'total' => collect($revenueByMovie)->sum('revenue'),
-            'tickets' => Ticket::whereHas('showtime.screen', fn ($query) => $query->where('theater_id', $this->theaterId))
-                ->where('status', 'Đã đặt')->sum('price'),
+            'gross_tickets' => $this->theaterTicketRevenue(),
+            'commission' => $this->theaterTicketCommission(),
+            'food' => $this->theaterFoodRevenue(),
         ];
-        $revenueSummary['food'] = max(0, $revenueSummary['total'] - $revenueSummary['tickets']);
+        $revenueSummary['tickets'] = max(0, $revenueSummary['gross_tickets'] - $revenueSummary['commission']);
+        $revenueSummary['total'] = $revenueSummary['tickets'] + $revenueSummary['food'];
         
         // Get available dates from showtimes
         $availableDates = Showtime::whereHas('screen', function($q) {
@@ -827,61 +942,7 @@ class ModeratorController extends Controller
         $fillRateScreenFilter = $request->input('fill_rate_screen', 'all');
         $fillRateTimeFilter = $request->input('fill_rate_time', 'all');
         
-        // Fill rate by date and screen
-        $fillRateQuery = Showtime::with(['movie', 'screen'])
-            ->whereHas('screen', function($q) {
-                $q->where('theater_id', $this->theaterId);
-            });
-        
-        // Apply filters
-        if ($fillRateDateFilter !== 'all') {
-            $fillRateQuery->where('show_date', $fillRateDateFilter);
-        }
-        if ($fillRateMovieFilter !== 'all') {
-            $fillRateQuery->where('movie_id', $fillRateMovieFilter);
-        }
-        if ($fillRateScreenFilter !== 'all') {
-            $fillRateQuery->where('screen_id', $fillRateScreenFilter);
-        }
-        if ($fillRateTimeFilter !== 'all') {
-            $fillRateQuery->where('show_time', $fillRateTimeFilter);
-        }
-        
-        $fillRateData = $fillRateQuery->get()
-            ->groupBy('show_date')
-            ->map(function($showtimes, $date) {
-                $screens = $showtimes->map(function($showtime) {
-                    $bookedTickets = Ticket::where('showtime_id', $showtime->id)
-                        ->where('status', 'Đã đặt')
-                        ->count();
-                    
-                    $pickedUpTickets = Ticket::where('showtime_id', $showtime->id)
-                        ->where('status', 'Đã đặt')
-                        ->where('is_picked_up', true)
-                        ->count();
-                    
-                    $fillRate = $bookedTickets > 0 ? ($pickedUpTickets / $bookedTickets) * 100 : 0;
-                    
-                    return [
-                        'showtime_id' => $showtime->id,
-                        'movie_id' => $showtime->movie_id,
-                        'movie_title' => $showtime->movie ? $showtime->movie->title : 'N/A',
-                        'screen_id' => $showtime->screen_id,
-                        'screen_name' => $showtime->screen ? $showtime->screen->screen_name : 'N/A',
-                        'show_time' => $showtime->show_time,
-                        'booked_tickets' => $bookedTickets,
-                        'picked_up_tickets' => $pickedUpTickets,
-                        'fill_rate' => round($fillRate, 2)
-                    ];
-                });
-                
-                return [
-                    'show_date' => $date,
-                    'screens' => $screens->values()->toArray()
-                ];
-            })
-            ->values()
-            ->toArray();
+        $fillRateData = $this->buildFillRateData($request);
         
         $fillRateByDate = $fillRateData;
         
@@ -930,6 +991,70 @@ class ModeratorController extends Controller
             'fillRateScreenFilter',
             'fillRateTimeFilter'
         ));
+    }
+
+    public function fillRateData(Request $request)
+    {
+        if ($error = $this->checkPermission()) return $error;
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->buildFillRateData($request),
+        ]);
+    }
+
+    private function buildFillRateData(Request $request): array
+    {
+        $query = Showtime::with(['movie:id,title', 'screen:id,screen_name'])
+            ->withCount([
+                'tickets as booked_tickets_count' => fn ($ticketQuery) => $ticketQuery->where('status', 'Đã đặt'),
+                'tickets as picked_up_tickets_count' => fn ($ticketQuery) => $ticketQuery
+                    ->where('status', 'Đã đặt')
+                    ->where('is_picked_up', true),
+            ])
+            ->whereHas('screen', fn ($screenQuery) => $screenQuery->where('theater_id', $this->theaterId));
+
+        $filters = [
+            'fill_rate_date' => 'show_date',
+            'fill_rate_movie' => 'movie_id',
+            'fill_rate_screen' => 'screen_id',
+            'fill_rate_time' => 'show_time',
+        ];
+
+        foreach ($filters as $requestKey => $column) {
+            $value = $request->input($requestKey, 'all');
+            if ($value !== 'all' && $value !== null && $value !== '') {
+                $query->where($column, $value);
+            }
+        }
+
+        return $query->orderBy('show_date')->orderBy('show_time')->get()
+            ->groupBy(fn ($showtime) => (string) $showtime->show_date)
+            ->map(function ($showtimes, $date) {
+                return [
+                    'show_date' => $date,
+                    'screens' => $showtimes->map(function ($showtime) {
+                        $bookedTickets = (int) $showtime->booked_tickets_count;
+                        $pickedUpTickets = (int) $showtime->picked_up_tickets_count;
+
+                        return [
+                            'showtime_id' => $showtime->id,
+                            'movie_id' => $showtime->movie_id,
+                            'movie_title' => $showtime->movie?->title ?? 'N/A',
+                            'screen_id' => $showtime->screen_id,
+                            'screen_name' => $showtime->screen?->screen_name ?? 'N/A',
+                            'show_time' => $showtime->show_time,
+                            'booked_tickets' => $bookedTickets,
+                            'picked_up_tickets' => $pickedUpTickets,
+                            'fill_rate' => $bookedTickets > 0
+                                ? round(($pickedUpTickets / $bookedTickets) * 100, 2)
+                                : 0,
+                        ];
+                    })->values()->all(),
+                ];
+            })
+            ->values()
+            ->all();
     }
     
     public function getShowtimePriceAnalysis(Request $request)
@@ -1054,12 +1179,17 @@ class ModeratorController extends Controller
         $rowLetters = range('A', 'Z');
         $numRows = max((int) $request->input('num_rows', 12), 1);
         $numGroups = max((int) $request->input('num_groups', 1), 1);
-        $seatsPerGroupRow = max((int) $request->input('seats_per_group_row', 12), 1);
+        $defaultSeatsPerGroup = max((int) $request->input('seats_per_group_row', 12), 1);
+        $submittedGroupCounts = $request->input('group_seat_counts', []);
+        $groupSeatCounts = [];
+        for ($group = 0; $group < $numGroups; $group++) {
+            $groupSeatCounts[] = max((int) ($submittedGroupCounts[$group] ?? $defaultSeatsPerGroup), 1);
+        }
         $numVipRows = max((int) $request->input('num_vip_rows', 3), 0);
         $hasCoupleRow = $request->input('has_couple_row', '1') !== '0';
 
         $rows = array_slice($rowLetters, 0, $numRows);
-        $totalCols = $numGroups * $seatsPerGroupRow;
+        $totalCols = array_sum($groupSeatCounts);
         $cols = range(1, $totalCols);
 
         $vipRowsStart = max((int) floor(($numRows - min($numVipRows, $numRows)) / 2), 0);
@@ -1067,12 +1197,14 @@ class ModeratorController extends Controller
         $coupleRows = $hasCoupleRow && !empty($rows) ? [end($rows)] : [];
 
         $seatGroups = [];
+        $start = 1;
         for ($group = 0; $group < $numGroups; $group++) {
-            $start = ($group * $seatsPerGroupRow) + 1;
+            $seatsInGroup = $groupSeatCounts[$group];
             $seatGroups[] = [
                 'rows' => $rows,
-                'cols' => range($start, $start + $seatsPerGroupRow - 1),
+                'cols' => range($start, $start + $seatsInGroup - 1),
             ];
+            $start += $seatsInGroup;
         }
         
         return [

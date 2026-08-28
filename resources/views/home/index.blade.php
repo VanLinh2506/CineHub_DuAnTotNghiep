@@ -165,7 +165,7 @@
         .continue-watching-card::after { content:""; position:absolute; inset:35% 0 0; background:linear-gradient(transparent,rgba(0,0,0,.92)); }
         .continue-info { position:absolute; z-index:2; left:14px; right:14px; bottom:12px; display:grid; gap:3px; }
         .continue-info small { color:rgba(255,255,255,.78); }
-        .continue-play { position:absolute; z-index:2; inset:0; margin:auto; width:44px; height:44px; display:grid; place-items:center; border-radius:50%; background:#e50914; }
+        .continue-play { position:absolute; z-index:2; inset:0; margin:auto; width:44px; height:44px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.58); border-radius:50%; color:#fff; background:linear-gradient(145deg,rgba(255,255,255,.3),rgba(255,255,255,.08)); box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 8px 24px rgba(0,0,0,.28); backdrop-filter:blur(14px) saturate(120%); -webkit-backdrop-filter:blur(14px) saturate(120%); }
     </style>
     @endif
 

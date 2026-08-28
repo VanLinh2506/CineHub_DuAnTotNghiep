@@ -20,8 +20,8 @@ Schedule::command('movies:update-status')
     ->everyMinute()
     ->withoutOverlapping();
 
-Schedule::command('subscriptions:renew')
-    ->hourly()
+Schedule::command('subscriptions:expire')
+    ->everyMinute()
     ->withoutOverlapping();
 
 Schedule::command('bookings:send-reminders')

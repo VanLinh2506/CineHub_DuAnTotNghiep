@@ -66,18 +66,18 @@
 
 <section class="section">
     <div class="container">
-        @if(!empty($audienceTitle) && !empty($frequentlyWatchedMovies) && $frequentlyWatchedMovies->isNotEmpty())
-        <section class="series-resume-section personal-library-section">
+        @if(!empty($audienceTitle) && !empty($librarySliderMovies) && $librarySliderMovies->isNotEmpty())
+        <section class="series-resume-section personal-library-section frequent-library-section">
             <div class="series-resume-heading">
                 <div>
-                    <span>Dành riêng cho bạn</span>
-                    <h2><i class="fas fa-fire"></i> Phim bạn hay xem</h2>
+                    <span>Nổi bật trong kho</span>
+                    <h2><i class="fas fa-fire"></i> Slide phim {{ $audienceTitle }}</h2>
                 </div>
-                <small>Xếp theo số lượt xem của bạn</small>
+                <small>Phim nổi bật và được quan tâm nhiều</small>
             </div>
-            <div class="series-resume-list">
-                @foreach($frequentlyWatchedMovies as $frequentMovie)
-                    <a class="series-resume-card" href="{{ route('movies.introduce', $frequentMovie->id) }}">
+            <div class="series-resume-list frequent-movie-carousel" data-frequent-carousel aria-label="Slide phim {{ $audienceTitle }}">
+                @foreach($librarySliderMovies as $frequentMovie)
+                    <a class="series-resume-card frequent-movie-slide {{ $loop->index === 0 ? 'is-left' : ($loop->index === 1 ? 'is-center' : ($loop->index === 2 ? 'is-right' : '')) }}" href="{{ route('movies.introduce', $frequentMovie->id) }}">
                         <div class="series-resume-poster">
                             @if($frequentMovie->thumbnail)
                             <img src="{{ $frequentMovie->thumbnail }}" alt="{{ $frequentMovie->title }}" loading="lazy">
@@ -85,7 +85,7 @@
                             <span class="personal-library-placeholder"><i class="fas fa-film"></i></span>
                             @endif
                             <span><i class="fas fa-play"></i></span>
-                            <b>{{ number_format((int) $frequentMovie->personal_view_count) }} lượt xem</b>
+                            <b>{{ number_format((int) $frequentMovie->view_events_count) }} lượt xem</b>
                         </div>
                         <strong>{{ $frequentMovie->title }}</strong>
                         <small>
@@ -375,7 +375,7 @@
         {{-- Pagination --}}
         @if($movies->hasPages())
         <nav aria-label="Phân trang danh sách phim" class="movie-pagination mt-4">
-            {{ $movies->withQueryString()->links('pagination::bootstrap-4') }}
+            {{ $movies->onEachSide(0)->withQueryString()->links('pagination::bootstrap-4') }}
             <div class="text-center mt-3 text-muted">
                 <small>
                     Hiển thị {{ $movies->firstItem() }} - {{ $movies->lastItem() }}
@@ -477,9 +477,12 @@
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        background: #e50914;
+        border: 1px solid rgba(255,255,255,.58);
+        background: linear-gradient(145deg,rgba(255,255,255,.3),rgba(255,255,255,.08));
         color: #fff;
-        box-shadow: 0 12px 24px rgba(229, 9, 20, 0.34);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.4),0 12px 24px rgba(0,0,0,.28);
+        backdrop-filter: blur(14px) saturate(120%);
+        -webkit-backdrop-filter: blur(14px) saturate(120%);
         transform: scale(0.88);
         transition: transform 0.22s ease, background 0.22s ease;
     }
@@ -514,7 +517,11 @@
     .movie-rating-badge {
         right: 10px;
         bottom: 10px;
-        background: rgba(229, 9, 20, 0.94);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(20, 20, 20, 0.22);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 8px 18px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(12px) saturate(110%);
+        -webkit-backdrop-filter: blur(12px) saturate(110%);
     }
 
     .movie-rating-badge i {
@@ -864,6 +871,26 @@
         height: 14px !important;
     }
 
+    @media (max-width: 575px) {
+        .movie-pagination {
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .movie-pagination .pagination {
+            max-width: 100%;
+            gap: 3px;
+        }
+
+        .movie-pagination .page-link {
+            min-width: 28px;
+            height: 30px;
+            padding: 0 7px;
+            border-radius: 7px;
+            font-size: 12px;
+        }
+    }
+
     .series-resume-section { margin: 0 0 34px; padding: 22px; border: 1px solid rgba(255,255,255,.09); border-radius: 20px; background: linear-gradient(135deg,rgba(229,9,20,.12),rgba(18,18,18,.96) 42%); }
     .series-resume-heading { display:flex; align-items:end; justify-content:space-between; gap:18px; margin-bottom:18px; }
     .series-resume-heading span { color:#ff6971; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; }
@@ -875,10 +902,23 @@
     .series-resume-poster::after { content:""; position:absolute; inset:40% 0 0; background:linear-gradient(transparent,rgba(0,0,0,.85)); }
     .series-resume-poster img { width:100%; height:100%; object-fit:cover; transition:transform .25s ease; }
     .series-resume-card:hover img { transform:scale(1.04); }
-    .series-resume-poster span { position:absolute; z-index:2; inset:0; margin:auto; width:42px; height:42px; display:grid; place-items:center; border-radius:50%; background:#e50914; box-shadow:0 8px 24px rgba(229,9,20,.4); }
+    .series-resume-poster span { position:absolute; z-index:2; inset:0; margin:auto; width:42px; height:42px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.58); border-radius:50%; background:linear-gradient(145deg,rgba(255,255,255,.3),rgba(255,255,255,.08)); box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 8px 24px rgba(0,0,0,.28); backdrop-filter:blur(14px) saturate(120%); -webkit-backdrop-filter:blur(14px) saturate(120%); }
     .series-resume-poster b { position:absolute; z-index:2; right:9px; bottom:8px; padding:5px 8px; border-radius:999px; background:rgba(0,0,0,.78); font-size:11px; }
     .series-resume-card > strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px; }
     .series-resume-card > small { color:rgba(255,255,255,.62); }
+    .frequent-library-section { position:relative; left:50%; width:calc(100vw - 8px); max-width:none; margin-left:0; padding:20px 34px 14px; border-color:rgba(255,255,255,.09); background:linear-gradient(135deg,#292323 0%,#1b1b1d 52%,#101113 100%); box-shadow:0 20px 55px rgba(0,0,0,.28); transform:translateX(-50%); }
+    .frequent-library-section .series-resume-heading h2 { color:#fff; }
+    .frequent-library-section .series-resume-heading > div > span { color:#ff5962; }
+    .frequent-library-section .series-resume-heading > small { color:rgba(255,255,255,.6); }
+    .frequent-movie-carousel.is-ready { position:relative; display:block; height:clamp(255px,25vw,375px); overflow:hidden; padding:8px 0 12px; scrollbar-width:none; }
+    .frequent-movie-carousel.is-ready .frequent-movie-slide { position:absolute; top:50%; left:50%; width:36%; opacity:0; visibility:hidden; pointer-events:none; transform:translate(-50%,-50%) scale(.72); transform-origin:center center; transition:transform .8s cubic-bezier(.22,.61,.36,1),opacity .6s ease,filter .6s ease; will-change:transform,opacity; }
+    .frequent-movie-carousel.is-ready .frequent-movie-slide.is-left { z-index:1; opacity:.45; visibility:visible; pointer-events:auto; transform:translate(-120%,-50%) scale(.76); filter:brightness(.48) saturate(.7); }
+    .frequent-movie-carousel.is-ready .frequent-movie-slide.is-center { z-index:4; opacity:1; visibility:visible; pointer-events:auto; transform:translate(-50%,-50%) scale(1.35); filter:none; }
+    .frequent-movie-carousel.is-ready .frequent-movie-slide.is-right { z-index:2; opacity:.45; visibility:visible; pointer-events:auto; transform:translate(20%,-50%) scale(.76); filter:brightness(.48) saturate(.7); }
+    .frequent-library-section .frequent-movie-slide > strong { color:#fff; }
+    .frequent-library-section .frequent-movie-slide > small { color:rgba(255,255,255,.62); }
+    .frequent-movie-carousel.is-ready .frequent-movie-slide.is-center > strong { font-size:16px; }
+    .frequent-movie-carousel.is-ready .frequent-movie-slide.is-center .series-resume-poster { box-shadow:0 18px 42px rgba(0,0,0,.42),0 0 0 1px rgba(229,9,20,.32); }
     .personal-library-section + .personal-library-section { margin-top:-14px; }
     .personal-library-placeholder { position:absolute; inset:0 !important; width:auto !important; height:auto !important; border-radius:0 !important; color:#777; background:#222 !important; box-shadow:none !important; }
     .upcoming-date-badge { position:absolute; z-index:4; left:10px; bottom:10px; padding:7px 9px; border-radius:999px; background:rgba(15,15,15,.9); color:#fff; font-size:11px; font-weight:800; backdrop-filter:blur(8px); }
@@ -890,11 +930,77 @@
         .series-resume-section { padding:16px; }
         .series-resume-heading { align-items:start; flex-direction:column; gap:5px; }
         .series-resume-list { grid-auto-columns:78%; }
+        .frequent-library-section { width:calc(100vw - 4px); padding:14px 10px 8px; }
+        .frequent-movie-carousel.is-ready { height:clamp(160px,42vw,220px); padding-top:6px; }
+        .frequent-movie-carousel.is-ready .frequent-movie-slide { width:38%; }
+        .frequent-movie-carousel.is-ready .frequent-movie-slide.is-left { transform:translate(-128%,-50%) scale(.76); }
+        .frequent-movie-carousel.is-ready .frequent-movie-slide.is-center { transform:translate(-50%,-50%) scale(1.22); }
+        .frequent-movie-carousel.is-ready .frequent-movie-slide.is-right { transform:translate(28%,-50%) scale(.76); }
+        .frequent-movie-carousel.is-ready .frequent-movie-slide > strong { font-size:11px; }
+        .frequent-movie-carousel.is-ready .frequent-movie-slide > small { display:none; }
+        .frequent-movie-carousel.is-ready .series-resume-poster span { width:32px; height:32px; font-size:12px; }
+        .frequent-movie-carousel.is-ready .series-resume-poster b { padding:3px 5px; font-size:8px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .frequent-movie-carousel.is-ready .frequent-movie-slide { transition:none; }
     }
 </style>
 
 @push('scripts')
 <script>
+    const initializeFrequentMovieCarousels = () => {
+        document.querySelectorAll('[data-frequent-carousel]').forEach(carousel => {
+            if (carousel.dataset.carouselReady === 'true') return;
+            const slides = Array.from(carousel.querySelectorAll('.frequent-movie-slide'));
+            if (slides.length < 3) return;
+
+            carousel.dataset.carouselReady = 'true';
+
+            let centerIndex = 1;
+            let timer;
+            const render = () => {
+                const leftIndex = (centerIndex - 1 + slides.length) % slides.length;
+                const rightIndex = (centerIndex + 1) % slides.length;
+
+                slides.forEach((slide, index) => {
+                    slide.classList.toggle('is-left', index === leftIndex);
+                    slide.classList.toggle('is-center', index === centerIndex);
+                    slide.classList.toggle('is-right', index === rightIndex);
+                    slide.setAttribute('aria-hidden', index !== leftIndex && index !== centerIndex && index !== rightIndex ? 'true' : 'false');
+                    slide.tabIndex = index === leftIndex || index === centerIndex || index === rightIndex ? 0 : -1;
+                });
+            };
+
+            // Decrease the active index so every card visibly travels to the right.
+            const moveRight = () => {
+                centerIndex = (centerIndex - 1 + slides.length) % slides.length;
+                render();
+            };
+            const start = () => {
+                window.clearInterval(timer);
+                timer = window.setInterval(moveRight, 2400);
+            };
+            const stop = () => window.clearInterval(timer);
+
+            carousel.classList.add('is-ready');
+            render();
+            start();
+            carousel.addEventListener('mouseenter', stop);
+            carousel.addEventListener('mouseleave', start);
+            carousel.addEventListener('focusin', stop);
+            carousel.addEventListener('focusout', event => {
+                if (!carousel.contains(event.relatedTarget)) start();
+            });
+        });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeFrequentMovieCarousels);
+    } else {
+        initializeFrequentMovieCarousels();
+    }
+
     function markInterested(button) {
         @guest
         window.location.href = @json(route('login'));

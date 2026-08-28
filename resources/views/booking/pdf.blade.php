@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Vé Phim - {{ $booking->qr_code ?: $booking->id }}</title>
+    <title>Vé Phim - {{ ($ticket ?? null)?->qr_code ?: ($booking->qr_code ?: $booking->id) }}</title>
     <style>
         body {
             font-family: 'DejaVu Sans', sans-serif;
@@ -68,13 +68,14 @@
     @php
         $showtime = $booking->showtime;
         $movie = $showtime->movie ?? null;
-        $theater = $showtime->theater ?? null;
+        $theater = $showtime->screen->theater ?? null;
         $screen = $showtime->screen ?? null;
-        $seats = $booking->tickets->pluck('seat')->toArray();
-        $totalPrice = $booking->tickets->sum('price');
-        if ($booking->foodOrders) {
-            $totalPrice += $booking->foodOrders->sum('total_price');
-        }
+        $ticket = $ticket ?? null;
+        $seats = $ticket ? [$ticket->seat] : $booking->tickets->pluck('seat')->toArray();
+        $foodItems = $foodItems ?? collect();
+        $totalPrice = $ticket ? (float) $ticket->price : $booking->tickets->sum('price');
+        $totalPrice += $foodItems->sum('subtotal');
+        $ticketCode = $ticket?->qr_code ?: ($booking->qr_code ?: ('BOOKING-' . $booking->id));
     @endphp
 
     <div class="ticket-wrapper">
@@ -87,7 +88,7 @@
             <table>
                 <tr>
                     <th>Mã đặt vé:</th>
-                    <td><strong>{{ $booking->qr_code ?: ('#' . $booking->id) }}</strong></td>
+                    <td><strong>{{ $ticketCode }}</strong></td>
                 </tr>
                 <tr>
                     <th>Rạp:</th>
@@ -105,12 +106,12 @@
                     <th>Ghế:</th>
                     <td><strong>{{ implode(', ', $seats) }}</strong></td>
                 </tr>
-                @if($booking->foodOrders && $booking->foodOrders->count() > 0)
+                @if($foodItems->isNotEmpty())
                 <tr>
                     <th>Đồ ăn/uống:</th>
                     <td>
-                        @foreach($booking->foodOrders as $order)
-                            {{ $order->foodItem->name ?? 'N/A' }} (x{{ $order->quantity }})<br>
+                        @foreach($foodItems as $food)
+                            {{ $food['name'] }} (x{{ $food['quantity'] }})<br>
                         @endforeach
                     </td>
                 </tr>
@@ -127,7 +128,7 @@
         </div>
 
         <div class="qr-section">
-            <img src="{{ qr_code_data_uri($booking->qr_code ?: ('BOOKING-' . $booking->id), 200) }}" alt="QR Code">
+            <img src="{{ qr_code_data_uri($ticketCode, 200) }}" alt="QR Code">
             <p>Vui lòng xuất trình mã QR này cho nhân viên rạp</p>
         </div>
 

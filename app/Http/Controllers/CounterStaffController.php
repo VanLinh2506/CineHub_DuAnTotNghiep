@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\SeatMapChanged;
 use App\Models\User;
 use App\Models\Theater;
 use App\Models\Showtime;
@@ -50,6 +51,7 @@ class CounterStaffController extends Controller
             ->pluck('booking_pending_id');
         $scannedBookings = Booking::whereIn('id', $scannedBookingIds)->get();
         $drinkStats = $this->summarizeBookingFood($scannedBookings, $theaterId);
+        $counterRevenue = $this->counterRevenueSummary($user->id, today()->toDateString());
 
         $todayStats = [
             'tickets_sold' => Ticket::where('is_counter_sale', true)
@@ -57,10 +59,9 @@ class CounterStaffController extends Controller
                 ->whereDate('created_at', today())
                 ->count(),
             
-            'revenue' => Ticket::where('is_counter_sale', true)
-                ->where('sold_by', $user->id)
-                ->whereDate('created_at', today())
-                ->sum('price'),
+            'revenue' => $counterRevenue['total'],
+            'ticket_revenue' => $counterRevenue['tickets'],
+            'food_revenue' => $counterRevenue['food'],
             
             'tickets_scanned' => Ticket::whereHas('showtime.screen', function($q) use ($theaterId) {
                     $q->where('theater_id', $theaterId);
@@ -251,17 +252,7 @@ class CounterStaffController extends Controller
             ->where('show_date', $date)
             ->orderBy('show_time')
             ->get()
-            ->map(function($showtime) {
-                $bookedSeats = $showtime->tickets->count();
-                $reservedSeats = SeatReservation::where('showtime_id', $showtime->id)
-                    ->active()
-                    ->count();
-
-                $showtime->booked_seats = $bookedSeats;
-                $showtime->reserved_seats = $reservedSeats;
-                $showtime->available_seats = max(0, $showtime->screen->total_seats - $bookedSeats - $reservedSeats);
-                return $showtime;
-            });
+            ->map(fn ($showtime) => $this->counterShowtimeSummary($showtime));
         
         $theater = Theater::find($theaterId);
         
@@ -286,15 +277,16 @@ class CounterStaffController extends Controller
             ->where('show_date', $date)
             ->orderBy('show_time')
             ->get()
-            ->map(function($showtime) {
+            ->map(function ($showtime) {
                 $bookedSeats = $showtime->tickets->count();
                 $reservedSeats = SeatReservation::where('showtime_id', $showtime->id)
                     ->active()
                     ->count();
+                $showtime->available_seats = max(
+                    0,
+                    (int) ($showtime->screen?->total_seats ?? 0) - $bookedSeats - $reservedSeats
+                );
 
-                $showtime->booked_seats = $bookedSeats;
-                $showtime->reserved_seats = $reservedSeats;
-                $showtime->available_seats = max(0, $showtime->screen->total_seats - $bookedSeats - $reservedSeats);
                 return $showtime;
             });
         
@@ -342,6 +334,22 @@ class CounterStaffController extends Controller
             'date',
             'foodItems'
         ));
+    }
+
+    public function seatStatus(Showtime $showtime)
+    {
+        abort_unless(
+            (int) $showtime->screen?->theater_id === (int) Auth::user()->theater_id,
+            404
+        );
+
+        return response()->json([
+            'showtimeId' => $showtime->id,
+            'bookedSeats' => Ticket::where('showtime_id', $showtime->id)
+                ->where('status', 'Đã đặt')->pluck('seat')->filter()->unique()->values(),
+            'reservedSeats' => SeatReservation::where('showtime_id', $showtime->id)
+                ->active()->pluck('seat')->filter()->unique()->values(),
+        ]);
     }
     
     /**
@@ -521,6 +529,24 @@ class CounterStaffController extends Controller
             ]);
             
             DB::commit();
+
+            try {
+                broadcast(new SeatMapChanged(
+                    showtimeId: (int) $showtimeId,
+                    action: 'booked',
+                    seats: $seats,
+                    bookedSeats: Ticket::where('showtime_id', $showtimeId)
+                        ->where('status', 'Đã đặt')->pluck('seat')->values()->all(),
+                    reservedSeats: SeatReservation::where('showtime_id', $showtimeId)
+                        ->active()->pluck('seat')->values()->all(),
+                    userId: Auth::id(),
+                ));
+            } catch (\Throwable $exception) {
+                Log::warning('Counter seat realtime broadcast unavailable.', [
+                    'showtime_id' => $showtimeId,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
             
             return response()->json([
                 'success' => true,
@@ -571,8 +597,12 @@ class CounterStaffController extends Controller
         $todayStats = Ticket::where('is_counter_sale', true)
             ->where('sold_by', Auth::id())
             ->whereDate('created_at', now()->toDateString())
-            ->selectRaw('COUNT(*) as ticket_count, COALESCE(SUM(price), 0) as total_revenue')
+            ->selectRaw('COUNT(*) as ticket_count')
             ->first();
+        $todayRevenue = $this->counterRevenueSummary(Auth::id(), now()->toDateString());
+        $todayStats->total_revenue = $todayRevenue['total'];
+        $todayStats->ticket_revenue = $todayRevenue['tickets'];
+        $todayStats->food_revenue = $todayRevenue['food'];
         
         return view('admin.counter_staff.sales_history', compact('sales', 'todayStats', 'date', 'search'));
     }
@@ -612,7 +642,7 @@ class CounterStaffController extends Controller
     {
         $booking = Booking::with([
             'showtime.movie', 'showtime.screen.theater', 'tickets',
-            'foodOrders.foodItem', 'user',
+            'user',
         ])
             ->whereKey($request->integer('booking_id'))
             ->whereHas('showtime.screen', function ($query) {
@@ -620,10 +650,34 @@ class CounterStaffController extends Controller
             })
             ->firstOrFail();
 
-        $filename = 've-phim-' . ($booking->qr_code ?: $booking->id) . '.pdf';
+        return view('admin.counter_staff.ticket_pdf_preview', compact('booking'));
+    }
 
-        return \Barryvdh\DomPDF\Facade\Pdf::loadView('booking.pdf', compact('booking'))
-            ->download($filename);
+    public function renderTicketPdf(Request $request, Ticket $ticket)
+    {
+        $ticket->load([
+            'showtime.movie', 'showtime.screen.theater',
+            'bookingPending.user', 'bookingPending.tickets',
+        ]);
+
+        abort_unless(
+            (int) $ticket->showtime?->screen?->theater_id === (int) Auth::user()->theater_id,
+            404
+        );
+
+        $booking = $ticket->bookingPending;
+        abort_unless($booking, 404);
+
+        $foodItems = collect();
+        $filename = 've-' . ($ticket->qr_code ?: $ticket->id) . '.pdf';
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+            'booking.pdf',
+            compact('booking', 'ticket', 'foodItems')
+        );
+
+        return $request->boolean('download')
+            ? $pdf->download($filename)
+            : $pdf->stream($filename);
     }
     
     // Helper methods
@@ -918,6 +972,36 @@ class CounterStaffController extends Controller
         })->filter()->values();
     }
 
+    private function counterShowtimeSummary(Showtime $showtime): array
+    {
+        $bookedSeats = $showtime->tickets->count();
+        $pickedUpTickets = $showtime->tickets->where('is_picked_up', true)->count();
+        $reservedSeats = SeatReservation::where('showtime_id', $showtime->id)
+            ->active()
+            ->count();
+        $totalSeats = max(0, (int) ($showtime->screen?->total_seats ?? 0));
+
+        return [
+            'id' => $showtime->id,
+            'movie_title' => $showtime->movie?->title ?? 'N/A',
+            'thumbnail' => $showtime->movie?->thumbnail,
+            'duration' => $showtime->movie?->duration,
+            'screen_name' => $showtime->screen?->screen_name ?? 'N/A',
+            'screen_type' => $showtime->screen?->screen_type ?? '2D',
+            'show_date' => $showtime->show_date,
+            'show_time' => $showtime->show_time,
+            'price' => (float) $showtime->price,
+            'total_seats' => $totalSeats,
+            'booked_seats' => $bookedSeats,
+            'picked_up_tickets' => $pickedUpTickets,
+            'fill_rate' => $bookedSeats > 0
+                ? round(($pickedUpTickets / $bookedSeats) * 100, 2)
+                : 0,
+            'reserved_seats' => $reservedSeats,
+            'available_seats' => max(0, $totalSeats - $bookedSeats - $reservedSeats),
+        ];
+    }
+
     private function summarizeBookingFood($bookings, int $theaterId): array
     {
         $details = $bookings->flatMap(fn ($booking) => $this->bookingFoodDetails($booking, $theaterId));
@@ -925,6 +1009,44 @@ class CounterStaffController extends Controller
         return [
             'quantity' => (int) $details->sum('quantity'),
             'revenue' => (float) $details->sum('subtotal'),
+        ];
+    }
+
+    private function counterRevenueSummary(int $userId, string $date): array
+    {
+        $bookingIds = Ticket::where('is_counter_sale', true)
+            ->where('sold_by', $userId)
+            ->whereDate('created_at', $date)
+            ->whereNotNull('booking_pending_id')
+            ->distinct()
+            ->pluck('booking_pending_id');
+
+        $tickets = (float) Ticket::where('is_counter_sale', true)
+            ->where('sold_by', $userId)
+            ->whereDate('created_at', $date)
+            ->where('status', 'Đã đặt')
+            ->sum('price');
+        $food = (float) DB::table('booking_food_items as booking_food')
+            ->join('booking_pending as bookings', 'bookings.id', '=', 'booking_food.booking_pending_id')
+            ->whereIn('bookings.id', $bookingIds)
+            ->where('bookings.status', 'completed')
+            ->sum(DB::raw('booking_food.quantity * booking_food.price'));
+        $legacyFood = Booking::whereIn('id', $bookingIds)
+            ->where('status', 'completed')
+            ->whereNotNull('food_items')
+            ->whereNotExists(function ($query) {
+                $query->selectRaw('1')
+                    ->from('booking_food_items')
+                    ->whereColumn('booking_food_items.booking_pending_id', 'booking_pending.id');
+            })
+            ->get()
+            ->sum(fn ($booking) => $this->bookingFoodDetails($booking, Auth::user()->theater_id)->sum('subtotal'));
+        $food += (float) $legacyFood;
+
+        return [
+            'total' => $tickets + $food,
+            'tickets' => $tickets,
+            'food' => $food,
         ];
     }
 }

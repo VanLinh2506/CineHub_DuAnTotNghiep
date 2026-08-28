@@ -285,6 +285,7 @@ class ProfileController extends Controller
         $request->validate([
             'subscription_id' => 'required|exists:subscriptions,id',
             'movie_id' => 'nullable|exists:movies,id',
+            'purchase_mode' => 'nullable|in:keep_time,reset',
         ]);
         
         $user = Auth::user();
@@ -292,14 +293,21 @@ class ProfileController extends Controller
 
         $subscription = Subscription::findOrFail($subscriptionId);
         $currentSubscription = $user->subscription;
+        $isRenewal = $currentSubscription
+            && $subscription->id === $currentSubscription->id
+            && $subscription->accessRank() > 0;
         $currentPrice = (float) ($currentSubscription->price ?? 0);
         $newPrice = (float) $subscription->price;
+        $purchaseMode = $request->input('purchase_mode', 'keep_time');
+        $isUpgrade = $currentSubscription
+            && $currentSubscription->accessRank() > 0
+            && $subscription->accessRank() > $currentSubscription->accessRank();
         $movieId = $request->input('movie_id');
 
         $redirectAfterUpgrade = function () use ($movieId) {
             return $movieId
                 ? redirect()->route('movies.watch', ['id' => $movieId])
-                : redirect()->route('profile.index');
+                : redirect()->to(route('profile.index').'#subscription');
         };
         
         // Kiểm tra nếu đã có gói này hoặc gói cao hơn
@@ -308,14 +316,19 @@ class ProfileController extends Controller
             $samePlan = $subscription->id === $currentSubscription->id;
             $shorterEquivalentPlan = $subscription->accessRank() === $currentSubscription->accessRank()
                 && $subscription->duration_months <= $currentSubscription->duration_months;
-            if ($lowerAccess || $samePlan || $shorterEquivalentPlan) {
+            if ($lowerAccess || (!$isRenewal && ($samePlan || $shorterEquivalentPlan))) {
                 return $redirectAfterUpgrade()
                     ->with('error', 'Bạn đã có gói tương đương hoặc cao hơn!');
             }
         }
 
         // Kiểm tra điểm
-        $requiredPoints = max($newPrice - $currentPrice, 0);
+        $upgradeBillingUnits = $user->subscriptionUpgradeBillingUnits();
+        $requiredPoints = match (true) {
+            $isRenewal => $newPrice,
+            $isUpgrade && $purchaseMode === 'keep_time' => ceil(max($newPrice - $currentPrice, 0) * $upgradeBillingUnits),
+            default => $newPrice,
+        };
 
         if ($user->points < $requiredPoints) {
             return $redirectAfterUpgrade()
@@ -323,7 +336,7 @@ class ProfileController extends Controller
         }
         
         // Trừ điểm và cập nhật gói
-        DB::transaction(function () use ($user, $requiredPoints, $subscriptionId, $subscription) {
+        DB::transaction(function () use ($user, $requiredPoints, $subscriptionId, $subscription, $isRenewal, $isUpgrade, $purchaseMode) {
             $lockedUser = User::query()->lockForUpdate()->findOrFail($user->id);
             if ($lockedUser->points < $requiredPoints) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
@@ -331,10 +344,20 @@ class ProfileController extends Controller
                 ]);
             }
             $lockedUser->decrement('points', $requiredPoints);
+            $keepExistingTime = $isUpgrade && $purchaseMode === 'keep_time';
+            $startedAt = ($isRenewal || $keepExistingTime)
+                ? ($lockedUser->subscription_started_at ?? now())
+                : now();
+            $expiresAt = match (true) {
+                $isRenewal && $lockedUser->subscription_expires_at?->isFuture() => $lockedUser->subscription_expires_at->copy()->addMonthNoOverflow(),
+                $keepExistingTime && $lockedUser->subscription_expires_at?->isFuture() => $lockedUser->subscription_expires_at,
+                default => now()->addMonthNoOverflow(),
+            };
             $lockedUser->update([
                 'subscription_id' => $subscriptionId,
-                'subscription_expires_at' => now()->addMonthsNoOverflow($subscription->duration_months ?: 1),
-                'subscription_auto_renew' => true,
+                'subscription_started_at' => $startedAt,
+                'subscription_expires_at' => $expiresAt,
+                'subscription_auto_renew' => false,
             ]);
             Transaction::create([
                 'user_id' => $lockedUser->id, 'type' => 'subscription', 'related_id' => $subscriptionId,
@@ -342,13 +365,13 @@ class ProfileController extends Controller
             ]);
             Notification::create([
                 'user_id' => $lockedUser->id, 'type' => 'subscription_success', 'title' => 'Đăng ký gói thành công',
-                'message' => 'Gói '.$subscription->name.' đã được kích hoạt đến '.$lockedUser->subscription_expires_at->format('H:i d/m/Y').'. Đã trừ '.number_format($requiredPoints).' xu; tự động gia hạn đang bật.',
+                'message' => 'Gói '.$subscription->name.($isRenewal ? ' đã được gia hạn thêm 1 tháng, đến ' : ($keepExistingTime ? ' đã được nâng cấp và giữ nguyên hạn đến ' : ' đã được mua mới, hạn đến ')).$lockedUser->subscription_expires_at->format('H:i d/m/Y').'. Đã trừ '.number_format($requiredPoints).' xu.',
                 'link' => route('profile.index').'#subscription', 'is_read' => false,
             ]);
         });
         
         return $redirectAfterUpgrade()
-            ->with('success', "Nâng cấp gói {$subscription->name} thành công! Đã trừ {$requiredPoints} điểm.");
+            ->with('success', ($isRenewal ? "Gia hạn gói {$subscription->name} thêm 1 tháng" : "Nâng cấp gói {$subscription->name}")." thành công! Đã trừ {$requiredPoints} điểm.");
     }
 
     /**

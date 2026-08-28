@@ -44,6 +44,8 @@
                         <div>
                             <h6 class="text-muted mb-2">Doanh thu hôm nay</h6>
                             <h3 class="mb-0">{{ number_format($todayStats['revenue']) }}₫</h3>
+                            <small class="text-muted">Vé: {{ number_format($todayStats['ticket_revenue']) }}₫</small>
+                            <small class="text-info d-block">Combo: {{ number_format($todayStats['food_revenue']) }}₫</small>
                         </div>
                         <div class="icon-shape bg-gradient-info text-white rounded-circle">
                             <i class="fas fa-dollar-sign fa-2x"></i>

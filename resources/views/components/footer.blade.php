@@ -219,7 +219,8 @@
     function switchAuthTab(tab) {
         const loginTab = document.getElementById('loginTab');
         const registerTab = document.getElementById('registerTab');
-        const tabs = document.querySelectorAll('.auth-tab');
+        const tabs = document.querySelectorAll('#authModal .auth-tab-glass');
+        const authTabs = document.querySelector('#authModal .auth-tabs-glass');
         const isLogin = tab === 'login';
         
         if (loginTab) {
@@ -236,6 +237,8 @@
         if (tabs.length >= 2) {
             tabs[isLogin ? 0 : 1].classList.add('active');
         }
+
+        authTabs?.classList.toggle('register-active', !isLogin);
     }
     
     function closeAlertModal() {

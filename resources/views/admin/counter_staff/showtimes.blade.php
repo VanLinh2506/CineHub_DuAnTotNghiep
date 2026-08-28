@@ -67,7 +67,9 @@
                                 @php
                                     $available = $showtime['available_seats'] ?? 0;
                                     $total = $showtime['total_seats'] ?? 0;
-                                    $percentage = $total > 0 ? ($available / $total) * 100 : 0;
+                                    $percentage = $total > 0
+                                        ? min(100, max(0, ($available / $total) * 100))
+                                        : 0;
                                 @endphp
                                 <small class="text-muted d-block">Ghế còn lại</small>
                                 <strong style="color: #333;">
@@ -88,6 +90,15 @@
                             <small class="text-muted"><i class="fas fa-users me-1"></i>Đã đặt: {{ $showtime['booked_seats'] }} vé</small>
                             <span class="badge {{ $percentage < 20 ? 'bg-danger' : ($percentage < 50 ? 'bg-warning' : 'bg-success') }}">
                                 {{ number_format($percentage, 0) }}% còn trống
+                            </span>
+                        </div>
+                        @php
+                            $fillRate = min(100, max(0, (float) ($showtime['fill_rate'] ?? 0)));
+                        @endphp
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                            <small class="text-muted"><i class="fas fa-ticket-alt me-1"></i>Đã lấy: {{ $showtime['picked_up_tickets'] ?? 0 }} vé</small>
+                            <span class="badge {{ $fillRate >= 80 ? 'bg-success' : ($fillRate >= 50 ? 'bg-warning text-dark' : 'bg-danger') }}">
+                                {{ number_format($fillRate, 1) }}% lấp đầy
                             </span>
                         </div>
                     </div>

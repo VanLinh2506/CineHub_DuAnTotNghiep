@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             \App\Http\Middleware\PublishScheduledMovies::class,
+            \App\Http\Middleware\ExpireUserSubscription::class,
         ]);
 
         // Legacy route middleware để tương thích với PHP cũ
